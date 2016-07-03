@@ -3696,6 +3696,11 @@ base_os=''
 
 submachine=
 
+# Force v9
+if test "$machine" = sparc; then
+   machine="sparcv9"
+fi
+
 # Check whether --with-cpu was given.
 if test "${with_cpu+set}" = set; then :
   withval=$with_cpu;   case "$withval" in

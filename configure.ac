@@ -443,6 +443,11 @@ os=$config_os
 base_os=''
 
 submachine=
+# Force v9
+if test "$machine" = sparc; then
+   machine="sparcv9"
+fi
+
 AC_ARG_WITH([cpu],
 	    AS_HELP_STRING([--with-cpu=CPU], [select code for CPU variant]),
 	    [dnl
