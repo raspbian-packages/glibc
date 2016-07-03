@@ -1,4 +1,597 @@
+2016-06-30  Aurelien Jarno  <aurelien@aurel32.net>
+
+	* sysdeps/unix/sysv/linux/sparc/sparc64/localplt.data: Add _Qp_cmp.
+
+2016-06-30  John David Anglin  <danglin@gcc.gnu.org>
+
+	[BZ #20277]
+	* sysdeps/hppa/start.S (_start): Correct loading of global pointer
+	when SHARED is defined.
+
+2016-06-30  Aurelien Jarno  <aurelien@aurel32.net>
+
+	* sysdeps/i386/i686/fpu/multiarch/libm-test-ulps: Regenerated.
+
+2016-05-17  Stefan Liebler  <stli@linux.vnet.ibm.com>
+
+	* nptl/tst-cancel17.c (do_test): Wait for finishing aio_read(&a).
+
+2016-06-27  Aurelien Jarno  <aurelien@aurel32.net>
+
+	* sysdeps/mips/tst-mode-switch-1.c (main): Converted to ...
+	(do_test): ... this.
+	(TEST_FUNCTION): New macro.
+	 Include test-skeleton.c.
+	* sysdeps/mips/tst-mode-switch-2.c (main): Likewise.
+	* sysdeps/mips/tst-mode-switch-3.c (main): Likewise.
+
+2016-06-21  Aurelien Jarno  <aurelien@aurel32.net>
+
+	* sysdeps/unix/sysv/linux/mips/vfork.S (__vfork): Rename into
+	__libc_vfork.
+	(__vfork) [IS_IN (libc)]: Remove alias.
+	(__libc_vfork) [IS_IN (libc)]: Define as an alias.
+	* sysdeps/unix/sysv/linux/sparc/sparc32/vfork.S: Likewise.
+	* sysdeps/unix/sysv/linux/sparc/sparc64/vfork.S: Likewise.
+
+2016-06-18  Aurelien Jarno  <aurelien@aurel32.net>
+
+	* sysdeps/unix/sysv/linux/mips/vfork.S (__vfork): Conditionalize
+	hidden_def, weak_alias and strong_alias on [IS_IN (libc)].
+	* sysdeps/unix/sysv/linux/sparc/sparc32/vfork.S: Likewise.
+	* sysdeps/unix/sysv/linux/sparc/sparc64/vfork.S: Likewise.
+
+2016-06-03  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	[BZ #20012]
+	* libio/fmemopen.c (fmemopen_read): Use buffer maximum position, not
+	length to calculate the buffer to read.
+	(fmemopen_write): Set the buffer position based on bytes written.
+	(fmemopen_seek): Return EINVAL for invalid whence modes.
+
+	[BZ #20005]
+	* libio/fmemopen.c (fmemopen_write): Update internal position after
+	write.
+	* stdio-common/Makefile (tests): Add tst-fmemopen4.c.
+	* stdio-common/tst-fmemopen4.c: New file..
+
+2016-06-01  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #19861]
+	Do not use IFUNC resolver with potentially unrelocated symbol.
+	* nptl/pt-fork.c [HAVE_IFUNC]: Remove.
+	(DEFINE_FORK): Remove macro and inline definition.
+	(fork_alias): Renamed from fork_ifunc.
+	(__fork_alias): Renamed from __fork_ifunc.
+
+2016-03-07  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #19648]
+	* test-skeleton.c (main): Do not set RLIMIT_DATA.
+
+2016-05-23  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #20111]
+	* bits/sockaddr.h (_SS_SIZE): Define.
+	* bits/socket.h (_SS_SIZE): Remove.
+	(_SS_PADSIZE): Adjust to account for all padding.
+	(struct sockaddr_storage): Update comment.  Avoid implicit
+	padding.
+	* sysdeps/mach/hurd/bits/socket.h (_SS_SIZE): Remove.
+	(_SS_PADSIZE): Adjust to account for all padding.
+	(struct sockaddr_storage): Update comment.  Avoid implicit
+	padding.
+	* sysdeps/unix/bsd/bits/sockaddr.h (_SS_SIZE): Define.
+	* sysdeps/unix/sysv/linux/bits/socket.h (_SS_SIZE): Remove.
+	(_SS_PADSIZE): Adjust to account for all padding.
+	(struct sockaddr_storage): Update comment.  Avoid implicit
+	padding.
+	* sysdeps/unix/sysv/linux/m68k/bits/sockaddr.h: New file.
+	__SS_SIZE is 126 in this version.
+	* inet/tst-sockaddr.c: New file.
+	* inet/Makefile (tests): Add tst-sockaddr.c
+	(tst-sockaddr.c): Compile with non-strict aliasing.
+
+2016-05-23  Florian Weimer  <fweimer@redhat.com>
+
+	CVE-2016-4429
+	[BZ #20112]
+	* sunrpc/clnt_udp.c (clntudp_call): Use malloc/free for the error
+	payload.
+
+2016-05-13  Florian Weimer  <fweimer@redhat.com>
+
+	Fix race condition in tst-mallocfork2, use fewer resources.
+	* malloc/tst-mallocfork2.c (sigusr1_handler): Do not send SIGSTOP
+	to current process group.
+	(signal_sender): Yield in the non-sleeping case.
+
+2016-05-12  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #19703]
+	Partially async-signal-safe fork for single-threaded processes.
+	* sysdeps/nptl/fork.c (__libc_fork): Introduce multiple_threads
+	variable.  Do not acquire and reset/release malloc and libio locks
+	in single-threaded processes.
+	* malloc/tst-mallocfork2.c: New file.
+	* malloc/Makefile (tests): Add it.
+
+2016-04-14  Stefan Liebler  <stli@linux.vnet.ibm.com>
+
+	* stdio-common/printf_fp.c (__printf_fp_l):
+	Rename ___printf_fp_l to __printf_fp_l and
+	remove strong alias. Use libc_hidden_def instead
+	of ldbl_hidden_def macro.
+
+2016-04-29  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #20010]
+	CVE-2016-3706
+	* sysdeps/posix/getaddrinfo.c
+	(convert_hostent_to_gaih_addrtuple): New function.
+	(gethosts): Call convert_hostent_to_gaih_addrtuple.
+	(gaih_inet): Use convert_hostent_to_gaih_addrtuple to convert
+	AF_INET data.
+
+2016-03-07  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #19610]
+	* elf/ldconfig.c (opt_link): Update comment.
+	(options): Update help string for option -X.
+	(search_dir): Unlink stale symbolic link only if updating symbolic
+	links.
+	* elf/tst-ldconfig-X.sh: New file.
+	* elf/Makefile (tests-special): Add tst-ldconfig-X.out.
+	(tst-ldconfig-X.out): New rule to run tst-ldconfig-X.sh.
+
+2016-05-04  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #19779]
+	CVE-2016-1234
+	Avoid copying names of directory entries.
+	* posix/glob.c (DIRENT_MUST_BE, DIRENT_MIGHT_BE_SYMLINK)
+	(DIRENT_MIGHT_BE_DIR, CONVERT_D_INO, CONVERT_D_TYPE)
+	(CONVERT_DIRENT_DIRENT64, REAL_DIR_ENTRY): Remove macros.
+	(struct readdir_result): New type.
+	(D_TYPE_TO_RESULT, D_INO_TO_RESULT, READDIR_RESULT_INITIALIZER)
+	(GL_READDIR): New macros.
+	(readdir_result_might_be_symlink, readdir_result_might_be_dir)
+	(convert_dirent, convert_dirent64): New functions.
+	(glob_in_dir): Use struct readdir_result.  Call convert_dirent or
+	convert_dirent64.  Adjust references to the readdir result.
+	* sysdeps/unix/sysv/linux/i386/glob64.c:
+	(convert_dirent, GL_READDIR): Redefine for second file inclusion.
+	* posix/bug-glob2.c (LONG_NAME): Define.
+	(filesystem): Add LONG_NAME.
+	(my_DIR): Increase the size of room_for_dirent.
+
+2016-04-29  Florian Weimer  <fweimer@redhat.com>
+
+	glob: Simplify and document the interface for the GLOB_ALTDIRFUNC
+	callback function gl_readdir.
+	* posix/glob.c (NAMELEN, CONVERT_D_NAMLEN): Remove.
+	(CONVERT_DIRENT_DIRENT64): Use strcpy instead of memcpy.
+	(glob_in_dir): Remove len.  Use strdup instead of malloc and
+	memcpy to copy the name.
+	* manual/pattern.texi (Calling Glob): Document requirements for
+	implementations of the gl_readdir callback function.
+	* manual/examples/mkdirent.c: New example.
+	* posix/bug-glob2.c (my_readdir): Set d_ino to 1 unconditionally,
+	per the manual guidance.
+	* posix/tst-gnuglob.c (my_readdir): Likewise.
+
+2016-04-04  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #19633]
+	Use specified locale for number formatting in strfmon_l.
+	* locale/localeinfo.h (__nl_lookup, _nl_lookup_wstr)
+	(__nl_lookup_word): New inline functions.
+	* include/printf.h (__print_fp_l): Declare.
+	* stdio-common/printf_fp.c (___printf_fp_l): Renamed from
+	___printf_fp.  Add locale argument.  Replace _NL_CURRENT with
+	_nl_lookup and _NL_CURRENT_WORD with _nl_lookup_word.
+	(___printf_fp): New function.
+	* stdlib/strfmon_l.c (__printf_fp): Remove declaration.
+	(__vstrfmon_l): Call __printf_fp_l instead of printf_fp.
+	* stdlib/tst-strfmon_l.c (do_test): New test.
+	* stdlib/Makefile (tests): Add kt.
+	(LOCALES): Build additional locales.
+	(tst-strfmon_l.out): Require locales.
+
+2016-03-25  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ# 19860]
+	* sysdeps/x86_64/tst-audit10.c (avx512_enabled): Always return
+	zero if the compiler does not provide the AVX512F bit.
+
+2016-03-08  Roland McGrath  <roland@hack.frob.com>
+
+	* sysdeps/x86_64/tst-audit10.c: #include <cpu-features.h>.
+	* sysdeps/x86_64/tst-audit10-aux.c: Move audit_test extern decl ...
+	(tst_audit10_aux) [__AVX512F__]: ... here.
+
+2016-03-07  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #19269]
+	* sysdeps/x86_64/Makefile (tst-audit4): Depend on
+	tst-audit4-aux.o.
+	(tst-audit10): Depend on tst-audit10-aux.o.
+	(CFLAGS-tst-audit4-aux.c): Compile with AVX enabled.
+	(CFLAGS-tst-audit10-aux.c): Compile with AVX512 enabled.
+	* sysdeps/x86_64/tst-audit4.c (do_test): Call tst_audit4_aux
+	instead of inline AVX code.
+	* sysdeps/x86_64/tst-audit10.c (do_test): Call tst_audit10_aux
+	instead of inline AVX512 code.
+	* sysdeps/x86_64/tst-audit4-aux.c: New file
+	* sysdeps/x86_64/tst-audit10-aux.c: New file
+
+2016-04-27  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #19825]
+	* resolv/res_send.c (send_vc): Remove early *resplen2
+	initialization.  Set *resplen2 on socket error.  Call
+	close_and_return_error for other errors.
+
+2016-03-25  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #19868]
+	* resolv/nss_dns/dns-network.c (getanswer_r): Implement additional
+	DNS packet syntax checks (which were not needed before).  Skip
+	over non-PTR records.
+
+2016-04-27  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #19831]
+	* resolv/nss_dns/dns-host.c (rrtype_to_rdata_length): New
+	function.
+	(getanswer_r): Check RDATA length against RRTYPE and QTYPE.
+	(gaih_getanswer_slice): Check RDATA length against RRTYPE.
+
+2016-04-27  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #19862]
+	* resolv/nss_dns/dns-host.c (AskedForGot): Remove.
+	(getanswer_r): Do not call syslog.
+	(gaih_getanswer_slice): Likewise.
+	* resolv/gethnamaddr.c (AskedForGot): Remove.
+	(getanswer): Do not call syslog.
+	(gethostbyaddr): Likewise.
+
+2016-04-27  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #19830]
+	* resolv/nss_dns/dns-host.c (getanswer_r): Check RDATA length.
+	(gaih_getanswer_slice): Likewise.
+	* resolv/nss_dns/dns-canon.c (_nss_dns_getcanonname_r): Likewise.
+	Also check for availability of RR metadata.
+
+2016-04-11  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #19865]
+	* resolv/nss_dns/dns-canon.c (_nss_dns_getcanonname_r): Restore
+	original buffer before retry.
+
+2016-04-14  Florian Weimer  <fweimer@redhat.com>
+
+	* malloc/arena.c (__malloc_fork_lock_parent)
+	(__malloc_fork_unlock_parent, __malloc_fork_unlock_child): Add
+	internal_function attribute.
+
+2016-04-14  Florian Weimer  <fweimer@redhat.com>
+
+	Remove malloc hooks from fork handler.  They are no longer needed
+	because malloc runs right before fork, and no malloc calls from
+	other fork handlers are not possible anymore.
+	* malloc/malloc.c (malloc_atfork, free_atfork): Remove
+	declarations.
+	* malloc/arena.c (save_malloc_hook, save_free_hook, save_arena)
+	(ATFORK_ARENA_PTR, malloc_atfork, free_atfork)
+	(atfork_recursive_cntr): Remove.
+	(__malloc_fork_lock_parent): Do not override malloc hooks and
+	thread_arena.
+	(__malloc_fork_unlock_parent): Do not restore malloc hooks and
+	thread_arena.
+	(__malloc_fork_unlock_child): Do not restore malloc hooks.  Use
+	thread_arena instead of save_arena.
+
+2016-04-14  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #19431]
+	Run the malloc fork handler as late as possible to avoid deadlocks.
+	* malloc/malloc-internal.h: New file.
+	* malloc/malloc.c: Include it.
+	* malloc/arena.c (ATFORK_MEM): Remove.
+	(__malloc_fork_lock_parent): Rename from ptmalloc_lock_all.
+	Update comment.
+	(__malloc_fork_unlock_parent): Rename from ptmalloc_unlock_all.
+	(__malloc_fork_unlock_child): Rename from ptmalloc_unlock_all2.
+	Remove outdated comment.
+	(ptmalloc_init): Do not call thread_atfork.  Remove
+	thread_atfork_static.
+	* malloc/tst-malloc-fork-deadlock.c: New file.
+	* Makefile (tests): Add tst-malloc-fork-deadlock.
+	(tst-malloc-fork-deadlock): Link against libpthread.
+	* manual/memory.texi (Aligned Memory Blocks): Update safety
+	annotation comments.
+	* sysdeps/nptl/fork.c (__libc_fork): Call
+	__malloc_fork_lock_parent, __malloc_fork_unlock_parent,
+	__malloc_fork_unlock_child.
+	* sysdeps/mach/hurd/fork.c (__fork): Likewise.
+
+2016-03-22  Samuel Thibault  <samuel.thibault@ens-lyon.org>
+
+	* malloc/Makefile ($(objpfx)tst-malloc-backtrace,
+	$(objpfx)tst-malloc-thread-exit, $(objpfx)tst-malloc-thread-fail): Use
+	$(shared-thread-library) instead of hardcoding the path to libpthread.
+
+2016-02-19  Florian Weimer  <fweimer@redhat.com>
+
+	* sysdeps/generic/malloc-machine.h: Assume mutex_init is always
+	available.  Do not define NO_THREADS.
+	* malloc/malloc.c: Do not check NO_THREADS.
+	* malloc/arena.c: Likewise.
+
+2016-05-02  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #20031]
+	* hesiod/hesiod.c (get_txt_records): Return error if TXT record is
+	completely empty.
+
+2016-05-02  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #19573]
+	* hesiod/Makefile (libnss_hesiod-routines): Remove hesiod-init.
+	* hesiod/nss_hesiod/hesiod-init.c: Remove file.
+	* hesiod/nss_hesiod/nss_hesiod.h: Likewise.
+	* hesiod/hesiod.h (__hesiod_res_get, __hesiod_res_set): Remove.
+	(hesiod_init, hesiod_end, hesiod_to_bind, hesiod_resolve)
+	(hesiod_free_list): Mark as hidden.
+	* hesiod/hesiod_p (struct hesiod_p): Remove res, free_res,
+	res_set, res_get.
+	* hesiod/hesiod.c: Remove unnecessary forward declarations.
+	(init, __hesiod_res_get, __hesiod_res_set): Remove.
+	(hesiod_init): Remove obsolete res_ninit call.
+	(hesiod_end): Do not free resolver state.  Do not invoke callback.
+	(hesiod_bind): Do not call init.
+	(get_txt_records): Use res_mkquery, res_send instead of
+	res_nmkquery, res_nsend.
+	* hesiod/nss_hesiod/hesiod-grp.c (lookup): Call hesiod_init
+	instead of _nss_hesiod_init.
+	(_nss_hesiod_initgroups_dyn): Likewise.
+	* hesiod/nss_hesiod/hesiod-proto.c (lookup): Likewise.
+	* hesiod/nss_hesiod/hesiod-pwd.c (lookup): Likewise.
+	* hesiod/nss_hesiod/hesiod-service.c (lookup): Likewise.
+
+2016-05-02  Florian Weimer  <fweimer@redhat.com>
+
+	* hesiod/hesiod.h: Remove RCS keyword.
+	* hesiod/hesiod_p.h: Likewise.
+	* hesiod/hesiod.c: Likewise.
+
+2016-05-04  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #19787]
+	* inet/getnameinfo.c (check_sprintf_result): New function.
+	(CHECKED_SNPRINTF): New macro.
+	(gni_host_inet_numeric): Use CHECKED_SNPRINTF to write the scope
+	to the host buffer.
+	(gni_host_local): Use checked_copy to copy the host name.
+	(gni_serv_inet): Use CHECKED_SNPRINTF to write the service name.
+	(gni_serv_local): Use checked_copy to copy the service name.
+	(getnameinfo): Remove unnecessary truncation of result buffers.
+
+2016-05-04  Florian Weimer  <fweimer@redhat.com>
+
+	* inet/getnameinfo.c (gni_host_inet_numeric): Return EAI_OVERFLOW
+	in case of inet_ntop failure.
+
+2016-05-04  Florian Weimer  <fweimer@redhat.com>
+
+	* inet/getnameinfo.c (gni_host_inet_name): Use temporaries to
+	avoid long lines.
+	(gni_host_inet_numeric): Likewise.  Reduce scope of local
+	variables.
+	(gni_host_inet, gni_host_local): Add comment.
+	(gni_host): Add comment.  Use temporary to avoid long lines.
+
+2016-04-29  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #19642]
+	* inet/getnameinfo.c (gni_host_inet_name, gni_host_inet_numeric)
+	(gni_host_inet, gni_host_local, gni_host, gni_serv_inet)
+	(gni_serv_local, gni_serv): New functions extracted from
+	getnameinfo.
+	(getnameinfo): Call gni_host and gni_serv to perform the
+	processing.  Always free scratch buffer.
+
+2016-04-28  Florian Weimer  <fweimer@redhat.com>
+
+	* inet/getnameinfo.c (getnameinfo): Do not preserve errno.
+
+2016-03-29  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #19837]
+	* nss/nss_db/db-XXX.c (_nss_db_getENTNAME_r): Propagate ERANGE
+	error if parse_line fails.
+
+2016-04-20  Yvan Roux  <yvan.roux@linaro.org>
+
+	* stdlib/setenv.c (unsetenv): Fix ambiguous 'else'.
+	* nis/nis_call.c (nis_server_cache_add): Likewise.
+
+2016-04-09  Mike Frysinger  <vapier@gentoo.org>
+
+	* sysdeps/i386/configure.ac: Change == to = when calling test.
+	* sysdeps/x86_64/configure.ac: Likewise.
+	* sysdeps/i386/configure: Regenerated.
+	* sysdeps/x86_64/configure: Likewise.
+
+2016-04-01  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #19879]
+	CVE-2016-3075
+	* resolv/nss_dns/dns-network.c (_nss_dns_getnetbyname_r): Do not
+	copy name.
+
+2016-04-01  Stefan Liebler  <stli@linux.vnet.ibm.com>
+
+	* sysdeps/s390/bits/link.h: (La_s390_vr) New typedef.
+	(La_s390_32_regs): Append vector register lr_v24-lr_v31.
+	(La_s390_64_regs): Likewise.
+	(La_s390_32_retval): Append vector register lrv_v24.
+	(La_s390_64_retval): Likeweise.
+	* sysdeps/s390/s390-32/dl-trampoline.h (_dl_runtime_profile):
+	Handle extended structs La_s390_32_regs and La_s390_32_retval.
+	* sysdeps/s390/s390-64/dl-trampoline.h (_dl_runtime_profile):
+	Handle extended structs La_s390_64_regs and La_s390_64_retval.
+
+2016-04-01  Stefan Liebler  <stli@linux.vnet.ibm.com>
+
+	* sysdeps/s390/s390-32/dl-trampoline.S: Include dl-trampoline.h twice
+	to create a non-vector/vector version for _dl_runtime_resolve and
+	_dl_runtime_profile. Move implementation to ...
+	* sysdeps/s390/s390-32/dl-trampoline.h: ... here.
+	(_dl_runtime_resolve) Save and restore fpr/vrs.
+	(_dl_runtime_profile) Save and restore vrs and fix some issues
+	if _dl_call_pltexit is called.
+	* sysdeps/s390/s390-32/dl-machine.h (elf_machine_runtime_setup):
+	Choose the correct resolver function if running on a machine with vx.
+	* sysdeps/s390/s390-64/dl-trampoline.S: Include dl-trampoline.h twice
+	to create a non-vector/vector version for _dl_runtime_resolve and
+	_dl_runtime_profile. Move implementation to ...
+	* sysdeps/s390/s390-64/dl-trampoline.h: ... here.
+	(_dl_runtime_resolve) Save and restore fpr/vrs.
+	(_dl_runtime_profile) Save and restore vrs and fix some issues
+	* sysdeps/s390/s390-64/dl-machine.h: (elf_machine_runtime_setup):
+	Choose the correct resolver function if running on a machine with vx.
+
+2016-03-25  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #19791]
+	* resolv/res_send.c (close_and_return_error): New function.
+	(send_dg): Initialize *resplen2 after reopen failure.  Call
+	close_and_return_error for error returns.  On error paths without
+	__res_iclose, initialze *resplen2 explicitly.  Update comment for
+	successful return.
+
+2016-03-21  Dylan Alex Simon  <dylan-sourceware@dylex.net>
+
+	[BZ #19822]
+	* math/Makefile ($(inst_libdir)/libm.so): Write output to $@.tmp and
+	move it to the final $@ location.
+
+2016-03-15  Andreas Schwab  <schwab@suse.de>
+
+	[BZ #19257]
+	* resolv/res_init.c (__res_iclose): Use statp->nscount instead of
+	statp->_u._ext.nscount as loop count.
+
+2016-03-11  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #19758]
+	* sysdeps/unix/sysv/linux/x86_64/64/dl-librecon.h
+	(EXTRA_LD_ENVVARS): Or bit_Prefer_MAP_32BIT_EXEC.
+
+2016-03-11  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #19759]
+	* sysdeps/x86/bits/string.h (_HAVE_STRING_ARCH_mempcpy): New.
+
+2016-03-10  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #19762]
+	* sysdeps/i386/i686/multiarch/bcopy.S (bcopy): Use
+	HAS_ARCH_FEATURE with Fast_Rep_String.
+	* sysdeps/i386/i686/multiarch/bzero.S (__bzero): Likewise.
+	* sysdeps/i386/i686/multiarch/memcpy.S (memcpy): Likewise.
+	* sysdeps/i386/i686/multiarch/memcpy_chk.S (__memcpy_chk):
+	Likewise.
+	* sysdeps/i386/i686/multiarch/memmove_chk.S (__memmove_chk):
+	Likewise.
+	* sysdeps/i386/i686/multiarch/mempcpy.S (__mempcpy): Likewise.
+	* sysdeps/i386/i686/multiarch/mempcpy_chk.S (__mempcpy_chk):
+	Likewise.
+	* sysdeps/i386/i686/multiarch/memset.S (memset): Likewise.
+	* sysdeps/i386/i686/multiarch/memset_chk.S (__memset_chk):
+	Likewise.
+
+2016-03-09  Aurelien Jarno  <aurelien@aurel32.net>
+
+	[BZ #19792]
+	* sysdeps/unix/sysv/linux/mips/makecontext.S (__makecontext):
+	Terminate FDE before return label.
+
+2016-03-08  Aurelien Jarno  <aurelien@aurel32.net>
+
+	* include/sys/auxv.h: New file.
+
+2016-03-07  Hongjiu Zhang  <noctuorare@gmail.com>
+
+	* elf/sln.c (makesymlink): Change struct stat to stat64, and lstat
+	to lstat64.
+
+2016-02-24  Marko Myllynen  <myllynen@redhat.com>
+
+	* NEWS (2.23): Fix typo in bug 19048 text.
+
+2016-02-24  Andreas Schwab  <schwab@suse.de>
+
+	* math/test-math-isinff.cc (do_test): Only call isinfl and isnanl
+	if !NO_LONG_DOUBLE.
+
+2016-02-22  Roland McGrath  <roland@hack.frob.com>
+
+	* sysdeps/arm/nacl/libc.abilist (GLIBC_2.23): Add GLIBC_2.23,
+	fts64_children, fts64_close, fts64_open, fts64_read and fts64_set.
+
+2016-02-22  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #19679]
+	* sysdeps/x86_64/dl-trampoline.S (DL_RUNIME_UNALIGNED_VEC_SIZE):
+	Renamed to ...
+	(DL_RUNTIME_UNALIGNED_VEC_SIZE): This.  Set to 8.
+	(DL_RUNIME_RESOLVE_REALIGN_STACK): Renamed to ...
+	(DL_RUNTIME_RESOLVE_REALIGN_STACK): This.  Updated.
+	(DL_RUNIME_RESOLVE_REALIGN_STACK): Renamed to ...
+	(DL_RUNTIME_RESOLVE_REALIGN_STACK): This.
+	* sysdeps/x86_64/dl-trampoline.h
+	(DL_RUNIME_RESOLVE_REALIGN_STACK): Renamed to ...
+	(DL_RUNTIME_RESOLVE_REALIGN_STACK): This.
+
 2016-02-18  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	* configure: Regenerated.
+
+	* po/libc.pot: Regenerated.
+
+	* po/be.po: Updated translation.
+	* po/bg.po: Likewise.
+	* po/ca.po: Likewise.
+	* po/cs.po: Likewise.
+	* po/da.po: Likewise.
+	* po/el.po: Likewise.
+	* po/eo.po: Likewise.
+	* po/es.po: Likewise.
+	* po/fi.po: Likewise.
+	* po/fr.po: Likewise.
+	* po/gl.po: Likewise.
+	* po/hr.po: Likewise.
+	* po/hu.po: Likewise.
+	* po/ia.po: Likewise.
+	* po/id.po: Likewise.
+	* po/it.po: Likewise.
+	* po/ja.po: Likewise.
+	* po/lt.po: Likewise.
+	* po/nb.po: Likewise.
+	* po/nl.po: Likewise.
+	* po/pt_BR.po: Likewise.
+	* po/rw.po: Likewise.
+	* po/sk.po: Likewise.
+	* po/sl.po: Likewise.
+	* po/sv.po: Likewise.
+	* po/tr.po: Likewise.
+	* po/zh_CN.po: Likewise.
+	* po/zh_TW.po: Likewise.
 
 	* version.h (RELEASE): Set to "stable".
 	(VERSION): Set to 2.23.

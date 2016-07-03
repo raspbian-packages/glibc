@@ -1,6 +1,6 @@
-/* Copyright (C) 2000-2016 Free Software Foundation, Inc.
+/* Test case for preserved AVX registers in dynamic linker, -mavx part.
+   Copyright (C) 2009-2016 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
-   Contributed by Mark Kettenis <kettenis@phys.uva.nl>, 2000.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -16,5 +16,24 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-/* Initialize a Hesiod context.  */
-extern void *_nss_hesiod_init (void);
+#include <immintrin.h>
+#include <stdlib.h>
+#include <string.h>
+
+extern __m256i audit_test (__m256i, __m256i, __m256i, __m256i,
+			   __m256i, __m256i, __m256i, __m256i);
+
+int
+tst_audit4_aux (void)
+{
+#ifdef __AVX__
+  __m256i ymm = _mm256_setzero_si256 ();
+  __m256i ret = audit_test (ymm, ymm, ymm, ymm, ymm, ymm, ymm, ymm);
+  ymm =	 _mm256_set1_epi32 (0x12349876);
+  if (memcmp (&ymm, &ret, sizeof (ret)))
+    abort ();
+  return 0;
+#else  /* __AVX__ */
+  return 77;
+#endif  /* __AVX__ */
+}
