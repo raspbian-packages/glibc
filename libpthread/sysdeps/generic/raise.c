@@ -18,8 +18,10 @@
    License along with this program.  If not, see
    <http://www.gnu.org/licenses/>.  */
 
-#include "sig-internal.h"
+#include <pthread.h>
 
+#pragma weak pthread_kill
+#pragma weak pthread_self
 int
 raise (int signo)
 {
@@ -27,9 +29,11 @@ raise (int signo)
      "the effect of the raise() function shall be equivalent to
      calling: pthread_kill(pthread_self(), sig);"  */
 
-debug (0, "");
-  int err = pthread_kill (pthread_self (), signo);
-debug (0, "");
+  int err;
+  if (pthread_kill)
+    err = pthread_kill (pthread_self (), signo);
+  else
+    err = __kill (__getpid (), signo);
   if (err)
     {
       errno = err;
