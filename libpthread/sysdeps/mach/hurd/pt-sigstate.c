@@ -43,24 +43,27 @@ __pthread_sigstate (struct __pthread *thread, int how,
     *oset = ss->blocked;
 
   if (set)
-    switch (how)
-      {
-      case SIG_BLOCK:
-	ss->blocked |= *set;
-	break;
+    {
+      switch (how)
+	{
+	case SIG_BLOCK:
+	  ss->blocked |= *set;
+	  break;
 
-      case SIG_SETMASK:
-	ss->blocked = *set;
-	break;
+	case SIG_SETMASK:
+	  ss->blocked = *set;
+	  break;
 
-      case SIG_UNBLOCK:
-	ss->blocked &= ~*set;
-	break;
+	case SIG_UNBLOCK:
+	  ss->blocked &= ~*set;
+	  break;
 
-      default:
-	err = EINVAL;
-	break;
-      }
+	default:
+	  err = EINVAL;
+	  break;
+	}
+      ss->blocked &= ~_SIG_CANT_MASK;
+    }
 
   if (! err && clear_pending)
     __sigemptyset (&ss->pending);
