@@ -23,20 +23,37 @@
 #include <shlib-compat.h>
 #include <pthread-functions.h>
 
+#include <shlib-compat.h>
+
 /* Pointers to the libc functions.  */
 struct pthread_functions __libc_pthread_functions attribute_hidden;
 int __libc_pthread_functions_init attribute_hidden;
 
-
 # define FORWARD2(name, rettype, decl, params, defaction) \
 rettype									      \
-name decl								      \
+__##name decl								      \
 {									      \
   if (!__libc_pthread_functions_init)			      \
     defaction;								      \
 									      \
   return PTHFCT_CALL (ptr_##name, params);			      \
-}
+} \
+versioned_symbol (libc, __##name, name, GLIBC_2_21); \
+
+#if SHLIB_COMPAT (libc, GLIBC_2_13, GLIBC_2_21)
+# define FORWARD2_COMPAT(name, rettype, decl, params, defaction) \
+rettype									      \
+__##name##_2_13 decl							      \
+{									      \
+  if (!__libc_pthread_functions_init)			      \
+    defaction;								      \
+									      \
+  return PTHFCT_CALL (ptr_##name, params);			      \
+} \
+compat_symbol (libc, __##name##_2_13, name, GLIBC_2_13_DEBIAN_31);
+#else
+# define FORWARD2_COMPAT(name, rettype, decl, params, defaction)
+#endif
 
 /* Same as FORWARD2, only without return.  */
 # define FORWARD_NORETURN(name, rettype, decl, params, defaction) \
@@ -47,10 +64,19 @@ name decl								      \
     defaction;								      \
 									      \
   PTHFCT_CALL (ptr_##name, params);			      \
+} \
+rettype									      \
+name##_2_13 decl								      \
+{									      \
+  if (!__libc_pthread_functions_init)			      \
+    defaction;								      \
+									      \
+  PTHFCT_CALL (ptr_##name, params);			      \
 }
 
 # define FORWARD(name, decl, params, defretval) \
-  FORWARD2 (name, int, decl, params, return defretval)
+  FORWARD2 (name, int, decl, params, return defretval) \
+  FORWARD2_COMPAT (name, int, decl, params, return defretval)
 
 FORWARD (pthread_attr_destroy, (pthread_attr_t *attr), (attr), 0)
 
@@ -107,7 +133,10 @@ FORWARD (pthread_equal, (pthread_t thread1, pthread_t thread2),
 
 /* Use an alias to avoid warning, as pthread_exit is declared noreturn.  */
 FORWARD_NORETURN (__pthread_exit, void, (void *retval), (retval), exit (EXIT_SUCCESS))
-strong_alias (__pthread_exit, pthread_exit);
+versioned_symbol (libc, __pthread_exit, pthread_exit, GLIBC_2_21);
+#if SHLIB_COMPAT (libc, GLIBC_2_13, GLIBC_2_21)
+compat_symbol (libc, __pthread_exit_2_13, pthread_exit, GLIBC_2_13_DEBIAN_31);
+#endif
 
 
 FORWARD (pthread_getschedparam,
@@ -130,6 +159,7 @@ FORWARD (pthread_mutex_unlock, (pthread_mutex_t *mutex), (mutex), 0)
 
 
 FORWARD2 (pthread_self, pthread_t, (void), (), return 0)
+FORWARD2_COMPAT (pthread_self, pthread_t, (void), (), return 0)
 
 
 FORWARD (__pthread_setcancelstate, (int state, int *oldstate), (state, oldstate),
@@ -139,6 +169,7 @@ FORWARD (pthread_setcanceltype, (int type, int *oldtype), (type, oldtype), 0)
 
 struct __pthread_cancelation_handler *dummy_list;
 FORWARD2 (__pthread_get_cleanup_stack, struct __pthread_cancelation_handler **, (void), (), return &dummy_list);
+FORWARD2_COMPAT (__pthread_get_cleanup_stack, struct __pthread_cancelation_handler **, (void), (), return &dummy_list);
 
 
 /* Fork interaction */
