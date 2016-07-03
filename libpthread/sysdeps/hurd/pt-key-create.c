@@ -108,4 +108,3 @@ __pthread_key_create (pthread_key_t *key, void (*destructor) (void *))
   return 0;
 }
 strong_alias (__pthread_key_create, pthread_key_create)
-hidden_def (__pthread_key_create)
