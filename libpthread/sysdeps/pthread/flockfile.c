@@ -18,7 +18,7 @@
 
 #include <stdio.h>
 #include <libio.h>
-#include <bits/libc-lock.h>
+#include <libc-lock.h>
 
 
 void
