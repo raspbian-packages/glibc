@@ -38,3 +38,11 @@ endif
 ifeq ($(subdir),elf)
 CFLAGS-rtld.c += -Wno-uninitialized -Wno-unused
 endif
+ 
+ifeq ($(subdir),csu)
+ifeq (yes,$(build-shared))
+# Compatibility
+sysdep_routines += libgcc-compat
+shared-only-routines += libgcc-compat
+endif
+endif
