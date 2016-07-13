@@ -53,6 +53,7 @@
 
 /* COMMON_CPUID_INDEX_7.  */
 #define bit_RTM		(1 << 11)
+#define bit_HLE		(1 << 4)
 #define bit_AVX2	(1 << 5)
 #define bit_AVX512F	(1 << 16)
 #define bit_AVX512DQ	(1 << 17)
