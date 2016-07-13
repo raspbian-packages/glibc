@@ -24,3 +24,5 @@ fi
 if test -n "$sysheaders"; then
   CPPFLAGS=$OLD_CPPFLAGS
 fi
+
+use_ldconfig=yes
