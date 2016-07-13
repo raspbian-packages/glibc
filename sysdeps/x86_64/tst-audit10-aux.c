@@ -1,6 +1,6 @@
-/* Copyright (C) 2000-2016 Free Software Foundation, Inc.
+/* Test case for preserved AVX512 registers in dynamic linker, -mavx512f part.
+   Copyright (C) 2012-2016 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
-   Contributed by Mark Kettenis <kettenis@phys.uva.nl>, 2000.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -16,23 +16,26 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-#include <sys/cdefs.h>		/* Needs to come before <hesiod.h>.  */
-#include <hesiod.h>
-#include <resolv.h>
-#include <stddef.h>
+#include <immintrin.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "nss_hesiod.h"
-
-void *
-_nss_hesiod_init (void)
+int
+tst_audit10_aux (void)
 {
-  void *context;
+#ifdef __AVX512F__
+  extern __m512i audit_test (__m512i, __m512i, __m512i, __m512i,
+                             __m512i, __m512i, __m512i, __m512i);
 
-  if (hesiod_init (&context) == -1)
-    return NULL;
+  __m512i zmm = _mm512_setzero_si512 ();
+  __m512i ret = audit_test (zmm, zmm, zmm, zmm, zmm, zmm, zmm, zmm);
 
-  /* Use the default (per-thread) resolver state.  */
-  __hesiod_res_set (context, &_res, NULL);
+  zmm = _mm512_set1_epi64 (0x12349876);
 
-  return context;
+  if (memcmp (&zmm, &ret, sizeof (ret)))
+    abort ();
+  return 0;
+#else /* __AVX512F__ */
+  return 77;
+#endif /* __AVX512F__ */
 }
