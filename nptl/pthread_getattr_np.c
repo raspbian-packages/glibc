@@ -58,7 +58,11 @@ pthread_getattr_np (pthread_t thread_id, pthread_attr_t *attr)
   if (__glibc_likely (thread->stackblock != NULL))
     {
       iattr->stacksize = thread->stackblock_size;
+#ifdef _STACK_GROWS_DOWN
       iattr->stackaddr = (char *) thread->stackblock + iattr->stacksize;
+#else
+      iattr->stackaddr = (char *) thread->stackblock;
+#endif
     }
   else
     {
