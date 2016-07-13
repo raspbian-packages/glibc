@@ -103,7 +103,7 @@ _hurd_tls_init (tcbhead_t *tcb)
 
   /* Get the first available selector.  */
   int sel = -1;
-  error_t err = __i386_set_gdt (tcb->self, &sel, desc);
+  kern_return_t err = __i386_set_gdt (tcb->self, &sel, desc);
   if (err == MIG_BAD_ID)
     {
       /* Old kernel, use a per-thread LDT.  */
@@ -151,9 +151,9 @@ _hurd_tls_init (tcbhead_t *tcb)
 
 # include <mach/machine/thread_status.h>
 
-/* Set up TLS in the new thread of a fork child, copying from our own.  */
-static inline error_t __attribute__ ((unused))
-_hurd_tls_fork (thread_t child, struct i386_thread_state *state)
+/* Set up TLS in the new thread of a fork child, copying from the original.  */
+static inline kern_return_t __attribute__ ((unused))
+_hurd_tls_fork (thread_t child, thread_t orig, struct i386_thread_state *state)
 {
   /* Fetch the selector set by _hurd_tls_init.  */
   int sel;
@@ -161,11 +161,44 @@ _hurd_tls_fork (thread_t child, struct i386_thread_state *state)
   if (sel == state->ds)		/* _hurd_tls_init was never called.  */
     return 0;
 
-  tcbhead_t *const tcb = THREAD_SELF;
-  HURD_TLS_DESC_DECL (desc, tcb);
-  error_t err;
+  struct descriptor desc, *_desc = &desc;
+  int err;
+  unsigned int count = 1;
 
-  if (__builtin_expect (sel, 0x50) & 4) /* LDT selector */
+  if (__builtin_expect (sel, 0x48) & 4) /* LDT selector */
+    err = __i386_get_ldt (orig, sel, 1, &_desc, &count);
+  else
+    err = __i386_get_gdt (orig, sel, &desc);
+
+  assert_perror (err);
+  if (err)
+    return err;
+
+  if (__builtin_expect (sel, 0x48) & 4) /* LDT selector */
+    err = __i386_set_ldt (child, sel, &desc, 1);
+  else
+    err = __i386_set_gdt (child, &sel, desc);
+
+  state->gs = sel;
+  return err;
+}
+
+static inline kern_return_t __attribute__ ((unused))
+_hurd_tls_new (thread_t child, struct i386_thread_state *state, tcbhead_t *tcb)
+{
+  /* Fetch the selector set by _hurd_tls_init.  */
+  int sel;
+  asm ("mov %%gs, %w0" : "=q" (sel) : "0" (0));
+  if (sel == state->ds)		/* _hurd_tls_init was never called.  */
+    return 0;
+
+  HURD_TLS_DESC_DECL (desc, tcb);
+  kern_return_t err;
+
+  tcb->tcb = tcb;
+  tcb->self = child;
+
+  if (__builtin_expect (sel, 0x48) & 4) /* LDT selector */
     err = __i386_set_ldt (child, sel, &desc, 1);
   else
     err = __i386_set_gdt (child, &sel, desc);
