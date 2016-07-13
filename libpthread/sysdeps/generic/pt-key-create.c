@@ -21,9 +21,10 @@
 #include <pt-internal.h>
 
 int
-pthread_key_create (pthread_key_t *key, void (*destructor) (void *))
+__pthread_key_create (pthread_key_t *key, void (*destructor) (void *))
 {
   return ENOSYS;
 }
 
+strong_alias (__pthread_key_create, pthread_key_create)
 stub_warning (pthread_key_create)
