@@ -33,6 +33,6 @@ extern int pthread_hurd_cond_wait_np (pthread_cond_t *__restrict __cond,
    See hurd_thread_cancel.  */
 extern int pthread_hurd_cond_timedwait_np (pthread_cond_t *__restrict __cond,
 					   pthread_mutex_t *__restrict __mutex,
-					   const struct timespec *abstime);
+					   const struct timespec *__abstime);
 
 #endif /* bits/pthread-np.h */
