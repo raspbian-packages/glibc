@@ -1510,6 +1510,7 @@ send_dg(res_state statp,
 				(*thisresplenp > *thisanssizp)
 				? *thisanssizp : *thisresplenp);
 
+		next_ns:
 			if (recvresp1 || (buf2 != NULL && recvresp2)) {
 			  *resplen2 = 0;
 			  return resplen;
@@ -1527,7 +1528,6 @@ send_dg(res_state statp,
 			    goto wait;
 			  }
 
-		next_ns:
 			/* don't retry if called from dig */
 			if (!statp->pfcode)
 			  return close_and_return_error (statp, resplen2);
