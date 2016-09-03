@@ -43,7 +43,7 @@ __spawni (pid_t *pid, const char *file,
 	  int xflags)
 {
   pid_t new_pid;
-  char *path, *p, *name;
+  char *path, *p, *name, *filename;
   size_t len;
   size_t pathlen;
   short int flags;
@@ -59,14 +59,14 @@ __spawni (pid_t *pid, const char *file,
      that remains visible after an exec is registration with the proc
      server, and the inheritance of various values and ports.  All those
      inherited values and ports are what get collected up and passed in the
-     file_exec RPC by an exec call.  So we do the proc server registration
-     here, following the model of fork (see fork.c).  We then collect up
-     the inherited values and ports from this (parent) process following
-     the model of exec (see hurd/hurdexec.c), modify or replace each value
-     that fork would (plus the specific changes demanded by ATTRP and
-     FILE_ACTIONS), and make the file_exec RPC on the requested executable
-     file with the child process's task port rather than our own.  This
-     should be indistinguishable from the fork + exec implementation,
+     file_exec_file_name RPC by an exec call.  So we do the proc server
+     registration here, following the model of fork (see fork.c).  We then
+     collect up the inherited values and ports from this (parent) process
+     following the model of exec (see hurd/hurdexec.c), modify or replace each
+     value that fork would (plus the specific changes demanded by ATTRP and
+     FILE_ACTIONS), and make the file_exec_file_name RPC on the requested
+     executable file with the child process's task port rather than our own.
+     This should be indistinguishable from the fork + exec implementation,
      except that all errors will be detected here (in the parent process)
      and return proper errno codes rather than the child dying with 127.
 
@@ -546,7 +546,7 @@ __spawni (pid_t *pid, const char *file,
 
   if ((xflags & SPAWN_XFLAGS_USE_PATH) == 0 || strchr (file, '/') != NULL)
     /* The FILE parameter is actually a path.  */
-    err = child_lookup (file, O_EXEC, 0, &execfile);
+    err = child_lookup (filename = file, O_EXEC, 0, &execfile);
   else
     {
       /* We have to search for FILE on the path.  */
@@ -573,20 +573,18 @@ __spawni (pid_t *pid, const char *file,
       p = path;
       do
 	{
-	  char *startp;
-
 	  path = p;
 	  p = __strchrnul (path, ':');
 
 	  if (p == path)
 	    /* Two adjacent colons, or a colon at the beginning or the end
 	       of `PATH' means to search the current directory.  */
-	    startp = name + 1;
+	    filename = name + 1;
 	  else
-	    startp = (char *) memcpy (name - (p - path), path, p - path);
+	    filename = (char *) memcpy (name - (p - path), path, p - path);
 
 	  /* Try to open this file name.  */
-	  err = child_lookup (startp, O_EXEC, 0, &execfile);
+	  err = child_lookup (filename, O_EXEC, 0, &execfile);
 	  switch (err)
 	    {
 	    case EACCES:
@@ -623,14 +621,27 @@ __spawni (pid_t *pid, const char *file,
 
     inline error_t exec (file_t file)
       {
-	return __file_exec (file, task,
-			    (__sigismember (&_hurdsig_traced, SIGKILL)
-			     ? EXEC_SIGTRAP : 0),
-			    args, argslen, env, envlen,
-			    dtable, MACH_MSG_TYPE_COPY_SEND, dtablesize,
-			    ports, MACH_MSG_TYPE_COPY_SEND, _hurd_nports,
-			    ints, INIT_INT_MAX,
-			    NULL, 0, NULL, 0);
+	error_t err = __file_exec_file_name
+	  (file, task,
+	   __sigismember (&_hurdsig_traced, SIGKILL) ? EXEC_SIGTRAP : 0,
+	   filename, args, argslen, env, envlen,
+	   dtable, MACH_MSG_TYPE_COPY_SEND, dtablesize,
+	   ports, MACH_MSG_TYPE_COPY_SEND, _hurd_nports,
+	   ints, INIT_INT_MAX, NULL, 0, NULL, 0);
+
+	/* Fallback for backwards compatibility.  This can just be removed
+	   when __file_exec goes away.  */
+	if (err == MIG_BAD_ID)
+	  return __file_exec (file, task,
+			      (__sigismember (&_hurdsig_traced, SIGKILL)
+			      ? EXEC_SIGTRAP : 0),
+			      args, argslen, env, envlen,
+			      dtable, MACH_MSG_TYPE_COPY_SEND, dtablesize,
+			      ports, MACH_MSG_TYPE_COPY_SEND, _hurd_nports,
+			      ints, INIT_INT_MAX,
+			      NULL, 0, NULL, 0);
+
+	return err;
       }
 
     /* Now we are out of things that can fail before the file_exec RPC,
