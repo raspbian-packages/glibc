@@ -1,5 +1,5 @@
-/* Extendible version of getcontext for System z
-   Copyright (C) 2013 Free Software Foundation, Inc.
+/* BZ #16046 dl_iterate_phdr static executable test.
+   Copyright (C) 2014 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,23 +16,32 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-#include <libc-symbols.h>
-#include <shlib-compat.h>
+#include <link.h>
 
-versioned_symbol (libc, __v2getcontext, getcontext, GLIBC_2_19)
-#define __getcontext __v2getcontext
+/* Check that the link map of the static executable itself is iterated
+   over exactly once.  */
 
-#include "getcontext-common.S"
+static int
+callback (struct dl_phdr_info *info, size_t size, void *data)
+{
+  int *count = data;
 
-#undef __getcontext
+  if (info->dlpi_name[0] == '\0')
+    (*count)++;
 
-libc_hidden_ver (__v2getcontext, getcontext)
+  return 0;
+}
 
-#if defined SHARED && SHLIB_COMPAT (libc, GLIBC_2_1, GLIBC_2_19)
-# define __V1_UCONTEXT
-compat_symbol (libc, __v1getcontext, getcontext, GLIBC_2_1)
-# define __getcontext __v1getcontext
-# include "getcontext-common.S"
-# undef __getcontext
+static int
+do_test (void)
+{
+  int count = 0;
+  int status;
 
-#endif
+  status = dl_iterate_phdr (callback, &count);
+
+  return status || count != 1;
+}
+
+#define TEST_FUNCTION do_test ()
+#include "../test-skeleton.c"

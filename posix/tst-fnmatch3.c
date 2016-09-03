@@ -1,5 +1,5 @@
-/* Extendible version of setjmp for System z
-   Copyright (C) 2013 Free Software Foundation, Inc.
+/* Test for fnmatch not reading past the end of the pattern.
+   Copyright (C) 2014 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,5 +16,15 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-/* Build a non-versioned object for rtld-*.  */
-# include "setjmp-common.S"
+#include <fnmatch.h>
+
+int
+do_test (void)
+{
+  const char *pattern = "[[:alpha:]'[:alpha:]\0]";
+
+  return fnmatch (pattern, "a", 0) != FNM_NOMATCH;
+}
+
+#define TEST_FUNCTION do_test ()
+#include "../test-skeleton.c"
