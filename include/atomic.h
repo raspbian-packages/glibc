@@ -184,7 +184,7 @@
      __typeof (*(mem)) __atg5_value = (newvalue);			      \
 									      \
      do									      \
-       __atg5_oldval = *__atg5_memp;					      \
+       __atg5_oldval = *(volatile __typeof (mem))__atg5_memp;		      \
      while (__builtin_expect						      \
 	    (atomic_compare_and_exchange_bool_acq (__atg5_memp, __atg5_value, \
 						   __atg5_oldval), 0));	      \
@@ -209,7 +209,7 @@
      __typeof (*(mem)) __atg6_value = (value);				      \
 									      \
      do									      \
-       __atg6_oldval = *__atg6_memp;					      \
+       __atg6_oldval = *(volatile __typeof (mem))__atg6_memp;		      \
      while (__builtin_expect						      \
 	    (atomic_compare_and_exchange_bool_acq (__atg6_memp,		      \
 						   __atg6_oldval	      \
@@ -237,7 +237,7 @@
      __typeof (*(mem)) __atg7_value = (value);				      \
 									      \
      do									      \
-       __atg7_oldv = *__atg7_memp;					      \
+       __atg7_oldv = *(volatile __typeof (mem))__atg7_memp;		      \
      while (__builtin_expect						      \
 	    (catomic_compare_and_exchange_bool_acq (__atg7_memp,	      \
 						    __atg7_oldv		      \
@@ -255,7 +255,7 @@
     __typeof (mem) __atg8_memp = (mem);					      \
     __typeof (*(mem)) __atg8_value = (value);				      \
     do {								      \
-      __atg8_oldval = *__atg8_memp;					      \
+      __atg8_oldval = *(volatile __typeof (mem))__atg8_memp;		      \
       if (__atg8_oldval >= __atg8_value)				      \
 	break;								      \
     } while (__builtin_expect						      \
@@ -272,7 +272,7 @@
     __typeof (mem) __atg9_memp = (mem);					      \
     __typeof (*(mem)) __atg9_value = (value);				      \
     do {								      \
-      __atg9_oldv = *__atg9_memp;					      \
+      __atg9_oldv = *(volatile __typeof (mem))__atg9_memp;		      \
       if (__atg9_oldv >= __atg9_value)					      \
 	break;								      \
     } while (__builtin_expect						      \
@@ -290,7 +290,7 @@
     __typeof (mem) __atg10_memp = (mem);				      \
     __typeof (*(mem)) __atg10_value = (value);				      \
     do {								      \
-      __atg10_oldval = *__atg10_memp;					      \
+      __atg10_oldval = *(volatile __typeof (mem))__atg10_memp;		      \
       if (__atg10_oldval <= __atg10_value)				      \
 	break;								      \
     } while (__builtin_expect						      \
@@ -374,7 +374,7 @@
 									      \
      do									      \
        {								      \
-	 __atg11_oldval = *__atg11_memp;				      \
+	 __atg11_oldval = *(volatile __typeof (mem))__atg11_memp;	      \
 	 if (__builtin_expect (__atg11_oldval <= 0, 0))			      \
 	   break;							      \
        }								      \
@@ -413,7 +413,7 @@
      __typeof (*(mem)) __atg14_mask = ((__typeof (*(mem))) 1 << (bit));	      \
 									      \
      do									      \
-       __atg14_old = (*__atg14_memp);					      \
+       __atg14_old = (*(volatile __typeof (mem))__atg14_memp);		      \
      while (__builtin_expect						      \
 	    (atomic_compare_and_exchange_bool_acq (__atg14_memp,	      \
 						   __atg14_old | __atg14_mask,\
@@ -431,7 +431,7 @@
     __typeof (*(mem)) __atg15_mask = (mask);				      \
 									      \
     do									      \
-      __atg15_old = (*__atg15_memp);					      \
+      __atg15_old = (*(volatile __typeof (mem))__atg15_memp);		      \
     while (__builtin_expect						      \
 	   (atomic_compare_and_exchange_bool_acq (__atg15_memp,		      \
 						  __atg15_old & __atg15_mask, \
@@ -463,7 +463,7 @@
      __typeof (*(mem)) __atg16_mask = (mask);				      \
 									      \
      do									      \
-       __atg16_old = (*__atg16_memp);					      \
+       __atg16_old = (*(volatile __typeof (mem))__atg16_memp);		      \
      while (__builtin_expect						      \
 	    (atomic_compare_and_exchange_bool_acq (__atg16_memp,	      \
 						   __atg16_old & __atg16_mask,\
@@ -481,7 +481,7 @@
     __typeof (*(mem)) __atg17_mask = (mask);				      \
 									      \
     do									      \
-      __atg17_old = (*__atg17_memp);					      \
+      __atg17_old = (*(volatile __typeof (mem))__atg17_memp);		      \
     while (__builtin_expect						      \
 	   (atomic_compare_and_exchange_bool_acq (__atg17_memp,		      \
 						  __atg17_old | __atg17_mask, \
@@ -497,7 +497,7 @@
     __typeof (*(mem)) __atg18_mask = (mask);				      \
 									      \
     do									      \
-      __atg18_old = (*__atg18_memp);					      \
+      __atg18_old = (*(volatile __typeof (mem))__atg18_memp);		      \
     while (__builtin_expect						      \
 	   (catomic_compare_and_exchange_bool_acq (__atg18_memp,	      \
 						   __atg18_old | __atg18_mask,\
@@ -513,7 +513,7 @@
      __typeof (*(mem)) __atg19_mask = (mask);				      \
 									      \
      do									      \
-       __atg19_old = (*__atg19_memp);					      \
+       __atg19_old = (*(volatile __typeof (mem))__atg19_memp);		      \
      while (__builtin_expect						      \
 	    (atomic_compare_and_exchange_bool_acq (__atg19_memp,	      \
 						   __atg19_old | __atg19_mask,\

@@ -386,14 +386,14 @@ _dl_start (void *arg)
      know it is available.  We do not have to clear the memory if we
      do not have to use the temporary bootstrap_map.  Global variables
      are initialized to zero by default.  */
-#ifndef DONT_USE_BOOTSTRAP_MAP
+#if !defined DONT_USE_BOOTSTRAP_MAP
 # ifdef HAVE_BUILTIN_MEMSET
   __builtin_memset (bootstrap_map.l_info, '\0', sizeof (bootstrap_map.l_info));
 # else
-  for (size_t cnt = 0;
-       cnt < sizeof (bootstrap_map.l_info) / sizeof (bootstrap_map.l_info[0]);
-       ++cnt)
-    bootstrap_map.l_info[cnt] = 0;
+  /* Clear the whole bootstrap_map structure */
+  for (char *cnt = (char *)&(bootstrap_map);
+       cnt < ((char *)&(bootstrap_map) + sizeof (bootstrap_map));
+       *cnt++ = '\0');
 # endif
 # if USE___THREAD
   bootstrap_map.l_tls_modid = 0;
