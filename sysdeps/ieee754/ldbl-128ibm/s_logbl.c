@@ -28,6 +28,7 @@ __logbl (long double x)
 {
   int64_t hx, rhx;
   double xhi;
+  long double ret;
 
   xhi = ldbl_high (x);
   EXTRACT_WORDS64 (hx, xhi);
@@ -42,7 +43,9 @@ __logbl (long double x)
          though it were normalized.  */
       rhx -= __builtin_clzll (hx) - 12;
     }
-  return (long double) (rhx - 1023);
+  ret = (long double) (rhx - 1023);
+  /* The test is to avoid logb_downward (0.0) == -0.0.  */
+  return ret == -0.0 ? 0.0 : ret;
 }
 #ifndef __logbl
 long_double_symbol (libm, __logbl, logbl);
