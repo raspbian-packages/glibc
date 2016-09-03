@@ -61,3 +61,11 @@ sysdep-CFLAGS += -mieee -mfp-rounding-mode=d
 # libc.so requires about 16k for the small data area, which is well
 # below the 64k maximum.
 pic-ccflag = -fpic
+
+ifeq ($(subdir),csu)
+ifeq (yes,$(build-shared))
+# Compatibility
+sysdep_routines += libgcc-compat
+shared-only-routines += libgcc-compat
+endif
+endif
