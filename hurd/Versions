@@ -161,4 +161,13 @@ libc {
     cthread_keycreate; cthread_getspecific; cthread_setspecific;
     __libc_getspecific;
   }
+
+  GLIBC_PRIVATE {
+    # Used by other libs.
+    lll_xwait; lll_timed_wait; lll_timed_xwait;
+    __lll_abstimed_wait; __lll_abstimed_xwait;
+    __lll_abstimed_lock; lll_robust_lock;
+    __lll_robust_abstimed_lock; lll_robust_trylock;
+    lll_set_wake; lll_robust_unlock; lll_requeue;
+  }
 }
