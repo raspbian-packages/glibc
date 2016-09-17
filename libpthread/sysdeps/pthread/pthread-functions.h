@@ -114,7 +114,7 @@ struct pthread_functions
   int (*ptr_pthread_mutex_trylock) (pthread_mutex_t *);
   int (*ptr_pthread_mutex_unlock) (pthread_mutex_t *);
   pthread_t (*ptr_pthread_self) (void);
-  int (*ptr_pthread_setcancelstate) (int, int *);
+  int (*ptr___pthread_setcancelstate) (int, int *);
   int (*ptr_pthread_setcanceltype) (int, int *);
   struct __pthread_cancelation_handler **(*ptr___pthread_get_cleanup_stack) (void);
   int (*ptr_pthread_once) (pthread_once_t *, void (*) (void));

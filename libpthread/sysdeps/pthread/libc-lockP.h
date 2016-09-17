@@ -37,7 +37,7 @@
 #endif
 
 /* Call thread functions through the function pointer table.  */
-#if defined SHARED && !defined NOT_IN_libc
+#if defined SHARED && IS_IN (libc)
 # define PTFAVAIL(NAME) __libc_pthread_functions_init
 # define __libc_ptf_call(FUNC, ARGS, ELSE) \
   (__libc_pthread_functions_init ? PTHFCT_CALL (ptr_##FUNC, ARGS) : ELSE)
@@ -129,7 +129,7 @@ weak_extern (__pthread_getspecific)
 weak_extern (__pthread_once)
 weak_extern (__pthread_initialize)
 weak_extern (__pthread_atfork)
-weak_extern (pthread_setcancelstate)
+weak_extern (__pthread_setcancelstate)
 # else
 #  pragma weak __pthread_mutex_init
 #  pragma weak __pthread_mutex_destroy
@@ -151,7 +151,7 @@ weak_extern (pthread_setcancelstate)
 #  pragma weak __pthread_once
 #  pragma weak __pthread_initialize
 #  pragma weak __pthread_atfork
-#  pragma weak pthread_setcancelstate
+#  pragma weak __pthread_setcancelstate
 # endif
 #endif
 
