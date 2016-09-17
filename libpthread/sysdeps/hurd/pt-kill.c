@@ -46,7 +46,6 @@ pthread_kill (pthread_t thread, int sig)
   detail.code = sig;
   detail.error = 0;
 
-  _hurd_raise_signal (ss, sig, &detail);
-
-  return 0;
+  __spin_lock (&ss->lock);
+  return _hurd_raise_signal (ss, sig, &detail);
 }
