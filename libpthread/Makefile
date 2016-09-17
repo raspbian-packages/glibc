@@ -191,7 +191,7 @@ headers :=				\
 ifeq ($(IN_GLIBC),yes)
 distribute :=
 
-routines := forward libc_pthread_init
+routines := forward libc_pthread_init alloca_cutoff
 shared-only-routines = forward
 
 vpath %.c
