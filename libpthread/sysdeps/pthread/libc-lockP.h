@@ -106,7 +106,7 @@ extern int __pthread_atfork (void (*__prepare) (void),
 
 /* Make the pthread functions weak so that we can elide them from
    single-threaded processes.  */
-#ifndef __NO_WEAK_PTHREAD_ALIASES
+#if !defined(__NO_WEAK_PTHREAD_ALIASES) && !IS_IN (libpthread)
 # ifdef weak_extern
 weak_extern (__pthread_mutex_init)
 weak_extern (__pthread_mutex_destroy)
