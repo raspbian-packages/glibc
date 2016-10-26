@@ -224,6 +224,10 @@ enum __error_t_codes
 #define	ETIME           _HURD_ERRNO (117)/* Timer expired */
 	ECANCELED       = _HURD_ERRNO (119),
 #define	ECANCELED       _HURD_ERRNO (119)/* Operation canceled */
+	EOWNERDEAD      = _HURD_ERRNO (120),
+#define	EOWNERDEAD      _HURD_ERRNO (120)/* Robust mutex owner died */
+	ENOTRECOVERABLE = _HURD_ERRNO (121),
+#define	ENOTRECOVERABLE _HURD_ERRNO (121)/* Robust mutex irrecoverable */
 
 	/* Errors from <mach/message.h>.  */
 	EMACH_SEND_IN_PROGRESS          = 0x10000001,
@@ -280,6 +284,8 @@ enum __error_t_codes
 	EKERN_MEMORY_PRESENT            = 23,
 	EKERN_WRITE_PROTECTION_FAILURE  = 24,
 	EKERN_TERMINATED                = 26,
+	EKERN_TIMEDOUT                  = 27,
+	EKERN_INTERRUPTED               = 28,
 
 	/* Errors from <mach/mig_errors.h>.  */
 	EMIG_TYPE_ERROR         = -300  /* client type check failure */,
@@ -307,7 +313,7 @@ enum __error_t_codes
 
 };
 
-#define	_HURD_ERRNOS	120
+#define	_HURD_ERRNOS	122
 
 /* User-visible type of error codes.  It is ok to use `int' or
    `kern_return_t' for these, but with `error_t' the debugger prints
