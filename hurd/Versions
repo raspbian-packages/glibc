@@ -140,6 +140,14 @@ libc {
     _hurd_sigstate_unlock;
     _hurd_sigstate_delete;
   }
+  GLIBC_2.13_DEBIAN_33 {
+    # "quasi-internal" functions
+    _hurd_exec_file_name;
+  }
+  GLIBC_2.21 {
+    # "quasi-internal" functions
+    _hurd_exec_file_name;
+  }
 
   HURD_CTHREADS_0.3 {
     # weak refs to libthreads functions that libc calls iff libthreads in use
