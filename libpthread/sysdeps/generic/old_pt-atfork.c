@@ -17,18 +17,11 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
-#include <pthread.h>
-#include <pt-internal.h>
-#include <fork.h>
+#include <shlib-compat.h>
 
-/* This is defined by newer gcc version unique for each module.  */
-extern void *__dso_handle __attribute__ ((__weak__,
-					  __visibility__ ("hidden")));
-
-int
-pthread_atfork (void (*prepare) (void),
-		void (*parent) (void),
-		void (*child) (void))
-{
-  return __register_atfork (prepare, parent, child, &__dso_handle == NULL ? NULL : __dso_handle);
-}
+#if SHLIB_COMPAT(libpthread, GLIBC_2_12, GLIBC_2_23)
+# define pthread_atfork __dyn_pthread_atfork
+# include "pt-atfork.c"
+# undef pthread_atfork
+compat_symbol (libpthread, __dyn_pthread_atfork, pthread_atfork, GLIBC_2_12);
+#endif
