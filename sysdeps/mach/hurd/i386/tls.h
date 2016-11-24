@@ -23,6 +23,40 @@
 /* Some things really need not be machine-dependent.  */
 #include <sysdeps/mach/hurd/tls.h>
 
+
+#ifndef __ASSEMBLER__
+/* Type for the dtv.  */
+typedef union dtv
+{
+  size_t counter;
+  struct
+  {
+    void *val;
+    bool is_static;
+  } pointer;
+} dtv_t;
+
+
+/* Type of the TCB.  */
+typedef struct
+{
+  void *tcb;			/* Points to this structure.  */
+  dtv_t *dtv;			/* Vector of pointers to TLS data.  */
+  thread_t self;		/* This thread's control port.  */
+  int multiple_threads;
+  uintptr_t sysinfo;
+  uintptr_t stack_guard;
+  uintptr_t pointer_guard;
+  int gscope_flag;
+  int private_futex;
+  /* Reservation of some values for the TM ABI.  */
+  void *__private_tm[4];
+  /* GCC split stack support.  */
+  void *__private_ss;
+} tcbhead_t;
+#endif
+
+
 /* The TCB can have any size and the memory following the address the
    thread pointer points to is unspecified.  Allocate the TCB there.  */
 #define TLS_TCB_AT_TP	1
