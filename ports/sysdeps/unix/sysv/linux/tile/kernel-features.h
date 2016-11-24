@@ -25,8 +25,14 @@
 #define __ASSUME_PIPE2			1
 #define __ASSUME_EVENTFD2		1
 #define __ASSUME_SIGNALFD4		1
-#define __ASSUME_ACCEPT4		1
+#define __ASSUME_ACCEPT4_SYSCALL	1
 #define __ASSUME_DUP3			1
+#define __ASSUME_RECVMMSG_SYSCALL	1
+
+/* Support for the sendmmsg syscall was added in 3.0.  */
+#if __LINUX_KERNEL_VERSION >= 0x030000
+# define __ASSUME_SENDMMSG_SYSCALL	1
+#endif
 
 #include_next <kernel-features.h>
 
