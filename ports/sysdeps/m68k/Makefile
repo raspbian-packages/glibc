@@ -42,3 +42,11 @@ endif
 # Build objects in libc_nonshared.a with -fPIC (instead of -fpic) to avoid
 # possible linkage problems.
 CFLAGS-.oS += -fPIC
+ 
+ifeq ($(subdir),csu)
+ifeq (yes,$(build-shared))
+# Compatibility
+sysdep_routines += libgcc-compat
+shared-only-routines += libgcc-compat
+endif
+endif

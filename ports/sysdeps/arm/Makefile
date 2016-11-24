@@ -12,6 +12,11 @@ $(objpfx)libgcc-stubs.a: $(objpfx)aeabi_unwind_cpp_pr1.os
 
 lib-noranlib: $(objpfx)libgcc-stubs.a
 endif
+ifeq (yes,$(build-shared))
+# Compatibility
+sysdep_routines += libgcc-compat
+shared-only-routines += libgcc-compat
+endif
 
 ifeq ($(subdir),csu)
 # get offset to rtld_global._dl_hwcap
