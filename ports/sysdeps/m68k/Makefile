@@ -38,3 +38,7 @@ endif
 ifeq ($(subdir),elf)
 CFLAGS-rtld.c += -Wno-uninitialized -Wno-unused
 endif
+
+# Build objects in libc_nonshared.a with -fPIC (instead of -fpic) to avoid
+# possible linkage problems.
+CFLAGS-.oS += -fPIC
