@@ -175,7 +175,7 @@ make_request (int fd, pid_t pid)
 	};
 
       ssize_t read_len = TEMP_FAILURE_RETRY (__recvmsg (fd, &msg, 0));
-      if (read_len < 0)
+      if (read_len <= 0)
 	goto out_fail;
 
       if (msg.msg_flags & MSG_TRUNC)
