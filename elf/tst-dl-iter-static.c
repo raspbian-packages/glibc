@@ -1,5 +1,5 @@
-/* Single-precision floating point square root.
-   Copyright (C) 1997-2014 Free Software Foundation, Inc.
+/* BZ #16046 dl_iterate_phdr static executable test.
+   Copyright (C) 2014 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,15 +16,32 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-#include <math.h>
-#include <math_private.h>
+#include <link.h>
 
-#undef __ieee754_sqrtf
-float
-__ieee754_sqrtf (float x)
+/* Check that the link map of the static executable itself is iterated
+   over exactly once.  */
+
+static int
+callback (struct dl_phdr_info *info, size_t size, void *data)
 {
-  double z;
-  __asm ("fsqrts %0,%1" : "=f" (z) : "f" (x));
-  return z;
+  int *count = data;
+
+  if (info->dlpi_name[0] == '\0')
+    (*count)++;
+
+  return 0;
 }
-strong_alias (__ieee754_sqrtf, __sqrtf_finite)
+
+static int
+do_test (void)
+{
+  int count = 0;
+  int status;
+
+  status = dl_iterate_phdr (callback, &count);
+
+  return status || count != 1;
+}
+
+#define TEST_FUNCTION do_test ()
+#include "../test-skeleton.c"
