@@ -177,6 +177,7 @@ GLIBC_2.0 __memalign_hook D 0x8
 GLIBC_2.0 __mempcpy F
 GLIBC_2.0 __monstartup F
 GLIBC_2.0 __morecore D 0x8
+GLIBC_2.0 __multi3 F
 GLIBC_2.0 __nss_configure_lookup F
 GLIBC_2.0 __nss_database_lookup F
 GLIBC_2.0 __nss_group_lookup F
