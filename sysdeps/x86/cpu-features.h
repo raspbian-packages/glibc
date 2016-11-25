@@ -55,6 +55,7 @@
 #define bit_cpu_HTT		(1 << 28)
 
 /* COMMON_CPUID_INDEX_7.  */
+#define bit_cpu_HLE		(1 << 4)
 #define bit_cpu_ERMS		(1 << 9)
 #define bit_cpu_RTM		(1 << 11)
 #define bit_cpu_AVX2		(1 << 5)
