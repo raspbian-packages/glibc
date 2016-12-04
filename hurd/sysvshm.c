@@ -26,6 +26,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/shm.h>
+#include <hurdlock.h>
 
 
 /* Description of an shm attachment.  */
@@ -45,7 +46,7 @@ struct sysvshm_attach
 static struct sysvshm_attach *attach_list;
 
 /* A lock to protect the linked list of shared memory attachments.  */
-static struct mutex sysvshm_lock = MUTEX_INITIALIZER;
+static unsigned int sysvshm_lock = LLL_INITIALIZER;
 
 
 /* Adds a segment attachment.  */

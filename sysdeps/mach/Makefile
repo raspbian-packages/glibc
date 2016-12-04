@@ -50,4 +50,22 @@ mach-before-compile:
 before-compile += $(mach-before-compile)
 endif
 
+ifeq (crypt,$(subdir))
+  LDLIBS-crypt.so += -lmachuser
+else ifeq (dlfcn,$(subdir))
+  LDLIBS-dl.so += -lmachuser
+else ifeq (nis,$(subdir))
+  LDLIBS-nsl.so += -lmachuser
+  LDLIBS-nss_nis.so += -lmachuser
+  LDLIBS-nss_nisplus.so += -lmachuser
+  LDLIBS-nss_compat.so += -lmachuser
+else ifeq (nss,$(subdir))
+  LDLIBS-nss.so += -lmachuser
+  LDLIBS-nss_files.so += -lmachuser
+else ifeq (posix,$(subdir))
+  LDLIBS-tst-rfc3484 += -lmachuser
+  LDLIBS-tst-rfc3484-2 += -lmachuser
+  LDLIBS-tst-rfc3484-3 += -lmachuser
+endif
+
 endif	# in-Makerules
