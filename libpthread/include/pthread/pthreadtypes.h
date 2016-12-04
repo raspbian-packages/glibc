@@ -77,6 +77,12 @@ enum __pthread_mutex_type
     __PTHREAD_MUTEX_RECURSIVE
   };
 
+enum __pthread_mutex_robustness
+  {
+    __PTHREAD_MUTEX_STALLED,
+    __PTHREAD_MUTEX_ROBUST = 0x100
+  };
+
 #include <bits/mutex-attr.h>
 typedef struct __pthread_mutexattr pthread_mutexattr_t;
 
