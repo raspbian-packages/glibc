@@ -1,7 +1,6 @@
-/* Compute positive difference, sparc 32-bit+v9+vis3.
-   Copyright (C) 2013-2016 Free Software Foundation, Inc.
+/* Bug 11941: Improper assert map->l_init_called in dlclose.
+   Copyright (C) 2016 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
-   Contributed by David S. Miller <davem@davemloft.net>.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -17,16 +16,25 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-#include <sysdep.h>
+/* This DSO simulates a plugin with a dependency on the
+   primary DSO loaded by the appliation.  */
+#include <stdio.h>
 
-ENTRY(__fdimf_vis3)
-	movwtos	%o0, %f0
-	movwtos	%o1, %f1
-	fcmps	%f0, %f1
-	fbug	1f
-	 nop
-	fzeros	%f0
-	fnegs	%f0, %f1
-1:	retl
-	 fsubs	%f0, %f1, %f0
-END(__fdimf_vis3)
+extern void primary_reference (void);
+
+void
+plugin_func (void)
+{
+  printf ("INFO: Calling plugin function.\n");
+  /* Need a reference to the DSO to ensure that a potential --as-needed
+     doesn't remove the DT_NEEDED entry which we rely upon to ensure
+     destruction ordering.  */
+  primary_reference ();
+}
+
+__attribute__ ((destructor))
+static void
+plugin_dtor (void)
+{
+  printf ("INFO: Calling plugin destructor.\n");
+}
