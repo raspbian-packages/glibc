@@ -28,8 +28,14 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/syscall.h>
 
-#include <tls.h> /* for THREAD_* macros.  */
+#include <stackinfo.h>  /* For _STACK_GROWS_{UP,DOWN}.  */
+
+static int do_test (void);
+
+#define TEST_FUNCTION do_test ()
+#include <test-skeleton.c>
 
 static int sig;
 static int pipefd[2];
@@ -39,20 +45,32 @@ f (void *a)
 {
   close (pipefd[0]);
 
-  pid_t pid = THREAD_GETMEM (THREAD_SELF, pid);
-  pid_t tid = THREAD_GETMEM (THREAD_SELF, tid);
+  pid_t ppid = getppid ();
+  pid_t pid = getpid ();
+  pid_t tid = syscall (__NR_gettid);
 
-  while (write (pipefd[1], &pid, sizeof pid) < 0)
-    continue;
-  while (write (pipefd[1], &tid, sizeof tid) < 0)
-    continue;
+  if (write (pipefd[1], &ppid, sizeof ppid) != sizeof (ppid))
+    {
+      printf ("write ppid failed\n");
+      exit (1);
+    }
+  if (write (pipefd[1], &pid, sizeof pid) != sizeof (pid))
+    {
+      printf ("write pid failed\n");
+      exit (1);
+    }
+  if (write (pipefd[1], &tid, sizeof tid) != sizeof (tid))
+    {
+      printf ("write tid failed\n");
+      exit (1);
+    }
 
   return 0;
 }
 
 
 static int
-clone_test (int clone_flags)
+do_test (void)
 {
   sig = SIGRTMIN;
   sigset_t ss;
@@ -61,17 +79,16 @@ clone_test (int clone_flags)
   if (sigprocmask (SIG_BLOCK, &ss, NULL) != 0)
     {
       printf ("sigprocmask failed: %m\n");
-      return 1;
+      exit (1);
     }
 
   if (pipe2 (pipefd, O_CLOEXEC))
     {
-      printf ("sigprocmask failed: %m\n");
-      return 1;
+      printf ("pipe failed: %m\n");
+      exit (1);
     }
 
-  pid_t ppid = getpid ();
-
+  int clone_flags = 0;
 #ifdef __ia64__
   extern int __clone2 (int (*__fn) (void *__arg), void *__child_stack_base,
 		       size_t __child_stack_size, int __flags,
@@ -88,53 +105,48 @@ clone_test (int clone_flags)
 #error "Define either _STACK_GROWS_DOWN or _STACK_GROWS_UP"
 #endif
 #endif
+
   close (pipefd[1]);
 
-  if (p == -1)
-    {
-      printf ("clone failed: %m\n");
-      return 1;
-    }
+  if (p == -1) {
+    printf ("clone failed: %m");
+    exit (1);
+  }
 
-  pid_t pid, tid;
+  pid_t ppid, pid, tid;
+  if (read (pipefd[0], &ppid, sizeof pid) != sizeof pid)
+    {
+      printf ("read ppid failed: %m\n");
+      kill (p, SIGKILL);
+      exit (1);
+    }
   if (read (pipefd[0], &pid, sizeof pid) != sizeof pid)
     {
       printf ("read pid failed: %m\n");
       kill (p, SIGKILL);
-      return 1;
+      exit (1);
     }
   if (read (pipefd[0], &tid, sizeof tid) != sizeof tid)
     {
       printf ("read pid failed: %m\n");
       kill (p, SIGKILL);
-      return 1;
+      exit (1);
     }
 
   close (pipefd[0]);
 
   int ret = 0;
 
-  /* For CLONE_VM glibc clone implementation does not change the pthread
-     pid/tid field.  */
-  if ((clone_flags & CLONE_VM) == CLONE_VM)
+  pid_t own_pid = getpid ();
+  pid_t own_tid = syscall (__NR_gettid);
+
+  /* Some sanity checks for clone syscall: returned ppid should be current
+     pid and both returned tid/pid should be different from current one.  */
+  if ((ppid != own_pid) || (pid == own_pid) || (tid == own_tid))
     {
-      if ((ppid != pid) || (ppid != tid))
-	{
-	  printf ("parent pid (%i) != received pid/tid (%i/%i)\n",
-		  (int)ppid, (int)pid, (int)tid);
-	  ret = 1;
-	}
-    }
-  /* For any other flag clone updates the new pthread pid and tid with
-     the clone return value.  */
-  else
-    {
-      if ((p != pid) || (p != tid))
-	{
-	  printf ("child pid (%i) != received pid/tid (%i/%i)\n",
-		  (int)p, (int)pid, (int)tid);
-	  ret = 1;
-	}
+      printf ("ppid=%i pid=%i tid=%i | own_pid=%i own_tid=%i",
+	      (int)ppid, (int)pid, (int)tid, (int)own_pid, (int)own_tid);
+      return 1;
     }
 
   int e;
@@ -142,7 +154,7 @@ clone_test (int clone_flags)
     {
       puts ("waitpid failed");
       kill (p, SIGKILL);
-      return 1;
+      exit (1);
     }
   if (!WIFEXITED (e))
     {
@@ -150,29 +162,13 @@ clone_test (int clone_flags)
 	printf ("died from signal %s\n", strsignal (WTERMSIG (e)));
       else
 	puts ("did not terminate correctly");
-      return 1;
+      exit (1);
     }
   if (WEXITSTATUS (e) != 0)
     {
       printf ("exit code %d\n", WEXITSTATUS (e));
-      return 1;
+      exit (1);
     }
 
   return ret;
 }
-
-int
-do_test (void)
-{
-  /* First, check that the clone implementation, without any flag, updates
-     the struct pthread to contain the new PID and TID.  */
-  int ret = clone_test (0);
-  /* Second, check that with CLONE_VM the struct pthread PID and TID fields
-     remain unmodified after the clone.  Any modifications would cause problem
-     for the parent as described in bug 19957.  */
-  ret += clone_test (CLONE_VM);
-  return ret;
-}
-
-#define TEST_FUNCTION do_test ()
-#include "../test-skeleton.c"
