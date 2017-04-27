@@ -89,7 +89,7 @@
 			      __lll_private_flag (__op, private),	      \
 			      (val), (timespec), NULL /* Unused.  */, 	      \
 			      FUTEX_BITSET_MATCH_ANY);			      \
-    __ret;		      						      \
+    INTERNAL_SYSCALL_ERROR_P (__ret, __err) ? -__ret : __ret;		      \
   })
 
 #define lll_futex_timed_wait(futexp, val, timespec, private) \
