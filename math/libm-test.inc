@@ -6000,6 +6000,15 @@ static const struct test_f_f_data ceil_test_data[] =
     TEST_f_f (ceil, -72057594037927936.75L, -72057594037927936.0L),
     TEST_f_f (ceil, -72057594037927937.5L, -72057594037927937.0L),
 
+    /* Check cases where first double is a exact integer higher than 2^52 and
+       the precision is determined by second long double for IBM long double.  */
+    TEST_f_f (ceil,  34503599627370498.515625L, 34503599627370499.0L),
+    TEST_f_f (ceil, -34503599627370498.515625L, -34503599627370498.0L),
+# if LDBL_MANT_DIG >= 106
+    TEST_f_f (ceil,  1192568192774434123539907640624.484375L, 1192568192774434123539907640625.0L),
+    TEST_f_f (ceil, -1192568192774434123539907640624.484375L, -1192568192774434123539907640624.0L),
+# endif
+
     TEST_f_f (ceil, 10141204801825835211973625643007.5L, 10141204801825835211973625643008.0L),
     TEST_f_f (ceil, 10141204801825835211973625643008.25L, 10141204801825835211973625643009.0L),
     TEST_f_f (ceil, 10141204801825835211973625643008.5L, 10141204801825835211973625643009.0L),
@@ -8714,6 +8723,15 @@ static const struct test_f_f1_data frexp_test_data[] =
 
     TEST_fI_f1 (frexp, 12.8L, 0.8L, 4, NO_INEXACT_EXCEPTION),
     TEST_fI_f1 (frexp, -27.34L, -0.854375L, 5, NO_INEXACT_EXCEPTION),
+
+#if defined TEST_LDOUBLE && LDBL_MANT_DIG >= 106
+    TEST_fI_f1 (frexp, 1.0L-0x1p-106L, 1.0L-0x1p-106L, 0, NO_INEXACT_EXCEPTION),
+    TEST_fI_f1 (frexp, 1.0L, 0.5L, 1, NO_INEXACT_EXCEPTION),
+    TEST_fI_f1 (frexp, 1.0L+0x1p-105L, 0.5L+0x1p-106L, 1, NO_INEXACT_EXCEPTION),
+    TEST_fI_f1 (frexp, -1.0L+0x1p-106L, -1.0L+0x1p-106L, 0, NO_INEXACT_EXCEPTION),
+    TEST_fI_f1 (frexp, -1.0L, -0.5L, 1, NO_INEXACT_EXCEPTION),
+    TEST_fI_f1 (frexp, -1.0L-0x1p-105L, -0.5L-0x1p-106L, 1, NO_INEXACT_EXCEPTION),
+#endif
   };
 
 static void
@@ -10495,6 +10513,16 @@ static const struct test_f_f_data nearbyint_test_data[] =
     TEST_f_f (nearbyint, -562949953421312.75, -562949953421313.0, NO_INEXACT_EXCEPTION),
     TEST_f_f (nearbyint, -1125899906842624.75, -1125899906842625.0, NO_INEXACT_EXCEPTION),
 #endif
+#ifdef TEST_LDOUBLE
+    /* Check cases where first double is a exact integer higher than 2^52 and
+       the precision is determined by second long double for IBM long double.  */
+    TEST_f_f (nearbyint,  34503599627370498.515625L, 34503599627370499.0L),
+    TEST_f_f (nearbyint, -34503599627370498.515625L, -34503599627370499.0L),
+# if LDBL_MANT_DIG >= 106
+    TEST_f_f (nearbyint,  1192568192774434123539907640624.484375L, 1192568192774434123539907640624.0L),
+    TEST_f_f (nearbyint, -1192568192774434123539907640624.484375L, -1192568192774434123539907640624.0L),
+# endif
+#endif
   };
 
 static void
@@ -10527,6 +10555,14 @@ static const struct test_ff_f_data nextafter_test_data[] =
 #ifdef TEST_LDOUBLE
     // XXX Enable once gcc is fixed.
     //TEST_ff_f (nextafter, 0x0.00000040000000000000p-16385L, -0.1L, 0x0.0000003ffffffff00000p-16385L),
+#endif
+#if defined TEST_LDOUBLE && LDBL_MANT_DIG == 106
+    TEST_ff_f (nextafter, 1.0L, -10.0L, 1.0L-0x1p-106L, NO_EXCEPTION),
+    TEST_ff_f (nextafter, 1.0L, 10.0L, 1.0L+0x1p-105L, NO_EXCEPTION),
+    TEST_ff_f (nextafter, 1.0L-0x1p-106L, 10.0L, 1.0L, NO_EXCEPTION),
+    TEST_ff_f (nextafter, -1.0L, -10.0L, -1.0L-0x1p-105L, NO_EXCEPTION),
+    TEST_ff_f (nextafter, -1.0L, 10.0L, -1.0L+0x1p-106L, NO_EXCEPTION),
+    TEST_ff_f (nextafter, -1.0L+0x1p-106L, -10.0L, -1.0L, NO_EXCEPTION),
 #endif
 
     /* XXX We need the hexadecimal FP number representation here for further
@@ -11784,6 +11820,15 @@ static const struct test_f_f_data round_test_data[] =
     TEST_f_f (round, -72057594037927936.75L, -72057594037927937.0L),
     TEST_f_f (round, -72057594037927937.5L, -72057594037927938.0L),
 
+    /* Check cases where first double is a exact integer higher than 2^52 and
+       the precision is determined by second long double for IBM long double.  */
+    TEST_f_f (round,  34503599627370498.515625L, 34503599627370499.0L),
+    TEST_f_f (round, -34503599627370498.515625L, -34503599627370499.0L),
+# if LDBL_MANT_DIG >= 106
+    TEST_f_f (round,  1192568192774434123539907640624.484375L, 1192568192774434123539907640624.0L),
+    TEST_f_f (round, -1192568192774434123539907640624.484375L, -1192568192774434123539907640624.0L),
+# endif
+
     TEST_f_f (round, 10141204801825835211973625643007.5L, 10141204801825835211973625643008.0L),
     TEST_f_f (round, 10141204801825835211973625643008.25L, 10141204801825835211973625643008.0L),
     TEST_f_f (round, 10141204801825835211973625643008.5L, 10141204801825835211973625643009.0L),
@@ -12460,6 +12505,15 @@ static const struct test_f_f_data trunc_test_data[] =
     TEST_f_f (trunc, -72057594037927936.5L, -72057594037927936.0L),
     TEST_f_f (trunc, -72057594037927936.75L, -72057594037927936.0L),
     TEST_f_f (trunc, -72057594037927937.5L, -72057594037927937.0L),
+
+    /* Check cases where first double is a exact integer higher than 2^52 and
+       the precision is determined by second long double for IBM long double.  */
+    TEST_f_f (trunc,  34503599627370498.515625L, 34503599627370498.0L),
+    TEST_f_f (trunc, -34503599627370498.515625L, -34503599627370498.0L),
+# if LDBL_MANT_DIG >= 106
+    TEST_f_f (trunc,  1192568192774434123539907640624.484375L, 1192568192774434123539907640624.0L),
+    TEST_f_f (trunc, -1192568192774434123539907640624.484375L, -1192568192774434123539907640624.0L),
+# endif
 
     TEST_f_f (trunc, 10141204801825835211973625643007.5L, 10141204801825835211973625643007.0L),
     TEST_f_f (trunc, 10141204801825835211973625643008.25L, 10141204801825835211973625643008.0L),

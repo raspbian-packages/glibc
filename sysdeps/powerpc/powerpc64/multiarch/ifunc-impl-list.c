@@ -238,5 +238,61 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 	      IFUNC_IMPL_ADD (array, i, wcscpy, 1,
 			      __wcscpy_ppc))
 
+  /* Support sysdeps/powerpc/powerpc64/multiarch/strrchr.c.  */
+  IFUNC_IMPL (i, name, strrchr,
+	      IFUNC_IMPL_ADD (array, i, strrchr,
+			      hwcap & PPC_FEATURE_HAS_VSX,
+			      __strrchr_power7)
+	      IFUNC_IMPL_ADD (array, i, strrchr, 1,
+			      __strrchr_ppc))
+
+  /* Support sysdeps/powerpc/powerpc64/multiarch/strncat.c.  */
+  IFUNC_IMPL (i, name, strncat,
+	      IFUNC_IMPL_ADD (array, i, strncat,
+			      hwcap & PPC_FEATURE_HAS_VSX,
+			      __strncat_power7)
+	      IFUNC_IMPL_ADD (array, i, strncat, 1,
+			      __strncat_ppc))
+
+  /* Support sysdeps/powerpc/powerpc64/multiarch/strspn.c.  */
+  IFUNC_IMPL (i, name, strspn,
+	      IFUNC_IMPL_ADD (array, i, strspn,
+			      hwcap & PPC_FEATURE_HAS_VSX,
+			      __strspn_power7)
+	      IFUNC_IMPL_ADD (array, i, strspn, 1,
+			      __strspn_ppc))
+
+  /* Support sysdeps/powerpc/powerpc64/multiarch/strcspn.c.  */
+  IFUNC_IMPL (i, name, strcspn,
+	      IFUNC_IMPL_ADD (array, i, strcspn,
+			      hwcap & PPC_FEATURE_HAS_VSX,
+			      __strcspn_power7)
+	      IFUNC_IMPL_ADD (array, i, strcspn, 1,
+			     __strcspn_ppc))
+
+  /* Support sysdeps/powerpc/powerpc64/multiarch/strpbrk.c.  */
+  IFUNC_IMPL (i, name, strpbrk,
+	      IFUNC_IMPL_ADD (array, i, strpbrk,
+			      hwcap & PPC_FEATURE_HAS_VSX,
+			      __strpbrk_power7)
+	      IFUNC_IMPL_ADD (array, i, strpbrk, 1,
+			     __strpbrk_ppc))
+
+  /* Support sysdeps/powerpc/powerpc64/multiarch/strncpy.c.  */
+  IFUNC_IMPL (i, name, strncpy,
+	      IFUNC_IMPL_ADD (array, i, strncpy,
+			      hwcap & PPC_FEATURE_HAS_VSX,
+			      __strncpy_power7)
+	      IFUNC_IMPL_ADD (array, i, strncpy, 1,
+			     __strncpy_ppc))
+
+  /* Support sysdeps/powerpc/powerpc64/multiarch/stpncpy.c.  */
+  IFUNC_IMPL (i, name, stpncpy,
+	      IFUNC_IMPL_ADD (array, i, stpncpy,
+			      hwcap & PPC_FEATURE_HAS_VSX,
+			      __stpncpy_power7)
+	      IFUNC_IMPL_ADD (array, i, stpncpy, 1,
+			     __stpncpy_ppc))
+
   return i;
 }
