@@ -120,13 +120,13 @@ static const char rcsid[] = "$BINDId: res_send.c,v 8.38 2000/03/30 20:16:51 vixi
 #define MAXPACKET       65536
 #endif
 
-
+#ifdef SOCK_NONBLOCK
 #ifndef __ASSUME_SOCK_CLOEXEC
 static int __have_o_nonblock;
 #else
 # define __have_o_nonblock 0
 #endif
-
+#endif
 
 /* From ev_streams.c.  */
 
@@ -1008,6 +1008,7 @@ reopen (res_state statp, int *terrno, int ns)
 
 		/* only try IPv6 if IPv6 NS and if not failed before */
 		if (nsap->sa_family == AF_INET6 && !statp->ipv6_unavail) {
+#ifdef SOCK_NONBLOCK
 			if (__builtin_expect (__have_o_nonblock >= 0, 1)) {
 				EXT(statp).nssocks[ns] =
 				  socket(PF_INET6, SOCK_DGRAM|SOCK_NONBLOCK,
@@ -1020,12 +1021,14 @@ reopen (res_state statp, int *terrno, int ns)
 #endif
 			}
 			if (__builtin_expect (__have_o_nonblock < 0, 0))
+#endif
 				EXT(statp).nssocks[ns] =
 				  socket(PF_INET6, SOCK_DGRAM, 0);
 			if (EXT(statp).nssocks[ns] < 0)
 			    statp->ipv6_unavail = errno == EAFNOSUPPORT;
 			slen = sizeof (struct sockaddr_in6);
 		} else if (nsap->sa_family == AF_INET) {
+#ifdef SOCK_NONBLOCK
 			if (__builtin_expect (__have_o_nonblock >= 0, 1)) {
 				EXT(statp).nssocks[ns]
 				  = socket(PF_INET, SOCK_DGRAM|SOCK_NONBLOCK,
@@ -1038,6 +1041,7 @@ reopen (res_state statp, int *terrno, int ns)
 #endif
 			}
 			if (__builtin_expect (__have_o_nonblock < 0, 0))
+#endif
 				EXT(statp).nssocks[ns]
 				  = socket(PF_INET, SOCK_DGRAM, 0);
 			slen = sizeof (struct sockaddr_in);
@@ -1064,7 +1068,11 @@ reopen (res_state statp, int *terrno, int ns)
 			__res_iclose(statp, false);
 			return (0);
 		}
+#ifdef SOCK_NONBLOCK
 		if (__builtin_expect (__have_o_nonblock < 0, 0)) {
+#else
+                {
+#endif
 			/* Make socket non-blocking.  */
 			int fl = __fcntl (EXT(statp).nssocks[ns], F_GETFL);
 			if  (fl != -1)
