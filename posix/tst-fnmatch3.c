@@ -1,5 +1,5 @@
-/* Double-precision floating point square root.
-   Copyright (C) 1997-2014 Free Software Foundation, Inc.
+/* Test for fnmatch not reading past the end of the pattern.
+   Copyright (C) 2014 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,15 +16,15 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-#include <math.h>
-#include <math_private.h>
+#include <fnmatch.h>
 
-#undef __ieee754_sqrt
-double
-__ieee754_sqrt (double x)
+int
+do_test (void)
 {
-  double z;
-  __asm __volatile ("fsqrt %0,%1" : "=f" (z) : "f" (x));
-  return z;
+  const char *pattern = "[[:alpha:]'[:alpha:]\0]";
+
+  return fnmatch (pattern, "a", 0) != FNM_NOMATCH;
 }
-strong_alias (__ieee754_sqrt, __sqrt_finite)
+
+#define TEST_FUNCTION do_test ()
+#include "../test-skeleton.c"
