@@ -34,7 +34,8 @@ endif
 
 ifeq ($(subdir),elf)
 # The ld.so startup code cannot use literals until it self-relocates.
-CFLAGS-rtld.c = -mbuild-constants
+# It uses more than 64k for the small data area.
+CFLAGS-rtld.c = -mbuild-constants $(PIC-ccflag)
 endif
 
 ifeq ($(subdir),math)
