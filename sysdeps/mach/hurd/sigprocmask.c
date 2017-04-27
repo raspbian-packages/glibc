@@ -39,7 +39,7 @@ __sigprocmask (how, set, oset)
 
   ss = _hurd_self_sigstate ();
 
-  __spin_lock (&ss->lock);
+  _hurd_sigstate_lock (ss);
 
   old = ss->blocked;
 
@@ -60,7 +60,7 @@ __sigprocmask (how, set, oset)
 	  break;
 
 	default:
-	  __spin_unlock (&ss->lock);
+	  _hurd_sigstate_unlock (ss);
 	  errno = EINVAL;
 	  return -1;
 	}
@@ -68,9 +68,9 @@ __sigprocmask (how, set, oset)
       ss->blocked &= ~_SIG_CANT_MASK;
     }
 
-  pending = ss->pending & ~ss->blocked;
+  pending = _hurd_sigstate_pending (ss) & ~ss->blocked;
 
-  __spin_unlock (&ss->lock);
+  _hurd_sigstate_unlock (ss);
 
   if (oset != NULL)
     *oset = old;
