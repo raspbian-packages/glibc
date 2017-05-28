@@ -1,7 +1,6 @@
-/* Compute positive difference, sparc 64-bit.
-   Copyright (C) 2013-2016 Free Software Foundation, Inc.
+/* Bug 11941: Improper assert map->l_init_called in dlclose.
+   Copyright (C) 2016 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
-   Contributed by David S. Miller <davem@davemloft.net>.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -17,15 +16,21 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-#include <sysdep.h>
+/* This simulates an application using the primary DSO which loads the
+   plugin DSO.  */
+#include <stdio.h>
+#include <stdlib.h>
 
-ENTRY(__fdimf)
-	fcmps	%f1, %f3
-	fbug	1f
-	 nop
-	fzeros	%f1
-	fnegs	%f1, %f3
-1:	retl
-	 fsubs	%f1, %f3, %f0
-END(__fdimf)
-weak_alias (__fdimf, fdimf)
+extern void primary (void);
+
+static int
+do_test (void)
+{
+  printf ("INFO: Starting application.\n");
+  primary ();
+  printf ("INFO: Exiting application.\n");
+  return 0;
+}
+
+#define TEST_FUNCTION do_test ()
+#include "../test-skeleton.c"
