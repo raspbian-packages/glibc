@@ -21,17 +21,14 @@
 #define _BITS_SPIN_LOCK_H	1
 
 #include <features.h>
-#include <machine-lock.h>	/* This does all the work.  */
 
 __BEGIN_DECLS
 
 /* The type of a spin lock object.  */
-typedef __spin_lock_t __pthread_spinlock_t;
+typedef volatile int __pthread_spinlock_t;
 
 /* Initializer for a spin lock object.  */
-#ifndef __PTHREAD_SPIN_LOCK_INITIALIZER
-#error __PTHREAD_SPIN_LOCK_INITIALIZER undefined: should be defined by <lock-intern.h>.
-#endif
+#define __PTHREAD_SPIN_LOCK_INITIALIZER 0
 
 __END_DECLS
 
