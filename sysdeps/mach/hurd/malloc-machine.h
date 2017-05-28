@@ -20,15 +20,14 @@
 #ifndef _MALLOC_MACHINE_H
 #define _MALLOC_MACHINE_H
 
-#include <atomic.h>
 #include <libc-lock.h>
+#include <mach/lock-intern.h>
 
-/* Assume hurd, with cthreads */
-
-/* Cthreads `mutex_t' is a pointer to a mutex, and malloc wants just the
-   mutex itself.  */
 #undef mutex_t
-#define mutex_t struct mutex
+#define mutex_t unsigned int
+
+#undef MUTEX_INITIALIZER
+#define MUTEX_INITIALIZER   LLL_INITIALIZER
 
 #undef mutex_init
 #define mutex_init(m) ({ __mutex_init(m); 0; })
