@@ -24,7 +24,7 @@ include ../Makeconfig
 headers		= elf.h bits/elfclass.h link.h bits/link.h
 routines	= $(dl-routines) dl-support dl-iteratephdr \
 		  dl-addr enbl-secure dl-profstub \
-		  dl-origin dl-libc dl-sym dl-tsd dl-sysdep
+		  dl-origin dl-libc dl-sym dl-tsd dl-sysdep dl-altinit
 
 # The core dynamic linking functions are in libc for the static and
 # profiled libraries.
@@ -49,6 +49,10 @@ all-rtld-routines = $(rtld-routines) $(sysdep-rtld-routines)
 CFLAGS-dl-runtime.c = -fexceptions -fasynchronous-unwind-tables
 CFLAGS-dl-lookup.c = -fexceptions -fasynchronous-unwind-tables
 CFLAGS-dl-iterate-phdr.c = $(uses-callbacks)
+
+# We only need to re-run initializers if ld.so and libc.so might be built
+# for different machines, so only shared libraries need dl-altinit.
+shared-only-routines += dl-altinit
 
 ifeq ($(unwind-find-fde),yes)
 routines += unwind-dw2-fde-glibc
