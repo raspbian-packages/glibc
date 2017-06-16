@@ -25,6 +25,7 @@ s390x-.*-linux.*        DEFAULT			GLIBC_2.2
 powerpc64-.*-linux.*	DEFAULT			GLIBC_2.3
 powerpc.*le-.*-linux.*	DEFAULT			GLIBC_2.17
 .*-.*-gnu-gnu.*		DEFAULT			GLIBC_2.2.6
+.*-.*-kfreebsd.*	DEFAULT			GLIBC_2.3
 
 # Configuration		ABI			Identifier for ABI data files
 # -------------		----------		-----------------------------
@@ -39,11 +40,13 @@ sparc64.*-.*-linux.*	libm=6			GLIBC_2.2
 sh.*-.*-linux.*		libm=6			GLIBC_2.2
 .*-.*-linux.*		libm=6
 .*-.*-gnu-gnu.*		libm=6
+.*-.*-kfreebsd.*	libm=1
 
 # We provide libc.so.6 for Linux kernel versions 2.0 and later.
 sh.*-.*-linux.*		libc=6			GLIBC_2.2
 sparc64.*-.*-linux.*	libc=6			GLIBC_2.2
 .*-.*-linux.*		libc=6
+.*-.*-kfreebsd.*	libc=0.1
 
 # libmachuser.so.1 corresponds to mach/*.defs as of Utah's UK22 release.
 .*-.*-gnu-gnu.*		libmachuser=1
