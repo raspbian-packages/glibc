@@ -76,7 +76,7 @@ $(objpfx)tst-printf.out: tst-printf.sh $(objpfx)tst-printf
 	$(SHELL) $< $(common-objpfx) '$(test-program-prefix)'
 endif
 
-CFLAGS-vfprintf.c = -Wno-uninitialized
+CFLAGS-vfprintf.c = -Wno-uninitialized -fno-delayed-branch
 CFLAGS-vfwprintf.c = -Wno-uninitialized
 CFLAGS-tst-printf.c = -Wno-format
 CFLAGS-tstdiomisc.c = -Wno-format
