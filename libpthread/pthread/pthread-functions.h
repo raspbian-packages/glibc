@@ -61,6 +61,17 @@ pthread_t __pthread_self (void);
 int __pthread_setcancelstate (int, int *);
 int __pthread_setcanceltype (int, int *);
 struct __pthread_cancelation_handler **__pthread_get_cleanup_stack (void);
+int __pthread_once (pthread_once_t *, void (*) (void));
+int __pthread_rwlock_rdlock (pthread_rwlock_t *);
+int __pthread_rwlock_wrlock (pthread_rwlock_t *);
+int __pthread_rwlock_unlock (pthread_rwlock_t *);
+int __pthread_key_create (pthread_key_t *, void (*) (void *));
+void *__pthread_getspecific (pthread_key_t);
+int __pthread_setspecific (pthread_key_t, const void *);
+
+void _cthreads_flockfile (FILE *);
+void _cthreads_funlockfile (FILE *);
+int _cthreads_ftrylockfile (FILE *);
 
 /* Data type shared with libc.  The libc uses it to pass on calls to
    the thread functions.  Wine pokes directly into this structure,
@@ -106,11 +117,25 @@ struct pthread_functions
   int (*ptr_pthread_setcancelstate) (int, int *);
   int (*ptr_pthread_setcanceltype) (int, int *);
   struct __pthread_cancelation_handler **(*ptr___pthread_get_cleanup_stack) (void);
+  int (*ptr_pthread_once) (pthread_once_t *, void (*) (void));
+  int (*ptr_pthread_rwlock_rdlock) (pthread_rwlock_t *);
+  int (*ptr_pthread_rwlock_wrlock) (pthread_rwlock_t *);
+  int (*ptr_pthread_rwlock_unlock) (pthread_rwlock_t *);
+  int (*ptr_pthread_key_create) (pthread_key_t *, void (*) (void *));
+  void *(*ptr_pthread_getspecific) (pthread_key_t);
+  int (*ptr_pthread_setspecific) (pthread_key_t, const void *);
+  void (*ptr__IO_flockfile) (FILE *);
+  void (*ptr__IO_funlockfile) (FILE *);
+  int (*ptr__IO_ftrylockfile) (FILE *);
 };
 
 /* Variable in libc.so.  */
 extern struct pthread_functions __libc_pthread_functions attribute_hidden;
+extern int __libc_pthread_functions_init attribute_hidden;
 
 void __libc_pthread_init (const struct pthread_functions *functions);
+
+# define PTHFCT_CALL(fct, params) \
+    __libc_pthread_functions.fct params
 
 #endif	/* pthread-functions.h */
