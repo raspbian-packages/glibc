@@ -2004,6 +2004,7 @@ main_loop_poll (void)
 	      /* We have a new incoming connection.  Accept the connection.  */
 	      int fd;
 
+#ifdef SOCK_NONBLOCK
 #ifndef __ASSUME_ACCEPT4
 	      fd = -1;
 	      if (have_accept4 >= 0)
@@ -2018,6 +2019,9 @@ main_loop_poll (void)
 		}
 #ifndef __ASSUME_ACCEPT4
 	      if (have_accept4 < 0)
+		fd = TEMP_FAILURE_RETRY (accept (sock, NULL, NULL));
+#endif
+#else
 		fd = TEMP_FAILURE_RETRY (accept (sock, NULL, NULL));
 #endif
 
@@ -2210,7 +2214,7 @@ main_loop_epoll (int efd)
 	  {
 	    /* A new connection.  */
 	    int fd;
-
+#ifdef SOCK_NONBLOCK
 # ifndef __ASSUME_ACCEPT4
 	    fd = -1;
 	    if (have_accept4 >= 0)
@@ -2227,6 +2231,9 @@ main_loop_epoll (int efd)
 	    if (have_accept4 < 0)
 	      fd = TEMP_FAILURE_RETRY (accept (sock, NULL, NULL));
 # endif
+#else
+	    fd = TEMP_FAILURE_RETRY (accept (sock, NULL, NULL));
+#endif
 
 	    /* Use the descriptor if we have not reached the limit.  */
 	    if (fd >= 0)
