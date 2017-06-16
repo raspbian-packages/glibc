@@ -41,6 +41,7 @@ libc {
   GCC_3.0
 %endif
   GLIBC_PRIVATE
+  GLIBC_2.13_DEBIAN_19
 }
 libcrypt {
   GLIBC_2.0
