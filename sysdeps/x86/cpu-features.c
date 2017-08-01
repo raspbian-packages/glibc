@@ -22,7 +22,8 @@
 static void
 get_common_indeces (struct cpu_features *cpu_features,
 		    unsigned int *family, unsigned int *model,
-		    unsigned int *extended_model)
+		    unsigned int *extended_model,
+		    unsigned int *stepping)
 {
   if (family)
     {
@@ -34,6 +35,7 @@ get_common_indeces (struct cpu_features *cpu_features,
       *family = (eax >> 8) & 0x0f;
       *model = (eax >> 4) & 0x0f;
       *extended_model = (eax >> 12) & 0xf0;
+      *stepping = eax & 0x0f;
       if (*family == 0x0f)
 	{
 	  *family += (eax >> 20) & 0xff;
@@ -97,6 +99,7 @@ init_cpu_features (struct cpu_features *cpu_features)
   unsigned int ebx, ecx, edx;
   unsigned int family = 0;
   unsigned int model = 0;
+  unsigned int stepping = 0;
   enum cpu_features_kind kind;
 
 #if !HAS_CPUID
@@ -116,7 +119,8 @@ init_cpu_features (struct cpu_features *cpu_features)
 
       kind = arch_kind_intel;
 
-      get_common_indeces (cpu_features, &family, &model, &extended_model);
+      get_common_indeces (cpu_features, &family, &model,
+		          &extended_model, &stepping);
 
       if (family == 0x06)
 	{
@@ -235,7 +239,8 @@ init_cpu_features (struct cpu_features *cpu_features)
 
       kind = arch_kind_amd;
 
-      get_common_indeces (cpu_features, &family, &model, &extended_model);
+      get_common_indeces (cpu_features, &family, &model,
+		          &extended_model, &stepping);
 
       ecx = cpu_features->cpuid[COMMON_CPUID_INDEX_1].ecx;
 
@@ -272,7 +277,7 @@ init_cpu_features (struct cpu_features *cpu_features)
   else
     {
       kind = arch_kind_other;
-      get_common_indeces (cpu_features, NULL, NULL, NULL);
+      get_common_indeces (cpu_features, NULL, NULL, NULL, NULL);
     }
 
   /* Support i586 if CX8 is available.  */
@@ -282,6 +287,24 @@ init_cpu_features (struct cpu_features *cpu_features)
   /* Support i686 if CMOV is available.  */
   if (CPU_FEATURES_CPU_P (cpu_features, CMOV))
     cpu_features->feature[index_arch_I686] |= bit_arch_I686;
+
+  /* Disable Intel TSX (HLE and RTM) due to erratum HSD136/HSW136
+     on all Haswell processors, except Haswell-EX/Xeon E7-v3 (306F4),
+     to work around outdated microcode that doesn't disable the
+     broken feature by default.
+
+     Disable TSX on Broadwell, due to errata BDM53/BDW51/BDD51/
+     BDE42.  The errata documentation states that RTM is unusable,
+     and that it should not be advertised by CPUID at all on any
+     such processors.  Unfortunately, it _is_ advertised in some
+     (older) microcode versions.  Exceptions: Broadwell-E (406Fx),
+     likely already fixed at launch */
+  if (kind == arch_kind_intel && family == 6 &&
+      ((model == 63 && stepping <= 2) || (model == 60 && stepping <= 3) ||
+       (model == 69 && stepping <= 1) || (model == 70 && stepping <= 1) ||
+       (model == 61 && stepping <= 4) || (model == 71 && stepping <= 1) ||
+       (model == 86 && stepping <= 2) ))
+    cpu_features->cpuid[COMMON_CPUID_INDEX_7].ebx &= ~(bit_cpu_RTM | bit_cpu_HLE);
 
 #if !HAS_CPUID
 no_cpuid:
