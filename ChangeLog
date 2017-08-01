@@ -1,3 +1,608 @@
+2017-01-24  James Clarke  <jrtc27@jrtc27.com>
+
+	* sysdeps/unix/sysv/linux/sh/sh3/ucontext_i.sym: Use new REG_R*
+	constants instead of the old R* ones.
+	* sysdeps/unix/sysv/linux/sh/sh4/ucontext_i.sym: Likewise.
+	* sysdeps/unix/sysv/linux/sh/sys/ucontext.h (NGPREG): Rename...
+	(NGREG): ... to this, to fit in with other architectures.
+	(gpregset_t): Use new NGREG macro.
+	[__USE_GNU]: Remove condition; all architectures other than tile
+	are unconditional.
+	(R*): Rename to REG_R*.
+
+2017-07-26  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #21666]
+	* misc/regexp.c (loc1): Add __attribute__ ((nocommon));
+	(loc2): Likewise.
+	(locs): Likewise.
+
+2017-07-12  Szabolcs Nagy  <szabolcs.nagy@arm.com>
+
+	* sysdeps/aarch64/dl-machine.h (RTLD_START_1): Change _dl_argv to the
+	hidden __GI__dl_argv symbol.
+
+2016-09-05  Aurelien Jarno  <aurelien@aurel32.net>
+
+	* conform/Makefile (conformtest-header-tests): Pass -I. to $(PERL).
+	(linknamespace-symlists-tests): Likewise.
+	(linknamespace-header-tests): Likewise.
+
+2017-07-06  Florian Weimer  <fweimer@redhat.com>
+	    H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #21609]
+	* sysdeps/x86_64/Makefile (sysdep-dl-routines): Add tls_get_addr.
+	(gen-as-const-headers): Add rtld-offsets.sym.
+	* sysdeps/x86_64/dl-tls.c: New file.
+	* sysdeps/x86_64/rtld-offsets.sym: Likwise.
+	* sysdeps/x86_64/tls_get_addr.S: Likewise.
+	* sysdeps/x86_64/dl-tls.h: Add multiple inclusion guards.
+	* sysdeps/x86_64/tlsdesc.sym (TI_MODULE_OFFSET): New.
+	(TI_OFFSET_OFFSET): Likwise.
+
+2017-06-14  Florian Weimer  <fweimer@redhat.com>
+
+	* sysdeps/i386/i686/multiarch/strcspn-c.c: Add IS_IN (libc) guard.
+	* sysdeps/i386/i686/multiarch/varshift.c: Likewise.
+
+2017-03-07  Siddhesh Poyarekar  <siddhesh@sourceware.org>
+
+	[BZ #21209]
+	* elf/rtld.c (process_envvars): Ignore LD_HWCAP_MASK for
+	AT_SECURE processes.
+	* sysdeps/generic/unsecvars.h: Add LD_HWCAP_MASK.
+
+2017-06-19  Florian Weimer  <fweimer@redhat.com>
+
+	* elf/rtld.c (audit_list_string): New variable.
+	(audit_list): Update comment.
+	(struct audit_list_iter): Define.
+	(audit_list_iter_init, audit_list_iter_next): New function.
+	(dl_main): Use struct audit_list_iter to process audit modules.
+	(process_dl_audit): Call dso_name_valid_for_suid.
+	(process_envvars): Set audit_list_string instead of calling
+	process_dl_audit.
+
+2017-06-19  Florian Weimer  <fweimer@redhat.com>
+
+	* elf/rtld.c (SECURE_NAME_LIMIT, SECURE_PATH_LIMIT): Define.
+	(dso_name_valid_for_suid): New function.
+	(handle_ld_preload): Likewise.
+	(dl_main): Call it.  Remove alloca.
+
+2017-06-19  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #21624]
+	CVE-2017-1000366
+	* elf/rtld.c (process_envvars): Ignore LD_LIBRARY_PATH for
+	__libc_enable_secure.
+
+2017-02-01  Andreas Schwab  <schwab@linux-m68k.org>
+
+	* sysdeps/m68k/m680x0/m68020/atomic-machine.h
+	(__arch_compare_and_exchange_val_64_acq, atomic_exchange_acq)
+	(atomic_exchange_and_add, atomic_add): Add casts to 64 bit asm
+	operands.
+
+2017-05-12  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #21386]
+	* sysdeps/nptl/fork.c (__libc_fork): Remove assertions on the
+	parent PID.  The assertion in the child is incorrect with PID
+	namespaces.
+
+2017-06-07  Arjun Shankar  <arjun.is@lostca.se>
+
+	* sysdeps/unix/sysv/linux/tst-clone2.c: Do not
+	include test-skeleton.c.
+	Include support/check.h and support/test-driver.c.
+
+2016-11-24  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	* sysdeps/nptl/fork.c (__libc_fork): Remove pid cache setting.
+	* nptl/allocatestack.c (allocate_stack): Likewise.
+	(__reclaim_stacks): Likewise.
+	(setxid_signal_thread): Obtain pid through syscall.
+	* nptl/nptl-init.c (sigcancel_handler): Likewise.
+	(sighandle_setxid): Likewise.
+	* nptl/pthread_cancel.c (pthread_cancel): Likewise.
+	* sysdeps/unix/sysv/linux/pthread_kill.c (__pthread_kill): Likewise.
+	* sysdeps/unix/sysv/linux/pthread_sigqueue.c (pthread_sigqueue):
+	Likewise.
+	* sysdeps/unix/sysv/linux/createthread.c (create_thread): Likewise.
+	* sysdeps/unix/sysv/linux/raise.c (raise): Remove old behaviour
+	comment.
+	* sysdeps/unix/sysv/linux/getpid.c: Remove file.
+	* nptl/descr.h (struct pthread): Change comment about pid value.
+	* nptl/pthread_getattr_np.c (pthread_getattr_np): Remove thread
+	pid assert.
+	* sysdeps/unix/sysv/linux/pthread-pids.h (__pthread_initialize_pids):
+	Do not set pid value.
+	* nptl_db/td_ta_thr_iter.c (iterate_thread_list): Remove thread
+	pid cache check.
+	* nptl_db/td_thr_validate.c (td_thr_validate): Likewise.
+	* sysdeps/aarch64/nptl/tcb-offsets.sym: Remove pid offset.
+	* sysdeps/alpha/nptl/tcb-offsets.sym: Likewise.
+	* sysdeps/arm/nptl/tcb-offsets.sym: Likewise.
+	* sysdeps/hppa/nptl/tcb-offsets.sym: Likewise.
+	* sysdeps/i386/nptl/tcb-offsets.sym: Likewise.
+	* sysdeps/ia64/nptl/tcb-offsets.sym: Likewise.
+	* sysdeps/m68k/nptl/tcb-offsets.sym: Likewise.
+	* sysdeps/microblaze/nptl/tcb-offsets.sym: Likewise.
+	* sysdeps/mips/nptl/tcb-offsets.sym: Likewise.
+	* sysdeps/nios2/nptl/tcb-offsets.sym: Likewise.
+	* sysdeps/powerpc/nptl/tcb-offsets.sym: Likewise.
+	* sysdeps/s390/nptl/tcb-offsets.sym: Likewise.
+	* sysdeps/sh/nptl/tcb-offsets.sym: Likewise.
+	* sysdeps/sparc/nptl/tcb-offsets.sym: Likewise.
+	* sysdeps/tile/nptl/tcb-offsets.sym: Likewise.
+	* sysdeps/x86_64/nptl/tcb-offsets.sym: Likewise.
+	* sysdeps/unix/sysv/linux/aarch64/clone.S: Remove pid and tid caching.
+	* sysdeps/unix/sysv/linux/alpha/clone.S: Likewise.
+	* sysdeps/unix/sysv/linux/arm/clone.S: Likewise.
+	* sysdeps/unix/sysv/linux/hppa/clone.S: Likewise.
+	* sysdeps/unix/sysv/linux/i386/clone.S: Likewise.
+	* sysdeps/unix/sysv/linux/ia64/clone2.S: Likewise.
+	* sysdeps/unix/sysv/linux/mips/clone.S: Likewise.
+	* sysdeps/unix/sysv/linux/nios2/clone.S: Likewise.
+	* sysdeps/unix/sysv/linux/powerpc/powerpc32/clone.S: Likewise.
+	* sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S: Likewise.
+	* sysdeps/unix/sysv/linux/s390/s390-32/clone.S: Likewise.
+	* sysdeps/unix/sysv/linux/s390/s390-64/clone.S: Likewise.
+	* sysdeps/unix/sysv/linux/sh/clone.S: Likewise.
+	* sysdeps/unix/sysv/linux/sparc/sparc32/clone.S: Likewise.
+	* sysdeps/unix/sysv/linux/sparc/sparc64/clone.S: Likewise.
+	* sysdeps/unix/sysv/linux/tile/clone.S: Likewise.
+	* sysdeps/unix/sysv/linux/x86_64/clone.S: Likewise.
+	* sysdeps/unix/sysv/linux/aarch64/vfork.S: Remove pid set and reset.
+	* sysdeps/unix/sysv/linux/alpha/vfork.S: Likewise.
+	* sysdeps/unix/sysv/linux/arm/vfork.S: Likewise.
+	* sysdeps/unix/sysv/linux/i386/vfork.S: Likewise.
+	* sysdeps/unix/sysv/linux/ia64/vfork.S: Likewise.
+	* sysdeps/unix/sysv/linux/m68k/clone.S: Likewise.
+	* sysdeps/unix/sysv/linux/m68k/vfork.S: Likewise.
+	* sysdeps/unix/sysv/linux/mips/vfork.S: Likewise.
+	* sysdeps/unix/sysv/linux/nios2/vfork.S: Likewise.
+	* sysdeps/unix/sysv/linux/powerpc/powerpc32/vfork.S: Likewise.
+	* sysdeps/unix/sysv/linux/powerpc/powerpc64/vfork.S: Likewise.
+	* sysdeps/unix/sysv/linux/s390/s390-32/vfork.S: Likewise.
+	* sysdeps/unix/sysv/linux/s390/s390-64/vfork.S: Likewise.
+	* sysdeps/unix/sysv/linux/sh/vfork.S: Likewise.
+	* sysdeps/unix/sysv/linux/sparc/sparc32/vfork.S: Likewise.
+	* sysdeps/unix/sysv/linux/sparc/sparc64/vfork.S: Likewise.
+	* sysdeps/unix/sysv/linux/tile/vfork.S: Likewise.
+	* sysdeps/unix/sysv/linux/x86_64/vfork.S: Likewise.
+	* sysdeps/unix/sysv/linux/hppa/pt-vfork.S: Likewise.
+	* sysdeps/unix/sysv/linux/tst-clone2.c (f): Remove direct pthread
+	struct access.
+	(clone_test): Remove function.
+	(do_test): Rewrite to take in consideration pid is not cached anymore.
+
+2016-09-26  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	* sysdeps/unix/sysdep.h (__INTERNAL_SYSCALL0): New macro.
+	(__INTERNAL_SYSCALL1): Likewise.
+	(__INTERNAL_SYSCALL2): Likewise.
+	(__INTERNAL_SYSCALL3): Likewise.
+	(__INTERNAL_SYSCALL4): Likewise.
+	(__INTERNAL_SYSCALL5): Likewise.
+	(__INTERNAL_SYSCALL6): Likewise.
+	(__INTERNAL_SYSCALL7): Likewise.
+	(__INTERNAL_SYSCALL_NARGS_X): Likewise.
+	(__INTERNAL_SYSCALL_NARGS): Likewise.
+	(__INTERNAL_SYSCALL_DISP): Likewise.
+	(INTERNAL_SYSCALL_CALL): Likewise.
+	(__SYSCALL0): Rename to __INLINE_SYSCALL0.
+	(__SYSCALL1): Rename to __INLINE_SYSCALL1.
+	(__SYSCALL2): Rename to __INLINE_SYSCALL2.
+	(__SYSCALL3): Rename to __INLINE_SYSCALL3.
+	(__SYSCALL4): Rename to __INLINE_SYSCALL4.
+	(__SYSCALL5): Rename to __INLINE_SYSCALL5.
+	(__SYSCALL6): Rename to __INLINE_SYSCALL6.
+	(__SYSCALL7): Rename to __INLINE_SYSCALL7.
+	(__SYSCALL_NARGS_X): Rename to __INLINE_SYSCALL_NARGS_X.
+	(__SYSCALL_NARGS): Rename to __INLINE_SYSCALL_NARGS.
+	(__SYSCALL_DISP): Rename to __INLINE_SYSCALL_DISP.
+	(__SYSCALL_CALL): Rename to INLINE_SYSCALL_CALL.
+	(SYSCALL_CANCEL): Replace __SYSCALL_CALL with INLINE_SYSCALL_CALL.
+
+2017-04-28  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #21396]
+	* sysdeps/x86/cpu-features.c (init_cpu_features): Set
+	Prefer_No_AVX512 if AVX512ER isn't available.
+	* sysdeps/x86/cpu-features.h (bit_arch_Prefer_No_AVX512): New.
+	(index_arch_Prefer_No_AVX512): Likewise.
+	* sysdeps/x86_64/multiarch/memcpy.S (__new_memcpy): Don't use
+	AVX512 version if Prefer_No_AVX512 is set.
+	* sysdeps/x86_64/multiarch/memcpy_chk.S (__memcpy_chk):
+	Likewise.
+	* sysdeps/x86_64/multiarch/memmove.S (__libc_memmove): Likewise.
+	* sysdeps/x86_64/multiarch/memmove_chk.S (__memmove_chk):
+	Likewise.
+	* sysdeps/x86_64/multiarch/mempcpy.S (__mempcpy): Likewise.
+	* sysdeps/x86_64/multiarch/mempcpy_chk.S (__mempcpy_chk):
+	Likewise.
+	* sysdeps/x86_64/multiarch/memset.S (memset): Likewise.
+	* sysdeps/x86_64/multiarch/memset_chk.S (__memset_chk):
+	Likewise.
+
+2017-04-28  H.J. Lu  <hongjiu.lu@intel.com>
+
+	* sysdeps/x86/cpu-features.c (init_cpu_features): Set
+	Prefer_No_VZEROUPPER if AVX512ER is available.
+	* sysdeps/x86/cpu-features.h
+	(bit_cpu_AVX512PF): New.
+	(bit_cpu_AVX512ER): Likewise.
+	(bit_cpu_AVX512CD): Likewise.
+	(bit_cpu_AVX512BW): Likewise.
+	(bit_cpu_AVX512VL): Likewise.
+	(index_cpu_AVX512PF): Likewise.
+	(index_cpu_AVX512ER): Likewise.
+	(index_cpu_AVX512CD): Likewise.
+	(index_cpu_AVX512BW): Likewise.
+	(index_cpu_AVX512VL): Likewise.
+	(reg_AVX512PF): Likewise.
+	(reg_AVX512ER): Likewise.
+	(reg_AVX512CD): Likewise.
+	(reg_AVX512BW): Likewise.
+	(reg_AVX512VL): Likewise.
+
+2017-01-05  Joseph Myers  <joseph@codesourcery.com>
+
+	[BZ #21026]
+	* sysdeps/unix/sysv/linux/mips/mips64/n64/syscalls.list
+	(readahead): New syscall entry.
+
+2017-04-07  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #21258]
+	* sysdeps/x86_64/dl-trampoline.S (_dl_runtime_resolve_opt):
+	Define only if _dl_runtime_resolve is defined to
+	_dl_runtime_resolve_sse_vex.
+	* sysdeps/x86_64/dl-trampoline.h (_dl_runtime_resolve_opt):
+	Fallthrough to _dl_runtime_resolve_sse_vex.
+
+2017-04-03  Mike Frysinger  <vapier@gentoo.org>
+
+	[BZ #21253]
+	* sysdeps/unix/sysv/linux/spawni.c (__spawnix): Increase argv_size
+	slack space by 32KiB.
+
+2017-03-31  Slava Barinov  <v.barinov@samsung.com>
+
+	[BZ #21289]
+	* io/fts.h (fts_set): Replace __REDIRECT with __REDIRECT_NTH.
+
+2017-03-20  Mike Frysinger  <vapier@gentoo.org>
+
+	[BZ #21275]
+	* sysdeps/unix/sysv/linux/spawni.c [__ia64__] (CLONE): Rename
+	__stack to __stackbase.
+	(STACK): Invert _STACK_GROWS_DOWN and _STACK_GROWS_UP order of
+	checks so we can include defined(__ia64__) first.
+
+2017-03-15  John David Anglin  <danglin@gcc.gnu.org>
+
+	* sysdeps/hppa/dl-machine.h (DL_STACK_END): Define.
+	(RTLD_START): Don't record stack end address in _dl_start_user.
+
+2017-01-30  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #21081]
+	* sysdeps/x86_64/multiarch/memset-vec-unaligned-erms.S
+	(L(stosb)): Add VZEROUPPER before ret.
+
+2016-11-28  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #20750]
+	* sysdeps/x86_64/sysdep.h (JUMPTARGET): Check SHARED instead
+	of PIC.
+
+2016-12-31  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #18784]
+	CVE-2015-5180
+	* include/arpa/nameser_compat.h (T_QUERY_A_AND_AAAA): Rename from
+	T_UNSPEC.  Adjust value.
+	* resolv/nss_dns/dns-host.c (_nss_dns_gethostbyname4_r): Use it.
+	* resolv/res_query.c (__libc_res_nquery): Likewise.
+	* resolv/res_mkquery.c (res_nmkquery): Check for out-of-range
+	QTYPEs.
+	* resolv/tst-resolv-qtypes.c: New file.
+	* resolv/Makefile (xtests): Add tst-resolv-qtypes.
+	(tst-resolv-qtypes): Link against libresolv and libpthread.
+
+2017-02-02  Siddhesh Poyarekar  <siddhesh@sourceware.org>
+
+	* sysdeps/generic/unsecvars.h: Add GLIBC_TUNABLES.
+
+2017-01-23  Rajalakshmi Srinivasaraghavan  <raji@linux.vnet.ibm.com>
+	    Steven Munroe  <sjmunroe@us.ibm.com>
+	    Tulio Magno Quites Machado Filho  <tuliom@linux.vnet.ibm.com>
+
+	[BZ #20822]
+	* sysdeps/unix/sysv/linux/powerpc/elision-lock.c
+	(__lll_lock_elision): Access adapt_count via C11 atomics.
+	* sysdeps/unix/sysv/linux/powerpc/elision-trylock.c
+	(__lll_trylock_elision): Likewise.
+	* sysdeps/unix/sysv/linux/powerpc/elision-unlock.c
+	(__lll_unlock_elision):  Update adapt_count variable inside the
+	critical section using C11 atomics.
+
+2016-12-24  Carlos O'Donell  <carlos@redhat.com>
+
+	[BZ #11941]
+	* elf/dl-close.c (_dl_close): Take dl_load_lock to examine map.
+	Remove assert (map->l_init_called); if DF_1_NODELETE is set.
+	* elf/Makefile [ifeq (yes,$(build-shared))] (tests): Add
+	tst-nodelete-dlclose.
+	(modules-names): Add tst-nodelete-dlclose-dso and
+	tst-nodelete-dlclose-plugin.
+	($(objpfx)tst-nodelete-dlclose-dso.so): Define.
+	($(objpfx)tst-nodelete-dlclose-plugin.so): Define.
+	($(objpfx)tst-nodelete-dlclose): Define.
+	($(objpfx)tst-nodelete-dlclose.out): Define.
+
+2016-08-02  Aurelien Jarno  <aurelien@aurel32.net>
+
+2016-08-02  Aurelien Jarno  <aurelien@aurel32.net>
+
+	* sysdeps/alpha/fpu/s_ceil.c (__ceil): Add argument with itself
+	when it is a NaN.
+	[_IEEE_FP_INEXACT] Remove.
+	* sysdeps/alpha/fpu/s_ceilf.c (__ceilf): Likewise.
+	* sysdeps/alpha/fpu/s_floor.c (__floor): Add argument with itself
+	when it is a NaN.
+	[_IEEE_FP_INEXACT] Remove.
+	* sysdeps/alpha/fpu/s_floorf.c (__floorf): Likewise.
+	* sysdeps/alpha/fpu/s_rint.c (__rint): Add argument with itself
+	when it is a NaN.
+	* sysdeps/alpha/fpu/s_rintf.c (__rintf): Likewise.
+	* sysdeps/alpha/fpu/s_trunc.c (__trunc): Return the input value
+	when its absolute value is greater than 0x1.0p52.
+	[_IEEE_FP_INEXACT] Remove.
+	* sysdeps/alpha/fpu/s_truncf.c (__truncf): Return the input value
+	when its absolute value is greater than 0x1.0p23.
+	[_IEEE_FP_INEXACT] Remove.
+
+2016-11-30  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #20495]
+	[BZ #20508]
+	* sysdeps/x86/cpu-features.c (init_cpu_features): For Intel
+	processors, set Use_dl_runtime_resolve_slow and set
+	Use_dl_runtime_resolve_opt if XGETBV suports ECX == 1.
+	* sysdeps/x86/cpu-features.h (bit_arch_Use_dl_runtime_resolve_opt):
+	New.
+	(bit_arch_Use_dl_runtime_resolve_slow): Likewise.
+	(index_arch_Use_dl_runtime_resolve_opt): Likewise.
+	(index_arch_Use_dl_runtime_resolve_slow): Likewise.
+	* sysdeps/x86_64/dl-machine.h (elf_machine_runtime_setup): Use
+	_dl_runtime_resolve_avx512_opt and _dl_runtime_resolve_avx_opt
+	if Use_dl_runtime_resolve_opt is set.  Use
+	_dl_runtime_resolve_slow if Use_dl_runtime_resolve_slow is set.
+	* sysdeps/x86_64/dl-trampoline.S: Include <cpu-features.h>.
+	(_dl_runtime_resolve_opt): New.  Defined for AVX and AVX512.
+	(_dl_runtime_resolve): Add one for _dl_runtime_resolve_sse_vex.
+	* sysdeps/x86_64/dl-trampoline.h (_dl_runtime_resolve_avx_slow):
+	New.
+	(_dl_runtime_resolve_opt): Likewise.
+	(_dl_runtime_profile): Define only if _dl_runtime_profile is
+	defined.
+
+2016-11-24  Aurelien Jarno  <aurelien@aurel32.net>
+
+	* sysdeps/x86_64/memcpy_chk.S (__memcpy_chk): Check for SHARED
+	instead of PIC.
+
+2016-11-23  Matthew Fortune  <Matthew.Fortune@imgtec.com>
+	    Maciej W. Rozycki  <macro@imgtec.com>
+
+	* sysdeps/mips/mips32/crti.S (_init): Add `.insn' pseudo-op at
+	`.Lno_weak_fn' label.
+	* sysdeps/mips/mips64/n32/crti.S (_init): Likewise.
+	* sysdeps/mips/mips64/n64/crti.S (_init): Likewise.
+
+2016-11-22  Adhemerval Zanella  <adhemerva.zanella@linaro.org>
+
+	[BZ #20847]
+	* posix/execvpe.c (maybe_script_execute): Remove write past allocated
+	array bounds.
+	(__execvpe): Likewise.
+
+2016-11-15  Denis Kaganovich  <mahatma@eu.by>
+	    Magnus Granberg  <zorry@gentoo.org>
+	    Mike Frysinger  <vapier@gentoo.org>
+
+	[BZ #20662]
+	* configure.ac (libc_cv_predef_stack_protector): Also check for
+	__stack_chk_fail_local symbols.
+	* configure: Regenerated.
+
+2016-11-03  Joseph Myers  <joseph@codesourcery.com>
+
+	* conform/Makefile ($(linknamespace-header-tests)): Also depend on
+	$(linknamespace-symlists-tests).
+
+2016-11-06  Aurelien Jarno  <aurelien@aurel32.net>
+
+	* iconv/gconv.h (__gconv_info): Define __data element using a
+	zero-length array.
+
+2016-10-25  Joseph Myers  <joseph@codesourcery.com>
+
+	* sysdeps/powerpc/powerpc32/power6/memset.S (memset): Use cmplwi
+	instead of cmpli.
+	* sysdeps/powerpc/powerpc64/power6/memset.S (memset): Use cmpldi
+	instead of cmpli.
+
+2016-10-24  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	* sysdeps/unix/sysv/linux/pread.c (__libc_pread): Use SYSCALL_LL_PRW.
+	* sysdeps/unix/sysv/linux/pwrite.c (__libc_pwrite): Likewise.
+	* sysdeps/unix/sysv/linux/pread64.c (__libc_pread64): Use
+	SYSCALL_LL64_PRW.
+	* sysdeps/unix/sysv/linux/pwrite64.c (__libc_pwrite64): Likewise.
+	* sysdeps/unix/sysv/linux/sh/kernel-features.h: Define
+	__ASSUME_PRW_DUMMY_ARG.
+	* sysdeps/unix/sysv/linux/sh/pread.c: Remove file.
+	* sysdeps/unix/sysv/linux/sh/pread64.c: Likewise.
+	* sysdeps/unix/sysv/linux/sh/pwrite.c: Likewise.
+	* sysdeps/unix/sysv/linux/sh/pwrite64.c: Likewise.
+	* sysdeps/unix/sysv/linux/sysdep.h: Define SYSCALL_LL_PRW and
+	SYSCALL_LL_PRW64 based on __ASSUME_PRW_DUMMY_ARG.
+
+2016-10-05  Tulio Magno Quites Machado Filho  <tuliom@linux.vnet.ibm.com>
+
+	* sysdeps/powerpc/fpu/libm-test-ulps: Regenerated.
+
+2016-09-20  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	* sysdeps/unix/sysv/linux/spawni.c (__spawnix): Correctly block and unblock
+	all signals when executing the clone vfork child.
+	(SIGALL_SET): Remove macro.
+
+	* nptl/Makefile (tests): Add tst-exec5.
+	* nptl/tst-exec5.c: New file.
+	* sysdeps/unix/sysv/linux/spawni.c (__spawni): Correctly enable and disable
+	asynchronous cancellation.
+
+2016-09-19  Tulio Magno Quites Machado Filho  <tuliom@linux.vnet.ibm.com>
+
+	[BZ #20615]
+	* sysdeps/powerpc/powerpc32/power9/multiarch/Implies: Replace
+	fpu directory by non-fpu.
+	* sysdeps/powerpc/powerpc64/power9/fpu/Implies: Remove dependency
+	on non-fpu directory from a fpu directory.
+
+2016-09-02  Roland McGrath  <roland@hack.frob.com>
+
+	* sysdeps/arm/nacl/libc.abilist: Add GLIBC_2.24 A.
+
+	* sysdeps/nacl/dup.c: Add libc_hidden_def.
+
+2016-09-02  Roland McGrath  <roland@hack.frob.com>
+
+	* sysdeps/posix/wait3.c: Don't treat STAT_LOC as a union, since it's
+	not any more.
+
+2016-09-02  Roland McGrath  <roland@hack.frob.com>
+
+	* sysdeps/nacl/clock.c (clock): nacl_abi_clock_t -> nacl_irt_clock_t
+
+2016-08-17  Florian Weimer  <fweimer@redhat.com>
+
+	Reduce time to expected nptl/tst-once5 failure.
+	* nptl/tst-once5.cc (TIMEOUT): Define.
+
+2016-08-18  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #16907]
+	* argp/argp.h: Switch to __BEGIN_DECLS and __END_DECLS.
+	(__THROW, __NTH, __attribute__, __restrict): Remove definitions.
+	* argp/argp-fmtstream.h: Add __BEGIN_DECLS and __END_DECLS.
+	(__attribute__): Remove definition.
+
+2016-08-15  Andreas Schwab  <schwab@suse.de>
+
+	[BZ #20435]
+	* sysdeps/unix/sysv/linux/arm/setcontext.S (__startcontext): Mark
+	as .cantunwind.
+
+2016-08-17  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #20452]
+	Avoid additional copies of objects in libc.a in static libraries.
+	* sysdeps/ia64/nptl/Makefile (libpthread-shared-only-routines):
+	Add ptw-sysdep, ptw-sigblock, ptw-sigprocmask.
+	* sysdeps/mips/Makefile (librt-shared-only-routines): Add
+	rt-sysdep.
+	* sysdeps/mips/nptl/Makefile (libpthread-shared-only-routines):
+	Add nptl-sysdep.
+	* sysdeps/s390/nptl/Makefile (libpthread-shared-only-routines):
+	Add ptw-sysdep.
+	* sysdeps/unix/alpha/Makefile (librt-shared-only-routines): Add
+	rt-sysdep.
+	* sysdeps/unix/sysv/linux/alpha/Makefile
+	(libpthread-shared-only-routines): Add ptw-sysdep,
+	ptw-sigprocmask, ptw-rt_sigaction.
+	* sysdeps/unix/sysv/linux/ia64/Makefile
+	(librt-shared-only-routines): Add rt-sysdep.
+	* sysdeps/unix/sysv/linux/i386/Makefile
+	(libpthread-shared-only-routines): Add libc-do-syscall.
+	* sysdeps/unix/sysv/linux/microblaze/Makefile
+	(libpthread-shared-only-routines): Add sysdep.
+	* sysdeps/unix/sysv/linux/powerpc/Makefile
+	(librt-shared-only-routines): Add rt-sysdep.
+	(libpthread-shared-only-routines): Add sysdep.
+	* sysdeps/unix/sysv/linux/s390/Makefile
+	(librt-shared-only-routines): Add rt-sysdep.
+	* sysdeps/unix/sysv/linux/sparc/Makefile
+	(librt-shared-only-routines): Add rt-sysdep.
+	(libpthread-shared-only-routines): Add sysdep.
+	* sysdeps/unix/sysv/linux/tile/Makefile
+	(libpthread-shared-only-routines): Likewise.
+
+2016-08-05  Aurelien Jarno  <aurelien@aurel32.net>
+
+	* sysdeps/sparc/sparc32/sparcv9/fpu/multiarch/Makefile
+	[$(subdir) = math && $(have-as-vis3) = yes] (libm-sysdep_routines):
+	Remove s_fdimf-vis3, s_fdim-vis3.
+	* sysdeps/sparc/sparc32/fpu/s_fdim.S: Delete file.
+	* sysdeps/sparc/sparc32/fpu/s_fdimf.S: Likewise.
+	* sysdeps/sparc/sparc32/sparcv9/fpu/multiarch/s_fdim-vis3.S: Likewise.
+	* sysdeps/sparc/sparc32/sparcv9/fpu/multiarch/s_fdim.S: Likewise.
+	* sysdeps/sparc/sparc32/sparcv9/fpu/multiarch/s_fdimf-vis3.S: Likewise.
+	* sysdeps/sparc/sparc32/sparcv9/fpu/multiarch/s_fdimf.S: Likewise.
+	* sysdeps/sparc/sparc32/sparcv9/fpu/s_fdim.S: Likewise.
+	* sysdeps/sparc/sparc32/sparcv9/fpu/s_fdimf.S: Likewise.
+	* sysdeps/sparc/sparc64/fpu/s_fdim.S: Likewise.
+	* sysdeps/sparc/sparc64/fpu/s_fdimf.S: Likewise.
+
+2016-08-02  David S. Miller  <davem@davemloft.net>
+
+	* sysdeps/sparc/sparc32/sparcv9/fpu/multiarch/s_nearbyint-vis3.S
+	(__nearbyint_vis3): Don't check for sNaN before float register is
+	loaded with the incoming argument.
+	* sysdeps/sparc/sparc32/sparcv9/fpu/multiarch/s_nearbyintf-vis3.S
+	(__nearbyintf_vis3): Likewise.
+	* sysdeps/sparc/sparc32/sparcv9/fpu/s_nearbyint.S (__nearbyint):
+	Likewise.
+	* sysdeps/sparc/sparc32/sparcv9/fpu/s_nearbyintf.S (__nearbyintf):
+	Likewise.
+
+2016-08-03  Aurelien Jarno  <aurelien@aurel32.net>
+
+	* sysdeps/powerpc/ifunc-sel.h (ifunc_sel): Replace beqlr instructions
+	by beq instructions jumping to the end of the function.
+	* sysdeps/powerpc/ifunc-sel.h (ifunc_sel): Add "11", "12", "cr0" to the
+	clobber list. Use "i" constraint instead of "X".
+	(ifunc_one): Add "12" to the clobber list. Use "i" constraint instead
+	of "X".
+
+2016-08-04  Carlos O'Donell  <carlos@redhat.com>
+
+	* po/de.po: Update from Translation Project.
+	* po/fi.po: Likewise.
+	* po/sv.po: Likewise.
+
+2016-08-02  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #20370]
+	* malloc/arena.c (get_free_list): Update comment.  Assert that
+	arenas on the free list have no attached threads.
+	(remove_from_free_list): New function.
+	(reused_arena): Call it.
+
+2016-08-04  Florian Weimer  <fweimer@redhat.com>
+
+	Use sysdep.o from libc.a in static libraries.
+	* sysdeps/unix/sysv/linux/i386/Makefile
+	(libpthread-shared-only-routines): Add sysdep.
+	(librt-shared-only-routines): Likewise.
+
 2016-08-01  Carlos O'Donell  <carlos@redhat.com>
 
 	* version.h (RELEASE): Set to "stable"

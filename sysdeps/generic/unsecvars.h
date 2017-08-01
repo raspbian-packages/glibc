@@ -4,11 +4,13 @@
 #define UNSECURE_ENVVARS \
   "GCONV_PATH\0"							      \
   "GETCONF_DIR\0"							      \
+  "GLIBC_TUNABLES\0"							      \
   "HOSTALIASES\0"							      \
   "LD_AUDIT\0"								      \
   "LD_DEBUG\0"								      \
   "LD_DEBUG_OUTPUT\0"							      \
   "LD_DYNAMIC_WEAK\0"							      \
+  "LD_HWCAP_MASK\0"							      \
   "LD_LIBRARY_PATH\0"							      \
   "LD_ORIGIN_PATH\0"							      \
   "LD_PRELOAD\0"							      \
