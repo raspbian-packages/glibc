@@ -26,7 +26,7 @@
 #define _POSIX_THREAD_THREADS_MAX	64
 
 /* The default stack size.  */
-#define PTHREAD_STACK_DEFAULT	(2 * 1024 * 1024)
+#define PTHREAD_STACK_DEFAULT	(8 * 1024 * 1024)
 
 #define PTHREAD_SYSDEP_MEMBERS \
   thread_t kernel_thread;      \
