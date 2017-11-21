@@ -22,7 +22,7 @@
 
 #include <features.h>
 #include <bits/spin-lock.h>
-#include <machine-lock.h>	/* This does all the work.  */
+#include <lock-intern.h>   /* This does all the work.  */
 
 __BEGIN_DECLS
 
@@ -60,17 +60,15 @@ __PT_SPIN_INLINE int __pthread_spin_trylock (__pthread_spinlock_t *__lock);
 __PT_SPIN_INLINE int
 __pthread_spin_trylock (__pthread_spinlock_t *__lock)
 {
-  return __spin_try_lock (__lock) ? 0 : __EBUSY;
+  return __spin_try_lock ((__spin_lock_t *) __lock) ? 0 : __EBUSY;
 }
 
-__extern_inline int __pthread_spin_lock (__pthread_spinlock_t *__lock);
-extern int _pthread_spin_lock (__pthread_spinlock_t *__lock);
+__PT_SPIN_INLINE int __pthread_spin_lock (__pthread_spinlock_t *__lock);
 
-__extern_inline int
+__PT_SPIN_INLINE int
 __pthread_spin_lock (__pthread_spinlock_t *__lock)
 {
-  if (__pthread_spin_trylock (__lock))
-    return _pthread_spin_lock (__lock);
+  __spin_lock ((__spin_lock_t *) __lock);
   return 0;
 }
 
@@ -79,7 +77,7 @@ __PT_SPIN_INLINE int __pthread_spin_unlock (__pthread_spinlock_t *__lock);
 __PT_SPIN_INLINE int
 __pthread_spin_unlock (__pthread_spinlock_t *__lock)
 {
-  __spin_unlock (__lock);
+  __spin_unlock ((__spin_lock_t *) __lock);
   return 0;
 }
 
