@@ -82,6 +82,14 @@
 /* Options.  Leave them on. */
 /* #undef DEBUG */
 
+/* The structure HEADER is normally aligned to a word boundary and its
+   fields are accessed using word loads and stores.  We need to access 
+   this structure when it is aligned on a byte boundary.  This can cause
+   problems on machines with strict alignment.  So, we create a new
+   typedef to reduce its alignment to one.  This ensures the fields are
+   accessed with byte loads and stores.  */
+typedef HEADER __attribute__ ((__aligned__(1))) UHEADER;
+
 #if PACKETSZ > 65536
 #define MAXPACKET	PACKETSZ
 #else
@@ -118,8 +126,8 @@ __libc_res_nquery(res_state statp,
 		  int *resplen2,
 		  int *answerp2_malloced)
 {
-	HEADER *hp = (HEADER *) answer;
-	HEADER *hp2;
+	UHEADER *hp = (UHEADER *) answer;
+	UHEADER *hp2;
 	int n, use_malloc = 0;
 	u_int oflags = statp->_flags;
 
@@ -250,7 +258,7 @@ __libc_res_nquery(res_state statp,
 
 	if (answerp != NULL)
 	  /* __libc_res_nsend might have reallocated the buffer.  */
-	  hp = (HEADER *) *answerp;
+	  hp = (UHEADER *) *answerp;
 
 	/* We simplify the following tests by assigning HP to HP2 or
 	   vice versa.  It is easy to verify that this is the same as
@@ -261,7 +269,7 @@ __libc_res_nquery(res_state statp,
 	  }
 	else
 	  {
-	    hp2 = (HEADER *) *answerp2;
+	    hp2 = (UHEADER *) *answerp2;
 	    if (n < (int) sizeof (HEADER))
 	      {
 	        hp = hp2;
@@ -351,7 +359,7 @@ __libc_res_nsearch(res_state statp,
 		   int *answerp2_malloced)
 {
 	const char *cp, * const *domain;
-	HEADER *hp = (HEADER *) answer;
+	UHEADER *hp = (UHEADER *) answer;
 	char tmp[NS_MAXDNAME];
 	u_int dots;
 	int trailing_dot, ret, saved_herrno;
