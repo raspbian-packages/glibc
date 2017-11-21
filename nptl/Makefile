@@ -224,6 +224,7 @@ tests = tst-typesizes \
 	tst-attr1 tst-attr2 tst-attr3 tst-default-attr \
 	tst-mutex1 tst-mutex2 tst-mutex3 tst-mutex4 tst-mutex5 tst-mutex6 \
 	tst-mutex7 tst-mutex8 tst-mutex9 tst-mutex5a tst-mutex7a \
+	tst-mutex7robust \
 	tst-mutexpi1 tst-mutexpi2 tst-mutexpi3 tst-mutexpi4 tst-mutexpi5 \
 	tst-mutexpi5a tst-mutexpi6 tst-mutexpi7 tst-mutexpi7a tst-mutexpi8 \
 	tst-mutexpi9 \
@@ -241,7 +242,7 @@ tests = tst-typesizes \
 	tst-rwlock4 tst-rwlock5 tst-rwlock6 tst-rwlock7 tst-rwlock8 \
 	tst-rwlock9 tst-rwlock10 tst-rwlock11 tst-rwlock12 tst-rwlock13 \
 	tst-rwlock14 tst-rwlock15 tst-rwlock16 tst-rwlock17 tst-rwlock18 \
-	tst-rwlock19 \
+	tst-rwlock19 tst-rwlock20 \
 	tst-once1 tst-once2 tst-once3 tst-once4 tst-once5 \
 	tst-key1 tst-key2 tst-key3 tst-key4 \
 	tst-sem1 tst-sem2 tst-sem3 tst-sem4 tst-sem5 tst-sem6 tst-sem7 \
@@ -355,7 +356,7 @@ tests += tst-cancelx2 tst-cancelx3 tst-cancelx4 tst-cancelx5 \
 	 tst-oncex3 tst-oncex4
 ifeq ($(build-shared),yes)
 tests += tst-atfork2 tst-tls3 tst-tls3-malloc tst-tls4 tst-tls5 tst-_res1 \
-	 tst-fini1 tst-stackguard1
+	 tst-fini1 tst-stackguard1 tst-compat-forwarder
 tests-nolibpthread += tst-fini1
 ifeq ($(have-z-execstack),yes)
 tests += tst-execstack
@@ -366,7 +367,7 @@ modules-names = tst-atfork2mod tst-tls3mod tst-tls4moda tst-tls4modb \
 		tst-tls5mod tst-tls5moda tst-tls5modb tst-tls5modc \
 		tst-tls5modd tst-tls5mode tst-tls5modf tst-stack4mod \
 		tst-_res1mod1 tst-_res1mod2 tst-execstack-mod tst-fini1mod \
-		tst-join7mod
+		tst-join7mod tst-compat-forwarder-mod
 extra-test-objs += $(addsuffix .os,$(strip $(modules-names))) \
 		   tst-cleanup4aux.o tst-cleanupx4aux.o
 test-extras += $(modules-names) tst-cleanup4aux tst-cleanupx4aux
@@ -703,6 +704,8 @@ $(objpfx)tst-oddstacklimit.out: $(objpfx)tst-oddstacklimit $(objpfx)tst-basic1
 	$(test-program-prefix) $< --command '$(host-test-program-cmd)' > $@; \
 	$(evaluate-test)
 endif
+
+$(objpfx)tst-compat-forwarder: $(objpfx)tst-compat-forwarder-mod.so
 
 # The tests here better do not run in parallel
 ifneq ($(filter %tests,$(MAKECMDGOALS)),)
