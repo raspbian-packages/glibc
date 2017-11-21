@@ -108,6 +108,8 @@ GLIBC_2.0 __after_morecore_hook D 0x4
 GLIBC_2.0 __argz_count F
 GLIBC_2.0 __argz_next F
 GLIBC_2.0 __argz_stringify F
+GLIBC_2.0 __ashldi3 F
+GLIBC_2.0 __ashrdi3 F
 GLIBC_2.0 __assert_fail F
 GLIBC_2.0 __assert_perror_fail F
 GLIBC_2.0 __bsd_getpgrp F
@@ -115,6 +117,7 @@ GLIBC_2.0 __bzero F
 GLIBC_2.0 __check_rhosts_file D 0x4
 GLIBC_2.0 __clone F
 GLIBC_2.0 __close F
+GLIBC_2.0 __cmpdi2 F
 GLIBC_2.0 __cmsg_nxthdr F
 GLIBC_2.0 __connect F
 GLIBC_2.0 __ctype32_b D 0x4
@@ -129,6 +132,7 @@ GLIBC_2.0 __default_morecore F
 GLIBC_2.0 __deregister_frame F
 GLIBC_2.0 __deregister_frame_info F
 GLIBC_2.0 __dgettext F
+GLIBC_2.0 __divdi3 F
 GLIBC_2.0 __dup2 F
 GLIBC_2.0 __environ D 0x4
 GLIBC_2.0 __errno_location F
@@ -137,6 +141,12 @@ GLIBC_2.0 __ffs F
 GLIBC_2.0 __finite F
 GLIBC_2.0 __finitef F
 GLIBC_2.0 __finitel F
+GLIBC_2.0 __fixdfdi F
+GLIBC_2.0 __fixsfdi F
+GLIBC_2.0 __fixunsdfdi F
+GLIBC_2.0 __fixunssfdi F
+GLIBC_2.0 __floatdidf F
+GLIBC_2.0 __floatdisf F
 GLIBC_2.0 __fork F
 GLIBC_2.0 __fpu_control D 0x4
 GLIBC_2.0 __frame_state_for F
@@ -169,6 +179,7 @@ GLIBC_2.0 __libc_realloc F
 GLIBC_2.0 __libc_start_main F
 GLIBC_2.0 __libc_valloc F
 GLIBC_2.0 __lseek F
+GLIBC_2.0 __lshrdi3 F
 GLIBC_2.0 __lxstat F
 GLIBC_2.0 __malloc_hook D 0x4
 GLIBC_2.0 __malloc_initialize_hook D 0x4
@@ -176,8 +187,10 @@ GLIBC_2.0 __mbrlen F
 GLIBC_2.0 __mbrtowc F
 GLIBC_2.0 __memalign_hook D 0x4
 GLIBC_2.0 __mempcpy F
+GLIBC_2.0 __moddi3 F
 GLIBC_2.0 __monstartup F
 GLIBC_2.0 __morecore D 0x4
+GLIBC_2.0 __muldi3 F
 GLIBC_2.0 __nss_configure_lookup F
 GLIBC_2.0 __nss_database_lookup F
 GLIBC_2.0 __nss_group_lookup F
@@ -234,7 +247,10 @@ GLIBC_2.0 __strtouq_internal F
 GLIBC_2.0 __sysv_signal F
 GLIBC_2.0 __timezone D 0x4
 GLIBC_2.0 __tzname D 0x8
+GLIBC_2.0 __ucmpdi2 F
+GLIBC_2.0 __udivdi3 F
 GLIBC_2.0 __uflow F
+GLIBC_2.0 __umoddi3 F
 GLIBC_2.0 __underflow F
 GLIBC_2.0 __vfscanf F
 GLIBC_2.0 __vsnprintf F
