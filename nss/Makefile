@@ -61,7 +61,7 @@ tests += tst-cancel-getpwuid_r
 endif
 
 # Specify rules for the nss_* modules.  We have some services.
-services		:= files db
+services		:= files
 
 extra-libs		= $(services:%=libnss_%)
 # These libraries will be built in the `others' pass rather than
