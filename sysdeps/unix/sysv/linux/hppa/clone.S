@@ -64,9 +64,12 @@
 ENTRY(__clone)
 	/* Prologue */
 	stwm	%r4, 64(%sp)
+	.cfi_def_cfa_offset -64
+	.cfi_offset 4, 0
 	stw	%sp, -4(%sp)
 #ifdef PIC
 	stw	%r19, -32(%sp)
+	.cfi_offset 19, 32
 #endif
 
 	/* Sanity check arguments.  */
@@ -147,9 +150,9 @@ ENTRY(__clone)
 #ifdef PIC
 	copy	%r4, %r19
 #endif
-	/* The call to _exit needs saved r19.  */
-	bl	_exit, %rp
-	copy	%ret0, %arg0
+	copy	%r28, %r26
+	ble	0x100(%sr2, %r0)
+	ldi	__NR_exit, %r20
 
 	/* We should not return from _exit.
            We do not restore r4, or the stack state.  */
