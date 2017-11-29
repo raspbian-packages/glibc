@@ -21,4 +21,18 @@ libc {
     # This set has to exist in some Versions file so we can use 2.19 in
     # SHLIB_COMPAT.  Since it didn't exist anywhere else, we add it here.
   }
+  GLIBC_2.0 {
+    # Functions from libgcc.
+    __ashldi3; __ashrdi3;
+    __cmpdi2;
+    __divsi3;
+    __fixdfdi;
+    __floatdidf;
+    __floatdisf;
+    __modsi3;
+    __muldi3;
+    __ucmpdi2;
+    __udivsi3;
+    __umodsi3;
+  }
 }
