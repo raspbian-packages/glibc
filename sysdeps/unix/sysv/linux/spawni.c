@@ -17,7 +17,6 @@
    <http://www.gnu.org/licenses/>.  */
 
 #include <spawn.h>
-#include <assert.h>
 #include <fcntl.h>
 #include <paths.h>
 #include <string.h>
@@ -61,17 +60,18 @@
 #define SPAWN_ERROR	127
 
 #ifdef __ia64__
-# define CLONE(__fn, __stack, __stacksize, __flags, __args) \
-  __clone2 (__fn, __stack, __stacksize, __flags, __args, 0, 0, 0)
+# define CLONE(__fn, __stackbase, __stacksize, __flags, __args) \
+  __clone2 (__fn, __stackbase, __stacksize, __flags, __args, 0, 0, 0)
 #else
 # define CLONE(__fn, __stack, __stacksize, __flags, __args) \
   __clone (__fn, __stack, __flags, __args)
 #endif
 
-#if _STACK_GROWS_DOWN
-# define STACK(__stack, __stack_size) (__stack + __stack_size)
-#elif _STACK_GROWS_UP
+/* Since ia64 wants the stackbase w/clone2, re-use the grows-up macro.  */
+#if _STACK_GROWS_UP || defined (__ia64__)
 # define STACK(__stack, __stack_size) (__stack)
+#elif _STACK_GROWS_DOWN
+# define STACK(__stack, __stack_size) (__stack + __stack_size)
 #endif
 
 
@@ -265,7 +265,6 @@ __spawni_child (void *arguments)
   __sigprocmask (SIG_SETMASK, (attr->__flags & POSIX_SPAWN_SETSIGMASK)
 		 ? &attr->__ss : &args->oldmask, 0);
 
-  args->err = 0;
   args->exec (args->file, args->argv, args->envp);
 
   /* This is compatibility function required to enable posix_spawn run
@@ -318,6 +317,11 @@ __spawnix (pid_t * pid, const char *file,
 
   /* Add a slack area for child's stack.  */
   size_t argv_size = (argc * sizeof (void *)) + 512;
+  /* We need at least a few pages in case the compiler's stack checking is
+     enabled.  In some configs, it is known to use at least 24KiB.  We use
+     32KiB to be "safe" from anything the compiler might do.  Besides, the
+     extra pages won't actually be allocated unless they get used.  */
+  argv_size += (32 * 1024);
   size_t stack_size = ALIGN_UP (argv_size, GLRO(dl_pagesize));
   void *stack = __mmap (NULL, stack_size, prot,
 			MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK, -1, 0);
@@ -331,7 +335,7 @@ __spawnix (pid_t * pid, const char *file,
 
   /* Child must set args.err to something non-negative - we rely on
      the parent and child sharing VM.  */
-  args.err = -1;
+  args.err = 0;
   args.file = file;
   args.exec = exec;
   args.fa = file_actions;
@@ -354,12 +358,26 @@ __spawnix (pid_t * pid, const char *file,
   new_pid = CLONE (__spawni_child, STACK (stack, stack_size), stack_size,
 		   CLONE_VM | CLONE_VFORK | SIGCHLD, &args);
 
+  /* It needs to collect the case where the auxiliary process was created
+     but failed to execute the file (due either any preparation step or
+     for execve itself).  */
   if (new_pid > 0)
     {
+      /* Also, it handles the unlikely case where the auxiliary process was
+	 terminated before calling execve as if it was successfully.  The
+	 args.err is set to 0 as default and changed to a positive value
+	 only in case of failure, so in case of premature termination
+	 due a signal args.err will remain zeroed and it will be up to
+	 caller to actually collect it.  */
       ec = args.err;
-      assert (ec >= 0);
-      if (ec != 0)
-	  __waitpid (new_pid, NULL, 0);
+      if (ec > 0)
+	/* There still an unlikely case where the child is cancelled after
+	   setting args.err, due to a positive error value.  Also there is
+	   possible pid reuse race (where the kernel allocated the same pid
+	   to an unrelated process).  Unfortunately due synchronization
+	   issues where the kernel might not have the process collected
+	   the waitpid below can not use WNOHANG.  */
+	__waitpid (new_pid, NULL, 0);
     }
   else
     ec = -new_pid;
