@@ -1,0 +1,20 @@
+# Makeconfig fragment for Hurd libpthread add-on.
+# This gets included at the end of the main glibc Makeconfig.
+
+have-thread-library = yes
+
+shared-thread-library = $(common-objpfx)libpthread/libpthread_nonshared.a \
+			$(common-objpfx)libpthread/libpthread.so
+static-thread-library = $(common-objpfx)libpthread/libpthread.a
+bounded-thread-library = $(static-thread-library)
+
+ifeq ($(subdir),malloc)
+LDLIBS-tst-interpose-static-thread += -lihash
+endif
+ifeq ($(subdir),elf)
+LDLIBS-tst-linkall-static += -lihash
+endif
+
+rpath-dirs += libpthread
+
++includes += -I$(..)libpthread/include
