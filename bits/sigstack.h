@@ -23,6 +23,8 @@
 # error "Never include this file directly.  Use <signal.h> instead"
 #endif
 
+#define __need_size_t
+#include <stddef.h>
 
 /* Structure describing a signal stack (obsolete).  */
 struct sigstack
