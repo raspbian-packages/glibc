@@ -185,8 +185,10 @@ LIBC_START_MAIN (int (*main) (int, char **, char ** MAIN_AUXVEC_DECL),
   /* Perform IREL{,A} relocations.  */
   apply_irel ();
 
+#ifndef __GNU__
   /* The stack guard goes into the TCB, so initialize it early.  */
   __libc_setup_tls ();
+#endif
 
   /* Set up the stack checker's canary.  */
   uintptr_t stack_chk_guard = _dl_setup_stack_chk_guard (_dl_random);
