@@ -25,6 +25,16 @@
 
 __BEGIN_DECLS
 
+/* Information about EDNS properties of a DNS query.  */
+struct resolv_edns_info
+{
+  bool active;
+  uint8_t extended_rcode;
+  uint8_t version;
+  uint16_t flags;
+  uint16_t payload_size;
+};
+
 /* This struct provides context information when the response callback
    specified in struct resolv_redirect_config is invoked. */
 struct resolv_response_context
@@ -33,6 +43,7 @@ struct resolv_response_context
   size_t query_length;
   int server_index;
   bool tcp;
+  struct resolv_edns_info edns;
 };
 
 /* This opaque struct is used to construct responses from within the
@@ -82,6 +93,16 @@ struct resolv_redirect_config
      may results in more predictable ordering of queries and
      responses.  */
   bool single_thread_udp;
+
+  /* Do not rewrite the _res variable or change NSS defaults.  Use
+     server_address_overrides below to tell the testing framework on
+     which addresses to create the servers.  */
+  bool disable_redirect;
+
+  /* Use these addresses for creating the DNS servers.  The array must
+     have ns_count (or resolv_max_test_servers) sockaddr * elements if
+     not NULL.  */
+  const struct sockaddr *const *server_address_overrides;
 };
 
 /* Configure NSS to use, nss_dns only for aplicable databases, and try

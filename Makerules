@@ -127,6 +127,14 @@ $(common-objpfx)cstdlib: $(c++-cstdlib-header)
 $(common-objpfx)cmath: $(c++-cmath-header)
 	$(INSTALL_DATA) $< $@T
 	$(move-if-change) $@T $@
+ifneq (,$(c++-bits-std_abs-h))
+# Also make a copy of <bits/std_abs.h> from GCC 7 to prevent it from
+# including /usr/include/stdlib.h.
+before-compile := $(common-objpfx)bits/std_abs.h $(before-compile)
+$(common-objpfx)bits/std_abs.h: $(c++-bits-std_abs-h)
+	$(INSTALL_DATA) $< $@T
+	$(move-if-change) $@T $@
+endif
 endif
 
 before-compile := $(common-objpfx)libc-abis.h $(before-compile)
@@ -588,7 +596,7 @@ $(LINK.o) -shared -static-libgcc -Wl,-O1 $(sysdep-LDFLAGS) \
 	  $(extra-B-$(@F:lib%.so=%).so) -B$(csu-objpfx) \
 	  $(extra-B-$(@F:lib%.so=%).so) $(load-map-file) \
 	  -Wl,-soname=lib$(libprefix)$(@F:lib%.so=%).so$($(@F)-version) \
-	  $(LDFLAGS.so) $(LDFLAGS-$(@F:lib%.so=%).so) \
+	  $(LDFLAGS.so) $(LDFLAGS-lib.so) $(LDFLAGS-$(@F:lib%.so=%).so) \
 	  -L$(subst :, -L,$(rpath-link)) -Wl,-rpath-link=$(rpath-link)
 endef
 
@@ -669,14 +677,17 @@ $(build-module-helper) -o $@ $(shlib-lds-flags) \
 $(call after-link,$@)
 endef
 
+# sofini.os must be placed last since it terminates .eh_frame section.
 build-module-helper-objlist = \
 	$(patsubst %_pic.a,$(whole-archive) %_pic.a $(no-whole-archive),\
 		   $(filter-out %.lds $(map-file) $(+preinit) $(+postinit) \
+				$(elf-objpfx)sofini.os \
 				$(link-libc-deps),$^))
 
 build-module-objlist = $(build-module-helper-objlist) $(LDLIBS-$(@F:%.so=%).so)
 build-shlib-objlist = $(build-module-helper-objlist) \
-		      $(LDLIBS-$(@F:lib%.so=%).so)
+		      $(LDLIBS-$(@F:lib%.so=%).so) \
+		      $(filter $(elf-objpfx)sofini.os,$^)
 
 # Don't try to use -lc when making libc.so itself.
 # Also omits crti.o and crtn.o, which we do not want
@@ -686,10 +697,6 @@ LDFLAGS-c.so = -nostdlib -nostartfiles
 LDLIBS-c.so += $(libc.so-gnulib)
 # Give libc.so an entry point and make it directly runnable itself.
 LDFLAGS-c.so += -e __libc_main
-# If lazy relocation is disabled add the -z now flag.
-ifeq ($(bind-now),yes)
-LDFLAGS-c.so += -Wl,-z,now
-endif
 # Pre-link the objects of libc_pic.a so that we can locally resolve
 # COMMON symbols before we link against ld.so.  This is because ld.so
 # contains some of libc_pic.a already, which will prevent the COMMONs
@@ -1104,7 +1111,8 @@ $(common-objpfx)format.lds: $(..)scripts/output-format.sed \
 ifneq (unknown,$(output-format))
 	echo > $@.new 'OUTPUT_FORMAT($(output-format))'
 else
-	$(LINK.o) -shared $(sysdep-LDFLAGS) $(rtld-LDFLAGS) $(LDFLAGS.so) \
+	$(LINK.o) -shared $(sysdep-LDFLAGS) $(rtld-LDFLAGS) \
+		  $(LDFLAGS.so) $(LDFLAGS-lib.so) \
 		  -x c /dev/null -o $@.so -Wl,--verbose -v 2>&1 \
 	| sed -n -f $< > $@.new
 	test -s $@.new
