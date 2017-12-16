@@ -23,3 +23,4 @@
 #define __ASSUME_O_CLOEXEC	1
 #define __ASSUME_DUP3		1
 #define __ASSUME_ACCEPT4	1
+#define __ASSUME_SOCK_CLOEXEC	1
