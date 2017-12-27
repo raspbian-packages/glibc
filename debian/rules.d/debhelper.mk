@@ -43,7 +43,7 @@ ifeq ($(filter nostrip,$(DEB_BUILD_OPTIONS)),)
 	# table in libc6-dbg but basic thread debugging should
 	# work even without that package installed.
 	if test "$(NOSTRIP_$(curpass))" != 1; then					\
-	  if test "$(NODEBUG_$(curpass))" != 1; then					\
+	  if test "$(DEBUG_$(curpass))" = 1; then					\
 	    dh_strip -p$(curpass) -Xlibpthread $(DH_STRIP_DEBUG_PACKAGE);		\
 	    for f in $$(find debian/$(curpass) -name libpthread-\*.so) ; do		\
 	      dbgfile=$$(LC_ALL=C readelf -n $$f | sed -e '/Build ID:/!d'		\
@@ -55,13 +55,13 @@ ifeq ($(filter nostrip,$(DEB_BUILD_OPTIONS)),)
 	      $(DEB_HOST_GNU_TYPE)-strip --strip-debug --remove-section=.comment	\
 	                                 --remove-section=.note $$f ;			\
 	    done ;									\
-	    for f in $$(find debian/$(curpass) -name \*crt\*.o) ; do			\
-	      $(DEB_HOST_GNU_TYPE)-strip --strip-debug --remove-section=.comment	\
-	                                 --remove-section=.note $$f ;			\
-	    done ;									\
 	  else										\
 	    dh_strip -p$(curpass) -Xlibpthread;						\
-	  fi										\
+	  fi ;										\
+	  for f in $$(find debian/$(curpass) -name \*crt\*.o) ; do			\
+	    $(DEB_HOST_GNU_TYPE)-strip --strip-debug --remove-section=.comment		\
+	                               --remove-section=.note $$f ;			\
+	  done ;									\
 	fi
 endif
 

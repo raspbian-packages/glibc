@@ -57,13 +57,22 @@
 /*
  * User-settable options (used with setsockopt).
  */
-#define	TCP_NODELAY	 1	/* Don't delay send to coalesce packets  */
-#define	TCP_MAXSEG	 2	/* Set maximum segment size  */
+#define TCP_NODELAY	 1	/* Don't delay send to coalesce packets  */
+#define TCP_MAXSEG	 2	/* Set maximum segment size  */
 #define TCP_NOPUSH	 4	/* Don't push last block of write  */
 #define TCP_NOOPT	 8	/* Don't use TCP options  */
 #define TCP_MD5SIG	16	/* use MD5 digests (RFC2385) */
 #define TCP_INFO	32	/* retrieve tcp_info structure */
-#define TCP_CONGESTION  64	/* get/set congestion control algorithm */
+#define TCP_CONGESTION	64	/* get/set congestion control algorithm */
+#define TCP_CCALGOOPT	65	/* get/set cc algorithm specific options */
+#define TCP_KEEPINIT	128	/* N, time to establish connection */
+#define TCP_KEEPIDLE	256	/* L,N,X start keeplives after this period */
+#define TCP_KEEPINTVL	512	/* L,N interval between keepalives */
+#define TCP_KEEPCNT	1024	/* L,N number of keepalives before close */
+#define TCP_FASTOPEN	1025	/* enable TFO / was created via TFO */
+#define TCP_PCAP_OUT	2048	/* number of output packets to keep */
+#define TCP_PCAP_IN	4096	/* number of input packets to keep */
+#define TCP_FUNCTION_BLK 8192	/* Set the tcp function pointers to the specified stack */
 
 #ifdef __USE_MISC
 # include <sys/types.h>

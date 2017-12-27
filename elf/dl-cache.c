@@ -259,7 +259,7 @@ _dl_load_cache_lookup (const char *name)
       if (platform != (uint64_t) -1)
 	platform = 1ULL << platform;
 
-      if (__access ("/etc/ld.so.nohwcap", F_OK) == 0)
+      if (__access_noerrno ("/etc/ld.so.nohwcap", F_OK) == 0)
 	disable_hwcap = 1;
 
 #define _DL_HWCAP_TLS_MASK (1LL << 63)

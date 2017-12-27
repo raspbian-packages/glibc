@@ -112,7 +112,7 @@ _dl_important_hwcaps (const char *platform, size_t platform_len, size_t *sz,
   /* For TLS enabled builds always add 'tls'.  */
   ++cnt;
 
-  if (__access ("/etc/ld.so.nohwcap", F_OK) == 0)
+  if (__access_noerrno ("/etc/ld.so.nohwcap", F_OK) == 0)
     {
       /* If hwcap is disabled, we only have the base directory to search.  */
       result = (struct r_strlenpair *) malloc (sizeof (*result));
