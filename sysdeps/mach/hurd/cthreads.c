@@ -53,6 +53,7 @@ cthread_setspecific (cthread_key_t key, void *val)
 /* Call cthread_getspecific which gets a pointer to the return value instead
    of just returning it.  */
 void *
+weak_function
 __libc_getspecific (cthread_key_t key)
 {
   void *val;
