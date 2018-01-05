@@ -18,6 +18,8 @@
 #include <unistd.h>
 #include <hurd.h>
 #include <fcntl.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 /* Replace the current process, executing FILE_NAME with arguments ARGV and
    environment ENVP.  ARGV and ENVP are terminated by NULL pointers.  */
@@ -25,17 +27,45 @@ int
 __execve (const char *file_name, char *const argv[], char *const envp[])
 {
   error_t err;
-  file_t file = __file_name_lookup (file_name, O_EXEC, 0);
+  char *concat_name = NULL;
+  const char *abs_name;
 
+  file_t file = __file_name_lookup (file_name, O_EXEC, 0);
   if (file == MACH_PORT_NULL)
     return -1;
 
+  if (file_name[0] == '/')
+    {
+      /* Absolute path */
+      abs_name = file_name;
+    }
+  else
+    {
+      /* Relative path */
+      char *cwd = __getcwd (NULL, 0);
+      if (cwd == NULL)
+	{
+	  __mach_port_deallocate (__mach_task_self (), file);
+	  return -1;
+	}
+      int res = __asprintf (&concat_name, "%s/%s", cwd, file_name);
+      free (cwd);
+      if (res == -1)
+	{
+	  __mach_port_deallocate (__mach_task_self (), file);
+	  return -1;
+	}
+      abs_name = concat_name;
+    }
+
   /* Hopefully this will not return.  */
-  err = _hurd_exec (__mach_task_self (), file, argv, envp);
+  err = _hurd_exec_file_name (__mach_task_self (), file,
+			      abs_name, argv, envp);
 
   /* Oh well.  Might as well be tidy.  */
   __mach_port_deallocate (__mach_task_self (), file);
 
+  free (concat_name);
   return __hurd_fail (err);
 }
 
