@@ -1520,7 +1520,7 @@ glob_in_dir (const char *pattern, const char *directory, int flags,
       else
 	{
 	  int dfd = (__builtin_expect (flags & GLOB_ALTDIRFUNC, 0)
-		     ? -1 : dirfd ((DIR *) stream));
+		     ? -1 : __dirfd ((DIR *) stream));
 	  int fnm_flags = ((!(flags & GLOB_PERIOD) ? FNM_PERIOD : 0)
 			   | ((flags & GLOB_NOESCAPE) ? FNM_NOESCAPE : 0));
 	  flags |= GLOB_MAGCHAR;
