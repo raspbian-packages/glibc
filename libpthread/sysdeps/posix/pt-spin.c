@@ -49,6 +49,3 @@ _pthread_spin_lock (__pthread_spinlock_t *lock)
       __sched_yield ();
     }
 }
-
-weak_alias (_pthread_spin_lock, pthread_spin_lock);
-weak_alias (_pthread_spin_lock, __pthread_spin_lock);
