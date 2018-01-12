@@ -165,15 +165,15 @@ for file do
       fi
     done
     case $ret in
-    0|2)
-      try_trace "$RTLD" "$file" || result=1
-      ;;
     1)
       # This can be a non-ELF binary or no binary at all.
       nonelf "$file" || {
 	echo $"	not a dynamic executable"
 	result=1
       }
+      ;;
+    0|2)
+      try_trace "$RTLD" "$file" || result=1
       ;;
     *)
       echo 'ldd:' ${RTLD} $"exited with unknown exit code" "($ret)" >&2

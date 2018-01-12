@@ -68,7 +68,7 @@ check_auth (mach_port_t rendezvous,
   size_t tw_size = 0;
   unsigned i;
 
-  err = mach_port_mod_refs (mach_task_self (), rendezvous,
+  err = __mach_port_mod_refs (mach_task_self (), rendezvous,
 			    MACH_PORT_RIGHT_SEND, 1);
   if (err)
     goto out;
@@ -123,7 +123,7 @@ check_auth (mach_port_t rendezvous,
     err = EIO;
 
 out:
-  mach_port_deallocate (mach_task_self (), rendezvous);
+  __mach_port_deallocate (__mach_task_self (), rendezvous);
   if (euids != euids_buf)
     __vm_deallocate (__mach_task_self(), (vm_address_t) euids, neuids * sizeof(uid_t));
   if (auids != auids_buf)

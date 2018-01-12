@@ -19,15 +19,24 @@
 #include <sysdep.h>
 
 #ifdef USE_AS_STPNCPY
-# define FUNC_NAME __stpncpy
+# ifndef STPNCPY
+#   define FUNC_NAME __stpncpy
+# else
+#   define FUNC_NAME STPNCPY
+# endif
 #else
-# define FUNC_NAME strncpy
-#endif
+# ifndef STRNCPY
+#  define FUNC_NAME strncpy
+# else
+#  define FUNC_NAME STRNCPY
+# endif
+#endif  /* !USE_AS_STPNCPY  */
 
 #ifndef MEMSET
 /* For builds without IFUNC support, local calls should be made to internal
    GLIBC symbol (created by libc_hidden_builtin_def).  */
 # ifdef SHARED
+#  define MEMSET_is_local
 #  define MEMSET   __GI_memset
 # else
 #  define MEMSET   memset
@@ -52,7 +61,12 @@
    4k.  */
 
 	.machine  power7
-EALIGN (FUNC_NAME, 4, 0)
+#ifdef MEMSET_is_local
+ENTRY_TOCLESS (FUNC_NAME, 4)
+#else
+ENTRY (FUNC_NAME, 4)
+#endif
+	CALL_MCOUNT 3
 
         /* Check if the [src]+15 will cross a 4K page by checking if the bit
            indicating the page size changes.  Basically:
@@ -234,7 +248,9 @@ L(zero_pad_start_1):
 	cfi_adjust_cfa_offset(FRAMESIZE)
 
 	bl	MEMSET
+#ifndef MEMSET_is_local
 	nop
+#endif
 
 	/* Restore the stack frame.  */
 	addi	r1,r1,FRAMESIZE

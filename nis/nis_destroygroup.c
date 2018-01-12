@@ -18,6 +18,7 @@
 
 #include <string.h>
 #include <rpcsvc/nis.h>
+#include <shlib-compat.h>
 
 nis_error
 nis_destroygroup (const_nis_name group)
@@ -49,3 +50,4 @@ nis_destroygroup (const_nis_name group)
     return NIS_FAIL;
 
 }
+libnsl_hidden_nolink_def (nis_destroygroup, GLIBC_2_1)

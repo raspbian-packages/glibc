@@ -48,6 +48,8 @@ extern DIR *__alloc_dir (int fd, bool close_fd, int flags,
 			 const struct stat64 *statp)
      internal_function attribute_hidden;
 extern __typeof (rewinddir) __rewinddir;
+extern __typeof (seekdir) __seekdir;
+extern __typeof (dirfd) __dirfd;
 
 extern void __scandir_cancel_handler (void *arg) attribute_hidden;
 extern int __scandir_tail (DIR *dp,
@@ -76,7 +78,7 @@ extern __typeof (scandirat) __scandirat;
 libc_hidden_proto (__scandirat)
 libc_hidden_proto (scandirat64)
 
-#  if IS_IN (rtld)
+#  if IS_IN (rtld) && !defined NO_RTLD_HIDDEN
 extern __typeof (__closedir) __closedir attribute_hidden;
 extern __typeof (__fdopendir) __fdopendir attribute_hidden;
 extern __typeof (__readdir) __readdir attribute_hidden;

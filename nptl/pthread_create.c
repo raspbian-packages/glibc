@@ -32,6 +32,7 @@
 #include <exit-thread.h>
 #include <default-sched.h>
 #include <futex-internal.h>
+#include "libioP.h"
 
 #include <shlib-compat.h>
 
@@ -94,8 +95,17 @@ unsigned int __nptl_nthreads = 1;
    exactly which of the four ownership states we are in and therefore
    what actions can be taken.  For example after (2) we cannot read or
    write from PD anymore since the thread may no longer exist and the
-   memory may be unmapped.  The most complicated cases happen during
-   thread startup:
+   memory may be unmapped.
+
+   It is important to point out that PD->lock is being used both
+   similar to a one-shot semaphore and subsequently as a mutex.  The
+   lock is taken in the parent to force the child to wait, and then the
+   child releases the lock.  However, this semaphore-like effect is used
+   only for synchronizing the parent and child.  After startup the lock
+   is used like a mutex to create a critical section during which a
+   single owner modifies the thread parameters.
+
+   The most complicated cases happen during thread startup:
 
    (a) If the created thread is in a detached (PTHREAD_CREATE_DETACHED),
        or joinable (default PTHREAD_CREATE_JOINABLE) state and
@@ -452,11 +462,7 @@ START_THREAD_DEFN
       LIBC_PROBE (pthread_start, 3, (pthread_t) pd, pd->start_routine, pd->arg);
 
       /* Run the code the user provided.  */
-#ifdef CALL_THREAD_FCT
-      THREAD_SETMEM (pd, result, CALL_THREAD_FCT (pd));
-#else
       THREAD_SETMEM (pd, result, pd->start_routine (pd->arg));
-#endif
     }
 
   /* Call destructors for the thread_local TLS variables.  */
@@ -514,7 +520,7 @@ START_THREAD_DEFN
 
 #ifndef __ASSUME_SET_ROBUST_LIST
   /* If this thread has any robust mutexes locked, handle them now.  */
-# ifdef __PTHREAD_MUTEX_HAVE_PREV
+# if __PTHREAD_MUTEX_HAVE_PREV
   void *robust = pd->robust_head.list;
 # else
   __pthread_slist_t *robust = pd->robust_list.__next;
@@ -532,7 +538,7 @@ START_THREAD_DEFN
 					 __list.__next));
 	  robust = *((void **) robust);
 
-# ifdef __PTHREAD_MUTEX_HAVE_PREV
+# if __PTHREAD_MUTEX_HAVE_PREV
 	  this->__list.__prev = NULL;
 # endif
 	  this->__list.__next = NULL;
@@ -728,6 +734,9 @@ __pthread_create_2_1 (pthread_t *newthread, const pthread_attr_t *attr,
         collect_default_sched (pd);
     }
 
+  if (__glibc_unlikely (__nptl_nthreads == 1))
+    _IO_enable_locks ();
+
   /* Pass the descriptor to the caller.  */
   *newthread = (pthread_t) pd;
 
@@ -892,14 +901,14 @@ compat_symbol (libpthread, __pthread_create_2_0, pthread_create,
 
 /* If pthread_create is present, libgcc_eh.a and libsupc++.a expects some other POSIX thread
    functions to be present as well.  */
-PTHREAD_STATIC_FN_REQUIRE (pthread_mutex_lock)
-PTHREAD_STATIC_FN_REQUIRE (pthread_mutex_trylock)
-PTHREAD_STATIC_FN_REQUIRE (pthread_mutex_unlock)
+PTHREAD_STATIC_FN_REQUIRE (__pthread_mutex_lock)
+PTHREAD_STATIC_FN_REQUIRE (__pthread_mutex_trylock)
+PTHREAD_STATIC_FN_REQUIRE (__pthread_mutex_unlock)
 
-PTHREAD_STATIC_FN_REQUIRE (pthread_once)
-PTHREAD_STATIC_FN_REQUIRE (pthread_cancel)
+PTHREAD_STATIC_FN_REQUIRE (__pthread_once)
+PTHREAD_STATIC_FN_REQUIRE (__pthread_cancel)
 
-PTHREAD_STATIC_FN_REQUIRE (pthread_key_create)
-PTHREAD_STATIC_FN_REQUIRE (pthread_key_delete)
-PTHREAD_STATIC_FN_REQUIRE (pthread_setspecific)
-PTHREAD_STATIC_FN_REQUIRE (pthread_getspecific)
+PTHREAD_STATIC_FN_REQUIRE (__pthread_key_create)
+PTHREAD_STATIC_FN_REQUIRE (__pthread_key_delete)
+PTHREAD_STATIC_FN_REQUIRE (__pthread_setspecific)
+PTHREAD_STATIC_FN_REQUIRE (__pthread_getspecific)

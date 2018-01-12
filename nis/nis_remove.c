@@ -17,6 +17,7 @@
    <http://www.gnu.org/licenses/>.  */
 
 #include <rpcsvc/nis.h>
+#include <shlib-compat.h>
 
 #include "nis_xdr.h"
 #include "nis_intern.h"
@@ -55,4 +56,4 @@ nis_remove (const_nis_name name, const nis_object *obj)
 
   return res;
 }
-libnsl_hidden_def (nis_remove)
+libnsl_hidden_nolink_def (nis_remove, GLIBC_2_1)

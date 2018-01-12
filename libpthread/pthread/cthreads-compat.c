@@ -20,23 +20,20 @@
 #include <assert.h>
 #include <pthread.h>
 
-typedef void *cthread_t;
-typedef void *(*cthread_fn_t) (void *arg);
-typedef int cthread_key_t;
-
-#define	CTHREAD_KEY_INVALID (cthread_key_t) -1
+#define	CTHREAD_KEY_INVALID (__cthread_key_t) -1
 
 void
-cthread_detach (cthread_t thread)
+__cthread_detach (__cthread_t thread)
 {
   int err;
 
   err = pthread_detach ((pthread_t) thread);
   assert_perror (err);
 }
+weak_alias (__cthread_detach, cthread_detach)
 
-cthread_t
-cthread_fork (cthread_fn_t func, void *arg)
+__cthread_t
+__cthread_fork (__cthread_fn_t func, void *arg)
 {
   pthread_t thread;
   int err;
@@ -44,11 +41,12 @@ cthread_fork (cthread_fn_t func, void *arg)
   err = pthread_create (&thread, NULL, func, arg);
   assert_perror (err);
 
-  return (cthread_t) thread;
+  return (__cthread_t) thread;
 }
+weak_alias (__cthread_fork, cthread_fork)
 
 int
-cthread_keycreate (cthread_key_t *key)
+__cthread_keycreate (__cthread_key_t *key)
 {
   error_t err;
 
@@ -62,16 +60,18 @@ cthread_keycreate (cthread_key_t *key)
 
   return err;
 }
+weak_alias (__cthread_keycreate, cthread_keycreate)
 
 int
-cthread_getspecific (cthread_key_t key, void **val)
+__cthread_getspecific (__cthread_key_t key, void **val)
 {
   *val = pthread_getspecific (key);
   return 0;
 }
+weak_alias (__cthread_getspecific, cthread_getspecific)
 
 int
-cthread_setspecific (cthread_key_t key, void *val)
+__cthread_setspecific (__cthread_key_t key, void *val)
 {
   error_t err;
 
@@ -84,6 +84,7 @@ cthread_setspecific (cthread_key_t key, void *val)
 
   return err;
 }
+weak_alias (__cthread_setspecific, cthread_setspecific)
 
 void
 __mutex_lock_solid (void *lock)

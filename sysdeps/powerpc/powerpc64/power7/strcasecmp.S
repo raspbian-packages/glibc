@@ -24,17 +24,18 @@
    or if defined USE_IN_EXTENDED_LOCALE_MODEL:
 
    int [r3] strcasecmp_l (const char *s1 [r3], const char *s2 [r4],
-                          __locale_t loc [r5]) */
+                          locale_t loc [r5]) */
 
 #ifndef STRCMP
 # define __STRCMP __strcasecmp
 # define STRCMP   strcasecmp
 #endif
 
-ENTRY (__STRCMP)
 #ifndef USE_IN_EXTENDED_LOCALE_MODEL
+ENTRY (__STRCMP)
 	CALL_MCOUNT 2
 #else
+ENTRY_TOCLESS (__STRCMP)
 	CALL_MCOUNT 3
 #endif
 

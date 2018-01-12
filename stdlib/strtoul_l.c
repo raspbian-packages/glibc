@@ -19,9 +19,9 @@
 
 #define UNSIGNED	1
 
-#include <xlocale.h>
+#include <locale.h>
 
 extern unsigned long int ____strtoul_l_internal (const char *, char **, int,
-						 int, __locale_t);
+						 int, locale_t);
 
 #include "strtol_l.c"

@@ -1,8 +1,8 @@
 #ifndef _WCHAR_H
-#include <wcsmbs/wchar.h>
-
+# include <wcsmbs/wchar.h>
 # ifndef _ISOMAC
-# ifdef _WCHAR_H
+
+#include <bits/floatn.h>
 
 extern __typeof (wcscasecmp_l) __wcscasecmp_l;
 extern __typeof (wcsncasecmp_l) __wcsncasecmp_l;
@@ -54,7 +54,7 @@ extern unsigned long long int __wcstoull_internal (const wchar_t *
 						   int __group) __THROW;
 extern unsigned long long int ____wcstoull_l_internal (const wchar_t *,
 						       wchar_t **, int, int,
-						       __locale_t);
+						       locale_t);
 libc_hidden_proto (__wcstof_internal)
 libc_hidden_proto (__wcstod_internal)
 libc_hidden_proto (__wcstold_internal)
@@ -69,6 +69,17 @@ libc_hidden_proto (wcstol)
 libc_hidden_proto (wcstoll)
 libc_hidden_proto (wcstoul)
 libc_hidden_proto (wcstoull)
+
+#if __HAVE_DISTINCT_FLOAT128
+extern __typeof (wcstof128_l) __wcstof128_l;
+libc_hidden_proto (__wcstof128_l)
+extern _Float128 __wcstof128_internal (const wchar_t *__restrict __nptr,
+				       wchar_t **__restrict __endptr,
+				       int __group) __THROW;
+
+libc_hidden_proto (__wcstof128_internal)
+libc_hidden_proto (wcstof128)
+#endif
 
 libc_hidden_proto (__wcscasecmp_l)
 libc_hidden_proto (__wcsncasecmp_l)
@@ -157,6 +168,9 @@ extern wchar_t *__wmemmove (wchar_t *__s1, const wchar_t *__s2,
 extern wchar_t *__wcschrnul (const wchar_t *__s, wchar_t __wc)
      __attribute_pure__;
 
+extern wchar_t *__wmemset_chk (wchar_t *__s, wchar_t __c, size_t __n,
+			       size_t __ns) __THROW;
+
 extern int __vfwscanf (__FILE *__restrict __s,
 		       const wchar_t *__restrict __format,
 		       __gnuc_va_list __arg)
@@ -172,7 +186,6 @@ extern int __vfwprintf (__FILE *__restrict __s,
 			const wchar_t *__restrict __format,
 			__gnuc_va_list __arg)
      /* __attribute__ ((__format__ (__wprintf__, 2, 0))) */;
-#ifndef __cplusplus
 extern int __vfwprintf_chk (FILE *__restrict __s, int __flag,
 			    const wchar_t *__restrict __format,
 			    __gnuc_va_list __arg)
@@ -184,7 +197,6 @@ extern int __vswprintf_chk (wchar_t *__restrict __s, size_t __n,
      /* __attribute__ ((__format__ (__wprintf__, 5, 0))) */;
 libc_hidden_proto (__vfwprintf_chk)
 libc_hidden_proto (__vswprintf_chk)
-#endif
 
 extern int __isoc99_fwscanf (__FILE *__restrict __stream,
 			     const wchar_t *__restrict __format, ...);
@@ -209,7 +221,7 @@ libc_hidden_proto (__isoc99_vfwscanf)
 
 /* Internal functions.  */
 extern size_t __mbsrtowcs_l (wchar_t *dst, const char **src, size_t len,
-			     mbstate_t *ps, __locale_t l) attribute_hidden;
+			     mbstate_t *ps, locale_t l) attribute_hidden;
 
 /* Special version.  We know that all uses of mbsinit inside the libc
    have a non-NULL parameter.  And certainly we can access the
@@ -218,10 +230,4 @@ extern size_t __mbsrtowcs_l (wchar_t *dst, const char **src, size_t len,
 #  define __mbsinit(state) ((state)->__count == 0)
 
 # endif
-# endif
 #endif
-
-/* Undefine all __need_* constants in case we are included to get those
-   constants but the whole file was already read.  */
-#undef __need_mbstate_t
-#undef __need_wint_t

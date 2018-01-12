@@ -53,6 +53,10 @@ routines  = backtrace backtracesyms backtracesymsfd noophooks \
 	    $(static-only-routines)
 static-only-routines := warning-nop stack_chk_fail_local
 
+# Don't add stack_chk_fail_local.o to libc.a since __stack_chk_fail_local
+# is an alias of __stack_chk_fail in stack_chk_fail.o.
+elide-routines.o := stack_chk_fail_local
+
 # Building the stack-protector failure routines with stack protection
 # makes no sense.
 
@@ -103,21 +107,22 @@ CFLAGS-tst-longjmp_chk3.c = -fexceptions -fasynchronous-unwind-tables
 CPPFLAGS-tst-longjmp_chk3.c = -D_FORTIFY_SOURCE=1
 
 # We know these tests have problems with format strings, this is what
-# we are testing.  Disable that warning.  They also generate warnings
-# from warning attributes, which cannot be disabled via pragmas, so
-# require -Wno-error to be used.
-CFLAGS-tst-chk1.c = -Wno-format -Wno-error
-CFLAGS-tst-chk2.c = -Wno-format -Wno-error
-CFLAGS-tst-chk3.c = -Wno-format -Wno-error
-CFLAGS-tst-chk4.cc = -Wno-format -Wno-error
-CFLAGS-tst-chk5.cc = -Wno-format -Wno-error
-CFLAGS-tst-chk6.cc = -Wno-format -Wno-error
-CFLAGS-tst-lfschk1.c = -Wno-format -Wno-error
-CFLAGS-tst-lfschk2.c = -Wno-format -Wno-error
-CFLAGS-tst-lfschk3.c = -Wno-format -Wno-error
-CFLAGS-tst-lfschk4.cc = -Wno-format -Wno-error
-CFLAGS-tst-lfschk5.cc = -Wno-format -Wno-error
-CFLAGS-tst-lfschk6.cc = -Wno-format -Wno-error
+# we are testing.  Disable that warning.  They are also testing
+# deprecated functions (notably gets) so disable that warning as well.
+# And they also generate warnings from warning attributes, which
+# cannot be disabled via pragmas, so require -Wno-error to be used.
+CFLAGS-tst-chk1.c = -Wno-format -Wno-deprecated-declarations -Wno-error
+CFLAGS-tst-chk2.c = -Wno-format -Wno-deprecated-declarations -Wno-error
+CFLAGS-tst-chk3.c = -Wno-format -Wno-deprecated-declarations -Wno-error
+CFLAGS-tst-chk4.cc = -Wno-format -Wno-deprecated-declarations -Wno-error
+CFLAGS-tst-chk5.cc = -Wno-format -Wno-deprecated-declarations -Wno-error
+CFLAGS-tst-chk6.cc = -Wno-format -Wno-deprecated-declarations -Wno-error
+CFLAGS-tst-lfschk1.c = -Wno-format -Wno-deprecated-declarations -Wno-error
+CFLAGS-tst-lfschk2.c = -Wno-format -Wno-deprecated-declarations -Wno-error
+CFLAGS-tst-lfschk3.c = -Wno-format -Wno-deprecated-declarations -Wno-error
+CFLAGS-tst-lfschk4.cc = -Wno-format -Wno-deprecated-declarations -Wno-error
+CFLAGS-tst-lfschk5.cc = -Wno-format -Wno-deprecated-declarations -Wno-error
+CFLAGS-tst-lfschk6.cc = -Wno-format -Wno-deprecated-declarations -Wno-error
 LDLIBS-tst-chk4 = -lstdc++
 LDLIBS-tst-chk5 = -lstdc++
 LDLIBS-tst-chk6 = -lstdc++
@@ -138,11 +143,17 @@ LDFLAGS-tst-backtrace4 = -rdynamic
 LDFLAGS-tst-backtrace5 = -rdynamic
 LDFLAGS-tst-backtrace6 = -rdynamic
 
+CFLAGS-tst-ssp-1.c = -fstack-protector-all
+
 tests = backtrace-tst tst-longjmp_chk tst-chk1 tst-chk2 tst-chk3 \
 	tst-lfschk1 tst-lfschk2 tst-lfschk3 test-strcpy_chk test-stpcpy_chk \
 	tst-chk4 tst-chk5 tst-chk6 tst-lfschk4 tst-lfschk5 tst-lfschk6 \
 	tst-longjmp_chk2 tst-backtrace2 tst-backtrace3 tst-backtrace4 \
 	tst-backtrace5 tst-backtrace6
+
+ifeq ($(have-ssp),yes)
+tests += tst-ssp-1
+endif
 
 ifeq (,$(CXX))
 tests-unsupported = tst-chk4 tst-chk5 tst-chk6 \

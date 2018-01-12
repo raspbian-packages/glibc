@@ -26,5 +26,6 @@ error_t
 __pthread_init_specific (struct __pthread *thread)
 {
   thread->thread_specifics = 0;
+  thread->thread_specifics_size = 0;
   return 0;
 }

@@ -43,4 +43,5 @@ __munmap (__ptr_t addr, size_t len)
   return 0;
 }
 
+libc_hidden_def (__munmap)
 weak_alias (__munmap, munmap)

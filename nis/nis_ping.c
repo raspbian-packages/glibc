@@ -17,6 +17,7 @@
    <http://www.gnu.org/licenses/>.  */
 
 #include <rpcsvc/nis.h>
+#include <shlib-compat.h>
 
 #include "nis_xdr.h"
 #include "nis_intern.h"
@@ -67,3 +68,4 @@ nis_ping (const_nis_name dirname, unsigned int utime,
 		   (caddr_t) NULL, 0, NULL);
   nis_freeresult (res);
 }
+libnsl_hidden_nolink_def (nis_ping, GLIBC_2_1)

@@ -69,7 +69,7 @@ __shmat (int shmid, const void *shmaddr, int shmflg)
   err = __sysvshm_add (addr, statbuf.st_size);
   if (err)
     {
-      munmap (addr, statbuf.st_size);
+      __munmap (addr, statbuf.st_size);
       return (void *) -1;
     }
 

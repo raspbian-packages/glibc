@@ -18,7 +18,6 @@
    Boston, MA 02111-1307, USA.  */
 
 #include <pthread.h>
-#include <hurd/ihash.h>
 
 #include <pt-internal.h>
 
@@ -32,9 +31,9 @@ __pthread_getspecific (pthread_key_t key)
     return NULL;
 
   self = _pthread_self ();
-  if (! self->thread_specifics)
+  if (key >= self->thread_specifics_size)
     return 0;
 
-  return hurd_ihash_find (self->thread_specifics, key);
+  return self->thread_specifics[key];
 }
 strong_alias (__pthread_getspecific, pthread_getspecific);

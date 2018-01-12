@@ -8,6 +8,7 @@ aa_ER@saaho/UTF-8 \
 aa_ET/UTF-8 \
 af_ZA.UTF-8/UTF-8 \
 af_ZA/ISO-8859-1 \
+agr_PE/UTF-8 \
 ak_GH/UTF-8 \
 am_ET/UTF-8 \
 an_ES.UTF-8/UTF-8 \
@@ -51,6 +52,7 @@ ar_YE.UTF-8/UTF-8 \
 ar_YE/ISO-8859-6 \
 ayc_PE/UTF-8 \
 az_AZ/UTF-8 \
+az_IR/UTF-8 \
 as_IN/UTF-8 \
 ast_ES.UTF-8/UTF-8 \
 ast_ES/ISO-8859-15 \
@@ -64,6 +66,7 @@ bg_BG.UTF-8/UTF-8 \
 bg_BG/CP1251 \
 bhb_IN.UTF-8/UTF-8 \
 bho_IN/UTF-8 \
+bi_VU/UTF-8 \
 bn_BD/UTF-8 \
 bn_IN/UTF-8 \
 bo_CN/UTF-8 \
@@ -120,6 +123,7 @@ dv_MV/UTF-8 \
 dz_BT/UTF-8 \
 el_GR.UTF-8/UTF-8 \
 el_GR/ISO-8859-7 \
+el_GR@euro/ISO-8859-7 \
 el_CY.UTF-8/UTF-8 \
 el_CY/ISO-8859-7 \
 en_AG/UTF-8 \
@@ -253,6 +257,7 @@ hak_TW/UTF-8 \
 he_IL.UTF-8/UTF-8 \
 he_IL/ISO-8859-8 \
 hi_IN/UTF-8 \
+hif_FJ/UTF-8 \
 hne_IN/UTF-8 \
 hr_HR.UTF-8/UTF-8 \
 hr_HR/ISO-8859-2 \
@@ -312,6 +317,7 @@ lv_LV/ISO-8859-13 \
 lzh_TW/UTF-8 \
 mag_IN/UTF-8 \
 mai_IN/UTF-8 \
+mai_NP/UTF-8 \
 mg_MG.UTF-8/UTF-8 \
 mg_MG/ISO-8859-15 \
 mhr_RU/UTF-8 \
@@ -393,6 +399,7 @@ sk_SK.UTF-8/UTF-8 \
 sk_SK/ISO-8859-2 \
 sl_SI.UTF-8/UTF-8 \
 sl_SI/ISO-8859-2 \
+sm_WS/UTF-8 \
 so_DJ.UTF-8/UTF-8 \
 so_DJ/ISO-8859-1 \
 so_ET/UTF-8 \
@@ -434,6 +441,8 @@ tk_TM/UTF-8 \
 tl_PH.UTF-8/UTF-8 \
 tl_PH/ISO-8859-1 \
 tn_ZA/UTF-8 \
+to_TO/UTF-8 \
+tpi_PG/UTF-8 \
 tr_CY.UTF-8/UTF-8 \
 tr_CY/ISO-8859-9 \
 tr_TR.UTF-8/UTF-8 \

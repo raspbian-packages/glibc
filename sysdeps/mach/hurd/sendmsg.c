@@ -156,8 +156,8 @@ __libc_sendmsg (int fd, const struct msghdr *message, int flags)
 	  mach_port_t rendezvous  = __mach_reply_port (), reply;
 	  struct cmsgcred *ucredp;
 
-	  err = mach_port_insert_right (mach_task_self (), rendezvous,
-					rendezvous, MACH_MSG_TYPE_MAKE_SEND);
+	  err = __mach_port_insert_right (mach_task_self (), rendezvous,
+					  rendezvous, MACH_MSG_TYPE_MAKE_SEND);
 	  ports[nports++] = rendezvous;
 	  if (err)
 	    goto out;
@@ -178,7 +178,7 @@ __libc_sendmsg (int fd, const struct msghdr *message, int flags)
 	    (AUTH, __auth_user_authenticate_request (port,
 					reply, MACH_MSG_TYPE_MAKE_SEND_ONCE,
 					rendezvous, MACH_MSG_TYPE_MAKE_SEND));
-	  mach_port_deallocate (__mach_task_self (), reply);
+	  __mach_port_deallocate (__mach_task_self (), reply);
 	  if (err)
 	    goto out;
 	}

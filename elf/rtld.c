@@ -266,7 +266,9 @@ struct rtld_global_ro _rtld_global_ro attribute_relro =
     ._dl_debug_fd = STDERR_FILENO,
     ._dl_use_load_bias = -2,
     ._dl_correct_cache_id = _DL_CACHE_DEFAULT_ID,
+#if !HAVE_TUNABLES
     ._dl_hwcap_mask = HWCAP_IMPORTANT,
+#endif
     ._dl_lazy = 1,
     ._dl_fpu_control = _FPU_DEFAULT,
     ._dl_pagesize = EXEC_PAGESIZE,
@@ -2208,7 +2210,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 
   /* Now that we have completed relocation, the initializer data
      for the TLS blocks has its final values and we can copy them
-     into the main thread's TLS area, which we allocated above.  */
+     into the main thread's TLS area, which we allocated above.
+     Note: thread-local variables must only be accessed after completing
+     the next step.  */
   _dl_allocate_tls_init (tcbp);
 
   /* And finally install it for the main thread.  */
@@ -2534,13 +2538,14 @@ process_envvars (enum mode *modep)
 	    _dl_show_auxv ();
 	  break;
 
+#if !HAVE_TUNABLES
 	case 10:
 	  /* Mask for the important hardware capabilities.  */
 	  if (!__libc_enable_secure
 	      && memcmp (envline, "HWCAP_MASK", 10) == 0)
-	    GLRO(dl_hwcap_mask) = __strtoul_internal (&envline[11], NULL,
-						      0, 0);
+	    GLRO(dl_hwcap_mask) = _dl_strtoul (&envline[11], NULL);
 	  break;
+#endif
 
 	case 11:
 	  /* Path where the binary is found.  */
@@ -2658,11 +2663,7 @@ process_envvars (enum mode *modep)
      messages to this file.  */
   else if (any_debug && debug_output != NULL)
     {
-#ifdef O_NOFOLLOW
       const int flags = O_WRONLY | O_APPEND | O_CREAT | O_NOFOLLOW;
-#else
-      const int flags = O_WRONLY | O_APPEND | O_CREAT;
-#endif
       size_t name_len = strlen (debug_output);
       char buf[name_len + 12];
       char *startp;

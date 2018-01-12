@@ -22,7 +22,8 @@ subdir	:= locale
 
 include ../Makeconfig
 
-headers		= locale.h bits/locale.h langinfo.h xlocale.h
+headers		= langinfo.h locale.h bits/locale.h \
+		  bits/types/locale_t.h bits/types/__locale_t.h
 routines	= setlocale findlocale loadlocale loadarchive \
 		  localeconv nl_langinfo nl_langinfo_l mb_cur_max \
 		  newlocale duplocale freelocale uselocale
@@ -101,4 +102,4 @@ CFLAGS-charmap-dir.c = -Wno-write-strings
 cpp-srcs-left := $(localedef-modules) $(localedef-aux) $(locale-modules) \
 		 $(lib-modules)
 lib := locale-programs
-include $(patsubst %,$(..)cppflags-iterator.mk,$(cpp-srcs-left))
+include $(patsubst %,$(..)libof-iterator.mk,$(cpp-srcs-left))

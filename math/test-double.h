@@ -18,6 +18,7 @@
 
 #define FUNC(function) function
 #define FLOAT double
+#define CFLOAT __complex__ double
 #define BUILD_COMPLEX(real, imag) (CMPLX ((real), (imag)))
 #define PREFIX DBL
 #define LIT(x) (x)
@@ -25,3 +26,4 @@
 #define LITM(x) x
 #define FTOSTR strfromd
 #define snan_value_MACRO SNAN
+#define TEST_FLOATN 0

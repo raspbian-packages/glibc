@@ -26,7 +26,7 @@
 #define	WUNTRACED	2	/* Report status of stopped children.  */
 
 /* The following values are used by the `waitid' function.  */
-#if defined __USE_XOPEN || defined __USE_XOPEN2K8
+#if defined __USE_XOPEN_EXTENDED || defined __USE_XOPEN2K8
 # ifndef __ENUM_IDTYPE_T
 # define __ENUM_IDTYPE_T 1
 typedef enum

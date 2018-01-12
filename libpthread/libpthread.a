@@ -19,4 +19,4 @@ EXTERN(_cthreads_ftrylockfile)
 EXTERN(pthread_getattr_np)
 EXTERN(pthread_attr_getstack)
 
-GROUP(-lpthread2 -lihash -lrt)
+GROUP(-lpthread2 -lrt)

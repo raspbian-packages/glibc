@@ -22,7 +22,8 @@ subdir	:= wcsmbs
 
 include ../Makeconfig
 
-headers	:= wchar.h bits/wchar.h bits/wchar2.h bits/wchar-ldbl.h uchar.h
+headers	:= wchar.h bits/wchar.h bits/wchar2.h bits/wchar-ldbl.h uchar.h \
+	   bits/types/__mbstate_t.h bits/types/mbstate_t.h bits/types/wint_t.h
 
 routines := wcscat wcschr wcscmp wcscpy wcscspn wcsdup wcslen wcsncat \
 	    wcsncmp wcsncpy wcspbrk wcsrchr wcsspn wcstok wcsstr wmemchr \
@@ -81,6 +82,7 @@ CFLAGS-wcstoll.c = $(strtox-CFLAGS)
 CFLAGS-wcstoull.c = $(strtox-CFLAGS)
 CFLAGS-wcstod.c = $(strtox-CFLAGS)
 CFLAGS-wcstold.c = $(strtox-CFLAGS)
+CFLAGS-wcstof128.c = $(strtox-CFLAGS)
 CFLAGS-wcstof.c = $(strtox-CFLAGS)
 CFLAGS-wcstol_l.c = $(strtox-CFLAGS)
 CFLAGS-wcstoul_l.c = $(strtox-CFLAGS)
@@ -88,6 +90,7 @@ CFLAGS-wcstoll_l.c = $(strtox-CFLAGS)
 CFLAGS-wcstoull_l.c = $(strtox-CFLAGS)
 CFLAGS-wcstod_l.c = $(strtox-CFLAGS)
 CFLAGS-wcstold_l.c = $(strtox-CFLAGS)
+CFLAGS-wcstof128_l.c = $(strtox-CFLAGS)
 CFLAGS-wcstof_l.c = $(strtox-CFLAGS)
 CPPFLAGS-tst-wchar-h.c = -D_FORTIFY_SOURCE=2
 

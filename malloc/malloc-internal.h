@@ -58,16 +58,6 @@
 /* The corresponding word size.  */
 #define SIZE_SZ (sizeof (INTERNAL_SIZE_T))
 
-/* MALLOC_ALIGNMENT is the minimum alignment for malloc'ed chunks.  It
-   must be a power of two at least 2 * SIZE_SZ, even on machines for
-   which smaller alignments would suffice. It may be defined as larger
-   than this though. Note however that code and data structures are
-   optimized for the case of 8-byte alignment.  */
-#ifndef MALLOC_ALIGNMENT
-# define MALLOC_ALIGNMENT (2 * SIZE_SZ < __alignof__ (long double) \
-                           ? __alignof__ (long double) : 2 * SIZE_SZ)
-#endif
-
 /* The corresponding bit mask value.  */
 #define MALLOC_ALIGN_MASK (MALLOC_ALIGNMENT - 1)
 
@@ -81,5 +71,24 @@ void __malloc_fork_unlock_parent (void) internal_function attribute_hidden;
 /* Called in the child process after a fork.  */
 void __malloc_fork_unlock_child (void) internal_function attribute_hidden;
 
+/* Set *RESULT to LEFT * RIGHT.  Return true if the multiplication
+   overflowed.  */
+static inline bool
+check_mul_overflow_size_t (size_t left, size_t right, size_t *result)
+{
+#if __GNUC__ >= 5
+  return __builtin_mul_overflow (left, right, result);
+#else
+  /* size_t is unsigned so the behavior on overflow is defined.  */
+  *result = left * right;
+  size_t half_size_t = ((size_t) 1) << (8 * sizeof (size_t) / 2);
+  if (__glibc_unlikely ((left | right) >= half_size_t))
+    {
+      if (__glibc_unlikely (right != 0 && *result / right != left))
+        return true;
+    }
+  return false;
+#endif
+}
 
 #endif /* _MALLOC_INTERNAL_H */

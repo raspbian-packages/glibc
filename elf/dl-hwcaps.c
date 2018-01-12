@@ -22,8 +22,12 @@
 #include <libintl.h>
 #include <unistd.h>
 #include <ldsodefs.h>
+#include <fcntl.h>
+#include <sysdep.h>
+#include <not-errno.h>
 
 #include <dl-procinfo.h>
+#include <dl-hwcaps.h>
 
 #ifdef _DL_FIRST_PLATFORM
 # define _DL_FIRST_EXTRA (_DL_FIRST_PLATFORM + _DL_PLATFORMS_COUNT)
@@ -37,8 +41,9 @@ internal_function
 _dl_important_hwcaps (const char *platform, size_t platform_len, size_t *sz,
 		      size_t *max_capstrlen)
 {
+  uint64_t hwcap_mask = GET_HWCAP_MASK();
   /* Determine how many important bits are set.  */
-  uint64_t masked = GLRO(dl_hwcap) & GLRO(dl_hwcap_mask);
+  uint64_t masked = GLRO(dl_hwcap) & hwcap_mask;
   size_t cnt = platform != NULL;
   size_t n, m;
   size_t total;
@@ -140,7 +145,12 @@ _dl_important_hwcaps (const char *platform, size_t platform_len, size_t *sz,
 	 LD_HWCAP_MASK environment variable (or default HWCAP_IMPORTANT).
 	 So there is no way to request ignoring an OS-supplied dsocap
 	 string and bit like you can ignore an OS-supplied HWCAP bit.  */
-      GLRO(dl_hwcap_mask) |= (uint64_t) mask << _DL_FIRST_EXTRA;
+      hwcap_mask |= (uint64_t) mask << _DL_FIRST_EXTRA;
+#if HAVE_TUNABLES
+      TUNABLE_SET (glibc, tune, hwcap_mask, uint64_t, hwcap_mask);
+#else
+      GLRO(dl_hwcap_mask) = hwcap_mask;
+#endif
       size_t len;
       for (const char *p = dsocaps; p < dsocaps + dsocapslen; p += len + 1)
 	{

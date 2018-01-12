@@ -1,7 +1,6 @@
 git-updates.diff
 
 locale/check-unknown-symbols.diff
-locale/fix-LC_COLLATE-rules.diff
 locale/preprocessor-collate-uli-sucks.diff
 locale/preprocessor-collate.diff  # should not be needed anymore, but keep it anyways.
 locale/locale-print-LANGUAGE.diff
@@ -33,8 +32,9 @@ localedata/submitted-it_IT-thousands_sep.diff
 alpha/local-gcc4.1.diff
 alpha/submitted-dl-support.diff
 alpha/local-string-functions.diff
-alpha/submitted-termios_h.diff
 alpha/submitted-fts64.diff
+alpha/submitted-rlimit.diff
+alpha/submitted-fminmax.diff
 
 arm/local-sigaction.diff
 arm/unsubmitted-ldconfig-cache-abi.diff
@@ -43,7 +43,7 @@ arm/local-soname-hack.diff
 arm/local-vfp-sysdeps.diff
 arm/unsubmitted-ldso-multilib.diff
 arm/local-arm-futex.diff
-arm/submitted-strip-bit-0.diff
+arm/git-arm64-memcmp.diff
 
 hppa/local-inlining.diff
 hppa/local-elf-make-cflags.diff
@@ -94,7 +94,6 @@ hurd-i386/tg-io_select_timeout.diff
 hurd-i386/tg-poll_errors_fixes.diff
 hurd-i386/unsubmitted-clock_t_centiseconds.diff
 hurd-i386/submitted-path_mounted.diff
-hurd-i386/unsubmitted-NO_HIDDEN.diff
 hurd-i386/tg-socket_flags.diff
 hurd-i386/tg-socketpair_flags.diff
 hurd-i386/tg-pipe2.diff
@@ -131,18 +130,47 @@ hurd-i386/local-no_unsupported_ioctls.diff
 hurd-i386/submitted-shm_open_pthread.diff
 hurd-i386/cvs-libc_init_secure.diff
 hurd-i386/tg2.25-tls.diff
-hurd-i386/git-__inet6_scopeid_pton.diff
 hurd-i386/local-nocheck-installed-headers.diff
 hurd-i386/git-bits-sysmacros.h.diff
 hurd-i386/git-stack_chk_fail_local.diff
 hurd-i386/git-stack-protect-static.diff
+hurd-i386/git-sigsetops.h.diff
+hurd-i386/git-sigsetops-2.h.diff
+hurd-i386/git-sigsetops-3.h.diff
+hurd-i386/tg2.26-sigsetops.h.diff
+hurd-i386/git-bits_socket.h.diff
+hurd-i386/git-preadwritev2.diff
+hurd-i386/git-preadwritev2-2.diff
+hurd-i386/git-preadwritev2-3.diff
 hurd-i386/git-rtld-access.diff
+hurd-i386/git-rtld-sbrk.diff
+hurd-i386/git-rtld-sbrk-2.diff
+hurd-i386/git-divdi.diff
+hurd-i386/git-feraiseexcept.diff
+hurd-i386/git-libpthread-2.26.diff
+hurd-i386/git-x86-tunables.diff
+hurd-i386/git-i386-implies-x86.diff
+hurd-i386/git-rtld-strtoul_internal.diff
+hurd-i386/git-clone.diff
+hurd-i386/git-gethostname.diff
+hurd-i386/git-tst-udp-timeout.diff
+hurd-i386/git-tst-udp-nonblocking.diff
+hurd-i386/git-hidden-def.diff
+hurd-i386/git-hidden-def-2.diff
+hurd-i386/git-dl-sysdep-check.diff
+hurd-i386/git-socket-limit.diff
+hurd-i386/tg-thread-linkspace.diff
+hurd-i386/git-clock_gettime_gettimeofday.diff
+hurd-i386/git-sigsuspend_not_cancel.diff
+hurd-i386/git-dirfd-linknamespace.diff
+hurd-i386/git-revoke-linknamespace.diff
+hurd-i386/git-seekdir-linknamespace.diff
+hurd-i386/git-ifaddrs-linknamespace.diff
+hurd-i386/git-NO_HIDDEN.diff
+hurd-i386/git-mount_namespace.diff
 
 i386/local-biarch.diff
-i386/local-cmov.diff
 i386/unsubmitted-quiet-ldconfig.diff
-
-ia64/git-ia64-crash-thread-exit.diff
 
 kfreebsd/submitted-waitid.diff
 kfreebsd/submitted-auxv.diff
@@ -163,7 +191,6 @@ mips/submitted-rld_map.diff
 mips/git-syscalls5-7-unbound-stack.diff
 
 powerpc/local-powerpc8xx-dcbz.diff
-powerpc/submitted-tst-tlsopt-powerpc.diff
 
 sh4/local-fpscr_values.diff
 
@@ -185,9 +212,6 @@ any/local-ld-multiarch.diff
 any/local-ldso-disable-hwcap.diff
 any/local-ldconfig.diff
 any/local-ldconfig-fsync.diff
-any/local-libgcc-compat-main.diff
-any/local-libgcc-compat-ports.diff
-any/local-libgcc-compat-abilists.diff
 any/local-nss-upgrade.diff
 any/local-stubs_h.diff
 any/local-tcsetaddr.diff
@@ -196,22 +220,17 @@ any/local-nss-overflow.diff
 any/submitted-missing-etc-hosts.diff
 any/submitted-bits-fcntl_h-at.diff
 any/submitted-nptl-invalid-td.patch
-any/submitted-string2-strcmp.diff
 any/local-ldconfig-multiarch.diff
-any/local-tst-writev.diff
 any/local-disable-libnss-db.diff
 any/local-revert-bz13979.diff
 any/local-tst-eintr1-eagain.diff
 any/unsubmitted-ldso-machine-mismatch.diff
 any/unsubmitted-dlopen-static-crash.diff
 any/local-ldconfig-ignore-ld.so.diff
-any/local-dynamic-resolvconf.diff
 any/local-libpic.diff
 any/local-bootstrap-headers.diff
-any/submitted-unicode-9.0.0.diff
-any/cvs-malloc-hardening.diff
-any/local-bits-sigstack.diff
 any/submitted-resolv-unaligned.diff
 any/submitted-intl-tstgettext.diff
+any/local-cudacc-float128.diff
 any/submitted-ldconfig-c-collation.diff
 any/git-any-ld.so-newline.diff

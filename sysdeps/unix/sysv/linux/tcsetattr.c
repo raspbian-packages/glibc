@@ -41,7 +41,7 @@
 
 /* Set the state of FD to *TERMIOS_P.  */
 int
-tcsetattr (int fd, int optional_actions, const struct termios *termios_p)
+__tcsetattr (int fd, int optional_actions, const struct termios *termios_p)
 {
   struct __kernel_termios k_termios;
   struct __kernel_termios k_termios_old;
@@ -130,4 +130,5 @@ tcsetattr (int fd, int optional_actions, const struct termios *termios_p)
     }
    return retval;
 }
+weak_alias (__tcsetattr, tcsetattr)
 libc_hidden_def (tcsetattr)

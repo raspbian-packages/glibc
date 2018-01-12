@@ -66,6 +66,9 @@
 
 #include "nsswitch.h"
 #include <arpa/inet.h>
+#include <arpa/nameser.h>
+#include <resolv/resolv-internal.h>
+#include <resolv/resolv_context.h>
 
 /* Maximum number of aliases we allow.  */
 #define MAX_NR_ALIASES	48
@@ -92,13 +95,6 @@ typedef union querybuf
   u_char buf[MAXPACKET];
 } querybuf;
 
-/* These functions are defined in res_comp.c.  */
-#define NS_MAXCDNAME	255	/* maximum compressed domain name */
-extern int __ns_name_ntop (const u_char *, char *, size_t) __THROW;
-extern int __ns_name_unpack (const u_char *, const u_char *,
-			     const u_char *, u_char *, size_t) __THROW;
-
-
 /* Prototypes for local functions.  */
 static enum nss_status getanswer_r (const querybuf *answer, int anslen,
 				    struct netent *result, char *buffer,
@@ -121,19 +117,26 @@ _nss_dns_getnetbyname_r (const char *name, struct netent *result,
   int anslen;
   enum nss_status status;
 
-  if (__res_maybe_init (&_res, 0) == -1)
-    return NSS_STATUS_UNAVAIL;
+  struct resolv_context *ctx = __resolv_context_get ();
+  if (ctx == NULL)
+    {
+      *errnop = errno;
+      *herrnop = NETDB_INTERNAL;
+      return NSS_STATUS_UNAVAIL;
+    }
 
   net_buffer.buf = orig_net_buffer = (querybuf *) alloca (1024);
 
-  anslen = __libc_res_nsearch (&_res, name, C_IN, T_PTR, net_buffer.buf->buf,
-			       1024, &net_buffer.ptr, NULL, NULL, NULL, NULL);
+  anslen = __res_context_search
+    (ctx, name, C_IN, T_PTR, net_buffer.buf->buf,
+     1024, &net_buffer.ptr, NULL, NULL, NULL, NULL);
   if (anslen < 0)
     {
       /* Nothing found.  */
       *errnop = errno;
       if (net_buffer.buf != orig_net_buffer)
 	free (net_buffer.buf);
+      __resolv_context_put (ctx);
       return (errno == ECONNREFUSED
 	      || errno == EPFNOSUPPORT
 	      || errno == EAFNOSUPPORT)
@@ -144,6 +147,7 @@ _nss_dns_getnetbyname_r (const char *name, struct netent *result,
 			errnop, herrnop, BYNAME);
   if (net_buffer.buf != orig_net_buffer)
     free (net_buffer.buf);
+  __resolv_context_put (ctx);
   return status;
 }
 
@@ -171,8 +175,13 @@ _nss_dns_getnetbyaddr_r (uint32_t net, int type, struct netent *result,
   if (type != AF_INET)
     return NSS_STATUS_UNAVAIL;
 
-  if (__res_maybe_init (&_res, 0) == -1)
-    return NSS_STATUS_UNAVAIL;
+  struct resolv_context *ctx = __resolv_context_get ();
+  if (ctx == NULL)
+    {
+      *errnop = errno;
+      *herrnop = NETDB_INTERNAL;
+      return NSS_STATUS_UNAVAIL;
+    }
 
   net2 = (u_int32_t) net;
   for (cnt = 4; net2 != 0; net2 >>= 8)
@@ -202,8 +211,8 @@ _nss_dns_getnetbyaddr_r (uint32_t net, int type, struct netent *result,
 
   net_buffer.buf = orig_net_buffer = (querybuf *) alloca (1024);
 
-  anslen = __libc_res_nquery (&_res, qbuf, C_IN, T_PTR, net_buffer.buf->buf,
-			      1024, &net_buffer.ptr, NULL, NULL, NULL, NULL);
+  anslen = __res_context_query (ctx, qbuf, C_IN, T_PTR, net_buffer.buf->buf,
+				1024, &net_buffer.ptr, NULL, NULL, NULL, NULL);
   if (anslen < 0)
     {
       /* Nothing found.  */
@@ -211,6 +220,7 @@ _nss_dns_getnetbyaddr_r (uint32_t net, int type, struct netent *result,
       __set_errno (olderr);
       if (net_buffer.buf != orig_net_buffer)
 	free (net_buffer.buf);
+      __resolv_context_put (ctx);
       return (err == ECONNREFUSED
 	      || err == EPFNOSUPPORT
 	      || err == EAFNOSUPPORT)
@@ -231,6 +241,7 @@ _nss_dns_getnetbyaddr_r (uint32_t net, int type, struct netent *result,
       result->n_net = u_net;
     }
 
+  __resolv_context_put (ctx);
   return status;
 }
 
@@ -324,11 +335,8 @@ getanswer_r (const querybuf *answer, int anslen, struct netent *result,
 
   while (--answer_count >= 0 && cp < end_of_message)
     {
-      int n = dn_expand (answer->buf, end_of_message, cp, bp, linebuflen);
-      int type, class;
-
-      n = __ns_name_unpack (answer->buf, end_of_message, cp,
-			    packtmp, sizeof packtmp);
+      int n = __ns_name_unpack (answer->buf, end_of_message, cp,
+				packtmp, sizeof packtmp);
       if (n != -1 && __ns_name_ntop (packtmp, bp, linebuflen) == -1)
 	{
 	  if (errno == EMSGSIZE)
@@ -350,6 +358,7 @@ getanswer_r (const querybuf *answer, int anslen, struct netent *result,
 	  return NSS_STATUS_UNAVAIL;
 	}
 
+      int type, class;
       GETSHORT (type, cp);
       GETSHORT (class, cp);
       cp += INT32SZ;		/* TTL */

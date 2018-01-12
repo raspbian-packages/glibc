@@ -18,10 +18,11 @@
    Boston, MA 02111-1307, USA.  */
 
 #include <pthread.h>
-#include <hurd/ihash.h>
+#include <libc-lockP.h>
 
 #define PTHREAD_KEY_MEMBERS \
-  hurd_ihash_t thread_specifics;
+  void **thread_specifics;		/* This is only resized by the thread, and always growing */ \
+  unsigned thread_specifics_size;	/* Number of entries in thread_specifics */
 
 #define PTHREAD_KEY_INVALID (void *) (-1)
 
@@ -59,18 +60,18 @@ __pthread_key_lock_ready (void)
       int err;
       pthread_mutexattr_t attr;
 
-      err = pthread_mutexattr_init (&attr);
+      err = __pthread_mutexattr_init (&attr);
       assert_perror (err);
 
-      err = pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_RECURSIVE);
+      err = __pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_RECURSIVE);
       assert_perror (err);
 
-      err = pthread_mutex_init (&__pthread_key_lock, &attr);
+      err = _pthread_mutex_init (&__pthread_key_lock, &attr);
       assert_perror (err);
 
-      err = pthread_mutexattr_destroy (&attr);
+      err = __pthread_mutexattr_destroy (&attr);
       assert_perror (err);
     }
 
-  pthread_once (&o, do_init);
+  __pthread_once (&o, do_init);
 }

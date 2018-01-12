@@ -18,6 +18,7 @@
 
 #include <string.h>
 #include <rpcsvc/nis.h>
+#include <shlib-compat.h>
 
 #include "nis_xdr.h"
 #include "nis_intern.h"
@@ -76,3 +77,4 @@ nis_checkpoint (const_nis_name dirname)
 
   return res;
 }
+libnsl_hidden_nolink_def (nis_checkpoint, GLIBC_2_1)

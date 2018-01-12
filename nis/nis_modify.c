@@ -18,6 +18,7 @@
 
 #include <string.h>
 #include <rpcsvc/nis.h>
+#include <shlib-compat.h>
 
 #include "nis_xdr.h"
 #include "nis_intern.h"
@@ -71,4 +72,4 @@ nis_modify (const_nis_name name, const nis_object *obj2)
 
   return res;
 }
-libnsl_hidden_def (nis_modify)
+libnsl_hidden_nolink_def (nis_modify, GLIBC_2_1)

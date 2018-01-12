@@ -23,6 +23,7 @@
 #include <limits.h>
 #include <malloc.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -106,7 +107,7 @@ strncasecmp_max (const char *left, const char *right)
   return strncasecmp (left, right, SIZE_MAX);
 }
 
-static int
+int
 do_test (void)
 {
   enum {
@@ -206,7 +207,6 @@ do_test (void)
 
 /* The nested loops need a long time to complete on slower
    machines.  */
-#define TIMEOUT 300
+#define TIMEOUT 600
 
-#define TEST_FUNCTION do_test ()
-#include "../test-skeleton.c"
+#include <support/test-driver.c>

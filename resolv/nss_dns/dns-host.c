@@ -80,9 +80,11 @@
 #include <string.h>
 
 #include "nsswitch.h"
+#include <arpa/nameser.h>
 
 /* Get implementeation for some internal functions.  */
 #include <resolv/resolv-internal.h>
+#include <resolv/resolv_context.h>
 #include <resolv/mapv4v6addr.h>
 #include <resolv/mapv4v6hostent.h>
 
@@ -106,14 +108,8 @@ typedef union querybuf
   u_char buf[MAXPACKET];
 } querybuf;
 
-/* These functions are defined in res_comp.c.  */
-#define NS_MAXCDNAME	255	/* maximum compressed domain name */
-extern int __ns_name_ntop (const u_char *, char *, size_t);
-extern int __ns_name_unpack (const u_char *, const u_char *,
-			     const u_char *, u_char *, size_t);
-
-
-static enum nss_status getanswer_r (const querybuf *answer, int anslen,
+static enum nss_status getanswer_r (struct resolv_context *ctx,
+				    const querybuf *answer, int anslen,
 				    const char *qname, int qtype,
 				    struct hostent *result, char *buffer,
 				    size_t buflen, int *errnop, int *h_errnop,
@@ -127,13 +123,13 @@ static enum nss_status gaih_getanswer (const querybuf *answer1, int anslen1,
 				       int *errnop, int *h_errnop,
 				       int32_t *ttlp);
 
-extern enum nss_status _nss_dns_gethostbyname3_r (const char *name, int af,
-						  struct hostent *result,
-						  char *buffer, size_t buflen,
-						  int *errnop, int *h_errnop,
-						  int32_t *ttlp,
-						  char **canonp);
-hidden_proto (_nss_dns_gethostbyname3_r)
+static enum nss_status gethostbyname3_context (struct resolv_context *ctx,
+					       const char *name, int af,
+					       struct hostent *result,
+					       char *buffer, size_t buflen,
+					       int *errnop, int *h_errnop,
+					       int32_t *ttlp,
+					       char **canonp);
 
 /* Return the expected RDATA length for an address record type (A or
    AAAA).  */
@@ -151,10 +147,30 @@ rrtype_to_rdata_length (int type)
     }
 }
 
+
 enum nss_status
 _nss_dns_gethostbyname3_r (const char *name, int af, struct hostent *result,
 			   char *buffer, size_t buflen, int *errnop,
 			   int *h_errnop, int32_t *ttlp, char **canonp)
+{
+  struct resolv_context *ctx = __resolv_context_get ();
+  if (ctx == NULL)
+    {
+      *errnop = errno;
+      *h_errnop = NETDB_INTERNAL;
+      return NSS_STATUS_UNAVAIL;
+    }
+  enum nss_status status = gethostbyname3_context
+    (ctx, name, af, result, buffer, buflen, errnop, h_errnop, ttlp, canonp);
+  __resolv_context_put (ctx);
+  return status;
+}
+
+static enum nss_status
+gethostbyname3_context (struct resolv_context *ctx,
+			const char *name, int af, struct hostent *result,
+			char *buffer, size_t buflen, int *errnop,
+			int *h_errnop, int32_t *ttlp, char **canonp)
 {
   union
   {
@@ -168,9 +184,6 @@ _nss_dns_gethostbyname3_r (const char *name, int af, struct hostent *result,
   int map = 0;
   int olderr = errno;
   enum nss_status status;
-
-  if (__res_maybe_init (&_res, 0) == -1)
-    return NSS_STATUS_UNAVAIL;
 
   switch (af) {
   case AF_INET:
@@ -196,13 +209,13 @@ _nss_dns_gethostbyname3_r (const char *name, int af, struct hostent *result,
    * function that looks up host names.
    */
   if (strchr (name, '.') == NULL
-      && (cp = res_hostalias (&_res, name, tmp, sizeof (tmp))) != NULL)
+      && (cp = __res_context_hostalias (ctx, name, tmp, sizeof (tmp))) != NULL)
     name = cp;
 
   host_buffer.buf = orig_host_buffer = (querybuf *) alloca (1024);
 
-  n = __libc_res_nsearch (&_res, name, C_IN, type, host_buffer.buf->buf,
-			  1024, &host_buffer.ptr, NULL, NULL, NULL, NULL);
+  n = __res_context_search (ctx, name, C_IN, type, host_buffer.buf->buf,
+			    1024, &host_buffer.ptr, NULL, NULL, NULL, NULL);
   if (n < 0)
     {
       switch (errno)
@@ -234,10 +247,10 @@ _nss_dns_gethostbyname3_r (const char *name, int af, struct hostent *result,
 	 by having the RES_USE_INET6 bit in _res.options set, we try
 	 another lookup.  */
       if (af == AF_INET6 && res_use_inet6 ())
-	n = __libc_res_nsearch (&_res, name, C_IN, T_A, host_buffer.buf->buf,
-				host_buffer.buf != orig_host_buffer
-				? MAXPACKET : 1024, &host_buffer.ptr,
-				NULL, NULL, NULL, NULL);
+	n = __res_context_search (ctx, name, C_IN, T_A, host_buffer.buf->buf,
+				  host_buffer.buf != orig_host_buffer
+				  ? MAXPACKET : 1024, &host_buffer.ptr,
+				  NULL, NULL, NULL, NULL);
 
       if (n < 0)
 	{
@@ -252,14 +265,13 @@ _nss_dns_gethostbyname3_r (const char *name, int af, struct hostent *result,
       result->h_length = INADDRSZ;
     }
 
-  status = getanswer_r (host_buffer.buf, n, name, type, result, buffer, buflen,
-			errnop, h_errnop, map, ttlp, canonp);
+  status = getanswer_r
+    (ctx, host_buffer.buf, n, name, type, result, buffer, buflen,
+     errnop, h_errnop, map, ttlp, canonp);
   if (host_buffer.buf != orig_host_buffer)
     free (host_buffer.buf);
   return status;
 }
-hidden_def (_nss_dns_gethostbyname3_r)
-
 
 enum nss_status
 _nss_dns_gethostbyname2_r (const char *name, int af, struct hostent *result,
@@ -276,15 +288,21 @@ _nss_dns_gethostbyname_r (const char *name, struct hostent *result,
 			  char *buffer, size_t buflen, int *errnop,
 			  int *h_errnop)
 {
+  struct resolv_context *ctx = __resolv_context_get ();
+  if (ctx == NULL)
+    {
+      *errnop = errno;
+      *h_errnop = NETDB_INTERNAL;
+      return NSS_STATUS_UNAVAIL;
+    }
   enum nss_status status = NSS_STATUS_NOTFOUND;
-
   if (res_use_inet6 ())
-    status = _nss_dns_gethostbyname3_r (name, AF_INET6, result, buffer,
-					buflen, errnop, h_errnop, NULL, NULL);
+    status = gethostbyname3_context (ctx, name, AF_INET6, result, buffer,
+				     buflen, errnop, h_errnop, NULL, NULL);
   if (status == NSS_STATUS_NOTFOUND)
-    status = _nss_dns_gethostbyname3_r (name, AF_INET, result, buffer,
-					buflen, errnop, h_errnop, NULL, NULL);
-
+    status = gethostbyname3_context (ctx, name, AF_INET, result, buffer,
+				     buflen, errnop, h_errnop, NULL, NULL);
+  __resolv_context_put (ctx);
   return status;
 }
 
@@ -294,8 +312,13 @@ _nss_dns_gethostbyname4_r (const char *name, struct gaih_addrtuple **pat,
 			   char *buffer, size_t buflen, int *errnop,
 			   int *herrnop, int32_t *ttlp)
 {
-  if (__res_maybe_init (&_res, 0) == -1)
-    return NSS_STATUS_UNAVAIL;
+  struct resolv_context *ctx = __resolv_context_get ();
+  if (ctx == NULL)
+    {
+      *errnop = errno;
+      *herrnop = NETDB_INTERNAL;
+      return NSS_STATUS_UNAVAIL;
+    }
 
   /*
    * if there aren't any dots, it could be a user-level alias.
@@ -305,7 +328,7 @@ _nss_dns_gethostbyname4_r (const char *name, struct gaih_addrtuple **pat,
   if (strchr (name, '.') == NULL)
     {
       char *tmp = alloca (NS_MAXDNAME);
-      const char *cp = res_hostalias (&_res, name, tmp, NS_MAXDNAME);
+      const char *cp = __res_context_hostalias (ctx, name, tmp, NS_MAXDNAME);
       if (cp != NULL)
 	name = cp;
     }
@@ -324,9 +347,9 @@ _nss_dns_gethostbyname4_r (const char *name, struct gaih_addrtuple **pat,
 
   int olderr = errno;
   enum nss_status status;
-  int n = __libc_res_nsearch (&_res, name, C_IN, T_QUERY_A_AND_AAAA,
-			      host_buffer.buf->buf, 2048, &host_buffer.ptr,
-			      &ans2p, &nans2p, &resplen2, &ans2p_malloced);
+  int n = __res_context_search (ctx, name, C_IN, T_QUERY_A_AND_AAAA,
+				host_buffer.buf->buf, 2048, &host_buffer.ptr,
+				&ans2p, &nans2p, &resplen2, &ans2p_malloced);
   if (n >= 0)
     {
       status = gaih_getanswer (host_buffer.buf, n, (const querybuf *) ans2p,
@@ -369,6 +392,7 @@ _nss_dns_gethostbyname4_r (const char *name, struct gaih_addrtuple **pat,
   if (host_buffer.buf != orig_host_buffer)
     free (host_buffer.buf);
 
+  __resolv_context_put (ctx);
   return status;
 }
 
@@ -421,8 +445,13 @@ _nss_dns_gethostbyaddr2_r (const void *addr, socklen_t len, int af,
 
  host_data = (struct host_data *) buffer;
 
-  if (__res_maybe_init (&_res, 0) == -1)
-    return NSS_STATUS_UNAVAIL;
+  struct resolv_context *ctx = __resolv_context_get ();
+  if (ctx == NULL)
+    {
+      *errnop = errno;
+      *h_errnop = NETDB_INTERNAL;
+      return NSS_STATUS_UNAVAIL;
+    }
 
   if (af == AF_INET6 && len == IN6ADDRSZ
       && (memcmp (uaddr, mapped, sizeof mapped) == 0
@@ -447,12 +476,14 @@ _nss_dns_gethostbyaddr2_r (const void *addr, socklen_t len, int af,
     default:
       *errnop = EAFNOSUPPORT;
       *h_errnop = NETDB_INTERNAL;
+      __resolv_context_put (ctx);
       return NSS_STATUS_UNAVAIL;
     }
   if (size > len)
     {
       *errnop = EAFNOSUPPORT;
       *h_errnop = NETDB_INTERNAL;
+      __resolv_context_put (ctx);
       return NSS_STATUS_UNAVAIL;
     }
 
@@ -481,23 +512,28 @@ _nss_dns_gethostbyaddr2_r (const void *addr, socklen_t len, int af,
       break;
     }
 
-  n = __libc_res_nquery (&_res, qbuf, C_IN, T_PTR, host_buffer.buf->buf,
-			 1024, &host_buffer.ptr, NULL, NULL, NULL, NULL);
+  n = __res_context_query (ctx, qbuf, C_IN, T_PTR, host_buffer.buf->buf,
+			   1024, &host_buffer.ptr, NULL, NULL, NULL, NULL);
   if (n < 0)
     {
       *h_errnop = h_errno;
       __set_errno (olderr);
       if (host_buffer.buf != orig_host_buffer)
 	free (host_buffer.buf);
+      __resolv_context_put (ctx);
       return errno == ECONNREFUSED ? NSS_STATUS_UNAVAIL : NSS_STATUS_NOTFOUND;
     }
 
-  status = getanswer_r (host_buffer.buf, n, qbuf, T_PTR, result, buffer, buflen,
-			errnop, h_errnop, 0 /* XXX */, ttlp, NULL);
+  status = getanswer_r
+    (ctx, host_buffer.buf, n, qbuf, T_PTR, result, buffer, buflen,
+     errnop, h_errnop, 0 /* XXX */, ttlp, NULL);
   if (host_buffer.buf != orig_host_buffer)
     free (host_buffer.buf);
   if (status != NSS_STATUS_SUCCESS)
-    return status;
+    {
+      __resolv_context_put (ctx);
+      return status;
+    }
 
   result->h_addrtype = af;
   result->h_length = len;
@@ -505,6 +541,7 @@ _nss_dns_gethostbyaddr2_r (const void *addr, socklen_t len, int af,
   host_data->h_addr_ptrs[0] = (char *) host_data->host_addr;
   host_data->h_addr_ptrs[1] = NULL;
   *h_errnop = NETDB_SUCCESS;
+  __resolv_context_put (ctx);
   return NSS_STATUS_SUCCESS;
 }
 hidden_def (_nss_dns_gethostbyaddr2_r)
@@ -519,25 +556,27 @@ _nss_dns_gethostbyaddr_r (const void *addr, socklen_t len, int af,
 				    errnop, h_errnop, NULL);
 }
 
-static void addrsort (char **ap, int num);
-
 static void
-addrsort (char **ap, int num)
+addrsort (struct resolv_context *ctx, char **ap, int num)
 {
   int i, j;
   char **p;
   short aval[MAX_NR_ADDRS];
   int needsort = 0;
+  size_t nsort = __resolv_context_sort_count (ctx);
 
   p = ap;
   if (num > MAX_NR_ADDRS)
     num = MAX_NR_ADDRS;
   for (i = 0; i < num; i++, p++)
     {
-      for (j = 0 ; (unsigned)j < _res.nsort; j++)
-	if (_res.sort_list[j].addr.s_addr ==
-	    (((struct in_addr *)(*p))->s_addr & _res.sort_list[j].mask))
-	  break;
+      for (j = 0 ; (unsigned)j < nsort; j++)
+	{
+	  struct resolv_sortlist_entry e
+	    = __resolv_context_sort_entry (ctx, j);
+	  if (e.addr.s_addr == (((struct in_addr *)(*p))->s_addr & e.mask))
+	    break;
+	}
       aval[i] = j;
       if (needsort == 0 && i > 0 && j < aval[i-1])
 	needsort = i;
@@ -564,7 +603,8 @@ addrsort (char **ap, int num)
 }
 
 static enum nss_status
-getanswer_r (const querybuf *answer, int anslen, const char *qname, int qtype,
+getanswer_r (struct resolv_context *ctx,
+	     const querybuf *answer, int anslen, const char *qname, int qtype,
 	     struct hostent *result, char *buffer, size_t buflen,
 	     int *errnop, int *h_errnop, int map, int32_t *ttlp, char **canonp)
 {
@@ -625,7 +665,7 @@ getanswer_r (const querybuf *answer, int anslen, const char *qname, int qtype,
   ancount = ntohs (hp->ancount);
   qdcount = ntohs (hp->qdcount);
   cp = answer->buf + HFIXEDSZ;
-  if (__builtin_expect (qdcount, 1) != 1)
+  if (__glibc_unlikely (qdcount != 1))
     {
       *h_errnop = NO_RECOVERY;
       return NSS_STATUS_UNAVAIL;
@@ -639,7 +679,7 @@ getanswer_r (const querybuf *answer, int anslen, const char *qname, int qtype,
 			packtmp, sizeof packtmp);
   if (n != -1 && __ns_name_ntop (packtmp, bp, linebuflen) == -1)
     {
-      if (__builtin_expect (errno, 0) == EMSGSIZE)
+      if (__glibc_unlikely (errno == EMSGSIZE))
 	goto too_small;
 
       n = -1;
@@ -648,10 +688,16 @@ getanswer_r (const querybuf *answer, int anslen, const char *qname, int qtype,
   if (n > 0 && bp[0] == '.')
     bp[0] = '\0';
 
-  if (__builtin_expect (n < 0 || ((*name_ok) (bp) == 0 && (errno = EBADMSG)),
-			0))
+  if (__glibc_unlikely (n < 0))
     {
       *errnop = errno;
+      *h_errnop = NO_RECOVERY;
+      return NSS_STATUS_UNAVAIL;
+    }
+  if (__glibc_unlikely (name_ok (bp) == 0))
+    {
+      errno = EBADMSG;
+      *errnop = EBADMSG;
       *h_errnop = NO_RECOVERY;
       return NSS_STATUS_UNAVAIL;
     }
@@ -696,7 +742,7 @@ getanswer_r (const querybuf *answer, int anslen, const char *qname, int qtype,
 			    packtmp, sizeof packtmp);
       if (n != -1 && __ns_name_ntop (packtmp, bp, linebuflen) == -1)
 	{
-	  if (__builtin_expect (errno, 0) == EMSGSIZE)
+	  if (__glibc_unlikely (errno == EMSGSIZE))
 	    goto too_small;
 
 	  n = -1;
@@ -756,7 +802,7 @@ getanswer_r (const querybuf *answer, int anslen, const char *qname, int qtype,
 	  /* Store alias.  */
 	  *ap++ = bp;
 	  n = strlen (bp) + 1;		/* For the \0.  */
-	  if (__builtin_expect (n, 0) >= MAXHOSTNAMELEN)
+	  if (__glibc_unlikely (n >= MAXHOSTNAMELEN))
 	    {
 	      ++had_error;
 	      continue;
@@ -767,7 +813,7 @@ getanswer_r (const querybuf *answer, int anslen, const char *qname, int qtype,
 	  n = strlen (tbuf) + 1;	/* For the \0.  */
 	  if (__glibc_unlikely (n > linebuflen))
 	    goto too_small;
-	  if (__builtin_expect (n, 0) >= MAXHOSTNAMELEN)
+	  if (__glibc_unlikely (n >= MAXHOSTNAMELEN))
 	    {
 	      ++had_error;
 	      continue;
@@ -795,7 +841,7 @@ getanswer_r (const querybuf *answer, int anslen, const char *qname, int qtype,
 	  n = strlen (tbuf) + 1;   /* For the \0.  */
 	  if (__glibc_unlikely (n > linebuflen))
 	    goto too_small;
-	  if (__builtin_expect (n, 0) >= MAXHOSTNAMELEN)
+	  if (__glibc_unlikely (n >= MAXHOSTNAMELEN))
 	    {
 	      ++had_error;
 	      continue;
@@ -827,7 +873,7 @@ getanswer_r (const querybuf *answer, int anslen, const char *qname, int qtype,
 				packtmp, sizeof packtmp);
 	  if (n != -1 && __ns_name_ntop (packtmp, bp, linebuflen) == -1)
 	    {
-	      if (__builtin_expect (errno, 0) == EMSGSIZE)
+	      if (__glibc_unlikely (errno == EMSGSIZE))
 		goto too_small;
 
 	      n = -1;
@@ -843,24 +889,11 @@ getanswer_r (const querybuf *answer, int anslen, const char *qname, int qtype,
 	  /* bind would put multiple PTR records as aliases, but we don't do
 	     that.  */
 	  result->h_name = bp;
-	  if (have_to_map)
-	    {
-	      n = strlen (bp) + 1;	/* for the \0 */
-	      if (__glibc_unlikely (n >= MAXHOSTNAMELEN))
-		{
-		  ++had_error;
-		  break;
-		}
-	      bp += n;
-	      linebuflen -= n;
-	      if (map_v4v6_hostent (result, &bp, &linebuflen))
-		goto too_small;
-	    }
 	  *h_errnop = NETDB_SUCCESS;
 	  return NSS_STATUS_SUCCESS;
 	case T_A:
 	case T_AAAA:
-	  if (__builtin_expect (strcasecmp (result->h_name, bp), 0) != 0)
+	  if (__glibc_unlikely (strcasecmp (result->h_name, bp) != 0))
 	    {
 	      cp += n;
 	      continue;			/* XXX - had_error++ ? */
@@ -921,8 +954,9 @@ getanswer_r (const querybuf *answer, int anslen, const char *qname, int qtype,
        * in its return structures - should give it the "best"
        * address in that case, not some random one
        */
-      if (_res.nsort && haveanswer > 1 && qtype == T_A)
-	addrsort (host_data->h_addr_ptrs, haveanswer);
+      if (haveanswer > 1 && qtype == T_A
+	  && __resolv_context_sort_count (ctx) > 0)
+	addrsort (ctx, host_data->h_addr_ptrs, haveanswer);
 
       if (result->h_name == NULL)
 	{
@@ -981,7 +1015,7 @@ gaih_getanswer_slice (const querybuf *answer, int anslen, const char *qname,
      it later.  */
   if (n != -1 && __ns_name_ntop (packtmp, buffer, buflen) == -1)
     {
-      if (__builtin_expect (errno, 0) == EMSGSIZE)
+      if (__glibc_unlikely (errno == EMSGSIZE))
 	{
 	too_small:
 	  *errnop = ERANGE;
@@ -992,10 +1026,16 @@ gaih_getanswer_slice (const querybuf *answer, int anslen, const char *qname,
       n = -1;
     }
 
-  if (__builtin_expect (n < 0 || (res_hnok (buffer) == 0
-				  && (errno = EBADMSG)), 0))
+  if (__glibc_unlikely (n < 0))
     {
       *errnop = errno;
+      *h_errnop = NO_RECOVERY;
+      return NSS_STATUS_UNAVAIL;
+    }
+  if (__glibc_unlikely (res_hnok (buffer) == 0))
+    {
+      errno = EBADMSG;
+      *errnop = EBADMSG;
       *h_errnop = NO_RECOVERY;
       return NSS_STATUS_UNAVAIL;
     }
@@ -1020,7 +1060,7 @@ gaih_getanswer_slice (const querybuf *answer, int anslen, const char *qname,
       if (n != -1 &&
 	  (h_namelen = __ns_name_ntop (packtmp, buffer, buflen)) == -1)
 	{
-	  if (__builtin_expect (errno, 0) == EMSGSIZE)
+	  if (__glibc_unlikely (errno == EMSGSIZE))
 	    goto too_small;
 
 	  n = -1;
@@ -1134,8 +1174,7 @@ gaih_getanswer_slice (const querybuf *answer, int anslen, const char *qname,
 	  buffer += pad;
 	  buflen = buflen > pad ? buflen - pad : 0;
 
-	  if (__builtin_expect (buflen < sizeof (struct gaih_addrtuple),
-				0))
+	  if (__glibc_unlikely (buflen < sizeof (struct gaih_addrtuple)))
 	    goto too_small;
 
 	  *pat = (struct gaih_addrtuple *) buffer;

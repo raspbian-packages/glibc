@@ -30,6 +30,10 @@
 # define MEMSET_CHK_SYMBOL(p,s)		MEMSET_SYMBOL(p, s)
 #endif
 
+#ifndef WMEMSET_CHK_SYMBOL
+# define WMEMSET_CHK_SYMBOL(p,s)	WMEMSET_SYMBOL(p, s)
+#endif
+
 #ifndef VZEROUPPER
 # if VEC_SIZE > 16
 #  define VZEROUPPER			vzeroupper
@@ -79,6 +83,21 @@ END (__bzero)
 weak_alias (__bzero, bzero)
 #endif
 
+#if IS_IN (libc)
+# if defined SHARED
+ENTRY_CHK (WMEMSET_CHK_SYMBOL (__wmemset_chk, unaligned))
+	cmpq	%rdx, %rcx
+	jb	HIDDEN_JUMPTARGET (__chk_fail)
+END_CHK (WMEMSET_CHK_SYMBOL (__wmemset_chk, unaligned))
+# endif
+
+ENTRY (WMEMSET_SYMBOL (__wmemset, unaligned))
+	shlq	$2, %rdx
+	WMEMSET_VDUP_TO_VEC0_AND_SET_RETURN (%esi, %rdi)
+	jmp	L(entry_from_bzero)
+END (WMEMSET_SYMBOL (__wmemset, unaligned))
+#endif
+
 #if defined SHARED && IS_IN (libc)
 ENTRY_CHK (MEMSET_CHK_SYMBOL (__memset_chk, unaligned))
 	cmpq	%rdx, %rcx
@@ -87,8 +106,7 @@ END_CHK (MEMSET_CHK_SYMBOL (__memset_chk, unaligned))
 #endif
 
 ENTRY (MEMSET_SYMBOL (__memset, unaligned))
-L(memset_entry):
-	VDUP_TO_VEC0_AND_SET_RETURN (%esi, %rdi)
+	MEMSET_VDUP_TO_VEC0_AND_SET_RETURN (%esi, %rdi)
 L(entry_from_bzero):
 	cmpq	$VEC_SIZE, %rdx
 	jb	L(less_vec)
@@ -103,6 +121,11 @@ L(entry_from_bzero):
 END (MEMSET_SYMBOL (__memset, unaligned))
 
 # if VEC_SIZE == 16
+ENTRY (__memset_chk_erms)
+	cmpq	%rdx, %rcx
+	jb	HIDDEN_JUMPTARGET (__chk_fail)
+END (__memset_chk_erms)
+
 /* Only used to measure performance of REP STOSB.  */
 ENTRY (__memset_erms)
 # else
@@ -132,7 +155,7 @@ END_CHK (MEMSET_CHK_SYMBOL (__memset_chk, unaligned_erms))
 # endif
 
 ENTRY (MEMSET_SYMBOL (__memset, unaligned_erms))
-	VDUP_TO_VEC0_AND_SET_RETURN (%esi, %rdi)
+	MEMSET_VDUP_TO_VEC0_AND_SET_RETURN (%esi, %rdi)
 	cmpq	$VEC_SIZE, %rdx
 	jb	L(less_vec)
 	cmpq	$(VEC_SIZE * 2), %rdx

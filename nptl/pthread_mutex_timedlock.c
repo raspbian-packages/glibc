@@ -41,8 +41,8 @@
 #endif
 
 int
-pthread_mutex_timedlock (pthread_mutex_t *mutex,
-			 const struct timespec *abstime)
+__pthread_mutex_timedlock (pthread_mutex_t *mutex,
+			   const struct timespec *abstime)
 {
   int oldval;
   pid_t id = THREAD_GETMEM (THREAD_SELF, tid);
@@ -637,3 +637,4 @@ pthread_mutex_timedlock (pthread_mutex_t *mutex,
  out:
   return result;
 }
+weak_alias (__pthread_mutex_timedlock, pthread_mutex_timedlock)

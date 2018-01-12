@@ -40,10 +40,18 @@
       memset.  */
 
 #ifdef USE_AS_STPNCPY
-# define FUNC_NAME __stpncpy
+# ifndef STPNCPY
+#  define FUNC_NAME __stpncpy
+# else
+#  define FUNC_NAME STPNCPY
+# endif
 #else
-# define FUNC_NAME strncpy
-#endif
+# ifndef STRNCPY
+#  define FUNC_NAME strncpy
+# else
+#  define FUNC_NAME STRNCPY
+# endif
+#endif  /* !USE_AS_STPNCPY  */
 
 #define		FRAMESIZE	(FRAME_MIN_SIZE+32)
 
@@ -51,6 +59,7 @@
 /* For builds with no IFUNC support, local calls should be made to internal
    GLIBC symbol (created by libc_hidden_builtin_def).  */
 # ifdef SHARED
+#  define MEMSET_is_local
 #  define MEMSET   __GI_memset
 # else
 #  define MEMSET   memset
@@ -58,7 +67,11 @@
 #endif
 
 	.machine  power7
-EALIGN(FUNC_NAME, 4, 0)
+#ifdef MEMSET_is_local
+ENTRY_TOCLESS (FUNC_NAME, 4)
+#else
+ENTRY (FUNC_NAME, 4)
+#endif
 	CALL_MCOUNT 3
 
 	mflr r0			/* load link register LR to r0  */
@@ -215,7 +228,9 @@ L(zeroFill):
 	li r4, 0		/* zero fill buffer  */
 	mr r5, r8		/* how many bytes to fill buffer with  */
 	bl MEMSET		/* call optimized memset  */
+#ifndef MEMSET_is_local
 	nop
+#endif
 
 L(update3return):
 #ifdef USE_AS_STPNCPY

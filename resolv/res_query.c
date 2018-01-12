@@ -74,13 +74,12 @@
 #include <errno.h>
 #include <netdb.h>
 #include <resolv.h>
+#include <resolv/resolv-internal.h>
+#include <resolv/resolv_context.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <resolv/resolv-internal.h>
-
-/* Options.  Leave them on. */
-/* #undef DEBUG */
+#include <shlib-compat.h>
 
 /* The structure HEADER is normally aligned to a word boundary and its
    fields are accessed using word loads and stores.  We need to access 
@@ -99,37 +98,31 @@ typedef HEADER __attribute__ ((__aligned__(1))) UHEADER;
 #define QUERYSIZE	(HFIXEDSZ + QFIXEDSZ + MAXCDNAME + 1)
 
 static int
-__libc_res_nquerydomain(res_state statp, const char *name, const char *domain,
-			int class, int type, u_char *answer, int anslen,
-			u_char **answerp, u_char **answerp2, int *nanswerp2,
-			int *resplen2, int *answerp2_malloced);
+__res_context_querydomain (struct resolv_context *,
+			   const char *name, const char *domain,
+			   int class, int type, unsigned char *answer, int anslen,
+			   unsigned char **answerp, unsigned char **answerp2, int *nanswerp2,
+			   int *resplen2, int *answerp2_malloced);
 
-/*
- * Formulate a normal query, send, and await answer.
- * Returned answer is placed in supplied buffer "answer".
- * Perform preliminary check of answer, returning success only
- * if no error is indicated and the answer count is nonzero.
- * Return the size of the response on success, -1 on error.
- * Error number is left in H_ERRNO.
- *
- * Caller must parse answer and determine whether it answers the question.
- */
+/* Formulate a normal query, send, and await answer.  Returned answer
+   is placed in supplied buffer ANSWER.  Perform preliminary check of
+   answer, returning success only if no error is indicated and the
+   answer count is nonzero.  Return the size of the response on
+   success, -1 on error.  Error number is left in h_errno.
+
+   Caller must parse answer and determine whether it answers the
+   question.  */
 int
-__libc_res_nquery(res_state statp,
-		  const char *name,	/* domain name */
-		  int class, int type,	/* class and type of query */
-		  u_char *answer,	/* buffer to put answer */
-		  int anslen,		/* size of answer buffer */
-		  u_char **answerp,	/* if buffer needs to be enlarged */
-		  u_char **answerp2,
-		  int *nanswerp2,
-		  int *resplen2,
-		  int *answerp2_malloced)
+__res_context_query (struct resolv_context *ctx, const char *name,
+		     int class, int type,
+		     unsigned char *answer, int anslen,
+		     unsigned char **answerp, unsigned char **answerp2,
+		     int *nanswerp2, int *resplen2, int *answerp2_malloced)
 {
+	struct __res_state *statp = ctx->resp;
 	UHEADER *hp = (UHEADER *) answer;
 	UHEADER *hp2;
 	int n, use_malloc = 0;
-	u_int oflags = statp->_flags;
 
 	size_t bufsize = (type == T_QUERY_A_AND_AAAA ? 2 : 1) * QUERYSIZE;
 	u_char *buf = alloca (bufsize);
@@ -141,23 +134,17 @@ __libc_res_nquery(res_state statp,
  again:
 	hp->rcode = NOERROR;	/* default */
 
-#ifdef DEBUG
-	if (statp->options & RES_DEBUG)
-		printf(";; res_query(%s, %d, %d)\n", name, class, type);
-#endif
-
 	if (type == T_QUERY_A_AND_AAAA)
 	  {
-	    n = res_nmkquery(statp, QUERY, name, class, T_A, NULL, 0, NULL,
-			     query1, bufsize);
+	    n = __res_context_mkquery (ctx, QUERY, name, class, T_A, NULL,
+				       query1, bufsize);
 	    if (n > 0)
 	      {
-		if ((oflags & RES_F_EDNS0ERR) == 0
-		    && (statp->options & (RES_USE_EDNS0|RES_USE_DNSSEC)) != 0)
+		if ((statp->options & (RES_USE_EDNS0|RES_USE_DNSSEC)) != 0)
 		  {
 		    /* Use RESOLV_EDNS_BUFFER_SIZE because the receive
 		       buffer can be reallocated.  */
-		    n = __res_nopt (statp, n, query1, bufsize,
+		    n = __res_nopt (ctx, n, query1, bufsize,
 				    RESOLV_EDNS_BUFFER_SIZE);
 		    if (n < 0)
 		      goto unspec_nomem;
@@ -174,14 +161,13 @@ __libc_res_nquery(res_state statp,
 		  }
 		int nused = n + npad;
 		query2 = buf + nused;
-		n = res_nmkquery(statp, QUERY, name, class, T_AAAA, NULL, 0,
-				 NULL, query2, bufsize - nused);
+		n = __res_context_mkquery (ctx, QUERY, name, class, T_AAAA,
+					   NULL, query2, bufsize - nused);
 		if (n > 0
-		    && (oflags & RES_F_EDNS0ERR) == 0
 		    && (statp->options & (RES_USE_EDNS0|RES_USE_DNSSEC)) != 0)
 		  /* Use RESOLV_EDNS_BUFFER_SIZE because the receive
 		     buffer can be reallocated.  */
-		  n = __res_nopt (statp, n, query2, bufsize,
+		  n = __res_nopt (ctx, n, query2, bufsize,
 				  RESOLV_EDNS_BUFFER_SIZE);
 		nquery2 = n;
 	      }
@@ -190,11 +176,10 @@ __libc_res_nquery(res_state statp,
 	  }
 	else
 	  {
-	    n = res_nmkquery(statp, QUERY, name, class, type, NULL, 0, NULL,
-			     query1, bufsize);
+	    n = __res_context_mkquery (ctx, QUERY, name, class, type, NULL,
+				       query1, bufsize);
 
 	    if (n > 0
-		&& (oflags & RES_F_EDNS0ERR) == 0
 		&& (statp->options & (RES_USE_EDNS0|RES_USE_DNSSEC)) != 0)
 	      {
 		/* Use RESOLV_EDNS_BUFFER_SIZE if the receive buffer
@@ -204,13 +189,13 @@ __libc_res_nquery(res_state statp,
 		  advertise = anslen;
 		else
 		  advertise = RESOLV_EDNS_BUFFER_SIZE;
-		n = __res_nopt (statp, n, query1, bufsize, advertise);
+		n = __res_nopt (ctx, n, query1, bufsize, advertise);
 	      }
 
 	    nquery1 = n;
 	  }
 
-	if (__builtin_expect (n <= 0, 0) && !use_malloc) {
+	if (__glibc_unlikely (n <= 0) && !use_malloc) {
 		/* Retry just in case res_nmkquery failed because of too
 		   short buffer.  Shouldn't happen.  */
 		bufsize = (type == T_QUERY_A_AND_AAAA ? 2 : 1) * MAXPACKET;
@@ -222,42 +207,24 @@ __libc_res_nquery(res_state statp,
 		}
 	}
 	if (__glibc_unlikely (n <= 0))       {
-		/* If the query choked with EDNS0, retry without EDNS0.  */
-		if ((statp->options & (RES_USE_EDNS0|RES_USE_DNSSEC)) != 0
-		    && ((oflags ^ statp->_flags) & RES_F_EDNS0ERR) != 0) {
-			statp->_flags |= RES_F_EDNS0ERR;
-#ifdef DEBUG
-			if (statp->options & RES_DEBUG)
-				printf(";; res_nquery: retry without EDNS0\n");
-#endif
-			goto again;
-		}
-#ifdef DEBUG
-		if (statp->options & RES_DEBUG)
-			printf(";; res_query: mkquery failed\n");
-#endif
 		RES_SET_H_ERRNO(statp, NO_RECOVERY);
 		if (use_malloc)
 			free (buf);
 		return (n);
 	}
 	assert (answerp == NULL || (void *) *answerp == (void *) answer);
-	n = __libc_res_nsend(statp, query1, nquery1, query2, nquery2, answer,
-			     anslen, answerp, answerp2, nanswerp2, resplen2,
-			     answerp2_malloced);
+	n = __res_context_send (ctx, query1, nquery1, query2, nquery2, answer,
+				anslen, answerp, answerp2, nanswerp2, resplen2,
+				answerp2_malloced);
 	if (use_malloc)
 		free (buf);
 	if (n < 0) {
-#ifdef DEBUG
-		if (statp->options & RES_DEBUG)
-			printf(";; res_query: send error\n");
-#endif
 		RES_SET_H_ERRNO(statp, TRY_AGAIN);
 		return (n);
 	}
 
 	if (answerp != NULL)
-	  /* __libc_res_nsend might have reallocated the buffer.  */
+	  /* __res_context_send might have reallocated the buffer.  */
 	  hp = (UHEADER *) *answerp;
 
 	/* We simplify the following tests by assigning HP to HP2 or
@@ -281,15 +248,6 @@ __libc_res_nquery(res_state statp,
 
 	if ((hp->rcode != NOERROR || ntohs(hp->ancount) == 0)
 	    && (hp2->rcode != NOERROR || ntohs(hp2->ancount) == 0)) {
-#ifdef DEBUG
-		if (statp->options & RES_DEBUG) {
-			printf(";; rcode = %d, ancount=%d\n", hp->rcode,
-			    ntohs(hp->ancount));
-			if (hp != hp2)
-			  printf(";; rcode2 = %d, ancount2=%d\n", hp2->rcode,
-				 ntohs(hp2->ancount));
-		}
-#endif
 		switch (hp->rcode == NOERROR ? hp2->rcode : hp->rcode) {
 		case NXDOMAIN:
 			if ((hp->rcode == NOERROR && ntohs (hp->ancount) != 0)
@@ -326,7 +284,24 @@ __libc_res_nquery(res_state statp,
  success:
 	return (n);
 }
-libresolv_hidden_def (__libc_res_nquery)
+libresolv_hidden_def (__res_context_query)
+
+/* Common part of res_nquery and res_query.  */
+static int
+context_query_common (struct resolv_context *ctx,
+		      const char *name, int class, int type,
+		      unsigned char *answer, int anslen)
+{
+  if (ctx == NULL)
+    {
+      RES_SET_H_ERRNO (&_res, NETDB_INTERNAL);
+      return -1;
+    }
+  int result = __res_context_query (ctx, name, class, type, answer, anslen,
+				    NULL, NULL, NULL, NULL, NULL);
+  __resolv_context_put (ctx);
+  return result;
+}
 
 int
 res_nquery(res_state statp,
@@ -335,30 +310,31 @@ res_nquery(res_state statp,
 	   u_char *answer,	/* buffer to put answer */
 	   int anslen)		/* size of answer buffer */
 {
-	return __libc_res_nquery(statp, name, class, type, answer, anslen,
-				 NULL, NULL, NULL, NULL, NULL);
+  return context_query_common
+    (__resolv_context_get_override (statp), name, class, type, answer, anslen);
 }
-libresolv_hidden_def (res_nquery)
 
-/*
- * Formulate a normal query, send, and retrieve answer in supplied buffer.
- * Return the size of the response on success, -1 on error.
- * If enabled, implement search rules until answer or unrecoverable failure
- * is detected.  Error code, if any, is left in H_ERRNO.
- */
 int
-__libc_res_nsearch(res_state statp,
-		   const char *name,	/* domain name */
-		   int class, int type,	/* class and type of query */
-		   u_char *answer,	/* buffer to put answer */
-		   int anslen,		/* size of answer */
-		   u_char **answerp,
-		   u_char **answerp2,
-		   int *nanswerp2,
-		   int *resplen2,
-		   int *answerp2_malloced)
+res_query (const char *name, int class, int type,
+	   unsigned char *answer, int anslen)
 {
-	const char *cp, * const *domain;
+  return context_query_common
+    (__resolv_context_get (), name, class, type, answer, anslen);
+}
+
+/* Formulate a normal query, send, and retrieve answer in supplied
+   buffer.  Return the size of the response on success, -1 on error.
+   If enabled, implement search rules until answer or unrecoverable
+   failure is detected.  Error code, if any, is left in h_errno.  */
+int
+__res_context_search (struct resolv_context *ctx,
+		      const char *name, int class, int type,
+		      unsigned char *answer, int anslen,
+		      unsigned char **answerp, unsigned char **answerp2,
+		      int *nanswerp2, int *resplen2, int *answerp2_malloced)
+{
+	struct __res_state *statp = ctx->resp;
+	const char *cp;
 	UHEADER *hp = (UHEADER *) answer;
 	char tmp[NS_MAXDNAME];
 	u_int dots;
@@ -378,16 +354,11 @@ __libc_res_nsearch(res_state statp,
 		trailing_dot++;
 
 	/* If there aren't any dots, it could be a user-level alias. */
-	if (!dots && (cp = res_hostalias(statp, name, tmp, sizeof tmp))!= NULL)
-		return (__libc_res_nquery(statp, cp, class, type, answer,
-					  anslen, answerp, answerp2,
-					  nanswerp2, resplen2, answerp2_malloced));
-
-#ifdef DEBUG
-	if (statp->options & RES_DEBUG)
-		printf("dots=%d, statp->ndots=%d, trailing_dot=%d, name=%s\n",
-		       (int)dots,(int)statp->ndots,(int)trailing_dot,name);
-#endif
+	if (!dots && (cp = __res_context_hostalias
+		      (ctx, name, tmp, sizeof tmp))!= NULL)
+	  return __res_context_query (ctx, cp, class, type, answer,
+				      anslen, answerp, answerp2,
+				      nanswerp2, resplen2, answerp2_malloced);
 
 	/*
 	 * If there are enough dots in the name, let's just give it a
@@ -396,10 +367,10 @@ __libc_res_nsearch(res_state statp,
 	 */
 	saved_herrno = -1;
 	if (dots >= statp->ndots || trailing_dot) {
-		ret = __libc_res_nquerydomain(statp, name, NULL, class, type,
-					      answer, anslen, answerp,
-					      answerp2, nanswerp2, resplen2,
-					      answerp2_malloced);
+		ret = __res_context_querydomain (ctx, name, NULL, class, type,
+						 answer, anslen, answerp,
+						 answerp2, nanswerp2, resplen2,
+						 answerp2_malloced);
 		if (ret > 0 || trailing_dot
 		    /* If the second response is valid then we use that.  */
 		    || (ret == 0 && resplen2 != NULL && *resplen2 > 0))
@@ -429,13 +400,14 @@ __libc_res_nsearch(res_state statp,
 	    (dots && !trailing_dot && (statp->options & RES_DNSRCH) != 0)) {
 		int done = 0;
 
-		for (domain = (const char * const *)statp->dnsrch;
-		     *domain && !done;
-		     domain++) {
-			const char *dname = domain[0];
+		for (size_t domain_index = 0; !done; ++domain_index) {
+			const char *dname = __resolv_context_search_list
+			  (ctx, domain_index);
+			if (dname == NULL)
+			  break;
 			searched = 1;
 
-			/* __libc_res_nquerydoman concatenates name
+			/* __res_context_querydoman concatenates name
 			   with dname with a "." in between.  If we
 			   pass it in dname the "." we got from the
 			   configured default search path, we'll end
@@ -449,11 +421,10 @@ __libc_res_nsearch(res_state statp,
 			if (dname[0] == '\0')
 				root_on_list++;
 
-			ret = __libc_res_nquerydomain(statp, name, dname,
-						      class, type,
-						      answer, anslen, answerp,
-						      answerp2, nanswerp2,
-						      resplen2, answerp2_malloced);
+			ret = __res_context_querydomain
+			  (ctx, name, dname, class, type,
+			   answer, anslen, answerp, answerp2, nanswerp2,
+			   resplen2, answerp2_malloced);
 			if (ret > 0 || (ret == 0 && resplen2 != NULL
 					&& *resplen2 > 0))
 				return (ret);
@@ -521,10 +492,10 @@ __libc_res_nsearch(res_state statp,
 	 */
 	if ((dots || !searched || (statp->options & RES_NOTLDQUERY) == 0)
 	    && !(tried_as_is || root_on_list)) {
-		ret = __libc_res_nquerydomain(statp, name, NULL, class, type,
-					      answer, anslen, answerp,
-					      answerp2, nanswerp2, resplen2,
-					      answerp2_malloced);
+		ret = __res_context_querydomain
+		  (ctx, name, NULL, class, type,
+		   answer, anslen, answerp, answerp2, nanswerp2,
+		   resplen2, answerp2_malloced);
 		if (ret > 0 || (ret == 0 && resplen2 != NULL
 				&& *resplen2 > 0))
 			return (ret);
@@ -552,7 +523,24 @@ __libc_res_nsearch(res_state statp,
 		RES_SET_H_ERRNO(statp, TRY_AGAIN);
 	return (-1);
 }
-libresolv_hidden_def (__libc_res_nsearch)
+libresolv_hidden_def (__res_context_search)
+
+/* Common part of res_nsearch and res_search.  */
+static int
+context_search_common (struct resolv_context *ctx,
+		       const char *name, int class, int type,
+		       unsigned char *answer, int anslen)
+{
+  if (ctx == NULL)
+    {
+      RES_SET_H_ERRNO (&_res, NETDB_INTERNAL);
+      return -1;
+    }
+  int result = __res_context_search (ctx, name, class, type, answer, anslen,
+				     NULL, NULL, NULL, NULL, NULL);
+  __resolv_context_put (ctx);
+  return result;
+}
 
 int
 res_nsearch(res_state statp,
@@ -561,36 +549,34 @@ res_nsearch(res_state statp,
 	    u_char *answer,	/* buffer to put answer */
 	    int anslen)		/* size of answer */
 {
-	return __libc_res_nsearch(statp, name, class, type, answer,
-				  anslen, NULL, NULL, NULL, NULL, NULL);
+  return context_search_common
+    (__resolv_context_get_override (statp), name, class, type, answer, anslen);
 }
-libresolv_hidden_def (res_nsearch)
 
-/*
- * Perform a call on res_query on the concatenation of name and domain.
- */
-static int
-__libc_res_nquerydomain(res_state statp,
-			const char *name,
-			const char *domain,
-			int class, int type,	/* class and type of query */
-			u_char *answer,		/* buffer to put answer */
-			int anslen,			/* size of answer */
-			u_char **answerp,
-			u_char **answerp2,
-			int *nanswerp2,
-			int *resplen2,
-			int *answerp2_malloced)
+int
+res_search (const char *name, int class, int type,
+	    unsigned char *answer, int anslen)
 {
+  return context_search_common
+    (__resolv_context_get (), name, class, type, answer, anslen);
+}
+
+/*  Perform a call on res_query on the concatenation of name and
+    domain.  */
+static int
+__res_context_querydomain (struct resolv_context *ctx,
+			   const char *name, const char *domain,
+			   int class, int type,
+			   unsigned char *answer, int anslen,
+			   unsigned char **answerp, unsigned char **answerp2,
+			   int *nanswerp2, int *resplen2,
+			   int *answerp2_malloced)
+{
+	struct __res_state *statp = ctx->resp;
 	char nbuf[MAXDNAME];
 	const char *longname = nbuf;
 	size_t n, d;
 
-#ifdef DEBUG
-	if (statp->options & RES_DEBUG)
-		printf(";; res_nquerydomain(%s, %s, %d, %d)\n",
-		       name, domain?domain:"<Nil>", class, type);
-#endif
 	if (domain == NULL) {
 		n = strlen(name);
 
@@ -612,9 +598,28 @@ __libc_res_nquerydomain(res_state statp,
 		}
 		sprintf(nbuf, "%s.%s", name, domain);
 	}
-	return (__libc_res_nquery(statp, longname, class, type, answer,
-				  anslen, answerp, answerp2, nanswerp2,
-				  resplen2, answerp2_malloced));
+	return __res_context_query (ctx, longname, class, type, answer,
+				    anslen, answerp, answerp2, nanswerp2,
+				    resplen2, answerp2_malloced);
+}
+
+/* Common part of res_nquerydomain and res_querydomain.  */
+static int
+context_querydomain_common (struct resolv_context *ctx,
+			    const char *name, const char *domain,
+			    int class, int type,
+			    unsigned char *answer, int anslen)
+{
+  if (ctx == NULL)
+    {
+      RES_SET_H_ERRNO (&_res, NETDB_INTERNAL);
+      return -1;
+    }
+  int result = __res_context_querydomain (ctx, name, domain, class, type,
+					  answer, anslen,
+					  NULL, NULL, NULL, NULL, NULL);
+  __resolv_context_put (ctx);
+  return result;
 }
 
 int
@@ -625,19 +630,28 @@ res_nquerydomain(res_state statp,
 	    u_char *answer,		/* buffer to put answer */
 	    int anslen)		/* size of answer */
 {
-	return __libc_res_nquerydomain(statp, name, domain, class, type,
-				       answer, anslen, NULL, NULL, NULL, NULL,
-				       NULL);
+  return context_querydomain_common
+    (__resolv_context_get_override (statp),
+     name, domain, class, type, answer, anslen);
 }
-libresolv_hidden_def (res_nquerydomain)
+
+int
+res_querydomain (const char *name, const char *domain, int class, int type,
+		 unsigned char *answer, int anslen)
+{
+  return context_querydomain_common
+    (__resolv_context_get (), name, domain, class, type, answer, anslen);
+}
 
 const char *
-res_hostalias(const res_state statp, const char *name, char *dst, size_t siz) {
+__res_context_hostalias (struct resolv_context *ctx,
+			 const char *name, char *dst, size_t siz)
+{
 	char *file, *cp1, *cp2;
 	char buf[BUFSIZ];
 	FILE *fp;
 
-	if (statp->options & RES_NOALIASES)
+	if (ctx->resp->options & RES_NOALIASES)
 		return (NULL);
 	file = getenv("HOSTALIASES");
 	if (file == NULL || (fp = fopen(file, "rce")) == NULL)
@@ -667,4 +681,43 @@ res_hostalias(const res_state statp, const char *name, char *dst, size_t siz) {
 	fclose(fp);
 	return (NULL);
 }
-libresolv_hidden_def (res_hostalias)
+libresolv_hidden_def (__res_context_hostalias)
+
+/* Common part of res_hostalias and hostalias.  */
+static const char *
+context_hostalias_common (struct resolv_context *ctx,
+			  const char *name, char *dst, size_t siz)
+{
+  if (ctx == NULL)
+    {
+      RES_SET_H_ERRNO (&_res, NETDB_INTERNAL);
+      return NULL;
+    }
+  const char *result = __res_context_hostalias (ctx, name, dst, siz);
+  __resolv_context_put (ctx);
+  return result;
+}
+
+const char *
+res_hostalias (res_state statp, const char *name, char *dst, size_t siz)
+{
+  return context_hostalias_common
+    (__resolv_context_get_override (statp), name, dst, siz);
+}
+
+const char *
+hostalias (const char *name)
+{
+  static char abuf[MAXDNAME];
+  return context_hostalias_common
+    (__resolv_context_get (), name, abuf, sizeof (abuf));
+}
+
+#if SHLIB_COMPAT (libresolv, GLIBC_2_0, GLIBC_2_2)
+# undef res_query
+# undef res_querydomain
+# undef res_search
+weak_alias (__res_query, res_query);
+weak_alias (__res_querydomain, res_querydomain);
+weak_alias (__res_search, res_search);
+#endif

@@ -27,7 +27,7 @@
    already running thread THREAD.  It shall be called on an uninitialized ATTR
    and destroyed with pthread_attr_destroy when no longer needed.  */
 int
-pthread_getattr_np (pthread_t thread, pthread_attr_t *attr)
+__pthread_getattr_np (pthread_t thread, pthread_attr_t *attr)
 {
   struct __pthread *pthread;
 
@@ -49,3 +49,4 @@ pthread_getattr_np (pthread_t thread, pthread_attr_t *attr)
 
   return 0;
 }
+weak_alias (__pthread_getattr_np, pthread_getattr_np)

@@ -36,7 +36,7 @@
 #include <caller.h>
 #include <sysdep.h>
 #include <stap-probe.h>
-#include <libc-internal.h>
+#include <libc-pointer-arith.h>
 #include <array_length.h>
 
 #include <dl-dst.h>
@@ -434,31 +434,40 @@ fillin_rpath (char *rpath, struct r_search_path_elem **result, const char *sep,
 {
   char *cp;
   size_t nelems = 0;
-  char *to_free;
 
   while ((cp = __strsep (&rpath, sep)) != NULL)
     {
       struct r_search_path_elem *dirp;
+      char *to_free = NULL;
+      size_t len = 0;
 
-      to_free = cp = expand_dynamic_string_token (l, cp, 1);
-
-      size_t len = strlen (cp);
-
-      /* `strsep' can pass an empty string.  This has to be
-	 interpreted as `use the current directory'. */
-      if (len == 0)
+      /* `strsep' can pass an empty string.  */
+      if (*cp != '\0')
 	{
-	  static const char curwd[] = "./";
-	  cp = (char *) curwd;
+	  to_free = cp = expand_dynamic_string_token (l, cp, 1);
+
+	  /* expand_dynamic_string_token can return NULL in case of empty
+	     path or memory allocation failure.  */
+	  if (cp == NULL)
+	    continue;
+
+	  /* Compute the length after dynamic string token expansion and
+	     ignore empty paths.  */
+	  len = strlen (cp);
+	  if (len == 0)
+	    {
+	      free (to_free);
+	      continue;
+	    }
+
+	  /* Remove trailing slashes (except for "/").  */
+	  while (len > 1 && cp[len - 1] == '/')
+	    --len;
+
+	  /* Now add one if there is none so far.  */
+	  if (len > 0 && cp[len - 1] != '/')
+	    cp[len++] = '/';
 	}
-
-      /* Remove trailing slashes (except for "/").  */
-      while (len > 1 && cp[len - 1] == '/')
-	--len;
-
-      /* Now add one if there is none so far.  */
-      if (len > 0 && cp[len - 1] != '/')
-	cp[len++] = '/';
 
       /* Make sure we don't use untrusted directories if we run SUID.  */
       if (__glibc_unlikely (check_trusted) && !is_trusted_path (cp, len))
@@ -622,6 +631,14 @@ decompose_rpath (struct r_search_path_struct *sps,
      necessary.  */
   free (copy);
 
+  /* There is no path after expansion.  */
+  if (result[0] == NULL)
+    {
+      free (result);
+      sps->dirs = (struct r_search_path_elem **) -1;
+      return false;
+    }
+
   sps->dirs = result;
   /* The caller will change this value if we haven't used a real malloc.  */
   sps->malloced = 1;
@@ -776,25 +793,7 @@ _dl_init_paths (const char *llp)
 
   if (llp != NULL && *llp != '\0')
     {
-      char *llp_tmp;
-
-#ifdef SHARED
-      /* Expand DSTs.  */
-      size_t cnt = DL_DST_COUNT (llp, 1);
-      if (__glibc_likely (cnt == 0))
-	llp_tmp = strdupa (llp);
-      else
-	{
-	  /* Determine the length of the substituted string.  */
-	  size_t total = DL_DST_REQUIRED (l, llp, strlen (llp), cnt);
-
-	  /* Allocate the necessary memory.  */
-	  llp_tmp = (char *) alloca (total + 1);
-	  llp_tmp = _dl_dst_substitute (l, llp, llp_tmp, 1);
-	}
-#else
-      llp_tmp = strdupa (llp);
-#endif
+      char *llp_tmp = strdupa (llp);
 
       /* Decompose the LD_LIBRARY_PATH contents.  First determine how many
 	 elements it has.  */

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <wctype.h>
-#include <libc-internal.h>
+#include <libc-diag.h>
 
 static int
 do_test (void)
@@ -30,5 +30,4 @@ do_test (void)
   return result;
 }
 
-#define TEST_FUNCTION do_test ()
-#include "../test-skeleton.c"
+#include <support/test-driver.c>

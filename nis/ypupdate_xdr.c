@@ -30,6 +30,7 @@
  */
 
 #include <rpcsvc/ypupd.h>
+#include <shlib-compat.h>
 
 bool_t
 xdr_yp_buf (XDR *xdrs, yp_buf *objp)
@@ -37,7 +38,7 @@ xdr_yp_buf (XDR *xdrs, yp_buf *objp)
   return xdr_bytes (xdrs, (char **) &objp->yp_buf_val,
 		    (u_int *) &objp->yp_buf_len, ~0);
 }
-libnsl_hidden_def (xdr_yp_buf)
+libnsl_hidden_nolink_def (xdr_yp_buf, GLIBC_2_0)
 
 bool_t
 xdr_ypupdate_args (XDR *xdrs, ypupdate_args *objp)
@@ -48,7 +49,7 @@ xdr_ypupdate_args (XDR *xdrs, ypupdate_args *objp)
     return FALSE;
   return xdr_yp_buf (xdrs, &objp->datum);
 }
-libnsl_hidden_def (xdr_ypupdate_args)
+libnsl_hidden_nolink_def (xdr_ypupdate_args, GLIBC_2_0)
 
 bool_t
 xdr_ypdelete_args (XDR *xdrs, ypdelete_args *objp)
@@ -57,4 +58,4 @@ xdr_ypdelete_args (XDR *xdrs, ypdelete_args *objp)
     return FALSE;
   return xdr_yp_buf (xdrs, &objp->key);
 }
-libnsl_hidden_def (xdr_ypdelete_args)
+libnsl_hidden_nolink_def (xdr_ypdelete_args, GLIBC_2_0)

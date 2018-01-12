@@ -2,7 +2,6 @@
 # include <posix/unistd.h>
 
 # ifndef _ISOMAC
-__BEGIN_DECLS
 
 libc_hidden_proto (_exit, __noreturn__)
 rtld_hidden_proto (_exit, __noreturn__)
@@ -34,14 +33,17 @@ extern __off_t __libc_lseek (int __fd, __off_t __offset, int __whence);
 extern __off64_t __libc_lseek64 (int __fd, __off64_t __offset, int __whence);
 extern ssize_t __pread (int __fd, void *__buf, size_t __nbytes,
 			__off_t __offset);
+libc_hidden_proto (__pread);
 extern ssize_t __libc_pread (int __fd, void *__buf, size_t __nbytes,
 			     __off_t __offset);
 extern ssize_t __pread64 (int __fd, void *__buf, size_t __nbytes,
 			  __off64_t __offset);
+libc_hidden_proto (__pread64);
 extern ssize_t __libc_pread64 (int __fd, void *__buf, size_t __nbytes,
 			       __off64_t __offset);
 extern ssize_t __pwrite (int __fd, const void *__buf, size_t __n,
 			 __off_t __offset);
+libc_hidden_proto (__pwrite)
 extern ssize_t __libc_pwrite (int __fd, const void *__buf, size_t __n,
 			      __off_t __offset);
 extern ssize_t __pwrite64 (int __fd, const void *__buf, size_t __n,
@@ -51,8 +53,10 @@ extern ssize_t __libc_pwrite64 (int __fd, const void *__buf, size_t __n,
 				__off64_t __offset) attribute_hidden;
 extern ssize_t __libc_read (int __fd, void *__buf, size_t __n);
 libc_hidden_proto (__libc_read)
+libc_hidden_proto (read)
 extern ssize_t __libc_write (int __fd, const void *__buf, size_t __n);
 libc_hidden_proto (__libc_write)
+libc_hidden_proto (write)
 extern int __pipe (int __pipedes[2]);
 libc_hidden_proto (__pipe)
 extern int __pipe2 (int __pipedes[2], int __flags);
@@ -127,6 +131,7 @@ extern int __symlink (const char *__from, const char *__to);
 extern ssize_t __readlink (const char *__path, char *__buf, size_t __len);
 extern int __unlink (const char *__name);
 extern int __gethostname (char *__name, size_t __len);
+extern int __revoke (const char *__file);
 extern int __profil (unsigned short int *__sample_buffer, size_t __size,
 		     size_t __offset, unsigned int __scale);
 extern int __getdtablesize (void);
@@ -172,9 +177,6 @@ extern int __libc_pause (void);
 /* Not cancelable variant.  */
 extern int __pause_nocancel (void) attribute_hidden;
 
-extern int __have_pipe2 attribute_hidden;
-extern int __have_dup3 attribute_hidden;
-
 extern int __getlogin_r_loginuid (char *name, size_t namesize)
      attribute_hidden;
 
@@ -182,14 +184,5 @@ extern int __getlogin_r_loginuid (char *name, size_t namesize)
 #   include <dl-unistd.h>
 #  endif
 
-#  if IS_IN (rtld) || !defined SHARED
-/* __access variant that does not set errno.  Used in very early initialization
-   code in libc.a and ld.so.  It follows access return semantics (zero for
-   sucess otherwise a value different than 0).  */
-extern __typeof (__access) __access_noerrno attribute_hidden;
-#  endif
-
-__END_DECLS
 # endif
-
 #endif

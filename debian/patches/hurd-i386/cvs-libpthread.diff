@@ -1,17 +1,18 @@
-git diff empty --patch-with-stat --src-prefix=glibc/libpthread/ --dst-prefix=glibc/libpthread/ 1f065f9ad49b78b40d29af92820225b328319fc6
+lsdiff -p2 cvs-libpthread.diff > orderfile
+git diff empty --patch-with-stat --src-prefix=glibc/libpthread/ --dst-prefix=glibc/libpthread/ -Oorderfile 64727f50e23a744e1607cb6aff72f0813d56c6c9
 from git.savannah.gnu.org:/srv/git/hurd/libpthread.git/
 thus by construction only libpthread/ files, thus hurd-only
-Date:   Mon Aug 28 00:14:36 2017 +0200
+Date: Tue Sep 26 21:29:14 2017 +0200
 
  ChangeLog                                     |   6 +
  Makeconfig                                    |  13 +
- Makefile                                      | 371 ++++++++++++
+ Makefile                                      | 365 +++++++++++
  TODO                                          | 131 ++++
- Versions                                      | 147 +++++
+ Versions                                      | 155 +++++
  configure                                     |   2 +
  configure.in                                  |   4 +
- forward.c                                     | 280 +++++++++
- include/pthread.h                             |   7 +
+ forward.c                                     | 281 +++++++++
+ sysdeps/pthread/pthread.h                     |  22 +
  include/pthread/pthread.h                     | 835 ++++++++++++++++++++++++++
  include/pthread/pthreadtypes.h                | 125 ++++
  libc_pthread_init.c                           |  35 ++
@@ -21,7 +22,7 @@ Date:   Mon Aug 28 00:14:36 2017 +0200
  not-in-libc.h                                 |  12 +
  pthread/Versions                              |  15 +
  pthread/alloca_cutoff.c                       |  27 +
- pthread/cthreads-compat.c                     | 101 ++++
+ pthread/cthreads-compat.c                     | 102 ++++
  pthread/pt-alloc.c                            | 219 +++++++
  pthread/pt-cancel.c                           |  63 ++
  pthread/pt-cleanup.c                          |  28 +
@@ -29,7 +30,7 @@ Date:   Mon Aug 28 00:14:36 2017 +0200
  pthread/pt-dealloc.c                          |  69 +++
  pthread/pt-detach.c                           |  80 +++
  pthread/pt-exit.c                             | 112 ++++
- pthread/pt-getattr.c                          |  51 ++
+ pthread/pt-getattr.c                          |  52 ++
  pthread/pt-initialize.c                       |  88 +++
  pthread/pt-internal.h                         | 330 ++++++++++
  pthread/pt-join.c                             |  76 +++
@@ -52,7 +53,7 @@ Date:   Mon Aug 28 00:14:36 2017 +0200
  sysdeps/generic/pt-attr-getschedparam.c       |  34 ++
  sysdeps/generic/pt-attr-getschedpolicy.c      |  31 +
  sysdeps/generic/pt-attr-getscope.c            |  31 +
- sysdeps/generic/pt-attr-getstack.c            |  31 +
+ sysdeps/generic/pt-attr-getstack.c            |  32 +
  sysdeps/generic/pt-attr-getstackaddr.c        |  29 +
  sysdeps/generic/pt-attr-getstacksize.c        |  29 +
  sysdeps/generic/pt-attr-init.c                |  29 +
@@ -91,7 +92,7 @@ Date:   Mon Aug 28 00:14:36 2017 +0200
  sysdeps/generic/pt-equal.c                    |  31 +
  sysdeps/generic/pt-getconcurrency.c           |  27 +
  sysdeps/generic/pt-getcpuclockid.c            |  35 ++
- sysdeps/generic/pt-getschedparam.c            |  31 +
+ sysdeps/generic/pt-getschedparam.c            |  32 +
  sysdeps/generic/pt-getspecific.c              |  27 +
  sysdeps/generic/pt-init-specific.c            |  27 +
  sysdeps/generic/pt-key-create.c               |  30 +
@@ -123,8 +124,8 @@ Date:   Mon Aug 28 00:14:36 2017 +0200
  sysdeps/generic/pt-rwlock-destroy.c           |  29 +
  sysdeps/generic/pt-rwlock-init.c              |  45 ++
  sysdeps/generic/pt-rwlock-rdlock.c            |  33 +
- sysdeps/generic/pt-rwlock-timedrdlock.c       | 120 ++++
- sysdeps/generic/pt-rwlock-timedwrlock.c       | 103 ++++
+ sysdeps/generic/pt-rwlock-timedrdlock.c       | 121 ++++
+ sysdeps/generic/pt-rwlock-timedwrlock.c       | 104 ++++
  sysdeps/generic/pt-rwlock-tryrdlock.c         |  56 ++
  sysdeps/generic/pt-rwlock-trywrlock.c         |  46 ++
  sysdeps/generic/pt-rwlock-unlock.c            |  99 +++
@@ -150,16 +151,18 @@ Date:   Mon Aug 28 00:14:36 2017 +0200
  sysdeps/generic/sem-unlink.c                  |  32 +
  sysdeps/generic/sem-wait.c                    |  32 +
  sysdeps/generic/shm-directory.h               |  31 +
- sysdeps/hurd/pt-destroy-specific.c            |  79 +++
- sysdeps/hurd/pt-getspecific.c                 |  40 ++
- sysdeps/hurd/pt-init-specific.c               |  30 +
+ sysdeps/hurd/pt-destroy-specific.c            |  77 +++
+ sysdeps/hurd/pt-getspecific.c                 |  39 ++
+ sysdeps/hurd/pt-init-specific.c               |  31 +
  sysdeps/hurd/pt-key-create.c                  | 110 ++++
  sysdeps/hurd/pt-key-delete.c                  |  64 ++
- sysdeps/hurd/pt-key.h                         |  76 +++
+ sysdeps/hurd/pt-key.h                         |  77 +++
  sysdeps/hurd/pt-kill.c                        |  52 ++
- sysdeps/hurd/pt-setspecific.c                 |  48 ++
+ sysdeps/hurd/pt-setspecific.c                 |  51 ++
  sysdeps/i386/bits/memory.h                    |  40 ++
  sysdeps/i386/bits/pt-atomic.h                 |  66 ++
+ sysdeps/i386/bits/pthreadtypes-arch.h         |  21 +
+ sysdeps/pthread/bits/thread-shared-types.h    |  24 +
  sysdeps/i386/machine-sp.h                     |  30 +
  sysdeps/i386/pt-machdep.h                     |  29 +
  sysdeps/mach/bits/spin-lock-inline.h          |  90 +++
@@ -200,7 +203,7 @@ Date:   Mon Aug 28 00:14:36 2017 +0200
  sysdeps/pthread/bits/once.h                   |  34 ++
  sysdeps/pthread/bits/pthread-np.h             |  27 +
  sysdeps/pthread/bits/pthread.h                |  38 ++
- sysdeps/pthread/bits/pthreadtypes.h           |  29 +
+ sysdeps/pthread/bits/pthreadtypes.h           |  30 +
  sysdeps/pthread/bits/rwlock-attr.h            |  32 +
  sysdeps/pthread/bits/rwlock.h                 |  46 ++
  sysdeps/pthread/bits/semaphore.h              |  44 ++
@@ -233,7 +236,7 @@ Date:   Mon Aug 28 00:14:36 2017 +0200
  tests/test-8.c                                |  60 ++
  tests/test-9.c                                |  88 +++
  tests/test-__pthread_destroy_specific-skip.c  |  83 +++
- 230 files changed, 13152 insertions(+)
+ 232 files changed, 13224 insertions(+)
 
 diff --git glibc/libpthread/ChangeLog glibc/libpthread/ChangeLog
 new file mode 100644
@@ -252,7 +255,7 @@ new file mode 100644
 index 0000000..e90f5f7
 --- /dev/null
 +++ glibc/libpthread/Makeconfig
-@@ -0,0 +1,20 @@
+@@ -0,0 +1,13 @@
 +# Makeconfig fragment for Hurd libpthread add-on.
 +# This gets included at the end of the main glibc Makeconfig.
 +
@@ -263,22 +266,15 @@ index 0000000..e90f5f7
 +static-thread-library = $(common-objpfx)libpthread/libpthread.a
 +bounded-thread-library = $(static-thread-library)
 +
-+ifeq ($(subdir),malloc)
-+LDLIBS-tst-interpose-static-thread += -lihash
-+endif
-+ifeq ($(subdir),elf)
-+LDLIBS-tst-linkall-static += -lihash
-+endif
-+
 +rpath-dirs += libpthread
 +
 ++includes += -I$(..)libpthread/include
 diff --git glibc/libpthread/Makefile glibc/libpthread/Makefile
 new file mode 100644
-index 0000000..9707f57
+index 0000000..3f59924
 --- /dev/null
 +++ glibc/libpthread/Makefile
-@@ -0,0 +1,371 @@
+@@ -0,0 +1,365 @@
 +#
 +#   Copyright (C) 1994, 1995, 1996, 1997, 2000, 2002, 2004, 2005, 2006, 2007,
 +#     2008, 2011 Free Software Foundation, Inc.
@@ -499,12 +495,6 @@ index 0000000..9707f57
 +	 $(srcdir)/include
 +
 +VPATH += $(SYSDEP_PATH)
-+
-+ifeq ($(IN_GLIBC),no)
-+HURDLIBS = ihash
-+else
-+LDLIBS-pthread.so = -lihash
-+endif
 +
 +ifeq ($(IN_GLIBC),no)
 +installhdrs :=
@@ -789,10 +779,10 @@ index 0000000..979c38c
 +   http://sources.redhat.com/ml/libc-alpha/2002-08/msg00278.html.
 diff --git glibc/libpthread/Versions glibc/libpthread/Versions
 new file mode 100644
-index 0000000..4ad3c3e
+index 0000000..67c6032
 --- /dev/null
 +++ glibc/libpthread/Versions
-@@ -0,0 +1,147 @@
+@@ -0,0 +1,155 @@
 +libc {
 +  GLIBC_2.13 {
 +    pthread_attr_destroy; pthread_attr_getdetachstate;
@@ -938,6 +928,14 @@ index 0000000..4ad3c3e
 +  GLIBC_PRIVATE {
 +    __shm_directory;
 +    __pthread_threads;
++
++    __cthread_detach;
++    __cthread_fork;
++    __cthread_keycreate;
++    __cthread_getspecific;
++    __cthread_setspecific;
++    __pthread_getattr_np;
++    __pthread_attr_getstack;
 +  }
 +}
 diff --git glibc/libpthread/configure glibc/libpthread/configure
@@ -960,10 +958,10 @@ index 0000000..4e140b1
 +libc_add_on_subdirs=.
 diff --git glibc/libpthread/forward.c glibc/libpthread/forward.c
 new file mode 100644
-index 0000000..c819357
+index 0000000..0ee84a0
 --- /dev/null
 +++ glibc/libpthread/forward.c
-@@ -0,0 +1,280 @@
+@@ -0,0 +1,281 @@
 +/* Copyright (C) 2002, 2003, 2012 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
 +   Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
@@ -1212,6 +1210,7 @@ index 0000000..c819357
 +
 +  return 0;
 +}
++libc_hidden_def (__register_atfork)
 +
 +void
 +__unregister_atfork (void *dso_handle)
@@ -1246,20 +1245,35 @@ index 0000000..c819357
 +}
 diff --git glibc/libpthread/sysdeps/pthread/pthread.h glibc/libpthread/sysdeps/pthread/pthread.h
 new file mode 100644
-index 0000000..1d4d3c7
+index 0000000..8e65b05
 --- /dev/null
 +++ glibc/libpthread/sysdeps/pthread/pthread.h
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,22 @@
 +#ifndef _PTHREAD_H
 +#include <pthread/pthread.h>
++
++/* These represent the interface used by glibc itself.  */
 +
 +extern int __pthread_mutex_lock (pthread_mutex_t *__mutex);
 +extern int __pthread_mutex_unlock (pthread_mutex_t *__mutex);
 +
++typedef struct __cthread *__cthread_t;
++typedef int __cthread_key_t;
++typedef void *	(*__cthread_fn_t)(void *__arg);
++
++__cthread_t __cthread_fork (__cthread_fn_t, void *);
++void __cthread_detach (__cthread_t);
++int __cthread_keycreate (__cthread_key_t *);
++int __cthread_getspecific (__cthread_key_t, void **);
++int __cthread_setspecific (__cthread_key_t, void *);
++
++int __pthread_getattr_np (pthread_t, pthread_attr_t *);
++int __pthread_attr_getstack (const pthread_attr_t *, void **, size_t *);
++
 +#endif
 diff --git glibc/libpthread/include/pthread/pthread.h glibc/libpthread/include/pthread/pthread.h
 new file mode 100644
-index 0000000..3aa6a93
+index 0000000..350a673
 --- /dev/null
 +++ glibc/libpthread/include/pthread/pthread.h
 @@ -0,0 +1,835 @@
@@ -2272,7 +2286,7 @@ index 0000000..afce1f7
 +}
 diff --git glibc/libpthread/libpthread.a glibc/libpthread/libpthread.a
 new file mode 100644
-index 0000000..7d3f8d3
+index 0000000..e5bd2cc
 --- /dev/null
 +++ glibc/libpthread/libpthread.a
 @@ -0,0 +1,22 @@
@@ -2297,10 +2311,10 @@ index 0000000..7d3f8d3
 +EXTERN(pthread_getattr_np)
 +EXTERN(pthread_attr_getstack)
 +
-+GROUP(-lpthread2 -lihash -lrt)
++GROUP(-lpthread2 -lrt)
 diff --git glibc/libpthread/libpthread_pic.a glibc/libpthread/libpthread_pic.a
 new file mode 100644
-index 0000000..cf0bd90
+index 0000000..33346b4
 --- /dev/null
 +++ glibc/libpthread/libpthread_pic.a
 @@ -0,0 +1,22 @@
@@ -2325,7 +2339,7 @@ index 0000000..cf0bd90
 +EXTERN(pthread_getattr_np)
 +EXTERN(pthread_attr_getstack)
 +
-+GROUP(-lpthread2_pic -lihash_pic)
++GROUP(-lpthread2_pic)
 diff --git glibc/libpthread/lockfile.c glibc/libpthread/lockfile.c
 new file mode 100644
 index 0000000..040cbfb
@@ -2471,10 +2485,10 @@ index 0000000..ec54d8f
 +libc_hidden_def (__libc_alloca_cutoff)
 diff --git glibc/libpthread/pthread/cthreads-compat.c glibc/libpthread/pthread/cthreads-compat.c
 new file mode 100644
-index 0000000..1a0971b
+index 0000000..cd845ed
 --- /dev/null
 +++ glibc/libpthread/pthread/cthreads-compat.c
-@@ -0,0 +1,101 @@
+@@ -0,0 +1,102 @@
 +/* Compatibility routines for cthreads.
 +   Copyright (C) 2000, 2002, 2008 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
@@ -2497,23 +2511,20 @@ index 0000000..1a0971b
 +#include <assert.h>
 +#include <pthread.h>
 +
-+typedef void *cthread_t;
-+typedef void *(*cthread_fn_t) (void *arg);
-+typedef int cthread_key_t;
-+
-+#define	CTHREAD_KEY_INVALID (cthread_key_t) -1
++#define	CTHREAD_KEY_INVALID (__cthread_key_t) -1
 +
 +void
-+cthread_detach (cthread_t thread)
++__cthread_detach (__cthread_t thread)
 +{
 +  int err;
 +
 +  err = pthread_detach ((pthread_t) thread);
 +  assert_perror (err);
 +}
++weak_alias (__cthread_detach, cthread_detach)
 +
-+cthread_t
-+cthread_fork (cthread_fn_t func, void *arg)
++__cthread_t
++__cthread_fork (__cthread_fn_t func, void *arg)
 +{
 +  pthread_t thread;
 +  int err;
@@ -2521,11 +2532,12 @@ index 0000000..1a0971b
 +  err = pthread_create (&thread, NULL, func, arg);
 +  assert_perror (err);
 +
-+  return (cthread_t) thread;
++  return (__cthread_t) thread;
 +}
++weak_alias (__cthread_fork, cthread_fork)
 +
 +int
-+cthread_keycreate (cthread_key_t *key)
++__cthread_keycreate (__cthread_key_t *key)
 +{
 +  error_t err;
 +
@@ -2539,16 +2551,18 @@ index 0000000..1a0971b
 +
 +  return err;
 +}
++weak_alias (__cthread_keycreate, cthread_keycreate)
 +
 +int
-+cthread_getspecific (cthread_key_t key, void **val)
++__cthread_getspecific (__cthread_key_t key, void **val)
 +{
 +  *val = pthread_getspecific (key);
 +  return 0;
 +}
++weak_alias (__cthread_getspecific, cthread_getspecific)
 +
 +int
-+cthread_setspecific (cthread_key_t key, void *val)
++__cthread_setspecific (__cthread_key_t key, void *val)
 +{
 +  error_t err;
 +
@@ -2561,6 +2575,7 @@ index 0000000..1a0971b
 +
 +  return err;
 +}
++weak_alias (__cthread_setspecific, cthread_setspecific)
 +
 +void
 +__mutex_lock_solid (void *lock)
@@ -3445,10 +3460,10 @@ index 0000000..af75937
 +strong_alias (__pthread_exit, pthread_exit);
 diff --git glibc/libpthread/pthread/pt-getattr.c glibc/libpthread/pthread/pt-getattr.c
 new file mode 100644
-index 0000000..574420a
+index 0000000..0b86c66
 --- /dev/null
 +++ glibc/libpthread/pthread/pt-getattr.c
-@@ -0,0 +1,51 @@
+@@ -0,0 +1,52 @@
 +/* Thread attributes retrieval.
 +   Copyright (C) 2008 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
@@ -3478,7 +3493,7 @@ index 0000000..574420a
 +   already running thread THREAD.  It shall be called on an uninitialized ATTR
 +   and destroyed with pthread_attr_destroy when no longer needed.  */
 +int
-+pthread_getattr_np (pthread_t thread, pthread_attr_t *attr)
++__pthread_getattr_np (pthread_t thread, pthread_attr_t *attr)
 +{
 +  struct __pthread *pthread;
 +
@@ -3500,6 +3515,7 @@ index 0000000..574420a
 +
 +  return 0;
 +}
++weak_alias (__pthread_getattr_np, pthread_getattr_np)
 diff --git glibc/libpthread/pthread/pt-initialize.c glibc/libpthread/pthread/pt-initialize.c
 new file mode 100644
 index 0000000..4435a36
@@ -4718,10 +4734,10 @@ index 0000000..5e0c1a0
 +strong_alias (__pthread_attr_getscope, pthread_attr_getscope);
 diff --git glibc/libpthread/sysdeps/generic/pt-attr-getstack.c glibc/libpthread/sysdeps/generic/pt-attr-getstack.c
 new file mode 100644
-index 0000000..7beb79f
+index 0000000..5ab821e
 --- /dev/null
 +++ glibc/libpthread/sysdeps/generic/pt-attr-getstack.c
-@@ -0,0 +1,31 @@
+@@ -0,0 +1,32 @@
 +/* pthread_attr_getstack.  Generic version.
 +   Copyright (C) 2002 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
@@ -4745,7 +4761,7 @@ index 0000000..7beb79f
 +#include <pt-internal.h>
 +
 +int
-+pthread_attr_getstack (const pthread_attr_t *attr,
++__pthread_attr_getstack (const pthread_attr_t *attr,
 +		       void **stackaddr,
 +		       size_t *stacksize)
 +{
@@ -4753,6 +4769,7 @@ index 0000000..7beb79f
 +  pthread_attr_getstacksize (attr, stacksize);
 +  return 0;
 +}
++weak_alias (__pthread_attr_getstack, pthread_attr_getstack)
 diff --git glibc/libpthread/sysdeps/generic/pt-attr-getstackaddr.c glibc/libpthread/sysdeps/generic/pt-attr-getstackaddr.c
 new file mode 100644
 index 0000000..0360701
@@ -5260,7 +5277,7 @@ index 0000000..da754d7
 +}
 diff --git glibc/libpthread/sysdeps/generic/pt-attr.c glibc/libpthread/sysdeps/generic/pt-attr.c
 new file mode 100644
-index 0000000..064b6ea
+index 0000000..48d8323
 --- /dev/null
 +++ glibc/libpthread/sysdeps/generic/pt-attr.c
 @@ -0,0 +1,41 @@
@@ -5292,7 +5309,7 @@ index 0000000..064b6ea
 +
 +const struct __pthread_attr __pthread_default_attr =
 +{
-+  __schedparam: { sched_priority: 0 },
++  __schedparam: { __sched_priority: 0 },
 +  __stacksize: 0,
 +  __stackaddr: NULL,
 +#ifdef PAGESIZE
@@ -6496,7 +6513,7 @@ index 0000000..03868d3
 +}
 diff --git glibc/libpthread/sysdeps/generic/pt-getschedparam.c glibc/libpthread/sysdeps/generic/pt-getschedparam.c
 new file mode 100644
-index 0000000..00974cf
+index 0000000..5b20421
 --- /dev/null
 +++ glibc/libpthread/sysdeps/generic/pt-getschedparam.c
 @@ -0,0 +1,32 @@
@@ -8059,7 +8076,7 @@ index 0000000..c9ff9b2
 +strong_alias (_pthread_rwlock_init, pthread_rwlock_init);
 diff --git glibc/libpthread/sysdeps/generic/pt-rwlock-rdlock.c glibc/libpthread/sysdeps/generic/pt-rwlock-rdlock.c
 new file mode 100644
-index 0000000..6eca601
+index 0000000..708e3e1
 --- /dev/null
 +++ glibc/libpthread/sysdeps/generic/pt-rwlock-rdlock.c
 @@ -0,0 +1,33 @@
@@ -8095,13 +8112,13 @@ index 0000000..6eca601
 +{
 +  return __pthread_rwlock_timedrdlock_internal (rwlock, 0);
 +}
-+strong_alias (__pthread_rwlock_rdlock, pthread_rwlock_rdlock);
++weak_alias (__pthread_rwlock_rdlock, pthread_rwlock_rdlock);
 diff --git glibc/libpthread/sysdeps/generic/pt-rwlock-timedrdlock.c glibc/libpthread/sysdeps/generic/pt-rwlock-timedrdlock.c
 new file mode 100644
-index 0000000..69bc757
+index 0000000..4cfba43
 --- /dev/null
 +++ glibc/libpthread/sysdeps/generic/pt-rwlock-timedrdlock.c
-@@ -0,0 +1,120 @@
+@@ -0,0 +1,121 @@
 +/* Acquire a rwlock for reading.  Generic version.
 +   Copyright (C) 2002, 2005 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
@@ -8217,17 +8234,18 @@ index 0000000..69bc757
 +}
 +
 +int
-+pthread_rwlock_timedrdlock (struct __pthread_rwlock *rwlock,
++__pthread_rwlock_timedrdlock (struct __pthread_rwlock *rwlock,
 +			    const struct timespec *abstime)
 +{
 +  return __pthread_rwlock_timedrdlock_internal (rwlock, abstime);
 +}
++weak_alias (__pthread_rwlock_timedrdlock, pthread_rwlock_timedrdlock)
 diff --git glibc/libpthread/sysdeps/generic/pt-rwlock-timedwrlock.c glibc/libpthread/sysdeps/generic/pt-rwlock-timedwrlock.c
 new file mode 100644
-index 0000000..be25629
+index 0000000..2adaf03
 --- /dev/null
 +++ glibc/libpthread/sysdeps/generic/pt-rwlock-timedwrlock.c
-@@ -0,0 +1,103 @@
+@@ -0,0 +1,104 @@
 +/* Acquire a rwlock for writing.  Generic version.
 +   Copyright (C) 2002, 2005 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
@@ -8326,11 +8344,12 @@ index 0000000..be25629
 +}
 +
 +int
-+pthread_rwlock_timedwrlock (struct __pthread_rwlock *rwlock,
++__pthread_rwlock_timedwrlock (struct __pthread_rwlock *rwlock,
 +			    const struct timespec *abstime)
 +{
 +  return __pthread_rwlock_timedwrlock_internal (rwlock, abstime);
 +}
++weak_alias (__pthread_rwlock_timedwrlock, pthread_rwlock_timedwrlock)
 diff --git glibc/libpthread/sysdeps/generic/pt-rwlock-tryrdlock.c glibc/libpthread/sysdeps/generic/pt-rwlock-tryrdlock.c
 new file mode 100644
 index 0000000..30cb6cf
@@ -8447,7 +8466,7 @@ index 0000000..af8f911
 +}
 diff --git glibc/libpthread/sysdeps/generic/pt-rwlock-unlock.c glibc/libpthread/sysdeps/generic/pt-rwlock-unlock.c
 new file mode 100644
-index 0000000..d538544
+index 0000000..0506ae6
 --- /dev/null
 +++ glibc/libpthread/sysdeps/generic/pt-rwlock-unlock.c
 @@ -0,0 +1,99 @@
@@ -8549,10 +8568,10 @@ index 0000000..d538544
 +  __pthread_spin_unlock (&rwlock->__lock);
 +  return 0;
 +}
-+strong_alias (__pthread_rwlock_unlock, pthread_rwlock_unlock);
++weak_alias (__pthread_rwlock_unlock, pthread_rwlock_unlock);
 diff --git glibc/libpthread/sysdeps/generic/pt-rwlock-wrlock.c glibc/libpthread/sysdeps/generic/pt-rwlock-wrlock.c
 new file mode 100644
-index 0000000..68254d1
+index 0000000..c769bc6
 --- /dev/null
 +++ glibc/libpthread/sysdeps/generic/pt-rwlock-wrlock.c
 @@ -0,0 +1,35 @@
@@ -8590,7 +8609,7 @@ index 0000000..68254d1
 +{
 +  return __pthread_rwlock_timedwrlock_internal (rwlock, 0);
 +}
-+strong_alias (__pthread_rwlock_wrlock, pthread_rwlock_wrlock);
++weak_alias (__pthread_rwlock_wrlock, pthread_rwlock_wrlock);
 diff --git glibc/libpthread/sysdeps/generic/pt-rwlockattr-destroy.c glibc/libpthread/sysdeps/generic/pt-rwlockattr-destroy.c
 new file mode 100644
 index 0000000..eabfcbe
@@ -9252,7 +9271,7 @@ index 0000000..6d438bf
 +strong_alias (__sem_post, sem_post);
 diff --git glibc/libpthread/sysdeps/generic/sem-timedwait.c glibc/libpthread/sysdeps/generic/sem-timedwait.c
 new file mode 100644
-index 0000000..7ab1583
+index 0000000..11c1391
 --- /dev/null
 +++ glibc/libpthread/sysdeps/generic/sem-timedwait.c
 @@ -0,0 +1,100 @@
@@ -9355,7 +9374,7 @@ index 0000000..7ab1583
 +  return __sem_timedwait_internal (sem, timeout);
 +}
 +
-+strong_alias (__sem_timedwait, sem_timedwait);
++weak_alias (__sem_timedwait, sem_timedwait);
 diff --git glibc/libpthread/sysdeps/generic/sem-trywait.c glibc/libpthread/sysdeps/generic/sem-trywait.c
 new file mode 100644
 index 0000000..437e282
@@ -9519,10 +9538,10 @@ index 0000000..8950284
 +#endif  /* shm-directory.h */
 diff --git glibc/libpthread/sysdeps/hurd/pt-destroy-specific.c glibc/libpthread/sysdeps/hurd/pt-destroy-specific.c
 new file mode 100644
-index 0000000..f7896e5
+index 0000000..642c61c
 --- /dev/null
 +++ glibc/libpthread/sysdeps/hurd/pt-destroy-specific.c
-@@ -0,0 +1,79 @@
+@@ -0,0 +1,77 @@
 +/* __pthread_destory_specific.  Hurd version.
 +   Copyright (C) 2002 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
@@ -9544,14 +9563,12 @@ index 0000000..f7896e5
 +
 +#include <pthread.h>
 +#include <stdlib.h>
-+#include <hurd/ihash.h>
 +
 +#include <pt-internal.h>
 +
 +void
 +__pthread_destroy_specific (struct __pthread *thread)
 +{
-+  error_t err;
 +  int i;
 +  int seen_one;
 +
@@ -9568,18 +9585,17 @@ index 0000000..f7896e5
 +
 +      __pthread_mutex_lock (&__pthread_key_lock);
 +
-+      for (i = 0; i < __pthread_key_count; i ++)
++      for (i = 0; i < __pthread_key_count && i < thread->thread_specifics_size; i ++)
 +	{
 +	  void *value;
 +
 +	  if (__pthread_key_destructors[i] == PTHREAD_KEY_INVALID)
 +	    continue;
 +
-+	  value = hurd_ihash_find (thread->thread_specifics, i);
++	  value = thread->thread_specifics[i];
 +	  if (value)
 +	    {
-+	      err = hurd_ihash_remove (thread->thread_specifics, i);
-+	      assert (err == 1);
++	      thread->thread_specifics[i] = 0;
 +
 +	      if (__pthread_key_destructors[i])
 +		{
@@ -9599,15 +9615,16 @@ index 0000000..f7896e5
 +      sched_yield ();
 +    }
 +
-+  hurd_ihash_free (thread->thread_specifics);
++  free (thread->thread_specifics);
 +  thread->thread_specifics = 0;
++  thread->thread_specifics_size = 0;
 +}
 diff --git glibc/libpthread/sysdeps/hurd/pt-getspecific.c glibc/libpthread/sysdeps/hurd/pt-getspecific.c
 new file mode 100644
-index 0000000..8a01470
+index 0000000..1f49c03
 --- /dev/null
 +++ glibc/libpthread/sysdeps/hurd/pt-getspecific.c
-@@ -0,0 +1,40 @@
+@@ -0,0 +1,39 @@
 +/* pthread_getspecific.  Hurd version.
 +   Copyright (C) 2002 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
@@ -9628,7 +9645,6 @@ index 0000000..8a01470
 +   Boston, MA 02111-1307, USA.  */
 +
 +#include <pthread.h>
-+#include <hurd/ihash.h>
 +
 +#include <pt-internal.h>
 +
@@ -9642,18 +9658,18 @@ index 0000000..8a01470
 +    return NULL;
 +
 +  self = _pthread_self ();
-+  if (! self->thread_specifics)
++  if (key >= self->thread_specifics_size)
 +    return 0;
 +
-+  return hurd_ihash_find (self->thread_specifics, key);
++  return self->thread_specifics[key];
 +}
 +strong_alias (__pthread_getspecific, pthread_getspecific);
 diff --git glibc/libpthread/sysdeps/hurd/pt-init-specific.c glibc/libpthread/sysdeps/hurd/pt-init-specific.c
 new file mode 100644
-index 0000000..c1bacbc
+index 0000000..78958cb
 --- /dev/null
 +++ glibc/libpthread/sysdeps/hurd/pt-init-specific.c
-@@ -0,0 +1,30 @@
+@@ -0,0 +1,31 @@
 +/* __pthread_init_specific.  Hurd version.
 +   Copyright (C) 2002 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
@@ -9682,6 +9698,7 @@ index 0000000..c1bacbc
 +__pthread_init_specific (struct __pthread *thread)
 +{
 +  thread->thread_specifics = 0;
++  thread->thread_specifics_size = 0;
 +  return 0;
 +}
 diff --git glibc/libpthread/sysdeps/hurd/pt-key-create.c glibc/libpthread/sysdeps/hurd/pt-key-create.c
@@ -9802,7 +9819,7 @@ index 0000000..f26ec36
 +strong_alias (__pthread_key_create, pthread_key_create)
 diff --git glibc/libpthread/sysdeps/hurd/pt-key-delete.c glibc/libpthread/sysdeps/hurd/pt-key-delete.c
 new file mode 100644
-index 0000000..8b2c8bb
+index 0000000..499e9f3
 --- /dev/null
 +++ glibc/libpthread/sysdeps/hurd/pt-key-delete.c
 @@ -0,0 +1,64 @@
@@ -9860,8 +9877,8 @@ index 0000000..8b2c8bb
 +
 +	  /* Just remove the key, no need to care whether it was
 +	     already there. */
-+	  if (t->thread_specifics)
-+	    hurd_ihash_remove (t->thread_specifics, key);
++	  if (key < t->thread_specifics_size)
++	    t->thread_specifics[key] = 0;
 +	}
 +      __pthread_rwlock_unlock (&__pthread_threads_lock);
 +    }
@@ -9872,10 +9889,10 @@ index 0000000..8b2c8bb
 +}
 diff --git glibc/libpthread/sysdeps/hurd/pt-key.h glibc/libpthread/sysdeps/hurd/pt-key.h
 new file mode 100644
-index 0000000..494e01d
+index 0000000..46830d7
 --- /dev/null
 +++ glibc/libpthread/sysdeps/hurd/pt-key.h
-@@ -0,0 +1,76 @@
+@@ -0,0 +1,77 @@
 +/* pthread_key internal declatations for the Hurd version.
 +   Copyright (C) 2002 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
@@ -9896,10 +9913,11 @@ index 0000000..494e01d
 +   Boston, MA 02111-1307, USA.  */
 +
 +#include <pthread.h>
-+#include <hurd/ihash.h>
++#include <libc-lockP.h>
 +
 +#define PTHREAD_KEY_MEMBERS \
-+  hurd_ihash_t thread_specifics;
++  void **thread_specifics;		/* This is only resized by the thread, and always growing */ \
++  unsigned thread_specifics_size;	/* Number of entries in thread_specifics */
 +
 +#define PTHREAD_KEY_INVALID (void *) (-1)
 +
@@ -9937,20 +9955,20 @@ index 0000000..494e01d
 +      int err;
 +      pthread_mutexattr_t attr;
 +
-+      err = pthread_mutexattr_init (&attr);
++      err = __pthread_mutexattr_init (&attr);
 +      assert_perror (err);
 +
-+      err = pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_RECURSIVE);
++      err = __pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_RECURSIVE);
 +      assert_perror (err);
 +
-+      err = pthread_mutex_init (&__pthread_key_lock, &attr);
++      err = _pthread_mutex_init (&__pthread_key_lock, &attr);
 +      assert_perror (err);
 +
-+      err = pthread_mutexattr_destroy (&attr);
++      err = __pthread_mutexattr_destroy (&attr);
 +      assert_perror (err);
 +    }
 +
-+  pthread_once (&o, do_init);
++  __pthread_once (&o, do_init);
 +}
 diff --git glibc/libpthread/sysdeps/hurd/pt-kill.c glibc/libpthread/sysdeps/hurd/pt-kill.c
 new file mode 100644
@@ -10012,10 +10030,10 @@ index 0000000..6aaf241
 +strong_alias (__pthread_kill, pthread_kill)
 diff --git glibc/libpthread/sysdeps/hurd/pt-setspecific.c glibc/libpthread/sysdeps/hurd/pt-setspecific.c
 new file mode 100644
-index 0000000..b3976cc
+index 0000000..871560c
 --- /dev/null
 +++ glibc/libpthread/sysdeps/hurd/pt-setspecific.c
-@@ -0,0 +1,48 @@
+@@ -0,0 +1,51 @@
 +/* pthread_setspecific.  Generic version.
 +   Copyright (C) 2002 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
@@ -10036,31 +10054,34 @@ index 0000000..b3976cc
 +   Boston, MA 02111-1307, USA.  */
 +
 +#include <pthread.h>
-+#include <hurd/ihash.h>
 +
 +#include <pt-internal.h>
 +
 +int
 +__pthread_setspecific (pthread_key_t key, const void *value)
 +{
-+  error_t err;
 +  struct __pthread *self = _pthread_self ();
 +
 +  if (key < 0 || key >= __pthread_key_count
 +      || __pthread_key_destructors[key] == PTHREAD_KEY_INVALID)
 +    return EINVAL;
 +
-+  if (! self->thread_specifics)
++  if (key >= self->thread_specifics_size)
 +    {
-+      err = hurd_ihash_create (&self->thread_specifics, HURD_IHASH_NO_LOCP);
-+      if (err)
++      /* Amortize reallocation cost.  */
++      int newsize = 2 * key + 1;
++      void **new = realloc (self->thread_specifics,
++			    newsize * sizeof (new[0]));
++      if (! new )
 +	return ENOMEM;
++
++      memset (&new[self->thread_specifics_size], 0,
++	      (newsize - self->thread_specifics_size) * sizeof (new[0]));
++      self->thread_specifics = new;
++      self->thread_specifics_size = newsize;
 +    }
 +
-+  err = hurd_ihash_add (self->thread_specifics, key, (void *) value);
-+  if (err)
-+    return ENOMEM;
-+      
++  self->thread_specifics[key] = (void*) value;
 +  return 0;
 +}
 +strong_alias (__pthread_setspecific, pthread_setspecific);
@@ -10182,6 +10203,63 @@ index 0000000..0dfc1f6
 +}
 +
 +#endif
+diff --git glibc/libpthread/sysdeps/i386/bits/pthreadtypes-arch.h glibc/libpthread/sysdeps/i386/bits/pthreadtypes-arch.h
+new file mode 100644
+index 0000000..7e7a311
+--- /dev/null
++++ glibc/libpthread/sysdeps/i386/bits/pthreadtypes-arch.h
+@@ -0,0 +1,21 @@
++/* Copyright (C) 2002-2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#ifndef _BITS_PTHREADTYPES_ARCH_H
++#define _BITS_PTHREADTYPES_ARCH_H	1
++
++#endif	/* bits/pthreadtypes.h */
+diff --git glibc/libpthread/sysdeps/pthread/bits/thread-shared-types.h glibc/libpthread/sysdeps/pthread/bits/thread-shared-types.h
+new file mode 100644
+index 0000000..369fead
+--- /dev/null
++++ glibc/libpthread/sysdeps/pthread/bits/thread-shared-types.h
+@@ -0,0 +1,24 @@
++/* Common threading primitives definitions for both POSIX and C11.
++   Copyright (C) 2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#ifndef _THREAD_SHARED_TYPES_H
++#define _THREAD_SHARED_TYPES_H 1
++
++#include <bits/pthreadtypes-arch.h>
++
++#endif /* _THREAD_SHARED_TYPES_H  */
 diff --git glibc/libpthread/sysdeps/i386/machine-sp.h glibc/libpthread/sysdeps/i386/machine-sp.h
 new file mode 100644
 index 0000000..cef6ab7
@@ -11736,7 +11814,7 @@ index 0000000..77aa933
 +    }
 +
 +  /* No need to queue more than one wakeup message on this port.  */
-+  mach_port_set_qlimit (__mach_task_self (),
++  __mach_port_set_qlimit (__mach_task_self (),
 +			thread->wakeupmsg.msgh_remote_port, 1);
 +
 +  return 0;
@@ -12584,12 +12662,12 @@ index 0000000..80e6b09
 +#endif /* bits/pthread.h */
 diff --git glibc/libpthread/sysdeps/pthread/bits/pthreadtypes.h glibc/libpthread/sysdeps/pthread/bits/pthreadtypes.h
 new file mode 100644
-index 0000000..70368ff
+index 0000000..3e44d6b
 --- /dev/null
 +++ glibc/libpthread/sysdeps/pthread/bits/pthreadtypes.h
-@@ -0,0 +1,29 @@
+@@ -0,0 +1,30 @@
 +/* 
-+   Copyright (C) 2000 Free Software Foundation, Inc.
++   Copyright (C) 2000-2017 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
 +
 +   The GNU C Library is free software; you can redistribute it and/or
@@ -12615,6 +12693,7 @@ index 0000000..70368ff
 +#define _BITS_PTHREADTYPES_H    1
 +
 +#include <pthread/pthreadtypes.h>
++#include <bits/thread-shared-types.h>
 +
 +#endif /* bits/pthreadtypes.h */
 diff --git glibc/libpthread/sysdeps/pthread/bits/rwlock-attr.h glibc/libpthread/sysdeps/pthread/bits/rwlock-attr.h

@@ -17,10 +17,16 @@ include $(firstword $(wildcard $(sysdirs:=/sysctl.mk)))
 sysdep_routines += clone umount umount2 readahead \
 		   setfsuid setfsgid epoll_pwait signalfd \
 		   eventfd eventfd_read eventfd_write prlimit \
-		   personality
+		   personality epoll_wait tee vmsplice splice \
+		   open_by_handle_at
 
 CFLAGS-gethostid.c = -fexceptions
-CFLAGS-tst-writev.c += "-DARTIFICIAL_LIMIT=0x80000000-__getpagesize()"
+CFLAGS-tee.c = -fexceptions -fasynchronous-unwind-tables
+CFLAGS-vmsplice.c = -fexceptions -fasynchronous-unwind-tables
+CFLAGS-splice.c = -fexceptions -fasynchronous-unwind-tables
+CFLAGS-open_by_handle_at.c = -fexceptions -fasynchronous-unwind-tables
+CFLAGS-sync_file_range.c = -fexceptions -fasynchronous-unwind-tables
+CFLAGS-tst-writev.c += "-DARTIFICIAL_LIMIT=(0x80000000-sysconf(_SC_PAGESIZE))"
 
 # Note that bits/mman-linux.h is listed here though the file lives in the
 # top-level bits/ subdirectory instead of here in sysdeps/.../linux/bits/.
@@ -35,15 +41,17 @@ sysdep_headers += sys/mount.h sys/acct.h sys/sysctl.h \
 		  sys/kd.h sys/soundcard.h sys/vt.h \
 		  sys/quota.h sys/fsuid.h \
 		  scsi/sg.h scsi/scsi.h scsi/scsi_ioctl.h sys/pci.h \
-		  sys/ultrasound.h sys/raw.h sys/personality.h sys/epoll.h \
+		  sys/raw.h sys/personality.h sys/epoll.h \
 		  bits/a.out.h sys/inotify.h sys/signalfd.h sys/eventfd.h \
 		  sys/timerfd.h sys/fanotify.h bits/eventfd.h bits/inotify.h \
 		  bits/signalfd.h bits/timerfd.h bits/epoll.h \
 		  bits/socket_type.h bits/syscall.h bits/sysctl.h \
-		  bits/mman-linux.h
+		  bits/mman-linux.h \
+		  bits/siginfo-arch.h bits/siginfo-consts-arch.h
 
-tests += tst-clone tst-clone2 tst-fanotify tst-personality tst-quota \
-	 tst-sync_file_range
+tests += tst-clone tst-clone2 tst-clone3 tst-fanotify tst-personality \
+	 tst-quota tst-sync_file_range tst-sysconf-iov_max tst-ttyname \
+	 test-errno-linux
 
 # Generate the list of SYS_* macros for the system calls (__NR_* macros).
 
@@ -113,12 +121,30 @@ ifndef no_deps
 -include $(objpfx)bits/syscall.d
 endif
 generated += bits/syscall.h bits/syscall.d
-endif
+
+# Separate object file for access to the constant from the UAPI header.
+$(objpfx)tst-sysconf-iov_max: $(objpfx)tst-sysconf-iov_max-uapi.o
+
+endif # $(subdir) == misc
 
 ifeq ($(subdir),time)
 sysdep_headers += sys/timex.h bits/timex.h
 
 sysdep_routines += ntp_gettime ntp_gettimex
+endif
+
+ifeq ($(subdir),signal)
+tests-special += $(objpfx)tst-signal-numbers.out
+# Depending on signal.o* is a hack.  What we actually want is a dependency
+# on signal.h and everything it includes.  That's impractical to write
+# in this context, but signal.c includes signal.h and not much else so it'll
+# be conservatively correct.
+$(objpfx)tst-signal-numbers.out: \
+		../sysdeps/unix/sysv/linux/tst-signal-numbers.sh \
+		$(objpfx)signal.o*
+	AWK=$(AWK) $(SHELL) ../sysdeps/unix/sysv/linux/tst-signal-numbers.sh \
+	$(CC) $(patsubst -DMODULE_NAME=%,-DMODULE_NAME=testsuite,$(CPPFLAGS)) \
+	< /dev/null > $@; $(evaluate-test)
 endif
 
 ifeq ($(subdir),socket)
@@ -199,7 +225,8 @@ CFLAGS-gai.c += -DNEED_NETLINK
 endif
 
 ifeq ($(subdir),nptl)
-tests += tst-setgetname tst-align-clone tst-getpid1 \
+tests += tst-align-clone tst-getpid1 \
 	tst-thread-affinity-pthread tst-thread-affinity-pthread2 \
 	tst-thread-affinity-sched
+tests-internal += tst-setgetname
 endif

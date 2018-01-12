@@ -1,6 +1,14 @@
 # Generate dl-tunable-list.h from dl-tunables.list
 
 BEGIN {
+  min_of["STRING"]="0"
+  max_of["STRING"]="0"
+  min_of["INT_32"]="INT32_MIN"
+  max_of["INT_32"]="INT32_MAX"
+  min_of["UINT_64"]="0"
+  max_of["UINT_64"]="UINT64_MAX"
+  min_of["SIZE_T"]="0"
+  max_of["SIZE_T"]="SIZE_MAX"
   tunable=""
   ns=""
   top_ns=""
@@ -39,20 +47,20 @@ $2 == "{" {
 $1 == "}" {
   if (tunable != "") {
     # Tunables definition ended, now fill in default attributes.
-    if (!types[top_ns][ns][tunable]) {
-      types[top_ns][ns][tunable] = "STRING"
+    if (!types[top_ns,ns,tunable]) {
+      types[top_ns,ns,tunable] = "STRING"
     }
-    if (!minvals[top_ns][ns][tunable]) {
-      minvals[top_ns][ns][tunable] = "0"
+    if (!minvals[top_ns,ns,tunable]) {
+      minvals[top_ns,ns,tunable] = min_of[types[top_ns,ns,tunable]]
     }
-    if (!maxvals[top_ns][ns][tunable]) {
-      maxvals[top_ns][ns][tunable] = "0"
+    if (!maxvals[top_ns,ns,tunable]) {
+      maxvals[top_ns,ns,tunable] = max_of[types[top_ns,ns,tunable]]
     }
-    if (!env_alias[top_ns][ns][tunable]) {
-      env_alias[top_ns][ns][tunable] = "NULL"
+    if (!env_alias[top_ns,ns,tunable]) {
+      env_alias[top_ns,ns,tunable] = "NULL"
     }
-    if (!is_secure[top_ns][ns][tunable]) {
-      is_secure[top_ns][ns][tunable] = "SXID_ERASE"
+    if (!security_level[top_ns,ns,tunable]) {
+      security_level[top_ns,ns,tunable] = "SXID_ERASE"
     }
 
     tunable = ""
@@ -81,7 +89,7 @@ $1 == "}" {
   if (tunable == "") {
     # We encountered a tunable without any attributes, so note it with a
     # default.
-    types[top_ns][ns][$1] = "STRING"
+    types[top_ns,ns,$1] = "STRING"
     next
   }
 
@@ -91,26 +99,34 @@ $1 == "}" {
   val = gensub(/^[ \t]+|[ \t]+$/, "", "g", arr[2])
 
   if (attr == "type") {
-    types[top_ns][ns][tunable] = val
+    types[top_ns,ns,tunable] = val
   }
   else if (attr == "minval") {
-    minvals[top_ns][ns][tunable] = val
+    minvals[top_ns,ns,tunable] = val
   }
   else if (attr == "maxval") {
-    maxvals[top_ns][ns][tunable] = val
+    maxvals[top_ns,ns,tunable] = val
   }
   else if (attr == "env_alias") {
-    env_alias[top_ns][ns][tunable] = sprintf("\"%s\"", val)
+    env_alias[top_ns,ns,tunable] = sprintf("\"%s\"", val)
   }
   else if (attr == "security_level") {
     if (val == "SXID_ERASE" || val == "SXID_IGNORE" || val == "NONE") {
-      is_secure[top_ns][ns][tunable] = val
+      security_level[top_ns,ns,tunable] = val
     }
     else {
-      printf("Line %d: Invalid value (%s) for is_secure: %s, ", NR, val,
+      printf("Line %d: Invalid value (%s) for security_level: %s, ", NR, val,
 	     $0)
-      print("Allowed values are 'true' or 'false'")
+      print("Allowed values are 'SXID_ERASE', 'SXID_IGNORE', or 'NONE'")
       exit 1
+    }
+  }
+  else if (attr == "default") {
+    if (types[top_ns,ns,tunable] == "STRING") {
+      default_val[top_ns,ns,tunable] = sprintf(".strval = \"%s\"", val);
+    }
+    else {
+      default_val[top_ns,ns,tunable] = sprintf(".numval = %s", val)
     }
   }
 }
@@ -126,31 +142,32 @@ END {
   print "# error \"Do not include this file directly.\""
   print "# error \"Include tunables.h instead.\""
   print "#endif"
+  print "#include <dl-procinfo.h>\n"
 
   # Now, the enum names
   print "\ntypedef enum"
   print "{"
-  for (t in types) {
-    for (n in types[t]) {
-      for (m in types[t][n]) {
-        printf ("  TUNABLE_ENUM_NAME(%s, %s, %s),\n", t, n, m);
-      }
-    }
+  for (tnm in types) {
+    split (tnm, indices, SUBSEP);
+    t = indices[1];
+    n = indices[2];
+    m = indices[3];
+    printf ("  TUNABLE_ENUM_NAME(%s, %s, %s),\n", t, n, m);
   }
   print "} tunable_id_t;\n"
 
   # Finally, the tunable list.
   print "\n#ifdef TUNABLES_INTERNAL"
-  print "static tunable_t tunable_list[] = {"
-  for (t in types) {
-    for (n in types[t]) {
-      for (m in types[t][n]) {
-        printf ("  {TUNABLE_NAME_S(%s, %s, %s)", t, n, m)
-        printf (", {TUNABLE_TYPE_%s, %s, %s}, {.numval = 0}, NULL, TUNABLE_SECLEVEL_%s, %s},\n",
-		types[t][n][m], minvals[t][n][m], maxvals[t][n][m],
-		is_secure[t][n][m], env_alias[t][n][m]);
-      }
-    }
+  print "static tunable_t tunable_list[] attribute_relro = {"
+  for (tnm in types) {
+    split (tnm, indices, SUBSEP);
+    t = indices[1];
+    n = indices[2];
+    m = indices[3];
+    printf ("  {TUNABLE_NAME_S(%s, %s, %s)", t, n, m)
+    printf (", {TUNABLE_TYPE_%s, %s, %s}, {%s}, NULL, TUNABLE_SECLEVEL_%s, %s},\n",
+	    types[t,n,m], minvals[t,n,m], maxvals[t,n,m],
+	    default_val[t,n,m], security_level[t,n,m], env_alias[t,n,m]);
   }
   print "};"
   print "#endif"

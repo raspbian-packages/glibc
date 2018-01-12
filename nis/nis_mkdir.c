@@ -17,6 +17,7 @@
    <http://www.gnu.org/licenses/>.  */
 
 #include <rpcsvc/nis.h>
+#include <shlib-compat.h>
 
 #include "nis_xdr.h"
 #include "nis_intern.h"
@@ -40,3 +41,4 @@ nis_mkdir (const_nis_name dir, const nis_server *server)
 
   return res;
 }
+libnsl_hidden_nolink_def (nis_mkdir, GLIBC_2_1)

@@ -17,17 +17,32 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 
 extern char **__libc_argv attribute_hidden;
 
 void
 __attribute__ ((noreturn)) internal_function
+__fortify_fail_abort (_Bool need_backtrace, const char *msg)
+{
+  /* The loop is added only to keep gcc happy.  Don't pass down
+     __libc_argv[0] if we aren't doing backtrace since __libc_argv[0]
+     may point to the corrupted stack.  */
+  while (1)
+    __libc_message (need_backtrace ? (do_abort | do_backtrace) : do_abort,
+		    "*** %s ***: %s terminated\n",
+		    msg,
+		    (need_backtrace && __libc_argv[0] != NULL
+		     ? __libc_argv[0] : "<unknown>"));
+}
+
+void
+__attribute__ ((noreturn)) internal_function
 __fortify_fail (const char *msg)
 {
-  /* The loop is added only to keep gcc happy.  */
-  while (1)
-    __libc_message (2, "*** %s ***: %s terminated\n",
-		    msg, __libc_argv[0] ?: "<unknown>");
+  __fortify_fail_abort (true, msg);
 }
+
 libc_hidden_def (__fortify_fail)
+libc_hidden_def (__fortify_fail_abort)

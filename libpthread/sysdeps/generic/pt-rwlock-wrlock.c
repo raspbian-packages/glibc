@@ -32,4 +32,4 @@ __pthread_rwlock_wrlock (struct __pthread_rwlock *rwlock)
 {
   return __pthread_rwlock_timedwrlock_internal (rwlock, 0);
 }
-strong_alias (__pthread_rwlock_wrlock, pthread_rwlock_wrlock);
+weak_alias (__pthread_rwlock_wrlock, pthread_rwlock_wrlock);

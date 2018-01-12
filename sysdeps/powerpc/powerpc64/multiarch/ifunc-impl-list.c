@@ -146,6 +146,8 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 
   /* Support sysdeps/powerpc/powerpc64/multiarch/memcmp.c.  */
   IFUNC_IMPL (i, name, memcmp,
+	      IFUNC_IMPL_ADD (array, i, memcmp, hwcap2 & PPC_FEATURE2_ARCH_2_07,
+			      __memcmp_power8)
 	      IFUNC_IMPL_ADD (array, i, memcmp, hwcap & PPC_FEATURE_HAS_VSX,
 			      __memcmp_power7)
 	      IFUNC_IMPL_ADD (array, i, memcmp, hwcap & PPC_FEATURE_POWER4,
@@ -181,6 +183,9 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
   /* Support sysdeps/powerpc/powerpc64/multiarch/memchr.c.  */
   IFUNC_IMPL (i, name, memchr,
 	      IFUNC_IMPL_ADD (array, i, memchr,
+			      hwcap2 & PPC_FEATURE2_ARCH_2_07,
+			      __memchr_power8)
+	      IFUNC_IMPL_ADD (array, i, memchr,
 			      hwcap & PPC_FEATURE_HAS_VSX,
 			      __memchr_power7)
 	      IFUNC_IMPL_ADD (array, i, memchr, 1,
@@ -204,6 +209,9 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 
   /* Support sysdeps/powerpc/powerpc64/multiarch/strnlen.c.  */
   IFUNC_IMPL (i, name, strnlen,
+	      IFUNC_IMPL_ADD (array, i, strnlen,
+			      hwcap2 & PPC_FEATURE2_ARCH_2_07,
+			      __strnlen_power8)
 	      IFUNC_IMPL_ADD (array, i, strnlen, hwcap & PPC_FEATURE_HAS_VSX,
 			      __strnlen_power7)
 	      IFUNC_IMPL_ADD (array, i, strnlen, 1,
@@ -281,6 +289,9 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
   /* Support sysdeps/powerpc/powerpc64/multiarch/strrchr.c.  */
   IFUNC_IMPL (i, name, strrchr,
 	      IFUNC_IMPL_ADD (array, i, strrchr,
+			      hwcap2 & PPC_FEATURE2_ARCH_2_07,
+			      __strrchr_power8)
+	      IFUNC_IMPL_ADD (array, i, strrchr,
 			      hwcap & PPC_FEATURE_HAS_VSX,
 			      __strrchr_power7)
 	      IFUNC_IMPL_ADD (array, i, strrchr, 1,
@@ -288,6 +299,9 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 
   /* Support sysdeps/powerpc/powerpc64/multiarch/strncat.c.  */
   IFUNC_IMPL (i, name, strncat,
+	      IFUNC_IMPL_ADD (array, i, strncat,
+			      hwcap2 & PPC_FEATURE2_ARCH_2_07,
+			      __strncat_power8)
 	      IFUNC_IMPL_ADD (array, i, strncat,
 			      hwcap & PPC_FEATURE_HAS_VSX,
 			      __strncat_power7)

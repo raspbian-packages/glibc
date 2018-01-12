@@ -106,6 +106,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <shlib-compat.h>
 
 #ifdef SPRINTF_CHAR
 # define SPRINTF(x) strlen(sprintf/**/x)
@@ -114,6 +115,36 @@
 #endif
 
 extern const char *_res_sectioncodes[] attribute_hidden;
+
+/* _res_opcodes was exported by accident as a variable.  */
+#if SHLIB_COMPAT (libresolv, GLIBC_2_0, GLIBC_2_26)
+static const char *res_opcodes[] =
+#else
+static const char res_opcodes[][9] =
+#endif
+  {
+    "QUERY",
+    "IQUERY",
+    "CQUERYM",
+    "CQUERYU",	/* experimental */
+    "NOTIFY",	/* experimental */
+    "UPDATE",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "ZONEINIT",
+    "ZONEREF",
+  };
+#if SHLIB_COMPAT (libresolv, GLIBC_2_0, GLIBC_2_26)
+strong_alias (res_opcodes, _res_opcodes)
+#endif
+
+static const char *p_section(int section, int opcode);
 
 /*
  * Print the current options.
@@ -130,9 +161,7 @@ fp_resstat(const res_state statp, FILE *file) {
 }
 
 static void
-do_section(const res_state statp,
-	   ns_msg *handle, ns_sect section,
-	   int pflag, FILE *file)
+do_section (int pfcode, ns_msg *handle, ns_sect section, int pflag, FILE *file)
 {
 	int n, sflag, rrnum;
 	static int buflen = 2048;
@@ -143,8 +172,8 @@ do_section(const res_state statp,
 	/*
 	 * Print answer records.
 	 */
-	sflag = (statp->pfcode & pflag);
-	if (statp->pfcode && !sflag)
+	sflag = (pfcode & pflag);
+	if (pfcode && !sflag)
 		return;
 
 	buf = malloc(buflen);
@@ -161,11 +190,11 @@ do_section(const res_state statp,
 				fprintf(file, ";; ns_parserr: %s\n",
 					strerror(errno));
 			else if (rrnum > 0 && sflag != 0 &&
-				 (statp->pfcode & RES_PRF_HEAD1))
+				 (pfcode & RES_PRF_HEAD1))
 				putc('\n', file);
 			goto cleanup;
 		}
-		if (rrnum == 0 && sflag != 0 && (statp->pfcode & RES_PRF_HEAD1))
+		if (rrnum == 0 && sflag != 0 && (pfcode & RES_PRF_HEAD1))
 			fprintf(file, ";; %s SECTION:\n",
 				p_section(section, opcode));
 		if (section == ns_s_qd)
@@ -207,10 +236,18 @@ do_section(const res_state statp,
  * This is intended to be primarily a debugging routine.
  */
 void
-res_pquery(const res_state statp, const u_char *msg, int len, FILE *file) {
+fp_nquery (const unsigned char *msg, int len, FILE *file)
+{
 	ns_msg handle;
 	int qdcount, ancount, nscount, arcount;
 	u_int opcode, rcode, id;
+
+	/* There is no need to initialize _res: If _res is not yet
+	   initialized, _res.pfcode is zero.  But initialization will
+	   leave it at zero, too.  _res.pfcode is an unsigned long,
+	   but the code here assumes that the flags fit into an int,
+	   so use that.  */
+	int pfcode = _res.pfcode;
 
 	if (ns_initparse(msg, len, &handle) < 0) {
 		fprintf(file, ";; ns_initparse: %s\n", strerror(errno));
@@ -227,13 +264,13 @@ res_pquery(const res_state statp, const u_char *msg, int len, FILE *file) {
 	/*
 	 * Print header fields.
 	 */
-	if ((!statp->pfcode) || (statp->pfcode & RES_PRF_HEADX) || rcode)
+	if ((!pfcode) || (pfcode & RES_PRF_HEADX) || rcode)
 		fprintf(file,
 			";; ->>HEADER<<- opcode: %s, status: %s, id: %d\n",
-			_res_opcodes[opcode], p_rcode(rcode), id);
-	if ((!statp->pfcode) || (statp->pfcode & RES_PRF_HEADX))
+			res_opcodes[opcode], p_rcode(rcode), id);
+	if ((!pfcode) || (pfcode & RES_PRF_HEADX))
 		putc(';', file);
-	if ((!statp->pfcode) || (statp->pfcode & RES_PRF_HEAD2)) {
+	if ((!pfcode) || (pfcode & RES_PRF_HEAD2)) {
 		fprintf(file, "; flags:");
 		if (ns_msg_getflag(handle, ns_f_qr))
 			fprintf(file, " qr");
@@ -252,7 +289,7 @@ res_pquery(const res_state statp, const u_char *msg, int len, FILE *file) {
 		if (ns_msg_getflag(handle, ns_f_cd))
 			fprintf(file, " cd");
 	}
-	if ((!statp->pfcode) || (statp->pfcode & RES_PRF_HEAD1)) {
+	if ((!pfcode) || (pfcode & RES_PRF_HEAD1)) {
 		fprintf(file, "; %s: %d",
 			p_section(ns_s_qd, opcode), qdcount);
 		fprintf(file, ", %s: %d",
@@ -262,20 +299,34 @@ res_pquery(const res_state statp, const u_char *msg, int len, FILE *file) {
 		fprintf(file, ", %s: %d",
 			p_section(ns_s_ar, opcode), arcount);
 	}
-	if ((!statp->pfcode) || (statp->pfcode &
+	if ((!pfcode) || (pfcode &
 		(RES_PRF_HEADX | RES_PRF_HEAD2 | RES_PRF_HEAD1))) {
 		putc('\n',file);
 	}
 	/*
 	 * Print the various sections.
 	 */
-	do_section(statp, &handle, ns_s_qd, RES_PRF_QUES, file);
-	do_section(statp, &handle, ns_s_an, RES_PRF_ANS, file);
-	do_section(statp, &handle, ns_s_ns, RES_PRF_AUTH, file);
-	do_section(statp, &handle, ns_s_ar, RES_PRF_ADD, file);
+	do_section (pfcode, &handle, ns_s_qd, RES_PRF_QUES, file);
+	do_section (pfcode, &handle, ns_s_an, RES_PRF_ANS, file);
+	do_section (pfcode, &handle, ns_s_ns, RES_PRF_AUTH, file);
+	do_section (pfcode, &handle, ns_s_ar, RES_PRF_ADD, file);
 	if (qdcount == 0 && ancount == 0 &&
 	    nscount == 0 && arcount == 0)
 		putc('\n', file);
+}
+libresolv_hidden_def (fp_nquery)
+
+void
+fp_query (const unsigned char *msg, FILE *file)
+{
+  fp_nquery (msg, PACKETSZ, file);
+}
+libresolv_hidden_def (fp_query)
+
+void
+p_query (const unsigned char *msg)
+{
+  fp_query (msg, stdout);
 }
 
 const u_char *
@@ -512,7 +563,7 @@ libresolv_hidden_def (p_type)
 /*
  * Return a string for the type.
  */
-const char *
+static const char *
 p_section(int section, int opcode) {
 	const struct res_sym *symbols;
 
@@ -562,6 +613,7 @@ p_option(u_long option) {
 	case RES_SNGLKUPREOP:	return "single-request-reopen";
 	case RES_USE_DNSSEC:	return "dnssec";
 	case RES_NOTLDQUERY:	return "no-tld-query";
+	case RES_NORELOAD:	return "no-reload";
 				/* XXX nonreentrant */
 	default:		sprintf(nbuf, "?0x%lx?", (u_long)option);
 				return (nbuf);

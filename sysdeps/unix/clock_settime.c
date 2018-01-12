@@ -18,7 +18,6 @@
 #include <errno.h>
 #include <time.h>
 #include <sys/time.h>
-#include <libc-internal.h>
 #include <ldsodefs.h>
 
 
@@ -90,7 +89,7 @@ __clock_settime (clockid_t clock_id, const struct timespec *tp)
 	struct timeval tv;						      \
 	TIMESPEC_TO_TIMEVAL (&tv, tp);					      \
 									      \
-	retval = settimeofday (&tv, NULL);				      \
+	retval = __settimeofday (&tv, NULL);				      \
       } while (0)
 
 #ifdef SYSDEP_SETTIME

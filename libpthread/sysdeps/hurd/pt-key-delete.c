@@ -52,8 +52,8 @@ pthread_key_delete (pthread_key_t key)
 
 	  /* Just remove the key, no need to care whether it was
 	     already there. */
-	  if (t->thread_specifics)
-	    hurd_ihash_remove (t->thread_specifics, key);
+	  if (key < t->thread_specifics_size)
+	    t->thread_specifics[key] = 0;
 	}
       __pthread_rwlock_unlock (&__pthread_threads_lock);
     }

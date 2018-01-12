@@ -41,6 +41,11 @@
 #include <setjmp.h>		/* For `jmp_buf'.  */
 #include <spin-lock.h>
 struct hurd_signal_preemptor;	/* <hurd/sigpreempt.h> */
+#if defined __USE_EXTERN_INLINES && defined _LIBC
+#  if IS_IN (libc)
+#    include <sigsetops.h>
+#  endif
+#endif
 
 
 /* Full details of a signal.  */
@@ -77,7 +82,7 @@ struct hurd_sigstate
        instead of this one.  */
     struct sigaction actions[NSIG];
 
-    struct sigaltstack sigaltstack;
+    stack_t sigaltstack;
 
     /* Chain of thread-local signal preemptors; see <hurd/sigpreempt.h>.
        Each element of this chain is in local stack storage, and the chain

@@ -18,31 +18,34 @@
    Boston, MA 02111-1307, USA.  */
 
 #include <pthread.h>
-#include <hurd/ihash.h>
 
 #include <pt-internal.h>
 
 int
 __pthread_setspecific (pthread_key_t key, const void *value)
 {
-  error_t err;
   struct __pthread *self = _pthread_self ();
 
   if (key < 0 || key >= __pthread_key_count
       || __pthread_key_destructors[key] == PTHREAD_KEY_INVALID)
     return EINVAL;
 
-  if (! self->thread_specifics)
+  if (key >= self->thread_specifics_size)
     {
-      err = hurd_ihash_create (&self->thread_specifics, HURD_IHASH_NO_LOCP);
-      if (err)
+      /* Amortize reallocation cost.  */
+      int newsize = 2 * key + 1;
+      void **new = realloc (self->thread_specifics,
+			    newsize * sizeof (new[0]));
+      if (! new )
 	return ENOMEM;
+
+      memset (&new[self->thread_specifics_size], 0,
+	      (newsize - self->thread_specifics_size) * sizeof (new[0]));
+      self->thread_specifics = new;
+      self->thread_specifics_size = newsize;
     }
 
-  err = hurd_ihash_add (self->thread_specifics, key, (void *) value);
-  if (err)
-    return ENOMEM;
-      
+  self->thread_specifics[key] = (void*) value;
   return 0;
 }
 strong_alias (__pthread_setspecific, pthread_setspecific);

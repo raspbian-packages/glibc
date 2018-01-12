@@ -109,7 +109,6 @@ GLIBC_2.0 __bzero F
 GLIBC_2.0 __check_rhosts_file D 0x4
 GLIBC_2.0 __clone F
 GLIBC_2.0 __close F
-GLIBC_2.0 __cmpdi2 F
 GLIBC_2.0 __cmsg_nxthdr F
 GLIBC_2.0 __connect F
 GLIBC_2.0 __ctype32_b D 0x4
@@ -133,9 +132,6 @@ GLIBC_2.0 __ffs F
 GLIBC_2.0 __finite F
 GLIBC_2.0 __finitef F
 GLIBC_2.0 __finitel F
-GLIBC_2.0 __fixunsdfdi F
-GLIBC_2.0 __fixunsxfdi F
-GLIBC_2.0 __floatdidf F
 GLIBC_2.0 __fork F
 GLIBC_2.0 __fpu_control D 0x2
 GLIBC_2.0 __frame_state_for F
@@ -234,7 +230,6 @@ GLIBC_2.0 __strtouq_internal F
 GLIBC_2.0 __sysv_signal F
 GLIBC_2.0 __timezone D 0x4
 GLIBC_2.0 __tzname D 0x8
-GLIBC_2.0 __ucmpdi2 F
 GLIBC_2.0 __udivdi3 F
 GLIBC_2.0 __uflow F
 GLIBC_2.0 __umoddi3 F
@@ -2025,6 +2020,19 @@ GLIBC_2.25 getrandom F
 GLIBC_2.25 strfromd F
 GLIBC_2.25 strfromf F
 GLIBC_2.25 strfroml F
+GLIBC_2.26 GLIBC_2.26 A
+GLIBC_2.26 __strtof128_internal F
+GLIBC_2.26 __wcstof128_internal F
+GLIBC_2.26 preadv2 F
+GLIBC_2.26 preadv64v2 F
+GLIBC_2.26 pwritev2 F
+GLIBC_2.26 pwritev64v2 F
+GLIBC_2.26 reallocarray F
+GLIBC_2.26 strfromf128 F
+GLIBC_2.26 strtof128 F
+GLIBC_2.26 strtof128_l F
+GLIBC_2.26 wcstof128 F
+GLIBC_2.26 wcstof128_l F
 GLIBC_2.3 GLIBC_2.3 A
 GLIBC_2.3 __ctype_b_loc F
 GLIBC_2.3 __ctype_tolower_loc F

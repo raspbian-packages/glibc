@@ -2,9 +2,7 @@
 #include <time/time.h>
 
 #ifndef _ISOMAC
-# include <xlocale.h>
-
-__BEGIN_DECLS
+# include <bits/types/locale_t.h>
 
 extern __typeof (strftime_l) __strftime_l;
 libc_hidden_proto (__strftime_l)
@@ -36,10 +34,6 @@ extern struct tm _tmbuf attribute_hidden;
 
 /* Defined in tzset.c.  */
 extern char *__tzstring (const char *string);
-
-/* Defined in tzset.c. */
-extern size_t __tzname_cur_max attribute_hidden;
-
 
 extern int __use_tzfile attribute_hidden;
 
@@ -82,13 +76,9 @@ extern void __tzset (void);
 /* Prototype for the internal function to get information based on TZ.  */
 extern struct tm *__tz_convert (const time_t *timer, int use_localtime, struct tm *tp);
 
-/* Return the maximum length of a timezone name.
-   This is what `sysconf (_SC_TZNAME_MAX)' does.  */
-extern long int __tzname_max (void);
-
 extern int __nanosleep (const struct timespec *__requested_time,
 			struct timespec *__remaining);
-libc_hidden_proto (__nanosleep)
+hidden_proto (__nanosleep)
 extern int __nanosleep_nocancel (const struct timespec *__requested_time,
 				 struct timespec *__remaining)
   attribute_hidden;
@@ -102,7 +92,7 @@ extern int __getclktck (void);
 /* strptime support.  */
 extern char * __strptime_internal (const char *rp, const char *fmt,
 				   struct tm *tm, void *statep,
-				   __locale_t locparam)
+				   locale_t locparam)
      internal_function;
 
 extern double __difftime (time_t time1, time_t time0);
@@ -111,8 +101,6 @@ extern double __difftime (time_t time1, time_t time0);
 /* Use in the clock_* functions.  Size of the field representing the
    actual clock ID.  */
 #define CLOCK_IDFIELD_SIZE	3
-
-__END_DECLS
 
 #endif
 #endif

@@ -45,6 +45,7 @@
 /* COMMON_CPUID_INDEX_1.  */
 #define bit_cpu_CX8		(1 << 8)
 #define bit_cpu_CMOV		(1 << 15)
+#define bit_cpu_SSE		(1 << 25)
 #define bit_cpu_SSE2		(1 << 26)
 #define bit_cpu_SSSE3		(1 << 9)
 #define bit_cpu_SSE4_1		(1 << 19)
@@ -55,8 +56,13 @@
 #define bit_cpu_FMA		(1 << 12)
 #define bit_cpu_FMA4		(1 << 16)
 #define bit_cpu_HTT		(1 << 28)
+#define bit_cpu_LZCNT		(1 << 5)
+#define bit_cpu_MOVBE		(1 << 22)
+#define bit_cpu_POPCNT		(1 << 23)
 
 /* COMMON_CPUID_INDEX_7.  */
+#define bit_cpu_BMI1		(1 << 3)
+#define bit_cpu_BMI2		(1 << 8)
 #define bit_cpu_ERMS		(1 << 9)
 #define bit_cpu_RTM		(1 << 11)
 #define bit_cpu_AVX2		(1 << 5)
@@ -96,6 +102,7 @@
 
 # define index_cpu_CX8	COMMON_CPUID_INDEX_1*CPUID_SIZE+CPUID_EDX_OFFSET
 # define index_cpu_CMOV	COMMON_CPUID_INDEX_1*CPUID_SIZE+CPUID_EDX_OFFSET
+# define index_cpu_SSE	COMMON_CPUID_INDEX_1*CPUID_SIZE+CPUID_EDX_OFFSET
 # define index_cpu_SSE2	COMMON_CPUID_INDEX_1*CPUID_SIZE+CPUID_EDX_OFFSET
 # define index_cpu_SSSE3 COMMON_CPUID_INDEX_1*CPUID_SIZE+CPUID_ECX_OFFSET
 # define index_cpu_SSE4_1 COMMON_CPUID_INDEX_1*CPUID_SIZE+CPUID_ECX_OFFSET
@@ -103,6 +110,7 @@
 # define index_cpu_AVX	COMMON_CPUID_INDEX_1*CPUID_SIZE+CPUID_ECX_OFFSET
 # define index_cpu_AVX2	COMMON_CPUID_INDEX_7*CPUID_SIZE+CPUID_EBX_OFFSET
 # define index_cpu_ERMS	COMMON_CPUID_INDEX_7*CPUID_SIZE+CPUID_EBX_OFFSET
+# define index_cpu_MOVBE COMMON_CPUID_INDEX_1*CPUID_SIZE+CPUID_ECX_OFFSET
 
 # define index_arch_Fast_Rep_String	FEATURE_INDEX_1*FEATURE_SIZE
 # define index_arch_Fast_Copy_Backward	FEATURE_INDEX_1*FEATURE_SIZE
@@ -123,8 +131,6 @@
 # define index_arch_Prefer_No_VZEROUPPER FEATURE_INDEX_1*FEATURE_SIZE
 # define index_arch_Fast_Unaligned_Copy	FEATURE_INDEX_1*FEATURE_SIZE
 # define index_arch_Prefer_ERMS		FEATURE_INDEX_1*FEATURE_SIZE
-# define index_arch_Use_dl_runtime_resolve_opt FEATURE_INDEX_1*FEATURE_SIZE
-# define index_arch_Use_dl_runtime_resolve_slow FEATURE_INDEX_1*FEATURE_SIZE
 # define index_arch_Prefer_No_AVX512	FEATURE_INDEX_1*FEATURE_SIZE
 
 
@@ -214,13 +220,27 @@ struct cpu_features
   } cpuid[COMMON_CPUID_INDEX_MAX];
   unsigned int family;
   unsigned int model;
-  /* The type must be unsigned long int so that we use
+  /* The state size for XSAVEC or XSAVE.  The type must be unsigned long
+     int so that we use
 
 	sub xsave_state_size_offset(%rip) %RSP_LP
 
      in _dl_runtime_resolve.  */
   unsigned long int xsave_state_size;
+  /* The full state size for XSAVE when XSAVEC is disabled by
+
+     GLIBC_TUNABLES=glibc.tune.hwcaps=-XSAVEC_Usable
+   */
+  unsigned int xsave_state_full_size;
   unsigned int feature[FEATURE_INDEX_MAX];
+  /* Data cache size for use in memory and string routines, typically
+     L1 size.  */
+  unsigned long int data_cache_size;
+  /* Shared cache size for use in memory and string routines, typically
+     L2 or L3 size.  */
+  unsigned long int shared_cache_size;
+  /* Threshold to use non temporal store.  */
+  unsigned long int non_temporal_threshold;
 };
 
 /* Used from outside of glibc to get access to the CPU features
@@ -249,6 +269,7 @@ extern const struct cpu_features *__get_cpu_features (void)
 
 # define index_cpu_CX8		COMMON_CPUID_INDEX_1
 # define index_cpu_CMOV		COMMON_CPUID_INDEX_1
+# define index_cpu_SSE		COMMON_CPUID_INDEX_1
 # define index_cpu_SSE2		COMMON_CPUID_INDEX_1
 # define index_cpu_SSSE3	COMMON_CPUID_INDEX_1
 # define index_cpu_SSE4_1	COMMON_CPUID_INDEX_1
@@ -269,9 +290,15 @@ extern const struct cpu_features *__get_cpu_features (void)
 # define index_cpu_POPCOUNT	COMMON_CPUID_INDEX_1
 # define index_cpu_OSXSAVE	COMMON_CPUID_INDEX_1
 # define index_cpu_HTT		COMMON_CPUID_INDEX_1
+# define index_cpu_BMI1		COMMON_CPUID_INDEX_7
+# define index_cpu_BMI2		COMMON_CPUID_INDEX_7
+# define index_cpu_LZCNT	COMMON_CPUID_INDEX_1
+# define index_cpu_MOVBE	COMMON_CPUID_INDEX_1
+# define index_cpu_POPCNT	COMMON_CPUID_INDEX_1
 
 # define reg_CX8		edx
 # define reg_CMOV		edx
+# define reg_SSE		edx
 # define reg_SSE2		edx
 # define reg_SSSE3		ecx
 # define reg_SSE4_1		ecx
@@ -292,6 +319,11 @@ extern const struct cpu_features *__get_cpu_features (void)
 # define reg_POPCOUNT		ecx
 # define reg_OSXSAVE		ecx
 # define reg_HTT		edx
+# define reg_BMI1		ebx
+# define reg_BMI2		ebx
+# define reg_LZCNT		ecx
+# define reg_MOVBE		ecx
+# define reg_POPCNT		ecx
 
 # define index_arch_Fast_Rep_String	FEATURE_INDEX_1
 # define index_arch_Fast_Copy_Backward	FEATURE_INDEX_1

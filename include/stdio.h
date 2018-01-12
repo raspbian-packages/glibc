@@ -1,11 +1,8 @@
 #ifndef _STDIO_H
-# if defined __need_FILE || defined __need___FILE || defined _ISOMAC
-#  include <libio/stdio.h>
-# else
-#  include <libio/stdio.h>
+# include <libio/stdio.h>
+# ifndef _ISOMAC
 
 /* Now define the internal interfaces.  */
-__BEGIN_DECLS
 
 extern int __fcloseall (void);
 extern int __snprintf (char *__restrict __s, size_t __maxlen,
@@ -30,7 +27,6 @@ extern int __vsscanf (const char *__restrict __s,
 		      _G_va_list __arg)
      __attribute__ ((__format__ (__scanf__, 2, 0)));
 
-#  ifndef __cplusplus
 extern int __sprintf_chk (char *, int, size_t, const char *, ...) __THROW;
 extern int __snprintf_chk (char *, size_t, int, size_t, const char *, ...)
      __THROW;
@@ -52,7 +48,6 @@ extern int __obstack_printf_chk (struct obstack *, int, const char *, ...)
      __THROW;
 extern int __obstack_vprintf_chk (struct obstack *, int, const char *,
 				  _G_va_list) __THROW;
-#  endif
 
 extern int __isoc99_fscanf (FILE *__restrict __stream,
 			    const char *__restrict __format, ...) __wur;
@@ -74,11 +69,11 @@ libc_hidden_proto (__isoc99_vfscanf)
 extern FILE *__new_tmpfile (void);
 extern FILE *__old_tmpfile (void);
 
-
-
 #  define __need_size_t
-#  define __need_wint_t
 #  include <stddef.h>
+
+#  include <bits/types/wint_t.h>
+
 /* Generate a unique file name (and possibly open it).  */
 extern int __path_search (char *__tmpl, size_t __tmpl_len,
 			  const char *__dir, const char *__pfx,
@@ -91,13 +86,24 @@ extern int __gen_tempname (char *__tmpl, int __suffixlen, int __flags,
 #  define __GT_DIR	1	/* create a directory */
 #  define __GT_NOCREATE	2	/* just find a name not currently in use */
 
+enum __libc_message_action
+{
+  do_message	= 0,		/* Print message.  */
+  do_abort	= 1 << 0,	/* Abort.  */
+  do_backtrace	= 1 << 1	/* Backtrace.  */
+};
+
 /* Print out MESSAGE on the error output and abort.  */
 extern void __libc_fatal (const char *__message)
      __attribute__ ((__noreturn__));
-extern void __libc_message (int do_abort, const char *__fnt, ...);
+extern void __libc_message (enum __libc_message_action action,
+			    const char *__fnt, ...);
 extern void __fortify_fail (const char *msg)
      __attribute__ ((__noreturn__)) internal_function;
+extern void __fortify_fail_abort (_Bool, const char *msg)
+     __attribute__ ((__noreturn__)) internal_function;
 libc_hidden_proto (__fortify_fail)
+libc_hidden_proto (__fortify_fail_abort)
 
 /* Acquire ownership of STREAM.  */
 extern void __flockfile (FILE *__stream);
@@ -113,6 +119,8 @@ extern int __getc_unlocked (FILE *__fp);
 extern wint_t __getwc_unlocked (FILE *__fp);
 
 extern int __fxprintf (FILE *__fp, const char *__fmt, ...)
+     __attribute__ ((__format__ (__printf__, 2, 3)));
+extern int __fxprintf_nocancel (FILE *__fp, const char *__fmt, ...)
      __attribute__ ((__format__ (__printf__, 2, 3)));
 
 extern const char *const _sys_errlist_internal[] attribute_hidden;
@@ -181,28 +189,8 @@ libc_hidden_proto (__vasprintf_chk)
 libc_hidden_proto (__vdprintf_chk)
 libc_hidden_proto (__obstack_vprintf_chk)
 
-/* The <stdio.h> header does not include the declaration for gets
-   anymore when compiling with _GNU_SOURCE.  Provide a copy here.  */
-extern char *gets (char *__s);
-#  if __USE_FORTIFY_LEVEL > 0
-extern char *__gets_chk (char *__str, size_t) __wur;
-extern char *__REDIRECT (__gets_warn, (char *__str), gets)
-     __wur __warnattr ("please use fgets or getline instead, gets can't "
-		       "specify buffer size");
-
-__fortify_function __wur char *
-gets (char *__str)
-{
-  if (__bos (__str) != (size_t) -1)
-    return __gets_chk (__str, __bos (__str));
-  return __gets_warn (__str);
-}
-#  endif
-
 extern FILE * __fmemopen (void *buf, size_t len, const char *mode);
 libc_hidden_proto (__fmemopen)
 
-__END_DECLS
-# endif
-
-#endif
+# endif /* not _ISOMAC */
+#endif /* stdio.h */

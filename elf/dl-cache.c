@@ -24,6 +24,10 @@
 #include <dl-procinfo.h>
 #include <stdint.h>
 #include <_itoa.h>
+#include <dl-hwcaps.h>
+#include <fcntl.h>
+#include <sysdep.h>
+#include <not-errno.h>
 
 #ifndef _DL_PLATFORMS_COUNT
 # define _DL_PLATFORMS_COUNT 0
@@ -259,11 +263,13 @@ _dl_load_cache_lookup (const char *name)
       if (platform != (uint64_t) -1)
 	platform = 1ULL << platform;
 
+      uint64_t hwcap_mask = GET_HWCAP_MASK();
+
       if (__access_noerrno ("/etc/ld.so.nohwcap", F_OK) == 0)
 	disable_hwcap = 1;
 
 #define _DL_HWCAP_TLS_MASK (1LL << 63)
-      uint64_t hwcap_exclude = ~((GLRO(dl_hwcap) & GLRO(dl_hwcap_mask))
+      uint64_t hwcap_exclude = ~((GLRO(dl_hwcap) & hwcap_mask)
 				 | _DL_HWCAP_PLATFORM | _DL_HWCAP_TLS_MASK);
 
       /* Only accept hwcap if it's for the right platform.  */
@@ -308,7 +314,7 @@ _dl_load_cache_lookup (const char *name)
   char *temp;
   temp = alloca (strlen (best) + 1);
   strcpy (temp, best);
-  return strdup (temp);
+  return __strdup (temp);
 }
 
 #ifndef MAP_COPY

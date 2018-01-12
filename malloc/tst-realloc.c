@@ -19,7 +19,7 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <string.h>
-#include <libc-internal.h>
+#include <libc-diag.h>
 
 static int errors = 0;
 
@@ -65,10 +65,6 @@ do_test (void)
 
   if (p == NULL)
     merror ("realloc (NULL, 10) failed.");
-
-  /* errno should be clear on success (POSIX).  */
-  if (p != NULL && save != 0)
-    merror ("errno is set but should not be");
 
   free (p);
 

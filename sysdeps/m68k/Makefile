@@ -29,6 +29,10 @@ pic-ccflag = -fpic
 ifeq ($(subdir),csu)
 # Make sure gcrt1.o uses the large PIC model
 CFLAGS-gmon-start.c := -fPIC
+ifeq ($(build-pie-default),yes)
+# Override default PIE
+ASFLAGS-.o += -fno-pie
+endif
 endif
 
 ifeq ($(subdir),setjmp)
@@ -46,12 +50,4 @@ endif
 
 ifeq ($(subdir),gmon)
 CFLAGS-mcount.c += -Wno-frame-address
-endif
-
-ifeq ($(subdir),csu)
-ifeq (yes,$(build-shared))
-# Compatibility
-sysdep_routines += libgcc-compat
-shared-only-routines += libgcc-compat
-endif
 endif

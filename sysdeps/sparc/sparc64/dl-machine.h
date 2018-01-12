@@ -85,6 +85,7 @@ elf_machine_load_address (void)
 
 static inline Elf64_Addr __attribute__ ((always_inline))
 elf_machine_fixup_plt (struct link_map *map, lookup_t t,
+		       const ElfW(Sym) *refsym, const ElfW(Sym) *sym,
 		       const Elf64_Rela *reloc,
 		       Elf64_Addr *reloc_addr, Elf64_Addr value)
 {
@@ -537,6 +538,12 @@ elf_machine_rela (struct link_map *map, const Elf64_Rela *reloc,
       break;
     case R_SPARC_DISP32:
       *(unsigned int *) reloc_addr = (value - (Elf64_Addr) reloc_addr);
+      break;
+    case R_SPARC_DISP64:
+      *reloc_addr = (value - (Elf64_Addr) reloc_addr);
+      break;
+    case R_SPARC_REGISTER:
+      *reloc_addr = value;
       break;
     case R_SPARC_WDISP30:
       *(unsigned int *) reloc_addr =

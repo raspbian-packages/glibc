@@ -17,9 +17,9 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-#include <xlocale.h>
+#include <locale.h>
 
-extern double ____strtod_l_internal (const char *, char **, int, __locale_t);
+extern double ____strtod_l_internal (const char *, char **, int, locale_t);
 
 /* Configuration part.  These macros are defined by `strtold.c',
    `strtof.c', `wcstod.c', `wcstold.c', and `wcstof.c' to produce the
@@ -46,7 +46,6 @@ extern double ____strtod_l_internal (const char *, char **, int, __locale_t);
 #include <errno.h>
 #include <float.h>
 #include "../locale/localeinfo.h"
-#include <locale.h>
 #include <math.h>
 #include <math_private.h>
 #include <stdlib.h>
@@ -485,7 +484,7 @@ str_to_mpn (const STRING_TYPE *str, int digcnt, mp_limb_t *n, mp_size_t *nsize,
    ERANGE and return HUGE_VAL with the appropriate sign.  */
 FLOAT
 ____STRTOF_INTERNAL (const STRING_TYPE *nptr, STRING_TYPE **endptr, int group,
-		     __locale_t loc)
+		     locale_t loc)
 {
   int negative;			/* The sign of the number.  */
   MPN_VAR (num);		/* MP representation of the number.  */
@@ -1759,7 +1758,7 @@ FLOAT
 #ifdef weak_function
 weak_function
 #endif
-__STRTOF (const STRING_TYPE *nptr, STRING_TYPE **endptr, __locale_t loc)
+__STRTOF (const STRING_TYPE *nptr, STRING_TYPE **endptr, locale_t loc)
 {
   return ____STRTOF_INTERNAL (nptr, endptr, 0, loc);
 }

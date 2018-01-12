@@ -16,6 +16,7 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#include <stdbool.h>
 #include <dirent.h>
 #include <errno.h>
 #include <stdio.h>
@@ -292,7 +293,6 @@ do_test (void)
   remove_file (scandir_test_dir, "aa");
   remove_file (scandir_test_dir, "b");
   remove_file (scandir_test_dir, "a");
-  rmdir (scandir_test_dir);
 
   return 0;
 }

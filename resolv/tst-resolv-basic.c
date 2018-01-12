@@ -22,8 +22,15 @@
 #include <string.h>
 #include <support/check.h>
 #include <support/check_nss.h>
+#include <support/format_nss.h>
 #include <support/resolv_test.h>
 #include <support/support.h>
+
+#define LONG_NAME                                                       \
+  "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaax."    \
+  "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaay."    \
+  "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaz."    \
+  "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaat"
 
 static void
 response (const struct resolv_response_context *ctx,
@@ -43,13 +50,17 @@ response (const struct resolv_response_context *ctx,
     qname_compare = qname + 2;
   else
     qname_compare = qname;
-  enum {www, alias, nxdomain} requested_qname;
+  enum {www, alias, nxdomain, long_name, nodata} requested_qname;
   if (strcmp (qname_compare, "www.example") == 0)
     requested_qname = www;
   else if (strcmp (qname_compare, "alias.example") == 0)
     requested_qname = alias;
   else if (strcmp (qname_compare, "nxdomain.example") == 0)
     requested_qname = nxdomain;
+  else if (strcmp (qname_compare, LONG_NAME) == 0)
+    requested_qname = long_name;
+  else if (strcmp (qname_compare, "nodata.example") == 0)
+    requested_qname = nodata;
   else
     {
       support_record_failure ();
@@ -69,6 +80,7 @@ response (const struct resolv_response_context *ctx,
   switch (requested_qname)
     {
     case www:
+    case long_name:
       resolv_response_open_record (b, qname, qclass, qtype, 0);
       break;
     case alias:
@@ -77,6 +89,8 @@ response (const struct resolv_response_context *ctx,
       resolv_response_close_record (b);
       resolv_response_open_record (b, "www.example", qclass, qtype, 0);
       break;
+    case nodata:
+      return;
     case nxdomain:
       FAIL_EXIT1 ("unreachable");
     }
@@ -173,17 +187,137 @@ check_h (const char *name, int family, const char *expected)
 }
 
 static void
-check_ai (const char *name, const char *service,
-          int family, const char *expected)
+check_ai_hints (const char *name, const char *service,
+                struct addrinfo hints, const char *expected)
 {
-  struct addrinfo hints = {.ai_family = family};
   struct addrinfo *ai;
-  char *query = xasprintf ("%s:%s [%d]", name, service, family);
+  char *query = xasprintf ("%s:%s [%d]/0x%x", name, service,
+                           hints.ai_family, hints.ai_flags);
   int ret = getaddrinfo (name, service, &hints, &ai);
   check_addrinfo (query, ai, ret, expected);
   if (ret == 0)
     freeaddrinfo (ai);
   free (query);
+}
+
+static void
+check_ai (const char *name, const char *service,
+          int family, const char *expected)
+{
+  return check_ai_hints (name, service,
+                         (struct addrinfo) { .ai_family = family, },
+                         expected);
+}
+
+/* Test for bug 21295: getaddrinfo used to discard address information
+   instead of merging it.  */
+static void
+test_bug_21295 (void)
+{
+  /* The address order is unpredictable.  There are two factors which
+     contribute to that: The stub resolver does not perform proper
+     response matching for A/AAAA queries (an A response could be
+     associated with an AAAA query and vice versa), and without
+     namespaces, system configuration could affect address
+     ordering.  */
+  for (int do_tcp = 0; do_tcp < 2; ++do_tcp)
+    {
+      const struct addrinfo hints =
+        {
+          .ai_family = AF_INET6,
+          .ai_socktype = SOCK_STREAM,
+          .ai_flags = AI_V4MAPPED | AI_ALL,
+        };
+      const char *qname;
+      if (do_tcp)
+        qname = "t.www.example";
+      else
+        qname = "www.example";
+      struct addrinfo *ai = NULL;
+      int ret = getaddrinfo (qname, "80", &hints, &ai);
+      TEST_VERIFY_EXIT (ret == 0);
+
+      const char *expected_a;
+      const char *expected_b;
+      if (do_tcp)
+        {
+          expected_a = "flags: AI_V4MAPPED AI_ALL\n"
+            "address: STREAM/TCP 2001:db8::3 80\n"
+            "address: STREAM/TCP ::ffff:192.0.2.19 80\n";
+          expected_b = "flags: AI_V4MAPPED AI_ALL\n"
+            "address: STREAM/TCP ::ffff:192.0.2.19 80\n"
+            "address: STREAM/TCP 2001:db8::3 80\n";
+        }
+      else
+        {
+          expected_a = "flags: AI_V4MAPPED AI_ALL\n"
+            "address: STREAM/TCP 2001:db8::1 80\n"
+            "address: STREAM/TCP ::ffff:192.0.2.17 80\n";
+          expected_b = "flags: AI_V4MAPPED AI_ALL\n"
+            "address: STREAM/TCP ::ffff:192.0.2.17 80\n"
+            "address: STREAM/TCP 2001:db8::1 80\n";
+        }
+
+      char *actual = support_format_addrinfo (ai, ret);
+      if (!(strcmp (actual, expected_a) == 0
+            || strcmp (actual, expected_b) == 0))
+        {
+          support_record_failure ();
+          printf ("error: %s: unexpected response (TCP: %d):\n%s\n",
+                  __func__, do_tcp, actual);
+        }
+      free (actual);
+      freeaddrinfo (ai);
+    }
+}
+
+/* Run tests which do not expect any data.  */
+static void
+test_nodata_nxdomain (void)
+{
+  /* Iterate through different address families.  */
+  int families[] = { AF_UNSPEC, AF_INET, AF_INET6, -1 };
+  for (int i = 0; families[i] >= 0; ++i)
+    /* If do_tcp, prepend "t." to the name to trigger TCP
+       fallback.  */
+    for (int do_tcp = 0; do_tcp < 2; ++do_tcp)
+      /* If do_nxdomain, trigger an NXDOMAIN error (DNS failure),
+         otherwise use a NODATA response (empty but successful
+         answer).  */
+      for (int do_nxdomain = 0; do_nxdomain < 2; ++do_nxdomain)
+        {
+          int family = families[i];
+          char *name = xasprintf ("%s%s.example",
+                                  do_tcp ? "t." : "",
+                                  do_nxdomain ? "nxdomain" : "nodata");
+
+          if (family != AF_UNSPEC)
+            {
+              if (do_nxdomain)
+                check_h (name, family, "error: HOST_NOT_FOUND\n");
+              else
+                check_h (name, family, "error: NO_ADDRESS\n");
+            }
+
+          const char *expected;
+          if (do_nxdomain)
+            expected = "error: Name or service not known\n";
+          else
+            expected = "error: No address associated with hostname\n";
+
+          check_ai (name, "80", family, expected);
+
+          struct addrinfo hints =
+            {
+              .ai_family = family,
+              .ai_flags = AI_V4MAPPED | AI_ALL,
+            };
+          check_ai_hints (name, "80", hints, expected);
+          hints.ai_flags |= AI_CANONNAME;
+          check_ai_hints (name, "80", hints, expected);
+
+          free (name);
+        }
 }
 
 static int
@@ -209,6 +343,10 @@ do_test (void)
            "name: www.example\n"
            "alias: alias.example\n"
            "address: 2001:db8::2\n");
+  check_h (LONG_NAME, AF_INET,
+           "name: " LONG_NAME "\n"
+           "address: 192.0.2.20\n");
+
   check_ai ("www.example", "80", AF_UNSPEC,
             "address: STREAM/TCP 192.0.2.17 80\n"
             "address: DGRAM/UDP 192.0.2.17 80\n"
@@ -216,6 +354,17 @@ do_test (void)
             "address: STREAM/TCP 2001:db8::1 80\n"
             "address: DGRAM/UDP 2001:db8::1 80\n"
             "address: RAW/IP 2001:db8::1 80\n");
+  check_ai_hints ("www.example", "80",
+                  (struct addrinfo) { .ai_family = AF_UNSPEC,
+                      .ai_flags = AI_CANONNAME, },
+                  "flags: AI_CANONNAME\n"
+                  "canonname: www.example\n"
+                  "address: STREAM/TCP 192.0.2.17 80\n"
+                  "address: DGRAM/UDP 192.0.2.17 80\n"
+                  "address: RAW/IP 192.0.2.17 80\n"
+                  "address: STREAM/TCP 2001:db8::1 80\n"
+                  "address: DGRAM/UDP 2001:db8::1 80\n"
+                  "address: RAW/IP 2001:db8::1 80\n");
   check_ai ("alias.example", "80", AF_UNSPEC,
             "address: STREAM/TCP 192.0.2.18 80\n"
             "address: DGRAM/UDP 192.0.2.18 80\n"
@@ -223,22 +372,80 @@ do_test (void)
             "address: STREAM/TCP 2001:db8::2 80\n"
             "address: DGRAM/UDP 2001:db8::2 80\n"
             "address: RAW/IP 2001:db8::2 80\n");
+  check_ai_hints ("alias.example", "80",
+                  (struct addrinfo) { .ai_family = AF_UNSPEC,
+                      .ai_flags = AI_CANONNAME, },
+                  "flags: AI_CANONNAME\n"
+                  "canonname: www.example\n"
+                  "address: STREAM/TCP 192.0.2.18 80\n"
+                  "address: DGRAM/UDP 192.0.2.18 80\n"
+                  "address: RAW/IP 192.0.2.18 80\n"
+                  "address: STREAM/TCP 2001:db8::2 80\n"
+                  "address: DGRAM/UDP 2001:db8::2 80\n"
+                  "address: RAW/IP 2001:db8::2 80\n");
+  check_ai (LONG_NAME, "80", AF_UNSPEC,
+            "address: STREAM/TCP 192.0.2.20 80\n"
+            "address: DGRAM/UDP 192.0.2.20 80\n"
+            "address: RAW/IP 192.0.2.20 80\n"
+            "address: STREAM/TCP 2001:db8::4 80\n"
+            "address: DGRAM/UDP 2001:db8::4 80\n"
+            "address: RAW/IP 2001:db8::4 80\n");
   check_ai ("www.example", "80", AF_INET,
             "address: STREAM/TCP 192.0.2.17 80\n"
             "address: DGRAM/UDP 192.0.2.17 80\n"
             "address: RAW/IP 192.0.2.17 80\n");
+  check_ai_hints ("www.example", "80",
+                  (struct addrinfo) { .ai_family = AF_INET,
+                      .ai_flags = AI_CANONNAME, },
+                  "flags: AI_CANONNAME\n"
+                  "canonname: www.example\n"
+                  "address: STREAM/TCP 192.0.2.17 80\n"
+                  "address: DGRAM/UDP 192.0.2.17 80\n"
+                  "address: RAW/IP 192.0.2.17 80\n");
   check_ai ("alias.example", "80", AF_INET,
             "address: STREAM/TCP 192.0.2.18 80\n"
             "address: DGRAM/UDP 192.0.2.18 80\n"
             "address: RAW/IP 192.0.2.18 80\n");
+  check_ai_hints ("alias.example", "80",
+                  (struct addrinfo) { .ai_family = AF_INET,
+                      .ai_flags = AI_CANONNAME, },
+                  "flags: AI_CANONNAME\n"
+                  "canonname: www.example\n"
+                  "address: STREAM/TCP 192.0.2.18 80\n"
+                  "address: DGRAM/UDP 192.0.2.18 80\n"
+                  "address: RAW/IP 192.0.2.18 80\n");
+  check_ai (LONG_NAME, "80", AF_INET,
+            "address: STREAM/TCP 192.0.2.20 80\n"
+            "address: DGRAM/UDP 192.0.2.20 80\n"
+            "address: RAW/IP 192.0.2.20 80\n");
   check_ai ("www.example", "80", AF_INET6,
             "address: STREAM/TCP 2001:db8::1 80\n"
             "address: DGRAM/UDP 2001:db8::1 80\n"
             "address: RAW/IP 2001:db8::1 80\n");
+  check_ai_hints ("www.example", "80",
+                  (struct addrinfo) { .ai_family = AF_INET6,
+                      .ai_flags = AI_CANONNAME, },
+                  "flags: AI_CANONNAME\n"
+                  "canonname: www.example\n"
+                  "address: STREAM/TCP 2001:db8::1 80\n"
+                  "address: DGRAM/UDP 2001:db8::1 80\n"
+                  "address: RAW/IP 2001:db8::1 80\n");
   check_ai ("alias.example", "80", AF_INET6,
             "address: STREAM/TCP 2001:db8::2 80\n"
             "address: DGRAM/UDP 2001:db8::2 80\n"
             "address: RAW/IP 2001:db8::2 80\n");
+  check_ai_hints ("alias.example", "80",
+                  (struct addrinfo) { .ai_family = AF_INET6,
+                      .ai_flags = AI_CANONNAME, },
+                  "flags: AI_CANONNAME\n"
+                  "canonname: www.example\n"
+                  "address: STREAM/TCP 2001:db8::2 80\n"
+                  "address: DGRAM/UDP 2001:db8::2 80\n"
+                  "address: RAW/IP 2001:db8::2 80\n");
+  check_ai (LONG_NAME, "80", AF_INET6,
+            "address: STREAM/TCP 2001:db8::4 80\n"
+            "address: DGRAM/UDP 2001:db8::4 80\n"
+            "address: RAW/IP 2001:db8::4 80\n");
 
   check_h ("t.www.example", AF_INET,
            "name: t.www.example\n"
@@ -285,27 +492,8 @@ do_test (void)
             "address: DGRAM/UDP 2001:db8::4 80\n"
             "address: RAW/IP 2001:db8::4 80\n");
 
-  check_h ("nxdomain.example", AF_INET,
-           "error: HOST_NOT_FOUND\n");
-  check_h ("nxdomain.example", AF_INET6,
-           "error: HOST_NOT_FOUND\n");
-  check_ai ("nxdomain.example", "80", AF_UNSPEC,
-            "error: Name or service not known\n");
-  check_ai ("nxdomain.example", "80", AF_INET,
-            "error: Name or service not known\n");
-  check_ai ("nxdomain.example", "80", AF_INET6,
-            "error: Name or service not known\n");
-
-  check_h ("t.nxdomain.example", AF_INET,
-           "error: HOST_NOT_FOUND\n");
-  check_h ("t.nxdomain.example", AF_INET6,
-           "error: HOST_NOT_FOUND\n");
-  check_ai ("t.nxdomain.example", "80", AF_UNSPEC,
-            "error: Name or service not known\n");
-  check_ai ("t.nxdomain.example", "80", AF_INET,
-            "error: Name or service not known\n");
-  check_ai ("t.nxdomain.example", "80", AF_INET6,
-            "error: Name or service not known\n");
+  test_bug_21295 ();
+  test_nodata_nxdomain ();
 
   resolv_test_end (aux);
 

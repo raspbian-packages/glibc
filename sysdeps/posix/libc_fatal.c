@@ -64,7 +64,7 @@ struct str_list
 
 /* Abort with an error message.  */
 void
-__libc_message (int do_abort, const char *fmt, ...)
+__libc_message (enum __libc_message_action action, const char *fmt, ...)
 {
   va_list ap;
   int fd = -1;
@@ -75,11 +75,16 @@ __libc_message (int do_abort, const char *fmt, ...)
   FATAL_PREPARE;
 #endif
 
-  /* Open a descriptor for /dev/tty unless the user explicitly
-     requests errors on standard error.  */
-  const char *on_2 = __libc_secure_getenv ("LIBC_FATAL_STDERR_");
-  if (on_2 == NULL || *on_2 == '\0')
-    fd = open_not_cancel_2 (_PATH_TTY, O_RDWR | O_NOCTTY | O_NDELAY);
+  /* Don't call __libc_secure_getenv if we aren't doing backtrace, which
+     may access the corrupted stack.  */
+  if ((action & do_backtrace))
+    {
+      /* Open a descriptor for /dev/tty unless the user explicitly
+	 requests errors on standard error.  */
+      const char *on_2 = __libc_secure_getenv ("LIBC_FATAL_STDERR_");
+      if (on_2 == NULL || *on_2 == '\0')
+	fd = open_not_cancel_2 (_PATH_TTY, O_RDWR | O_NOCTTY | O_NDELAY);
+    }
 
   if (fd == -1)
     fd = STDERR_FILENO;
@@ -140,7 +145,7 @@ __libc_message (int do_abort, const char *fmt, ...)
 
       written = WRITEV_FOR_FATAL (fd, iov, nlist, total);
 
-      if (do_abort)
+      if ((action & do_abort))
 	{
 	  total = ((total + 1 + GLRO(dl_pagesize) - 1)
 		   & ~(GLRO(dl_pagesize) - 1));
@@ -167,9 +172,10 @@ __libc_message (int do_abort, const char *fmt, ...)
 
   va_end (ap);
 
-  if (do_abort)
+  if ((action & do_abort))
     {
-      BEFORE_ABORT (do_abort, written, fd);
+      if ((action & do_backtrace))
+	BEFORE_ABORT (do_abort, written, fd);
 
       /* Kill the application.  */
       abort ();
@@ -182,6 +188,6 @@ __libc_fatal (const char *message)
 {
   /* The loop is added only to keep gcc happy.  */
   while (1)
-    __libc_message (1, "%s", message);
+    __libc_message (do_abort | do_backtrace, "%s", message);
 }
 libc_hidden_def (__libc_fatal)

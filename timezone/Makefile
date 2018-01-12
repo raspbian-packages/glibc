@@ -59,7 +59,8 @@ tz-cflags = -DTZDIR='"$(zonedir)"' \
 	    -DTZDEFAULT='"$(localtime-file)"' \
 	    -DTZDEFRULES='"$(posixrules-file)"' \
 	    -DTM_GMTOFF=tm_gmtoff -DTM_ZONE=tm_zone \
-	    -DHAVE_GETTEXT -DUSE_LTZ=0 -Wno-maybe-uninitialized
+	    -DHAVE_GETTEXT -DUSE_LTZ=0 -D_ISOMAC -DTZ_DOMAIN='"libc"' \
+	    -include $(common-objpfx)config.h -Wno-maybe-uninitialized
 
 # The -Wno-unused-variable flag is used to prevent GCC 6
 # from warning about time_t_min and time_t_max which are
@@ -79,6 +80,7 @@ $(objpfx)test-tz.out: $(addprefix $(testdata)/, America/New_York Etc/UTC UTC)
 $(objpfx)tst-timezone.out: $(addprefix $(testdata)/, \
 				       Europe/Berlin Universal \
 				       Australia/Melbourne \
+				       America/New_York \
 				       America/Sao_Paulo Asia/Tokyo \
 				       Europe/London)
 $(objpfx)tst-tzset.out: $(addprefix $(testdata)/XT, 1 2 3 4)

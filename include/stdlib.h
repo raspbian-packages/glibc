@@ -1,19 +1,13 @@
 #ifndef _STDLIB_H
 
-#ifdef __need_malloc_and_calloc
-#define __Need_M_And_C
-#endif
-
 #ifndef _ISOMAC
 # include <stddef.h>
 #endif
 #include <stdlib/stdlib.h>
 
 /* Now define the internal interfaces.  */
-#if !defined __Need_M_And_C && !defined _ISOMAC
+#if !defined _ISOMAC
 # include <sys/stat.h>
-
-__BEGIN_DECLS
 
 extern __typeof (strtol_l) __strtol_l;
 extern __typeof (strtoul_l) __strtoul_l;
@@ -116,6 +110,10 @@ extern int __posix_memalign (void **memptr, size_t alignment, size_t size);
 extern void *__libc_memalign (size_t alignment, size_t size)
      __attribute_malloc__;
 
+extern void *__libc_reallocarray (void *__ptr, size_t __nmemb, size_t __size)
+     __THROW __attribute_warn_unused_result__;
+libc_hidden_proto (__libc_reallocarray)
+
 extern int __libc_system (const char *line);
 
 
@@ -158,34 +156,34 @@ libc_hidden_proto (__strtoull_internal)
 
 extern double ____strtod_l_internal (const char *__restrict __nptr,
 				     char **__restrict __endptr, int __group,
-				     __locale_t __loc);
+				     locale_t __loc);
 extern float ____strtof_l_internal (const char *__restrict __nptr,
 				    char **__restrict __endptr, int __group,
-				    __locale_t __loc);
+				    locale_t __loc);
 extern long double ____strtold_l_internal (const char *__restrict __nptr,
 					   char **__restrict __endptr,
-					   int __group, __locale_t __loc);
+					   int __group, locale_t __loc);
 extern long int ____strtol_l_internal (const char *__restrict __nptr,
 				       char **__restrict __endptr,
 				       int __base, int __group,
-				       __locale_t __loc);
+				       locale_t __loc);
 extern unsigned long int ____strtoul_l_internal (const char *
 						 __restrict __nptr,
 						 char **__restrict __endptr,
 						 int __base, int __group,
-						 __locale_t __loc);
+						 locale_t __loc);
 __extension__
 extern long long int ____strtoll_l_internal (const char *__restrict __nptr,
 					     char **__restrict __endptr,
 					     int __base, int __group,
-					     __locale_t __loc);
+					     locale_t __loc);
 __extension__
 extern unsigned long long int ____strtoull_l_internal (const char *
 						       __restrict __nptr,
 						       char **
 						       __restrict __endptr,
 						       int __base, int __group,
-						       __locale_t __loc);
+						       locale_t __loc);
 
 libc_hidden_proto (____strtof_l_internal)
 libc_hidden_proto (____strtod_l_internal)
@@ -220,6 +218,35 @@ libc_hidden_proto (__strtold_nan)
 libc_hidden_proto (__wcstof_nan)
 libc_hidden_proto (__wcstod_nan)
 libc_hidden_proto (__wcstold_nan)
+
+/* Enable _FloatN bits as needed.  */
+#include <bits/floatn.h>
+
+#if __HAVE_DISTINCT_FLOAT128
+extern __typeof (strtof128_l) __strtof128_l;
+
+libc_hidden_proto (__strtof128_l)
+libc_hidden_proto (strtof128)
+
+extern _Float128 __strtof128_nan (const char *, char **, char)
+     internal_function;
+extern _Float128 __wcstof128_nan (const wchar_t *, wchar_t **, wchar_t)
+     internal_function;
+
+libc_hidden_proto (__strtof128_nan)
+libc_hidden_proto (__wcstof128_nan)
+
+extern _Float128 __strtof128_internal (const char *__restrict __nptr,
+				       char **__restrict __endptr,
+				       int __group);
+libc_hidden_proto (__strtof128_internal)
+
+extern _Float128 ____strtof128_l_internal (const char *__restrict __nptr,
+					   char **__restrict __endptr,
+					   int __group, locale_t __loc);
+
+libc_hidden_proto (____strtof128_l_internal)
+#endif
 
 extern char *__ecvt (double __value, int __ndigit, int *__restrict __decpt,
 		     int *__restrict __sign);
@@ -260,15 +287,11 @@ struct abort_msg_s
 extern struct abort_msg_s *__abort_msg;
 libc_hidden_proto (__abort_msg)
 
-# if IS_IN (rtld)
+# if IS_IN (rtld) && !defined NO_RTLD_HIDDEN
 extern __typeof (unsetenv) unsetenv attribute_hidden;
 extern __typeof (__strtoul_internal) __strtoul_internal attribute_hidden;
 # endif
 
-__END_DECLS
-
 #endif
-
-#undef __Need_M_And_C
 
 #endif  /* include/stdlib.h */

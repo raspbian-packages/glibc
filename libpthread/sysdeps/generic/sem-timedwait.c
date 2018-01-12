@@ -97,4 +97,4 @@ __sem_timedwait (sem_t *restrict sem,
   return __sem_timedwait_internal (sem, timeout);
 }
 
-strong_alias (__sem_timedwait, sem_timedwait);
+weak_alias (__sem_timedwait, sem_timedwait);

@@ -24,7 +24,7 @@
 
 /* long long [r3] llround (float x [fp1])  */
 
-ENTRY (__llround)
+ENTRY_TOCLESS (__llround)
 	CALL_MCOUNT 0
 	frin	fp1,fp1	/* Round to nearest +-0.5.  */
 	fctidz	fp1,fp1	/* Convert To Integer DW round toward 0.  */
@@ -35,6 +35,13 @@ END (__llround)
 strong_alias (__llround, __lround)
 weak_alias (__llround, llround)
 weak_alias (__lround, lround)
+/* The double version also works for single-precision as both float and
+   double parameters are passed in 64bit FPRs and both versions are expected
+   to return [long] long type.  */
+strong_alias (__llround, __llroundf)
+weak_alias (__llround, llroundf)
+strong_alias (__lround, __lroundf)
+weak_alias (__lround, lroundf)
 
 #ifdef NO_LONG_DOUBLE
 weak_alias (__llround, llroundl)

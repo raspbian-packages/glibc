@@ -49,10 +49,20 @@ makedb-modules = xmalloc hash-string
 extra-objs		+= $(makedb-modules:=.o)
 
 tests-static            = tst-field
-tests			= test-netdb tst-nss-test1 test-digits-dots \
-			  tst-nss-getpwent bug17079 \
-			  $(tests-static)
+tests-internal		= tst-field
+tests			= test-netdb test-digits-dots tst-nss-getpwent bug17079 \
+			  tst-nss-test1 \
+			  tst-nss-test2 \
+			  tst-nss-test3 \
+			  tst-nss-test4 \
+			  tst-nss-test5
 xtests			= bug-erange
+
+# Tests which need libdl
+ifeq (yes,$(build-shared))
+tests += tst-nss-files-hosts-erange
+tests += tst-nss-files-hosts-multi
+endif
 
 # If we have a thread library then we can test cancellation against
 # some routines like getpwuid_r.
@@ -74,7 +84,7 @@ vpath %.c $(subdir-dirs) ../locale/programs ../intl
 
 
 libnss_files-routines	:= $(addprefix files-,$(databases)) \
-			   files-initgroups files-have_o_cloexec files-init
+			   files-initgroups files-init
 
 libnss_db-dbs		:= $(addprefix db-,\
 				       $(filter-out hosts network key alias,\
@@ -94,7 +104,7 @@ routines                += $(libnss_files-routines)
 static-only-routines    += $(libnss_files-routines)
 tests-static		+= tst-nss-static
 endif
-extra-test-objs		+= nss_test1.os
+extra-test-objs		+= nss_test1.os nss_test2.os
 
 include ../Rules
 
@@ -123,15 +133,33 @@ $(objpfx)makedb: $(makedb-modules:%=$(objpfx)%.o)
 $(inst_vardbdir)/Makefile: db-Makefile $(+force)
 	$(do-install)
 
+libnss_test1.so-no-z-defs = 1
+libnss_test2.so-no-z-defs = 1
+
+rtld-tests-LDFLAGS += -Wl,--dynamic-list=nss_test.ver
+
 libof-nss_test1 = extramodules
+libof-nss_test2 = extramodules
 $(objpfx)/libnss_test1.so: $(objpfx)nss_test1.os $(link-libc-deps)
 	$(build-module)
+$(objpfx)/libnss_test2.so: $(objpfx)nss_test2.os $(link-libc-deps)
+	$(build-module)
+$(objpfx)nss_test2.os : nss_test1.c
 ifdef libnss_test1.so-version
 $(objpfx)/libnss_test1.so$(libnss_test1.so-version): $(objpfx)/libnss_test1.so
 	$(make-link)
 endif
-$(objpfx)tst-nss-test1.out: $(objpfx)/libnss_test1.so$(libnss_test1.so-version)
+ifdef libnss_test2.so-version
+$(objpfx)/libnss_test2.so$(libnss_test2.so-version): $(objpfx)/libnss_test2.so
+	$(make-link)
+endif
+$(patsubst %,$(objpfx)%.out,$(tests)) : \
+	$(objpfx)/libnss_test1.so$(libnss_test1.so-version) \
+	$(objpfx)/libnss_test2.so$(libnss_test2.so-version)
 
 ifeq (yes,$(have-thread-library))
 $(objpfx)tst-cancel-getpwuid_r: $(shared-thread-library)
 endif
+
+$(objpfx)tst-nss-files-hosts-erange: $(libdl)
+$(objpfx)tst-nss-files-hosts-multi: $(libdl)

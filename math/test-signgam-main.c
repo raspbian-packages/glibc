@@ -19,7 +19,6 @@
 #undef _LIBC
 #undef __LIBC_INTERNAL_MATH_INLINES
 #undef _GNU_SOURCE
-#define _ISOMAC
 
 #include <math.h>
 #include <stdio.h>
@@ -65,8 +64,6 @@ main (void)
   int result = 0;
   RUN_TESTS (lgammaf, float);
   RUN_TESTS (lgamma, double);
-#ifndef NO_LONG_DOUBLE
   RUN_TESTS (lgammal, long double);
-#endif
   return result;
 }

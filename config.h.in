@@ -1,14 +1,3 @@
-#if !defined IS_IN_build && !defined __ASSEMBLER__ && !defined _ISOMAC \
-    && !defined __OPTIMIZE__
-# error "glibc cannot be compiled without optimization"
-#endif
-
-/* Another evil option when it comes to compiling the C library is
-   --ffast-math since it alters the ABI.  */
-#if defined __FAST_MATH__ && !defined TEST_FAST_MATH
-# error "glibc must not be compiled with -ffast-math"
-#endif
-
 /* Define if building with SELinux support.  Set by --with-selinux.  */
 #undef	HAVE_SELINUX
 
@@ -104,6 +93,10 @@
    include/libc-symbols.h that avoid PLT slots in the shared objects.  */
 #undef	NO_HIDDEN
 
+/* Define this to disable in rtld the 'hidden_proto' et al macros in
+   include/libc-symbols.h that avoid PLT slots in the shared objects.  */
+#undef	NO_RTLD_HIDDEN
+
 /* Define this to disable lazy relocations in DSOs.  */
 #undef	BIND_NOW
 
@@ -125,12 +118,6 @@
 
 /* Override abi-tags ABI version if necessary.  */
 #undef  __ABI_TAG_VERSION
-
-/* bash 2.0 introduced the _XXX_GNU_nonoption_argv_flags_ variable to help
-   getopt determine whether a parameter is a flag or not.  This features
-   was disabled later since it caused trouble.  We are by default therefore
-   disabling the support as well.  */
-#undef USE_NONOPTION_FLAGS
 
 /* Mach/Hurd specific: define if mig supports the `retcode' keyword.  */
 #undef	HAVE_MIG_RETCODE
@@ -174,6 +161,10 @@
 /* Define if obsolete RPC code should be made available for user-level code
    to link against.  */
 #undef LINK_OBSOLETE_RPC
+
+/* Define if obsolete libnsl code should be made available for user-level
+   code to link against.  */
+#undef LINK_OBSOLETE_NSL
 
 /* Define if Systemtap <sys/sdt.h> probes should be defined.  */
 #undef USE_STAP_PROBE
@@ -261,5 +252,9 @@
 
 /* Build glibc with tunables support.  */
 #define HAVE_TUNABLES 0
+
+/* Some compiler options may now allow to use ebp in __asm__ (used mainly
+   in i386 6 argument syscall issue).  */
+#define CAN_USE_REGISTER_ASM_EBP 0
 
 #endif

@@ -167,5 +167,13 @@ libpthread {
   GLIBC_PRIVATE {
     __shm_directory;
     __pthread_threads;
+
+    __cthread_detach;
+    __cthread_fork;
+    __cthread_keycreate;
+    __cthread_getspecific;
+    __cthread_setspecific;
+    __pthread_getattr_np;
+    __pthread_attr_getstack;
   }
 }

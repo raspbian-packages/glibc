@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <string.h>
 #include <rpcsvc/nis.h>
+#include <shlib-compat.h>
 
 nis_name
 nis_domain_of_r (const_nis_name name, char *buffer, size_t buflen)
@@ -58,4 +59,4 @@ nis_domain_of_r (const_nis_name name, char *buffer, size_t buflen)
 
   return memcpy (buffer, cptr, cptr_len + 1);
 }
-libnsl_hidden_def (nis_domain_of_r)
+libnsl_hidden_nolink_def (nis_domain_of_r, GLIBC_2_1)

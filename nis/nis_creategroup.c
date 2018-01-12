@@ -19,6 +19,7 @@
 #include <time.h>
 #include <string.h>
 #include <rpcsvc/nis.h>
+#include <shlib-compat.h>
 
 nis_error
 nis_creategroup (const_nis_name group, unsigned int flags)
@@ -81,3 +82,4 @@ nis_creategroup (const_nis_name group, unsigned int flags)
     }
   return NIS_FAIL;
 }
+libnsl_hidden_nolink_def (nis_creategroup, GLIBC_2_1)

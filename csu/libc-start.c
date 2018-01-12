@@ -104,6 +104,12 @@ apply_irel (void)
 # define MAIN_AUXVEC_PARAM
 #endif
 
+#ifndef ARCH_INIT_CPU_FEATURES
+# define ARCH_INIT_CPU_FEATURES()
+#endif
+
+#include <libc-start.h>
+
 STATIC int LIBC_START_MAIN (int (*main) (int, char **, char **
 					 MAIN_AUXVEC_DECL),
 			    int argc,
@@ -182,13 +188,20 @@ LIBC_START_MAIN (int (*main) (int, char **, char ** MAIN_AUXVEC_DECL),
 
   __tunables_init (__environ);
 
+  ARCH_INIT_CPU_FEATURES ();
+
   /* Perform IREL{,A} relocations.  */
-  apply_irel ();
+  ARCH_SETUP_IREL ();
 
 #ifndef __GNU__
   /* The stack guard goes into the TCB, so initialize it early.  */
   __libc_setup_tls ();
 #endif
+
+  /* In some architectures, IREL{,A} relocations happen after TLS setup in
+     order to let IFUNC resolvers benefit from TCB information, e.g. powerpc's
+     hwcap and platform fields available in the TCB.  */
+  ARCH_APPLY_IREL ();
 
   /* Set up the stack checker's canary.  */
   uintptr_t stack_chk_guard = _dl_setup_stack_chk_guard (_dl_random);
@@ -220,7 +233,7 @@ LIBC_START_MAIN (int (*main) (int, char **, char ** MAIN_AUXVEC_DECL),
   __pointer_chk_guard_local = pointer_chk_guard;
 # endif
 
-#endif
+#endif /* !SHARED  */
 
   /* Register the destructor of the dynamic linker if there is any.  */
   if (__glibc_likely (rtld_fini != NULL))

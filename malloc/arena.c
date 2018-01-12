@@ -116,7 +116,7 @@ int __malloc_initialized = -1;
   } while (0)
 
 #define arena_lock(ptr, size) do {					      \
-      if (ptr && !arena_is_corrupt (ptr))				      \
+      if (ptr)								      \
         __libc_lock_lock (ptr->mutex);					      \
       else								      \
         ptr = arena_get2 ((size), NULL);				      \
@@ -212,30 +212,34 @@ __malloc_fork_unlock_child (void)
 #if HAVE_TUNABLES
 static inline int do_set_mallopt_check (int32_t value);
 void
-DL_TUNABLE_CALLBACK (set_mallopt_check) (tunable_val_t *valp)
+TUNABLE_CALLBACK (set_mallopt_check) (tunable_val_t *valp)
 {
   int32_t value = (int32_t) valp->numval;
-  do_set_mallopt_check (value);
-  if (check_action != 0)
+  if (value != 0)
     __malloc_check_init ();
 }
 
-# define DL_TUNABLE_CALLBACK_FNDECL(__name, __type) \
+# define TUNABLE_CALLBACK_FNDECL(__name, __type) \
 static inline int do_ ## __name (__type value);				      \
 void									      \
-DL_TUNABLE_CALLBACK (__name) (tunable_val_t *valp)			      \
+TUNABLE_CALLBACK (__name) (tunable_val_t *valp)				      \
 {									      \
   __type value = (__type) (valp)->numval;				      \
   do_ ## __name (value);						      \
 }
 
-DL_TUNABLE_CALLBACK_FNDECL (set_mmap_threshold, size_t)
-DL_TUNABLE_CALLBACK_FNDECL (set_mmaps_max, int32_t)
-DL_TUNABLE_CALLBACK_FNDECL (set_top_pad, size_t)
-DL_TUNABLE_CALLBACK_FNDECL (set_perturb_byte, int32_t)
-DL_TUNABLE_CALLBACK_FNDECL (set_trim_threshold, size_t)
-DL_TUNABLE_CALLBACK_FNDECL (set_arena_max, size_t)
-DL_TUNABLE_CALLBACK_FNDECL (set_arena_test, size_t)
+TUNABLE_CALLBACK_FNDECL (set_mmap_threshold, size_t)
+TUNABLE_CALLBACK_FNDECL (set_mmaps_max, int32_t)
+TUNABLE_CALLBACK_FNDECL (set_top_pad, size_t)
+TUNABLE_CALLBACK_FNDECL (set_perturb_byte, int32_t)
+TUNABLE_CALLBACK_FNDECL (set_trim_threshold, size_t)
+TUNABLE_CALLBACK_FNDECL (set_arena_max, size_t)
+TUNABLE_CALLBACK_FNDECL (set_arena_test, size_t)
+#if USE_TCACHE
+TUNABLE_CALLBACK_FNDECL (set_tcache_max, size_t)
+TUNABLE_CALLBACK_FNDECL (set_tcache_count, size_t)
+TUNABLE_CALLBACK_FNDECL (set_tcache_unsorted_limit, size_t)
+#endif
 #else
 /* Initialization routine. */
 #include <string.h>
@@ -314,14 +318,20 @@ ptmalloc_init (void)
   __libc_lock_lock (main_arena.mutex);
   malloc_consolidate (&main_arena);
 
-  TUNABLE_SET_VAL_WITH_CALLBACK (check, NULL, set_mallopt_check);
-  TUNABLE_SET_VAL_WITH_CALLBACK (top_pad, NULL, set_top_pad);
-  TUNABLE_SET_VAL_WITH_CALLBACK (perturb, NULL, set_perturb_byte);
-  TUNABLE_SET_VAL_WITH_CALLBACK (mmap_threshold, NULL, set_mmap_threshold);
-  TUNABLE_SET_VAL_WITH_CALLBACK (trim_threshold, NULL, set_trim_threshold);
-  TUNABLE_SET_VAL_WITH_CALLBACK (mmap_max, NULL, set_mmaps_max);
-  TUNABLE_SET_VAL_WITH_CALLBACK (arena_max, NULL, set_arena_max);
-  TUNABLE_SET_VAL_WITH_CALLBACK (arena_test, NULL, set_arena_test);
+  TUNABLE_GET (check, int32_t, TUNABLE_CALLBACK (set_mallopt_check));
+  TUNABLE_GET (top_pad, size_t, TUNABLE_CALLBACK (set_top_pad));
+  TUNABLE_GET (perturb, int32_t, TUNABLE_CALLBACK (set_perturb_byte));
+  TUNABLE_GET (mmap_threshold, size_t, TUNABLE_CALLBACK (set_mmap_threshold));
+  TUNABLE_GET (trim_threshold, size_t, TUNABLE_CALLBACK (set_trim_threshold));
+  TUNABLE_GET (mmap_max, int32_t, TUNABLE_CALLBACK (set_mmaps_max));
+  TUNABLE_GET (arena_max, size_t, TUNABLE_CALLBACK (set_arena_max));
+  TUNABLE_GET (arena_test, size_t, TUNABLE_CALLBACK (set_arena_test));
+#if USE_TCACHE
+  TUNABLE_GET (tcache_max, size_t, TUNABLE_CALLBACK (set_tcache_max));
+  TUNABLE_GET (tcache_count, size_t, TUNABLE_CALLBACK (set_tcache_count));
+  TUNABLE_GET (tcache_unsorted_limit, size_t,
+	       TUNABLE_CALLBACK (set_tcache_unsorted_limit));
+#endif
   __libc_lock_unlock (main_arena.mutex);
 #else
   const char *s = NULL;
@@ -386,12 +396,8 @@ ptmalloc_init (void)
             }
         }
     }
-  if (s && s[0])
-    {
-      __libc_mallopt (M_CHECK_ACTION, (int) (s[0] - '0'));
-      if (check_action != 0)
-        __malloc_check_init ();
-    }
+  if (s && s[0] != '\0' && s[0] != '0')
+    __malloc_check_init ();
 #endif
 
 #if HAVE_MALLOC_INIT_HOOK
@@ -826,7 +832,7 @@ reused_arena (mstate avoid_arena)
   result = next_to_use;
   do
     {
-      if (!arena_is_corrupt (result) && !__libc_lock_trylock (result->mutex))
+      if (!__libc_lock_trylock (result->mutex))
         goto out;
 
       /* FIXME: This is a data race, see _int_new_arena.  */
@@ -838,18 +844,6 @@ reused_arena (mstate avoid_arena)
      in that arena and it is currently locked.   */
   if (result == avoid_arena)
     result = result->next;
-
-  /* Make sure that the arena we get is not corrupted.  */
-  mstate begin = result;
-  while (arena_is_corrupt (result) || result == avoid_arena)
-    {
-      result = result->next;
-      if (result == begin)
-	/* We looped around the arena list.  We could not find any
-	   arena that was either not corrupted or not the one we
-	   wanted to avoid.  */
-	return NULL;
-    }
 
   /* No arena available without contention.  Wait for the next in line.  */
   LIBC_PROBE (memory_arena_reuse_wait, 3, &result->mutex, result, avoid_arena);
@@ -947,10 +941,6 @@ arena_get_retry (mstate ar_ptr, size_t bytes)
   if (ar_ptr != &main_arena)
     {
       __libc_lock_unlock (ar_ptr->mutex);
-      /* Don't touch the main arena if it is corrupt.  */
-      if (arena_is_corrupt (&main_arena))
-	return NULL;
-
       ar_ptr = &main_arena;
       __libc_lock_lock (ar_ptr->mutex);
     }

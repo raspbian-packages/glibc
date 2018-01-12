@@ -33,6 +33,7 @@
 #include "nis_xdr.h"
 #include "nis_intern.h"
 #include <libnsl.h>
+#include <shlib-compat.h>
 
 static const struct timeval RPCTIMEOUT = {10, 0};
 static const struct timeval UDPTIMEOUT = {5, 0};
@@ -65,7 +66,7 @@ __nisbind_destroy (dir_binding *bind)
       clnt_destroy (bind->clnt);
     }
 }
-libnsl_hidden_def (__nisbind_destroy)
+libnsl_hidden_nolink_def (__nisbind_destroy, GLIBC_2_1)
 
 nis_error
 __nisbind_next (dir_binding *bind)
@@ -107,7 +108,7 @@ __nisbind_next (dir_binding *bind)
 
   return NIS_FAIL;
 }
-libnsl_hidden_def (__nisbind_next)
+libnsl_hidden_nolink_def (__nisbind_next, GLIBC_2_1)
 
 static struct ckey_cache_entry
 {
@@ -246,7 +247,7 @@ __nisbind_connect (dir_binding *dbp)
 
   return NIS_SUCCESS;
 }
-libnsl_hidden_def (__nisbind_connect)
+libnsl_hidden_nolink_def (__nisbind_connect, GLIBC_2_1)
 
 nis_error
 __nisbind_create (dir_binding *dbp, const nis_server *serv_val,
@@ -290,7 +291,7 @@ __nisbind_create (dir_binding *dbp, const nis_server *serv_val,
 
   return NIS_SUCCESS;
 }
-libnsl_hidden_def (__nisbind_create)
+libnsl_hidden_nolink_def (__nisbind_create, GLIBC_2_1)
 
 /* __nisbind_connect (dbp) must be run before calling this function !
    So we could use the same binding twice */
@@ -374,7 +375,7 @@ __do_niscall3 (dir_binding *dbp, u_long prog, xdrproc_t xargs, caddr_t req,
 
   return retcode;
 }
-libnsl_hidden_def (__do_niscall3)
+libnsl_hidden_nolink_def (__do_niscall3, GLIBC_PRIVATE)
 
 
 nis_error
@@ -816,7 +817,7 @@ __prepare_niscall (const_nis_name name, directory_obj **dirp,
 
   return retcode;
 }
-libnsl_hidden_def (__prepare_niscall)
+libnsl_hidden_nolink_def (__prepare_niscall, GLIBC_PRIVATE)
 
 
 nis_error

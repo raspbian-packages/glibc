@@ -28,6 +28,7 @@
 #include <dl-fptr.h>
 #include <dl-unmap-segments.h>
 #include <atomic.h>
+#include <libc-pointer-arith.h>
 
 #ifndef ELF_MACHINE_BOOT_FPTR_TABLE_LEN
 /* ELF_MACHINE_BOOT_FPTR_TABLE_LEN should be greater than the number of

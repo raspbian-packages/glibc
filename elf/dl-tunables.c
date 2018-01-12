@@ -22,7 +22,6 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <libc-internal.h>
 #include <sysdep.h>
 #include <fcntl.h>
 #include <ldsodefs.h>
@@ -30,25 +29,11 @@
 #define TUNABLES_INTERNAL 1
 #include "dl-tunables.h"
 
+#include <not-errno.h>
+
 #if TUNABLES_FRONTEND == TUNABLES_FRONTEND_valstring
 # define GLIBC_TUNABLES "GLIBC_TUNABLES"
 #endif
-
-/* Compare environment or tunable names, bounded by the name hardcoded in
-   glibc.  */
-static bool
-is_name (const char *orig, const char *envname)
-{
-  for (;*orig != '\0' && *envname != '\0'; envname++, orig++)
-    if (*orig != *envname)
-      break;
-
-  /* The ENVNAME is immediately followed by a value.  */
-  if (*orig == '\0' && *envname == '=')
-    return true;
-  else
-    return false;
-}
 
 #if TUNABLES_FRONTEND == TUNABLES_FRONTEND_valstring
 static char *
@@ -103,118 +88,50 @@ get_next_env (char **envp, char **name, size_t *namelen, char **val,
   return NULL;
 }
 
-/* A stripped down strtoul-like implementation for very early use.  It does not
-   set errno if the result is outside bounds because it gets called before
-   errno may have been set up.  */
-static unsigned long int
-tunables_strtoul (const char *nptr)
-{
-  unsigned long int result = 0;
-  long int sign = 1;
-  unsigned max_digit;
-
-  while (*nptr == ' ' || *nptr == '\t')
-    ++nptr;
-
-  if (*nptr == '-')
-    {
-      sign = -1;
-      ++nptr;
-    }
-  else if (*nptr == '+')
-    ++nptr;
-
-  if (*nptr < '0' || *nptr > '9')
-    return 0UL;
-
-  int base = 10;
-  max_digit = 9;
-  if (*nptr == '0')
-    {
-      if (nptr[1] == 'x' || nptr[1] == 'X')
-	{
-	  base = 16;
-	  nptr += 2;
-	}
-      else
-	{
-	  base = 8;
-	  max_digit = 7;
-	}
-    }
-
-  while (1)
-    {
-      unsigned long int digval;
-      if (*nptr >= '0' && *nptr <= '0' + max_digit)
-        digval = *nptr - '0';
-      else if (base == 16)
-        {
-	  if (*nptr >= 'a' && *nptr <= 'f')
-	    digval = *nptr - 'a' + 10;
-	  else if (*nptr >= 'A' && *nptr <= 'F')
-	    digval = *nptr - 'A' + 10;
-	  else
-	    break;
-	}
-      else
-        break;
-
-      if (result > ULONG_MAX / base
-	  || (result == ULONG_MAX / base && digval > ULONG_MAX % base))
-	return ULONG_MAX;
-      result *= base;
-      result += digval;
-      ++nptr;
-    }
-
-  return result * sign;
-}
-
-/* Initialize the internal type if the value validates either using the
-   explicit constraints of the tunable or with the implicit constraints of its
-   type.  */
-static void
-tunable_set_val_if_valid_range_signed (tunable_t *cur, const char *strval,
-				int64_t default_min, int64_t default_max)
-{
-  int64_t val = (int64_t) tunables_strtoul (strval);
-
-  int64_t min = cur->type.min;
-  int64_t max = cur->type.max;
-
-  if (min == max)
-    {
-      min = default_min;
-      max = default_max;
-    }
-
-  if (val >= min && val <= max)
-    {
-      cur->val.numval = val;
-      cur->strval = strval;
-    }
-}
+#define TUNABLE_SET_VAL_IF_VALID_RANGE(__cur, __val, __type)		      \
+({									      \
+  __type min = (__cur)->type.min;					      \
+  __type max = (__cur)->type.max;					      \
+									      \
+  if ((__type) (__val) >= min && (__type) (val) <= max)			      \
+    {									      \
+      (__cur)->val.numval = val;					      \
+      (__cur)->initialized = true;					      \
+    }									      \
+})
 
 static void
-tunable_set_val_if_valid_range_unsigned (tunable_t *cur, const char *strval,
-					 uint64_t default_min, uint64_t default_max)
+do_tunable_update_val (tunable_t *cur, const void *valp)
 {
-  uint64_t val = (uint64_t) tunables_strtoul (strval);
+  uint64_t val;
 
-  uint64_t min = cur->type.min;
-  uint64_t max = cur->type.max;
+  if (cur->type.type_code != TUNABLE_TYPE_STRING)
+    val = *((int64_t *) valp);
 
-  if (min == max)
+  switch (cur->type.type_code)
     {
-      min = default_min;
-      max = default_max;
-    }
-
-  if (val >= min && val <= max)
-    {
-      cur->val.numval = val;
-      cur->strval = strval;
+    case TUNABLE_TYPE_INT_32:
+	{
+	  TUNABLE_SET_VAL_IF_VALID_RANGE (cur, val, int64_t);
+	  break;
+	}
+    case TUNABLE_TYPE_UINT_64:
+	{
+	  TUNABLE_SET_VAL_IF_VALID_RANGE (cur, val, uint64_t);
+	  break;
+	}
+    case TUNABLE_TYPE_SIZE_T:
+	{
+	  TUNABLE_SET_VAL_IF_VALID_RANGE (cur, val, uint64_t);
+	  break;
+	}
+    case TUNABLE_TYPE_STRING:
+	{
+	  cur->val.strval = valp;
+	  break;
+	}
+    default:
+      __builtin_unreachable ();
     }
 }
 
@@ -223,26 +140,28 @@ tunable_set_val_if_valid_range_unsigned (tunable_t *cur, const char *strval,
 static void
 tunable_initialize (tunable_t *cur, const char *strval)
 {
-  switch (cur->type.type_code)
+  uint64_t val;
+  const void *valp;
+
+  if (cur->type.type_code != TUNABLE_TYPE_STRING)
     {
-    case TUNABLE_TYPE_INT_32:
-	{
-	  tunable_set_val_if_valid_range_signed (cur, strval, INT32_MIN, INT32_MAX);
-	  break;
-	}
-    case TUNABLE_TYPE_SIZE_T:
-	{
-	  tunable_set_val_if_valid_range_unsigned (cur, strval, 0, SIZE_MAX);
-	  break;
-	}
-    case TUNABLE_TYPE_STRING:
-	{
-	  cur->val.strval = cur->strval = strval;
-	  break;
-	}
-    default:
-      __builtin_unreachable ();
+      val = _dl_strtoul (strval, NULL);
+      valp = &val;
     }
+  else
+    {
+      cur->initialized = true;
+      valp = strval;
+    }
+  do_tunable_update_val (cur, valp);
+}
+
+void
+__tunable_set_val (tunable_id_t id, void *valp)
+{
+  tunable_t *cur = &tunable_list[id];
+
+  do_tunable_update_val (cur, valp);
 }
 
 #if TUNABLES_FRONTEND == TUNABLES_FRONTEND_valstring
@@ -295,7 +214,7 @@ parse_tunables (char *tunestr, char *valstring)
 	{
 	  tunable_t *cur = &tunable_list[i];
 
-	  if (is_name (cur->name, name))
+	  if (tunable_is_name (cur->name, name))
 	    {
 	      /* If we are in a secure context (AT_SECURE) then ignore the tunable
 		 unless it is explicitly marked as secure.  Tunable values take
@@ -378,7 +297,7 @@ __tunables_init (char **envp)
 			       &prev_envp)) != NULL)
     {
 #if TUNABLES_FRONTEND == TUNABLES_FRONTEND_valstring
-      if (is_name (GLIBC_TUNABLES, envname))
+      if (tunable_is_name (GLIBC_TUNABLES, envname))
 	{
 	  char *new_env = tunables_strdup (envname);
 	  if (new_env != NULL)
@@ -395,13 +314,13 @@ __tunables_init (char **envp)
 
 	  /* Skip over tunables that have either been set already or should be
 	     skipped.  */
-	  if (cur->strval != NULL || cur->env_alias == NULL)
+	  if (cur->initialized || cur->env_alias == NULL)
 	    continue;
 
 	  const char *name = cur->env_alias;
 
 	  /* We have a match.  Initialize and move on to the next line.  */
-	  if (is_name (name, envname))
+	  if (tunable_is_name (name, envname))
 	    {
 	      /* For AT_SECURE binaries, we need to check the security settings of
 		 the tunable and decide whether we read the value and also whether
@@ -416,7 +335,7 @@ __tunables_init (char **envp)
 
 		      while (*ep != NULL)
 			{
-			  if (is_name (name, *ep))
+			  if (tunable_is_name (name, *ep))
 			    {
 			      char **dp = ep;
 
@@ -446,22 +365,17 @@ __tunables_init (char **envp)
 /* Set the tunable value.  This is called by the module that the tunable exists
    in. */
 void
-__tunable_set_val (tunable_id_t id, void *valp, tunable_callback_t callback)
+__tunable_get_val (tunable_id_t id, void *valp, tunable_callback_t callback)
 {
   tunable_t *cur = &tunable_list[id];
 
-  /* Don't do anything if our tunable was not set during initialization or if
-     it failed validation.  */
-  if (cur->strval == NULL)
-    return;
-
-  /* Caller does not need the value, just call the callback with our tunable
-     value.  */
-  if (valp == NULL)
-    goto cb;
-
   switch (cur->type.type_code)
     {
+    case TUNABLE_TYPE_UINT_64:
+	{
+	  *((uint64_t *) valp) = (uint64_t) cur->val.numval;
+	  break;
+	}
     case TUNABLE_TYPE_INT_32:
 	{
 	  *((int32_t *) valp) = (int32_t) cur->val.numval;
@@ -481,7 +395,8 @@ __tunable_set_val (tunable_id_t id, void *valp, tunable_callback_t callback)
       __builtin_unreachable ();
     }
 
-cb:
-  if (callback)
+  if (cur->initialized && callback != NULL)
     callback (&cur->val);
 }
+
+rtld_hidden_def (__tunable_get_val)

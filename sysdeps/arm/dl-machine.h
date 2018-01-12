@@ -58,7 +58,7 @@ elf_machine_load_address (void)
   Elf32_Addr pcrel_addr;
   asm ("adr %0, _dl_start" : "=r" (pcrel_addr));
 #ifdef __thumb__
-  /* Clear the low bit of the funciton address.
+  /* Clear the low bit of the function address.
 
      NOTE: got_addr is from GOT table whose lsb is always set by linker if it's
      Thumb function address.  PCREL_ADDR comes from PC-relative calculation
@@ -271,6 +271,7 @@ dl_platform_init (void)
 
 static inline Elf32_Addr
 elf_machine_fixup_plt (struct link_map *map, lookup_t t,
+		       const ElfW(Sym) *refsym, const ElfW(Sym) *sym,
 		       const Elf32_Rel *reloc,
 		       Elf32_Addr *reloc_addr, Elf32_Addr value)
 {

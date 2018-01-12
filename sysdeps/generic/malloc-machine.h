@@ -21,6 +21,7 @@
 #define _GENERIC_MALLOC_MACHINE_H
 
 #include <atomic.h>
+#include <malloc-alignment.h>
 
 #ifndef atomic_full_barrier
 # define atomic_full_barrier() __asm ("" ::: "memory")

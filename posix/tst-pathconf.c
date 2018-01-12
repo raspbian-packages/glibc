@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 
 static void prepare (void);
@@ -158,12 +159,6 @@ out_nofifo:
   if (unlink (filename) != 0)
     {
       printf ("Could not remove fifo (%s)\n", strerror (errno));
-      ret = 1;
-    }
-
-  if (rmdir (dirbuf) != 0)
-    {
-      printf ("Could not remove directory (%s)\n", strerror (errno));
       ret = 1;
     }
 

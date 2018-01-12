@@ -27,8 +27,27 @@
 #include <dlfcn.h>
 #include <stdint.h>
 #include <unistd.h>
-#include <dl-procinfo.h>
 #include <gconv.h>
+#include <string.h>
+
+/* Select which versions should be defined depending on support
+   for multiarch, vector and used minimum architecture level.  */
+#define HAVE_FROM_C		1
+#define FROM_LOOP_DEFAULT	FROM_LOOP_C
+#define HAVE_TO_C		1
+#define TO_LOOP_DEFAULT		TO_LOOP_C
+
+#if defined HAVE_S390_VX_ASM_SUPPORT && defined USE_MULTIARCH
+# define HAVE_FROM_VX		1
+# define HAVE_FROM_VX_CU	1
+# define HAVE_TO_VX		1
+# define HAVE_TO_VX_CU		1
+#else
+# define HAVE_FROM_VX		0
+# define HAVE_FROM_VX_CU	0
+# define HAVE_TO_VX		0
+# define HAVE_TO_VX_CU		0
+#endif
 
 #if defined HAVE_S390_VX_GCC_SUPPORT
 # define ASM_CLOBBER_VR(NR) , NR
@@ -53,8 +72,8 @@
 #define MIN_NEEDED_FROM		2
 #define MAX_NEEDED_FROM		4
 #define MIN_NEEDED_TO		4
-#define FROM_LOOP		__from_utf16_loop
-#define TO_LOOP			__to_utf16_loop
+#define FROM_LOOP		FROM_LOOP_DEFAULT
+#define TO_LOOP			TO_LOOP_DEFAULT
 #define FROM_DIRECTION		(dir == from_utf16)
 #define ONE_DIRECTION           0
 
@@ -174,9 +193,10 @@ gconv_end (struct __gconv_step *data)
 
 /* Conversion function from UTF-16 to UTF-32 internal/BE.  */
 
+#if HAVE_FROM_C == 1
 /* The software routine is copied from utf-16.c (minus bytes
    swapping).  */
-#define BODY_FROM_C							\
+# define BODY_FROM_C							\
   {									\
     uint16_t u1 = get16 (inptr);					\
 									\
@@ -220,7 +240,22 @@ gconv_end (struct __gconv_step *data)
     outptr += 4;							\
   }
 
-#define BODY_FROM_VX							\
+
+/* Generate loop-function with software routing.  */
+# define MIN_NEEDED_INPUT	MIN_NEEDED_FROM
+# define MAX_NEEDED_INPUT	MAX_NEEDED_FROM
+# define MIN_NEEDED_OUTPUT	MIN_NEEDED_TO
+# define FROM_LOOP_C		__from_utf16_loop_c
+# define LOOPFCT		FROM_LOOP_C
+# define LOOP_NEED_FLAGS
+# define BODY			BODY_FROM_C
+# include <iconv/loop.c>
+#else
+# define FROM_LOOP_C		NULL
+#endif /* HAVE_FROM_C != 1  */
+
+#if HAVE_FROM_VX == 1
+# define BODY_FROM_VX							\
   {									\
     size_t inlen = inend - inptr;					\
     size_t outlen = outend - outptr;					\
@@ -255,7 +290,7 @@ gconv_end (struct __gconv_step *data)
 		  /* Setup to check for ch >= 0xd800 && ch <= 0xdfff. (v30, v31)  */ \
 		  "9:  .short 0xd800,0xdfff,0x0,0x0,0x0,0x0,0x0,0x0\n\t" \
 		  "    .short 0xa000,0xc000,0x0,0x0,0x0,0x0,0x0,0x0\n\t" \
-		  /* At least on uint16_t is in range of surrogates.	\
+		  /* At least one uint16_t is in range of surrogates.	\
 		     Store the preceding chars.  */			\
 		  "10: vlgvb %[R_TMP],%%v19,7\n\t"			\
 		  "    vuplhh %%v17,%%v16\n\t"				\
@@ -350,53 +385,136 @@ gconv_end (struct __gconv_step *data)
     STANDARD_FROM_LOOP_ERR_HANDLER (2);					\
   }
 
-
-/* Generate loop-function with software routing.  */
-#define MIN_NEEDED_INPUT	MIN_NEEDED_FROM
-#define MAX_NEEDED_INPUT	MAX_NEEDED_FROM
-#define MIN_NEEDED_OUTPUT	MIN_NEEDED_TO
-#if defined HAVE_S390_VX_ASM_SUPPORT
-# define LOOPFCT		__from_utf16_loop_c
-# define LOOP_NEED_FLAGS
-# define BODY			BODY_FROM_C
-# include <iconv/loop.c>
-
 /* Generate loop-function with hardware vector instructions.  */
 # define MIN_NEEDED_INPUT	MIN_NEEDED_FROM
 # define MAX_NEEDED_INPUT	MAX_NEEDED_FROM
 # define MIN_NEEDED_OUTPUT	MIN_NEEDED_TO
-# define LOOPFCT		__from_utf16_loop_vx
+# define FROM_LOOP_VX		__from_utf16_loop_vx
+# define LOOPFCT		FROM_LOOP_VX
 # define LOOP_NEED_FLAGS
 # define BODY			BODY_FROM_VX
 # include <iconv/loop.c>
-
-/* Generate ifunc'ed loop function.  */
-__typeof(__from_utf16_loop_c)
-__attribute__ ((ifunc ("__from_utf16_loop_resolver")))
-__from_utf16_loop;
-
-static void *
-__from_utf16_loop_resolver (unsigned long int dl_hwcap)
-{
-  if (dl_hwcap & HWCAP_S390_VX)
-    return __from_utf16_loop_vx;
-  else
-    return __from_utf16_loop_c;
-}
-
-strong_alias (__from_utf16_loop_c_single, __from_utf16_loop_single)
 #else
-# define LOOPFCT		FROM_LOOP
+# define FROM_LOOP_VX		NULL
+#endif /* HAVE_FROM_VX != 1  */
+
+#if HAVE_FROM_VX_CU == 1
+#define BODY_FROM_VX_CU							\
+  {									\
+    register const unsigned char* pInput asm ("8") = inptr;		\
+    register size_t inlen asm ("9") = inend - inptr;			\
+    register unsigned char* pOutput asm ("10") = outptr;		\
+    register size_t outlen asm ("11") = outend - outptr;		\
+    unsigned long tmp, tmp2, tmp3;					\
+    asm volatile (".machine push\n\t"					\
+		  ".machine \"z13\"\n\t"				\
+		  ".machinemode \"zarch_nohighgprs\"\n\t"		\
+		  /* Setup to check for surrogates.  */			\
+		  "    larl %[R_TMP],9f\n\t"				\
+		  "    vlm %%v30,%%v31,0(%[R_TMP])\n\t"			\
+		  CONVERT_32BIT_SIZE_T ([R_INLEN])			\
+		  CONVERT_32BIT_SIZE_T ([R_OUTLEN])			\
+		  /* Loop which handles UTF-16 chars <0xd800, >0xdfff.  */ \
+		  "0:  clgijl %[R_INLEN],16,20f\n\t"			\
+		  "    clgijl %[R_OUTLEN],32,20f\n\t"			\
+		  "1:  vl %%v16,0(%[R_IN])\n\t"				\
+		  /* Check for surrogate chars.  */			\
+		  "    vstrchs %%v19,%%v16,%%v30,%%v31\n\t"		\
+		  "    jno 10f\n\t"					\
+		  /* Enlarge to UTF-32.  */				\
+		  "    vuplhh %%v17,%%v16\n\t"				\
+		  "    la %[R_IN],16(%[R_IN])\n\t"			\
+		  "    vupllh %%v18,%%v16\n\t"				\
+		  "    aghi %[R_INLEN],-16\n\t"				\
+		  /* Store 32 bytes to buf_out.  */			\
+		  "    vstm %%v17,%%v18,0(%[R_OUT])\n\t"		\
+		  "    aghi %[R_OUTLEN],-32\n\t"			\
+		  "    la %[R_OUT],32(%[R_OUT])\n\t"			\
+		  "    clgijl %[R_INLEN],16,20f\n\t"			\
+		  "    clgijl %[R_OUTLEN],32,20f\n\t"			\
+		  "    j 1b\n\t"					\
+		  /* Setup to check for ch >= 0xd800 && ch <= 0xdfff. (v30, v31)  */ \
+		  "9:  .short 0xd800,0xdfff,0x0,0x0,0x0,0x0,0x0,0x0\n\t" \
+		  "    .short 0xa000,0xc000,0x0,0x0,0x0,0x0,0x0,0x0\n\t" \
+		  /* At least one uint16_t is in range of surrogates.	\
+		     Store the preceding chars.  */			\
+		  "10: vlgvb %[R_TMP],%%v19,7\n\t"			\
+		  "    vuplhh %%v17,%%v16\n\t"				\
+		  "    sllg %[R_TMP3],%[R_TMP],1\n\t" /* Number of out bytes.  */ \
+		  "    ahik %[R_TMP2],%[R_TMP3],-1\n\t" /* Highest index to store.  */ \
+		  "    jl 20f\n\t"					\
+		  "    vstl %%v17,%[R_TMP2],0(%[R_OUT])\n\t"		\
+		  "    vupllh %%v18,%%v16\n\t"				\
+		  "    ahi %[R_TMP2],-16\n\t"				\
+		  "    jl 11f\n\t"					\
+		  "    vstl %%v18,%[R_TMP2],16(%[R_OUT])\n\t"		\
+		  "11: \n\t" /* Update pointers.  */			\
+		  "    la %[R_IN],0(%[R_TMP],%[R_IN])\n\t"		\
+		  "    slgr %[R_INLEN],%[R_TMP]\n\t"			\
+		  "    la %[R_OUT],0(%[R_TMP3],%[R_OUT])\n\t"		\
+		  "    slgr %[R_OUTLEN],%[R_TMP3]\n\t"			\
+		  /* Handles UTF16 surrogates with convert instruction.  */ \
+		  "20: cu24 %[R_OUT],%[R_IN],1\n\t"			\
+		  "    jo 0b\n\t" /* Try vector implemenation again.  */ \
+		  "    lochil %[R_RES],%[RES_OUT_FULL]\n\t" /* cc == 1.  */ \
+		  "    lochih %[R_RES],%[RES_IN_ILL]\n\t" /* cc == 2.  */ \
+		  ".machine pop"					\
+		  : /* outputs */ [R_IN] "+a" (pInput)			\
+		    , [R_INLEN] "+d" (inlen), [R_OUT] "+a" (pOutput)	\
+		    , [R_OUTLEN] "+d" (outlen), [R_TMP] "=a" (tmp)	\
+		    , [R_TMP2] "=d" (tmp2), [R_TMP3] "=a" (tmp3)	\
+		    , [R_RES] "+d" (result)				\
+		  : /* inputs */					\
+		    [RES_OUT_FULL] "i" (__GCONV_FULL_OUTPUT)		\
+		    , [RES_IN_ILL] "i" (__GCONV_ILLEGAL_INPUT)		\
+		  : /* clobber list */ "memory", "cc"			\
+		    ASM_CLOBBER_VR ("v16") ASM_CLOBBER_VR ("v17")	\
+		    ASM_CLOBBER_VR ("v18") ASM_CLOBBER_VR ("v19")	\
+		    ASM_CLOBBER_VR ("v30") ASM_CLOBBER_VR ("v31")	\
+		  );							\
+    inptr = pInput;							\
+    outptr = pOutput;							\
+									\
+    if (__glibc_likely (inlen == 0)					\
+	|| result == __GCONV_FULL_OUTPUT)				\
+      break;								\
+    if (inlen == 1)							\
+      {									\
+	/* Input does not contain a complete utf16 character.  */	\
+	result = __GCONV_INCOMPLETE_INPUT;				\
+	break;								\
+      }									\
+    else if (result != __GCONV_ILLEGAL_INPUT)				\
+      {									\
+	/* Input is >= 2 and < 4 bytes (as cu24 would have processed	\
+	   a possible next utf16 character) and not illegal.		\
+	   => we have a single high surrogate at end of input.  */	\
+	result = __GCONV_INCOMPLETE_INPUT;				\
+	break;								\
+      }									\
+									\
+    STANDARD_FROM_LOOP_ERR_HANDLER (2);					\
+  }
+
+/* Generate loop-function with hardware vector and utf-convert instructions.  */
+# define MIN_NEEDED_INPUT	MIN_NEEDED_FROM
+# define MAX_NEEDED_INPUT	MAX_NEEDED_FROM
+# define MIN_NEEDED_OUTPUT	MIN_NEEDED_TO
+# define FROM_LOOP_VX_CU	__from_utf16_loop_vx_cu
+# define LOOPFCT		FROM_LOOP_VX_CU
 # define LOOP_NEED_FLAGS
-# define BODY			BODY_FROM_C
+# define BODY			BODY_FROM_VX_CU
 # include <iconv/loop.c>
-#endif
+#else
+# define FROM_LOOP_VX_CU	NULL
+#endif /* HAVE_FROM_VX_CU != 1  */
 
 /* Conversion from UTF-32 internal/BE to UTF-16.  */
 
+#if HAVE_TO_C == 1
 /* The software routine is copied from utf-16.c (minus bytes
    swapping).  */
-#define BODY_TO_C							\
+# define BODY_TO_C							\
   {									\
     uint32_t c = get32 (inptr);						\
 									\
@@ -439,7 +557,21 @@ strong_alias (__from_utf16_loop_c_single, __from_utf16_loop_single)
     inptr += 4;								\
   }
 
-#define BODY_TO_VX							\
+/* Generate loop-function with software routing.  */
+# define MIN_NEEDED_INPUT	MIN_NEEDED_TO
+# define MIN_NEEDED_OUTPUT	MIN_NEEDED_FROM
+# define MAX_NEEDED_OUTPUT	MAX_NEEDED_FROM
+# define TO_LOOP_C		__to_utf16_loop_c
+# define LOOPFCT		TO_LOOP_C
+# define LOOP_NEED_FLAGS
+# define BODY			BODY_TO_C
+# include <iconv/loop.c>
+#else
+# define TO_LOOP_C		NULL
+#endif /* HAVE_TO_C != 1  */
+
+#if HAVE_TO_VX == 1
+# define BODY_TO_VX							\
   {									\
     size_t inlen = inend - inptr;					\
     size_t outlen = outend - outptr;					\
@@ -452,7 +584,7 @@ strong_alias (__from_utf16_loop_c_single, __from_utf16_loop_single)
 		  "    vlm %%v30,%%v31,0(%[R_TMP])\n\t"			\
 		  CONVERT_32BIT_SIZE_T ([R_INLEN])			\
 		  CONVERT_32BIT_SIZE_T ([R_OUTLEN])			\
-		  /* Loop which handles UTF-16 chars			\
+		  /* Loop which handles UTF-32 chars			\
 		     ch < 0xd800 || (ch > 0xdfff && ch < 0x10000).  */	\
 		  "0:  clgijl %[R_INLEN],32,2f\n\t"			\
 		  "    clgijl %[R_OUTLEN],16,2f\n\t"			\
@@ -563,43 +695,125 @@ strong_alias (__from_utf16_loop_c_single, __from_utf16_loop_single)
     STANDARD_TO_LOOP_ERR_HANDLER (4);					\
   }
 
-/* Generate loop-function with software routing.  */
-#define MIN_NEEDED_INPUT	MIN_NEEDED_TO
-#define MIN_NEEDED_OUTPUT	MIN_NEEDED_FROM
-#define MAX_NEEDED_OUTPUT	MAX_NEEDED_FROM
-#define LOOPFCT			__to_utf16_loop_c
-#define LOOP_NEED_FLAGS
-#define BODY			BODY_TO_C
-#include <iconv/loop.c>
-
-#if defined HAVE_S390_VX_ASM_SUPPORT
 /* Generate loop-function with hardware vector instructions.  */
 # define MIN_NEEDED_INPUT	MIN_NEEDED_TO
 # define MIN_NEEDED_OUTPUT	MIN_NEEDED_FROM
 # define MAX_NEEDED_OUTPUT	MAX_NEEDED_FROM
-# define LOOPFCT		__to_utf16_loop_vx
+# define TO_LOOP_VX		__to_utf16_loop_vx
+# define LOOPFCT		TO_LOOP_VX
 # define LOOP_NEED_FLAGS
 # define BODY			BODY_TO_VX
 # include <iconv/loop.c>
+#else
+# define TO_LOOP_VX		NULL
+#endif /* HAVE_TO_VX != 1  */
+
+#if HAVE_TO_VX_CU == 1
+#define BODY_TO_VX_CU							\
+  {									\
+    register const unsigned char* pInput asm ("8") = inptr;		\
+    register size_t inlen asm ("9") = inend - inptr;			\
+    register unsigned char* pOutput asm ("10") = outptr;		\
+    register size_t outlen asm ("11") = outend - outptr;		\
+    unsigned long tmp, tmp2, tmp3;					\
+    asm volatile (".machine push\n\t"					\
+		  ".machine \"z13\"\n\t"				\
+		  ".machinemode \"zarch_nohighgprs\"\n\t"		\
+		  /* Setup to check for surrogates.  */			\
+		  "    larl %[R_TMP],9f\n\t"				\
+		  "    vlm %%v30,%%v31,0(%[R_TMP])\n\t"			\
+		  CONVERT_32BIT_SIZE_T ([R_INLEN])			\
+		  CONVERT_32BIT_SIZE_T ([R_OUTLEN])			\
+		  /* Loop which handles UTF-32 chars			\
+		     ch < 0xd800 || (ch > 0xdfff && ch < 0x10000).  */	\
+		  "0:  clgijl %[R_INLEN],32,20f\n\t"			\
+		  "    clgijl %[R_OUTLEN],16,20f\n\t"			\
+		  "1:  vlm %%v16,%%v17,0(%[R_IN])\n\t"			\
+		  "    lghi %[R_TMP2],0\n\t"				\
+		  /* Shorten to UTF-16.  */				\
+		  "    vpkf %%v18,%%v16,%%v17\n\t"			\
+		  /* Check for surrogate chars.  */			\
+		  "    vstrcfs %%v19,%%v16,%%v30,%%v31\n\t"		\
+		  "    jno 10f\n\t"					\
+		  "    vstrcfs %%v19,%%v17,%%v30,%%v31\n\t"		\
+		  "    jno 11f\n\t"					\
+		  /* Store 16 bytes to buf_out.  */			\
+		  "    vst %%v18,0(%[R_OUT])\n\t"			\
+		  "    la %[R_IN],32(%[R_IN])\n\t"			\
+		  "    aghi %[R_INLEN],-32\n\t"				\
+		  "    aghi %[R_OUTLEN],-16\n\t"			\
+		  "    la %[R_OUT],16(%[R_OUT])\n\t"			\
+		  "    clgijl %[R_INLEN],32,20f\n\t"			\
+		  "    clgijl %[R_OUTLEN],16,20f\n\t"			\
+		  "    j 1b\n\t"					\
+		  /* Setup to check for ch >= 0xd800 && ch <= 0xdfff	\
+		     and check for ch >= 0x10000. (v30, v31)  */	\
+		  "9:  .long 0xd800,0xdfff,0x10000,0x10000\n\t"		\
+		  "    .long 0xa0000000,0xc0000000, 0xa0000000,0xa0000000\n\t" \
+		  /* At least one UTF32 char is in range of surrogates.	\
+		     Store the preceding characters.  */		\
+		  "11: ahi %[R_TMP2],16\n\t"				\
+		  "10: vlgvb %[R_TMP],%%v19,7\n\t"			\
+		  "    agr %[R_TMP],%[R_TMP2]\n\t"			\
+		  "    srlg %[R_TMP3],%[R_TMP],1\n\t" /* Number of out bytes.  */ \
+		  "    ahik %[R_TMP2],%[R_TMP3],-1\n\t" /* Highest index to store.  */ \
+		  "    jl 20f\n\t"					\
+		  "    vstl %%v18,%[R_TMP2],0(%[R_OUT])\n\t"		\
+		  /* Update pointers.  */				\
+		  "    la %[R_IN],0(%[R_TMP],%[R_IN])\n\t"		\
+		  "    slgr %[R_INLEN],%[R_TMP]\n\t"			\
+		  "    la %[R_OUT],0(%[R_TMP3],%[R_OUT])\n\t"		\
+		  "    slgr %[R_OUTLEN],%[R_TMP3]\n\t"			\
+		  /* Handles UTF16 surrogates with convert instruction.  */ \
+		  "20: cu42 %[R_OUT],%[R_IN]\n\t"			\
+		  "    jo 0b\n\t" /* Try vector implemenation again.  */ \
+		  "    lochil %[R_RES],%[RES_OUT_FULL]\n\t" /* cc == 1.  */ \
+		  "    lochih %[R_RES],%[RES_IN_ILL]\n\t" /* cc == 2.  */ \
+		  ".machine pop"					\
+		  : /* outputs */ [R_IN] "+a" (pInput)			\
+		    , [R_INLEN] "+d" (inlen), [R_OUT] "+a" (pOutput)	\
+		    , [R_OUTLEN] "+d" (outlen), [R_TMP] "=a" (tmp)	\
+		    , [R_TMP2] "=d" (tmp2), [R_TMP3] "=a" (tmp3)	\
+		    , [R_RES] "+d" (result)				\
+		  : /* inputs */					\
+		    [RES_OUT_FULL] "i" (__GCONV_FULL_OUTPUT)		\
+		    , [RES_IN_ILL] "i" (__GCONV_ILLEGAL_INPUT)		\
+		  : /* clobber list */ "memory", "cc"			\
+		    ASM_CLOBBER_VR ("v16") ASM_CLOBBER_VR ("v17")	\
+		    ASM_CLOBBER_VR ("v18") ASM_CLOBBER_VR ("v19")	\
+		    ASM_CLOBBER_VR ("v30") ASM_CLOBBER_VR ("v31")	\
+		  );							\
+    inptr = pInput;							\
+    outptr = pOutput;							\
+									\
+    if (__glibc_likely (inlen == 0)					\
+	|| result == __GCONV_FULL_OUTPUT)				\
+      break;								\
+    if (inlen < 4)							\
+      {									\
+	result = __GCONV_INCOMPLETE_INPUT;				\
+	break;								\
+      }									\
+									\
+    STANDARD_TO_LOOP_ERR_HANDLER (4);					\
+  }
+
+/* Generate loop-function with hardware vector and utf-convert instructions.  */
+# define MIN_NEEDED_INPUT	MIN_NEEDED_TO
+# define MIN_NEEDED_OUTPUT	MIN_NEEDED_FROM
+# define MAX_NEEDED_OUTPUT	MAX_NEEDED_FROM
+# define TO_LOOP_VX_CU		__to_utf16_loop_vx_cu
+# define LOOPFCT		TO_LOOP_VX_CU
+# define LOOP_NEED_FLAGS
+# define BODY			BODY_TO_VX_CU
+# include <iconv/loop.c>
+#else
+# define TO_LOOP_VX_CU		NULL
+#endif /* HAVE_TO_VX_CU != 1  */
+
+/* This file also exists in sysdeps/s390/multiarch/ which
+   generates ifunc resolvers for FROM/TO_LOOP functions
+   and includes iconv/skeleton.c afterwards.  */
+#if ! defined USE_MULTIARCH
+# include <iconv/skeleton.c>
 #endif
-
-/* Generate ifunc'ed loop function.  */
-__typeof(__to_utf16_loop_c)
-__attribute__ ((ifunc ("__to_utf16_loop_resolver")))
-__to_utf16_loop;
-
-static void *
-__to_utf16_loop_resolver (unsigned long int dl_hwcap)
-{
-#if defined HAVE_S390_VX_ASM_SUPPORT
-  if (dl_hwcap & HWCAP_S390_VX)
-    return __to_utf16_loop_vx;
-  else
-#endif
-    return __to_utf16_loop_c;
-}
-
-strong_alias (__to_utf16_loop_c_single, __to_utf16_loop_single)
-
-
-#include <iconv/skeleton.c>

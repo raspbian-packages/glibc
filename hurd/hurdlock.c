@@ -20,25 +20,6 @@
 #include <time.h>
 #include <errno.h>
 
-int lll_xwait (void *ptr, int lo, int hi, int flags)
-{
-  return (__gsync_wait (__mach_task_self (),
-    (vm_offset_t)ptr, lo, hi, 0, flags | GSYNC_QUAD));
-}
-
-int lll_timed_wait (void *ptr, int val, int mlsec, int flags)
-{
-  return (__gsync_wait (__mach_task_self (),
-    (vm_offset_t)ptr, val, 0, mlsec, flags | GSYNC_TIMED));
-}
-
-int lll_timed_xwait (void *ptr, int lo,
-  int hi, int mlsec, int flags)
-{
-  return (__gsync_wait (__mach_task_self (), (vm_offset_t)ptr,
-    lo, hi, mlsec, flags | GSYNC_TIMED | GSYNC_QUAD));
-}
-
 /* Convert an absolute timeout in nanoseconds to a relative
  * timeout in milliseconds. */
 static inline int __attribute__ ((gnu_inline))
@@ -96,18 +77,6 @@ int __lll_abstimed_lock (void *ptr,
     }
 }
 
-void lll_set_wake (void *ptr, int val, int flags)
-{
-  __gsync_wake (__mach_task_self (),
-    (vm_offset_t)ptr, val, flags | GSYNC_MUTATE);
-}
-
-void lll_requeue (void *src, void *dst, int wake_one, int flags)
-{
-  __gsync_requeue (__mach_task_self (), (vm_offset_t)src,
-    (vm_offset_t)dst, (boolean_t)wake_one, flags);
-}
-
 /* Robust locks. */
 
 extern int __getpid (void) __attribute__ ((const));
@@ -129,7 +98,7 @@ static inline int valid_pid (int pid)
  * maximum blocking time is determined by this constant. */
 #define MAX_WAIT_TIME   1500
 
-int lll_robust_lock (void *ptr, int flags)
+int __lll_robust_lock (void *ptr, int flags)
 {
   int *iptr = (int *)ptr;
   int id = __getpid ();
@@ -212,7 +181,7 @@ int __lll_robust_abstimed_lock (void *ptr,
     }
 }
 
-int lll_robust_trylock (void *ptr)
+int __lll_robust_trylock (void *ptr)
 {
   int *iptr = (int *)ptr;
   int id = __getpid ();
@@ -230,7 +199,7 @@ int lll_robust_trylock (void *ptr)
   return (EBUSY);
 }
 
-void lll_robust_unlock (void *ptr, int flags)
+void __lll_robust_unlock (void *ptr, int flags)
 {
   unsigned int val = atomic_load_relaxed((unsigned int *)ptr);
   while (1)

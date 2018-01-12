@@ -29,6 +29,7 @@
 #include <sys/stat.h>
 #include <sys/sysinfo.h>
 #include <sys/types.h>
+#include <sys/uio.h>
 #include <regex.h>
 
 #define NEED_SPEC_ARRAY 0
@@ -93,7 +94,7 @@ __sysconf (int name)
 #endif
 
     case _SC_TZNAME_MAX:
-      return MAX (__tzname_max (), _POSIX_TZNAME_MAX);
+      return -1;
 
     case _SC_JOB_CONTROL:
 #if CONF_IS_DEFINED_SET (_POSIX_JOB_CONTROL)

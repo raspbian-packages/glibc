@@ -45,6 +45,12 @@ modules-names += test-double-libmvec-alias-mod \
 		 test-float-libmvec-alias-mod \
 		 test-float-libmvec-alias-avx-mod \
 		 test-float-libmvec-alias-avx2-mod
+modules-names-tests += test-double-libmvec-alias-mod \
+		 test-double-libmvec-alias-avx-mod \
+		 test-double-libmvec-alias-avx2-mod \
+		 test-float-libmvec-alias-mod \
+		 test-float-libmvec-alias-avx-mod \
+		 test-float-libmvec-alias-avx2-mod
 extra-test-objs += test-double-libmvec-sincos-avx-main.o \
 		   test-double-libmvec-sincos-avx2-main.o \
 		   test-double-libmvec-sincos-main.o \
@@ -146,6 +152,8 @@ tests += test-double-libmvec-alias-avx512 \
 	 test-float-libmvec-sincosf-avx512
 modules-names += test-double-libmvec-alias-avx512-mod \
 		 test-float-libmvec-alias-avx512-mod
+modules-names-tests += test-double-libmvec-alias-avx512-mod \
+		 test-float-libmvec-alias-avx512-mod
 extra-test-objs += test-double-libmvec-sincos-avx512-main.o \
 		   test-float-libmvec-sincosf-avx512-main.o
 test-double-libmvec-alias-avx512-mod.so-no-z-defs = yes
@@ -178,6 +186,15 @@ $(objpfx)test-float-libmvec-sincosf-avx512: \
   $(objpfx)test-float-libmvec-sincosf-avx512-main.o $(libmvec)
 endif
 
+double-vlen2-funcs = cos exp log pow sin sincos
+double-vlen4-funcs = cos exp log pow sin sincos
+double-vlen4-avx2-funcs = cos exp log pow sin sincos
+double-vlen8-funcs = cos exp log pow sin sincos
+float-vlen4-funcs = cos exp log pow sin sincos
+float-vlen8-funcs = cos exp log pow sin sincos
+float-vlen8-avx2-funcs = cos exp log pow sin sincos
+float-vlen16-funcs = cos exp log pow sin sincos
+
 double-vlen4-arch-ext-cflags = -mavx
 double-vlen4-arch-ext2-cflags = -mavx2
 double-vlen8-arch-ext-cflags = -mavx512f
@@ -199,10 +216,8 @@ CFLAGS-test-float-libmvec-alias-avx-mod.c = $(double-vlen4-arch-ext-cflags) $(li
 CFLAGS-test-float-libmvec-alias-avx2-mod.c = $(double-vlen4-arch-ext2-cflags) $(libmvec-alias-cflags) -DREQUIRE_AVX2
 CFLAGS-test-float-libmvec-alias-avx512-mod.c = $(double-vlen8-arch-ext-cflags) $(libmvec-alias-cflags) -DREQUIRE_AVX512F
 
-CFLAGS-test-double-vlen4-avx2.c = $(libm-test-vec-cflags)
 CFLAGS-test-double-vlen4-avx2-wrappers.c = $(double-vlen4-arch-ext2-cflags)
 
-CFLAGS-test-float-vlen8-avx2.c = $(libm-test-vec-cflags)
 CFLAGS-test-float-vlen8-avx2-wrappers.c = $(float-vlen8-arch-ext2-cflags)
 
 CFLAGS-test-double-libmvec-sincos-main.c = $(libmvec-sincos-cflags)

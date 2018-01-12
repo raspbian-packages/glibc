@@ -96,8 +96,9 @@ __pthread_rwlock_timedwrlock_internal (struct __pthread_rwlock *rwlock,
 }
 
 int
-pthread_rwlock_timedwrlock (struct __pthread_rwlock *rwlock,
+__pthread_rwlock_timedwrlock (struct __pthread_rwlock *rwlock,
 			    const struct timespec *abstime)
 {
   return __pthread_rwlock_timedwrlock_internal (rwlock, abstime);
 }
+weak_alias (__pthread_rwlock_timedwrlock, pthread_rwlock_timedwrlock)

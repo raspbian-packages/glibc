@@ -19,14 +19,12 @@
 
 #include <pthread.h>
 #include <stdlib.h>
-#include <hurd/ihash.h>
 
 #include <pt-internal.h>
 
 void
 __pthread_destroy_specific (struct __pthread *thread)
 {
-  error_t err;
   int i;
   int seen_one;
 
@@ -43,18 +41,17 @@ __pthread_destroy_specific (struct __pthread *thread)
 
       __pthread_mutex_lock (&__pthread_key_lock);
 
-      for (i = 0; i < __pthread_key_count; i ++)
+      for (i = 0; i < __pthread_key_count && i < thread->thread_specifics_size; i ++)
 	{
 	  void *value;
 
 	  if (__pthread_key_destructors[i] == PTHREAD_KEY_INVALID)
 	    continue;
 
-	  value = hurd_ihash_find (thread->thread_specifics, i);
+	  value = thread->thread_specifics[i];
 	  if (value)
 	    {
-	      err = hurd_ihash_remove (thread->thread_specifics, i);
-	      assert (err == 1);
+	      thread->thread_specifics[i] = 0;
 
 	      if (__pthread_key_destructors[i])
 		{
@@ -74,6 +71,7 @@ __pthread_destroy_specific (struct __pthread *thread)
       sched_yield ();
     }
 
-  hurd_ihash_free (thread->thread_specifics);
+  free (thread->thread_specifics);
   thread->thread_specifics = 0;
+  thread->thread_specifics_size = 0;
 }

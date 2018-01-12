@@ -23,13 +23,15 @@ subdir	:= posix
 include ../Makeconfig
 
 headers	:= sys/utsname.h sys/times.h sys/wait.h sys/types.h unistd.h	      \
-	   glob.h regex.h wordexp.h fnmatch.h getopt.h			      \
+	   glob.h regex.h wordexp.h fnmatch.h 				      \
+	   getopt.h bits/getopt_core.h bits/getopt_ext.h bits/getopt_posix.h  \
 	   bits/types.h bits/typesizes.h bits/pthreadtypes.h		      \
+	   bits/pthreadtypes-arch.h bits/thread-shared-types.h		      \
 	   bits/posix1_lim.h bits/posix2_lim.h bits/posix_opt.h		      \
 	   bits/local_lim.h tar.h bits/utsname.h bits/confname.h	      \
 	   bits/waitflags.h bits/waitstatus.h sys/unistd.h sched.h	      \
-	   bits/sched.h re_comp.h wait.h bits/environments.h cpio.h	      \
-	   spawn.h bits/unistd.h
+	   bits/sched.h bits/cpu-set.h re_comp.h wait.h bits/environments.h   \
+	   cpio.h spawn.h bits/unistd.h
 
 routines :=								      \
 	uname								      \
@@ -45,7 +47,7 @@ routines :=								      \
 	pathconf sysconf fpathconf					      \
 	glob glob64 globfree globfree64 glob_pattern_p fnmatch regex	      \
 	confstr								      \
-	getopt getopt1 getopt_init					      \
+	getopt getopt1 							      \
 	sched_setp sched_getp sched_sets sched_gets sched_yield sched_primax  \
 	sched_primin sched_rr_gi sched_getaffinity sched_setaffinity	      \
 	getaddrinfo gai_strerror wordexp				      \
@@ -62,41 +64,45 @@ routines :=								      \
 	get_child_max sched_cpucount sched_cpualloc sched_cpufree
 
 aux		:= init-posix environ
-tests		:= tstgetopt testfnm runtests runptests	     \
+tests		:= test-errno tstgetopt testfnm runtests runptests \
 		   tst-preadwrite tst-preadwrite64 test-vfork regexbug1 \
 		   tst-mmap tst-mmap-offset tst-getaddrinfo tst-truncate \
 		   tst-truncate64 tst-fork tst-fnmatch tst-regexloc tst-dir \
 		   tst-chmod bug-regex1 bug-regex2 bug-regex3 bug-regex4 \
-		   tst-gnuglob tst-regex bug-regex5 bug-regex6 bug-regex7 \
+		   tst-gnuglob tst-regex bug-regex6 bug-regex7 \
 		   bug-regex8 bug-regex9 bug-regex10 bug-regex11 bug-regex12 \
 		   bug-regex13 bug-regex14 bug-regex15 bug-regex16 \
-		   bug-regex17 bug-regex18 bug-regex19 bug-regex20 \
+		   bug-regex17 bug-regex18 bug-regex19 \
 		   bug-regex21 bug-regex22 bug-regex23 bug-regex24 \
 		   bug-regex25 bug-regex26 bug-regex27 bug-regex28 \
 		   bug-regex29 bug-regex30 bug-regex31 bug-regex32 \
-		   bug-regex33 tst-nice tst-nanosleep tst-regex2 \
+		   tst-nice tst-nanosleep tst-regex2 \
 		   transbug tst-rxspencer tst-pcre tst-boost \
 		   bug-ga1 tst-vfork1 tst-vfork2 tst-vfork3 tst-waitid \
 		   tst-getaddrinfo2 bug-glob1 bug-glob2 bug-glob3 tst-sysconf \
 		   tst-execvp1 tst-execvp2 tst-execlp1 tst-execlp2 \
 		   tst-execv1 tst-execv2 tst-execl1 tst-execl2 \
 		   tst-execve1 tst-execve2 tst-execle1 tst-execle2 \
-		   tst-execvp3 tst-execvp4 tst-rfc3484 tst-rfc3484-2 \
+		   tst-execvp3 tst-execvp4 \
 		   tst-execvpe1 tst-execvpe2 tst-execvpe3 tst-execvpe4 \
 		   tst-execvpe5 tst-execvpe6 \
-		   tst-rfc3484-3 \
 		   tst-getaddrinfo3 tst-fnmatch2 tst-cpucount tst-cpuset \
 		   bug-getopt1 bug-getopt2 bug-getopt3 bug-getopt4 \
 		   bug-getopt5 tst-getopt_long1 bug-regex34 bug-regex35 \
 		   tst-pathconf tst-getaddrinfo4 tst-rxspencer-no-utf8 \
 		   tst-fnmatch3 bug-regex36 tst-getaddrinfo5 \
-		   tst-posix_spawn-fd \
+		   tst-posix_spawn-fd tst-posix_spawn-setsid \
 		   tst-posix_fadvise tst-posix_fadvise64 \
-		   tst-glob-tilde
+		   tst-sysconf-empty-chroot tst-glob-tilde
+tests-internal	:= bug-regex5 bug-regex20 bug-regex33 \
+		   tst-rfc3484 tst-rfc3484-2 tst-rfc3484-3
 xtests		:= bug-ga2
 ifeq (yes,$(build-shared))
 test-srcs	:= globtest
 tests           += wordexp-test tst-exec tst-spawn tst-spawn2 tst-spawn3
+endif
+ifeq (yesyes,$(build-shared)$(have-thread-library))
+tests		+= tst-getopt-cancel
 endif
 tests-static	= tst-exec-static tst-spawn-static
 tests		+= $(tests-static)
@@ -217,7 +223,6 @@ CFLAGS-spawnp.c = -fexceptions
 CFLAGS-spawnp.os = -fomit-frame-pointer
 CFLAGS-spawni.c = -fexceptions
 CFLAGS-spawni.os = -fomit-frame-pointer
-CFLAGS-pause.c = -fexceptions
 CFLAGS-glob.c = $(uses-callbacks) -fexceptions
 CFLAGS-glob64.c = $(uses-callbacks) -fexceptions
 CFLAGS-getconf.c = -DGETCONF_DIR='"$(libexecdir)/getconf"'
@@ -228,6 +233,7 @@ CFLAGS-execle.os = -fomit-frame-pointer
 CFLAGS-execl.os = -fomit-frame-pointer
 CFLAGS-execvp.os = -fomit-frame-pointer
 CFLAGS-execlp.os = -fomit-frame-pointer
+CFLAGS-nanosleep.c = -fexceptions -fasynchronous-unwind-tables
 
 tstgetopt-ARGS = -a -b -cfoobar --required foobar --optional=bazbug \
 		--none random --col --color --colour
@@ -255,6 +261,8 @@ testcases.h: TESTS TESTS2C.sed
 ptestcases.h: PTESTS PTESTS2C.sed
 	LC_ALL=C sed -f PTESTS2C.sed < $< > $@T
 	mv -f $@T $@
+
+$(objpfx)tst-getopt-cancel: $(shared-thread-library)
 
 test-xfail-annexc = yes
 $(objpfx)annexc.out: $(objpfx)annexc

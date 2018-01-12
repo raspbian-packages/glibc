@@ -23,6 +23,7 @@
 
 
 #define STRSTR simple_strstr
+#define libc_hidden_builtin_def(arg) /* nothing */
 #include "strstr.c"
 
 
@@ -208,4 +209,4 @@ test_main (void)
   return ret;
 }
 
-#include "../test-skeleton.c"
+#include <support/test-driver.c>

@@ -151,10 +151,10 @@ ENTRY(__clone)
 	copy	%r4, %r19
 #endif
 	copy	%r28, %r26
-	ble	0x100(%sr2, %r0)
+	ble     0x100(%sr2, %r0)
 	ldi	__NR_exit, %r20
 
-	/* We should not return from _exit.
+	/* We should not return from exit.
            We do not restore r4, or the stack state.  */
 	iitlbp	%r0, (%sr0, %r0)
 

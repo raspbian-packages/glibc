@@ -19,10 +19,19 @@
 #include <sysdep.h>
 
 #ifdef USE_AS_STRCHRNUL
-# define FUNC_NAME __strchrnul
+# ifndef STRCHRNUL
+#   define FUNC_NAME __strchrnul
+# else
+#   define FUNC_NAME STRCHRNUL
+# endif
 #else
-# define FUNC_NAME strchr
-#endif
+# ifndef STRCHR
+#  define FUNC_NAME strchr
+# else
+#  define FUNC_NAME STRCHR
+# endif
+#endif  /* !USE_AS_STRCHRNUL  */
+
 /* int [r3] strchr (char *s [r3], int c [r4])  */
 /* TODO: change these to the actual instructions when the minimum required
    binutils allows it.  */
@@ -35,7 +44,7 @@
 /* TODO: change this to .machine power8 when the minimum required binutils
    allows it.  */
 	.machine  power7
-ENTRY (FUNC_NAME)
+ENTRY_TOCLESS (FUNC_NAME)
 	CALL_MCOUNT 2
 	dcbt	0,r3
 	clrrdi	r8,r3,3	      /* Align the address to doubleword boundary.  */

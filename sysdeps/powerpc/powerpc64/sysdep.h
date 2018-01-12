@@ -21,66 +21,40 @@
 #ifdef __ASSEMBLER__
 
 /* Stack frame offsets.  */
+#define FRAME_BACKCHAIN		0
+#define FRAME_CR_SAVE		8
+#define FRAME_LR_SAVE		16
 #if _CALL_ELF != 2
 #define FRAME_MIN_SIZE		112
 #define FRAME_MIN_SIZE_PARM	112
-#define FRAME_BACKCHAIN		0
-#define FRAME_CR_SAVE		8
-#define FRAME_LR_SAVE		16
 #define FRAME_TOC_SAVE		40
 #define FRAME_PARM_SAVE		48
-#define FRAME_PARM1_SAVE	48
-#define FRAME_PARM2_SAVE	56
-#define FRAME_PARM3_SAVE	64
-#define FRAME_PARM4_SAVE	72
-#define FRAME_PARM5_SAVE	80
-#define FRAME_PARM6_SAVE	88
-#define FRAME_PARM7_SAVE	96
-#define FRAME_PARM8_SAVE	104
-#define FRAME_PARM9_SAVE	112
 #else
 #define FRAME_MIN_SIZE		32
 #define FRAME_MIN_SIZE_PARM	96
-#define FRAME_BACKCHAIN		0
-#define FRAME_CR_SAVE		8
-#define FRAME_LR_SAVE		16
 #define FRAME_TOC_SAVE		24
 #define FRAME_PARM_SAVE		32
-#define FRAME_PARM1_SAVE	32
-#define FRAME_PARM2_SAVE	40
-#define FRAME_PARM3_SAVE	48
-#define FRAME_PARM4_SAVE	56
-#define FRAME_PARM5_SAVE	64
-#define FRAME_PARM6_SAVE	72
-#define FRAME_PARM7_SAVE	80
-#define FRAME_PARM8_SAVE	88
-#define FRAME_PARM9_SAVE	96
 #endif
 
 /* Support macros for CALL_MCOUNT.  */
-#if _CALL_ELF == 2
-#define call_mcount_parm_offset (-64)
-#else
-#define call_mcount_parm_offset FRAME_PARM_SAVE
-#endif
 	.macro SAVE_ARG NARG
 	.if \NARG
 	SAVE_ARG \NARG-1
-	std	2+\NARG,call_mcount_parm_offset-8+8*(\NARG)(1)
+	std	2+\NARG,-FRAME_MIN_SIZE_PARM+FRAME_PARM_SAVE-8+8*(\NARG)(1)
 	.endif
 	.endm
 
 	.macro REST_ARG NARG
 	.if \NARG
 	REST_ARG \NARG-1
-	ld	2+\NARG,FRAME_MIN_SIZE_PARM+call_mcount_parm_offset-8+8*(\NARG)(1)
+	ld	2+\NARG,FRAME_PARM_SAVE-8+8*(\NARG)(1)
 	.endif
 	.endm
 
 	.macro CFI_SAVE_ARG NARG
 	.if \NARG
 	CFI_SAVE_ARG \NARG-1
-	cfi_offset(2+\NARG,call_mcount_parm_offset-8+8*(\NARG))
+	cfi_offset(2+\NARG,-FRAME_MIN_SIZE_PARM+FRAME_PARM_SAVE-8+8*(\NARG))
 	.endif
 	.endm
 
@@ -132,25 +106,25 @@
 # define OPD_ENT(name)	.quad BODY_LABEL (name), .TOC.@tocbase, 0
 #endif
 
-#define ENTRY_1(name)	\
+#define ENTRY_1(name)				\
 	.type BODY_LABEL(name),@function;	\
 	.globl name;				\
 	.section ".opd","aw";			\
-	.align 3;				\
-name##: OPD_ENT (name);				\
-	.previous;
+	.p2align 3;FUNC_LABEL(name):		\
+	OPD_ENT (name);				\
+	.previous
 
-#define DOT_LABEL(X) X
+#define FUNC_LABEL(X) X
 #define BODY_LABEL(X) .LY##X
-#define ENTRY_2(name)	\
+#define ENTRY_2(name)				\
 	.type name,@function;			\
 	ENTRY_1(name)
-#define END_2(name)	\
+#define END_2(name)				\
 	.size name,.-BODY_LABEL(name);		\
-	.size BODY_LABEL(name),.-BODY_LABEL(name);
+	.size BODY_LABEL(name),.-BODY_LABEL(name)
 #define LOCALENTRY(name)
 
-#else /* _CALL_ELF */
+#else /* _CALL_ELF == 2 */
 
 /* Macro to prepare for calling via a function pointer.  */
 	.macro PPC64_LOAD_FUNCPTR PTR
@@ -158,47 +132,64 @@ name##: OPD_ENT (name);				\
 	mtctr   r12
 	.endm
 
-#define DOT_LABEL(X) X
+#define FUNC_LABEL(X) X
 #define BODY_LABEL(X) X
-#define ENTRY_2(name)	\
+#define ENTRY_2(name)				\
 	.globl name;				\
-	.type name,@function;
-#define END_2(name)	\
-	.size name,.-name;
-#define LOCALENTRY(name)	\
-1:      addis	r2,r12,.TOC.-1b@ha; \
-        addi	r2,r2,.TOC.-1b@l; \
-	.localentry name,.-name;
+	.type name,@function
+#define END_2(name)				\
+	.size name,.-name
+#define LOCALENTRY(name)			\
+1:      addis	r2,r12,.TOC.-1b@ha;		\
+        addi	r2,r2,.TOC.-1b@l;		\
+	.localentry name,.-name
 
 #endif /* _CALL_ELF */
 
-#define ENTRY(name)	\
-	.section	".text";		\
-	ENTRY_2(name)				\
-	.align ALIGNARG(2);			\
-BODY_LABEL(name):				\
+	.macro NOPS NARG
+	.if \NARG
+	NOPS \NARG-1
+	nop
+	.endif
+	.endm
+
+	.macro ENTRY_3 name, alignp2=2, nopwords=0
+	.text
+	ENTRY_2(\name)
+	.p2align \alignp2
+	NOPS \nopwords
+BODY_LABEL(\name):
+	.endm
+
+/* Use ENTRY_TOCLESS for functions that make no use of r2 and
+   guarantee r2 is unchanged on exit.  Any function that has @toc or
+   @got relocs uses r2.  Functions that call other functions via the
+   PLT use r2.  Use ENTRY for functions that may use or change r2.
+   The first argument is the function name.
+   The optional second argument specifies alignment of the function's
+   code, as the logarithm base two of the byte alignment.  For
+   example, a value of four aligns to a sixteen byte boundary.
+   The optional third argument specifies the number of NOPs to emit
+   before the start of the function's code.   */
+#ifndef PROF
+#define ENTRY_TOCLESS(name, ...)		\
+	ENTRY_3 name, ## __VA_ARGS__;		\
+	cfi_startproc
+
+#define ENTRY(name, ...)			\
+	ENTRY_TOCLESS(name, ## __VA_ARGS__);	\
+	LOCALENTRY(name)
+#else
+/* The call to _mcount is potentially via the plt, so profiling code
+   is never free of an r2 use.  */
+#define ENTRY_TOCLESS(name, ...)		\
+	ENTRY_3 name, ## __VA_ARGS__;		\
 	cfi_startproc;				\
 	LOCALENTRY(name)
 
-#define EALIGN_W_0  /* No words to insert.  */
-#define EALIGN_W_1  nop
-#define EALIGN_W_2  nop;nop
-#define EALIGN_W_3  nop;nop;nop
-#define EALIGN_W_4  EALIGN_W_3;nop
-#define EALIGN_W_5  EALIGN_W_4;nop
-#define EALIGN_W_6  EALIGN_W_5;nop
-#define EALIGN_W_7  EALIGN_W_6;nop
-
-/* EALIGN is like ENTRY, but does alignment to 'words'*4 bytes
-   past a 2^alignt boundary.  */
-#define EALIGN(name, alignt, words) \
-	.section	".text";		\
-	ENTRY_2(name)				\
-	.align ALIGNARG(alignt);		\
-	EALIGN_W_##words;			\
-BODY_LABEL(name):				\
-	cfi_startproc;				\
-	LOCALENTRY(name)
+#define ENTRY(name, ...)			\
+	ENTRY_TOCLESS(name, ## __VA_ARGS__)
+#endif
 
 /* Local labels stripped out by the linker.  */
 #undef L
@@ -246,7 +237,7 @@ LT_LABEL(name): ; \
 LT_LABELSUFFIX(name,_name_start): ;\
 	.ascii	stringify(name) ; \
 LT_LABELSUFFIX(name,_name_end): ; \
-	.align	2 ;
+	.p2align 2
 
 #define TRACEBACK_MASK(name,mask) \
 LT_LABEL(name): ; \
@@ -257,19 +248,19 @@ LT_LABEL(name): ; \
 LT_LABELSUFFIX(name,_name_start): ;\
 	.ascii	stringify(name) ; \
 LT_LABELSUFFIX(name,_name_end): ; \
-	.align	2 ;
+	.p2align 2
 
 /* END generates Traceback tables */
 #undef	END
 #define END(name) \
   cfi_endproc;			\
-  TRACEBACK(name)		\
+  TRACEBACK(name);		\
   END_2(name)
 
 /* This form supports more informative traceback tables */
 #define END_GEN_TB(name,mask)	\
   cfi_endproc;			\
-  TRACEBACK_MASK(name,mask)	\
+  TRACEBACK_MASK(name,mask);	\
   END_2(name)
 
 #if !IS_IN(rtld) && defined (ENABLE_LOCK_ELISION)
@@ -281,7 +272,7 @@ LT_LABELSUFFIX(name,_name_end): ; \
     beq	     1f;		\
     li       11,_ABORT_SYSCALL;	\
     tabort.  11;		\
-    .align 4;                   \
+    .p2align 4;			\
 1:
 #else
 # define ABORT_TRANSACTION
@@ -294,12 +285,12 @@ LT_LABELSUFFIX(name,_name_end): ; \
 
 /* ppc64 is always PIC */
 #undef JUMPTARGET
-#define JUMPTARGET(name) DOT_LABEL(name)
+#define JUMPTARGET(name) FUNC_LABEL(name)
 
 #define PSEUDO(name, syscall_name, args) \
-  .section ".text";	\
-  ENTRY (name) \
-  DO_CALL (SYS_ify (syscall_name));
+  .section ".text";				\
+  ENTRY (name);					\
+  DO_CALL (SYS_ify (syscall_name))
 
 #ifdef SHARED
 #define TAIL_CALL_SYSCALL_ERROR \
@@ -340,9 +331,9 @@ LT_LABELSUFFIX(name,_name_end): ; \
   END (name)
 
 #define PSEUDO_NOERRNO(name, syscall_name, args) \
-  .section ".text";	\
-  ENTRY (name) \
-  DO_CALL (SYS_ify (syscall_name));
+  .section ".text";					\
+  ENTRY (name);						\
+  DO_CALL (SYS_ify (syscall_name))
 
 #define PSEUDO_RET_NOERRNO \
     blr
@@ -354,9 +345,9 @@ LT_LABELSUFFIX(name,_name_end): ; \
   END (name)
 
 #define PSEUDO_ERRVAL(name, syscall_name, args) \
-  .section ".text";	\
-  ENTRY (name) \
-  DO_CALL (SYS_ify (syscall_name));
+  .section ".text";					\
+  ENTRY (name);						\
+  DO_CALL (SYS_ify (syscall_name))
 
 #define PSEUDO_RET_ERRVAL \
     blr
@@ -372,53 +363,53 @@ LT_LABELSUFFIX(name,_name_end): ; \
 #if _CALL_ELF != 2
 
 #define PPC64_LOAD_FUNCPTR(ptr) \
-	"ld 	12,0(" #ptr ");\n"					\
-	"ld	2,8(" #ptr ");\n"					\
-	"mtctr	12;\n"							\
-	"ld	11,16(" #ptr ");"
+	"ld 	12,0(" #ptr ")\n"					\
+	"ld	2,8(" #ptr ")\n"					\
+	"mtctr	12\n"							\
+	"ld	11,16(" #ptr ")"
 
 #ifdef USE_PPC64_OVERLAPPING_OPD
-# define OPD_ENT(name)	".quad " BODY_PREFIX #name ", .TOC.@tocbase;"
+# define OPD_ENT(name)	".quad " BODY_PREFIX #name ", .TOC.@tocbase"
 #else
-# define OPD_ENT(name)	".quad " BODY_PREFIX #name ", .TOC.@tocbase, 0;"
+# define OPD_ENT(name)	".quad " BODY_PREFIX #name ", .TOC.@tocbase, 0"
 #endif
 
 #define ENTRY_1(name)	\
-	".type   " BODY_PREFIX #name ",@function;\n"			\
-	".globl " #name ";\n"						\
-	".pushsection \".opd\",\"aw\";\n"				\
-	".align  3;\n"							\
+	".type   " BODY_PREFIX #name ",@function\n"			\
+	".globl " #name "\n"						\
+	".pushsection \".opd\",\"aw\"\n"				\
+	".p2align 3\n"							\
 #name ":\n"								\
 	OPD_ENT (name) "\n"						\
-	".popsection;"
+	".popsection"
 
 #define DOT_PREFIX ""
 #define BODY_PREFIX ".LY"
 #define ENTRY_2(name)	\
-	".type " #name ",@function;\n"					\
+	".type " #name ",@function\n"					\
 	ENTRY_1(name)
 #define END_2(name)	\
-	".size " #name ",.-" BODY_PREFIX #name ";\n"			\
-	".size " BODY_PREFIX #name ",.-" BODY_PREFIX #name ";"
+	".size " #name ",.-" BODY_PREFIX #name "\n"			\
+	".size " BODY_PREFIX #name ",.-" BODY_PREFIX #name
 #define LOCALENTRY(name)
 
 #else /* _CALL_ELF */
 
 #define PPC64_LOAD_FUNCPTR(ptr) \
-	"mr	12," #ptr ";\n"						\
-	"mtctr 	12;"
+	"mr	12," #ptr "\n"						\
+	"mtctr 	12"
 
 #define DOT_PREFIX ""
 #define BODY_PREFIX ""
 #define ENTRY_2(name)	\
-	".type " #name ",@function;\n"					\
-	".globl " #name ";"
+	".type " #name ",@function\n"					\
+	".globl " #name
 #define END_2(name)	\
-	".size " #name ",.-" #name ";"
+	".size " #name ",.-" #name
 #define LOCALENTRY(name)	\
-	"1: addis 2,12,.TOC.-1b@ha;\n"					\
-	"addi	2,2,.TOC.-1b@l;\n"					\
-	".localentry " #name ",.-" #name ";"
+	"1: addis 2,12,.TOC.-1b@ha\n"					\
+	"addi	2,2,.TOC.-1b@l\n"					\
+	".localentry " #name ",.-" #name
 
 #endif /* _CALL_ELF */
 

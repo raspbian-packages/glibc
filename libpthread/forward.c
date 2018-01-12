@@ -288,6 +288,7 @@ __register_atfork (
 
   return 0;
 }
+libc_hidden_def (__register_atfork)
 
 void
 __unregister_atfork (void *dso_handle)

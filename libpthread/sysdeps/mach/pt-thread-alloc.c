@@ -56,7 +56,7 @@ create_wakeupmsg (struct __pthread *thread)
     }
 
   /* No need to queue more than one wakeup message on this port.  */
-  mach_port_set_qlimit (__mach_task_self (),
+  __mach_port_set_qlimit (__mach_task_self (),
 			thread->wakeupmsg.msgh_remote_port, 1);
 
   return 0;

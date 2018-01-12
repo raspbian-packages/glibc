@@ -29,10 +29,14 @@
 
 /* int [r3] strlen (char *s [r3])  */
 
+#ifndef STRLEN
+# define STRLEN strlen
+#endif
+
 /* TODO: change this to .machine power8 when the minimum required binutils
    allows it.  */
 	.machine  power7
-EALIGN (strlen, 4, 0)
+ENTRY_TOCLESS (STRLEN, 4)
 	CALL_MCOUNT 1
 	dcbt	0,r3
 	clrrdi	r4,r3,3	      /* Align the address to doubleword boundary.  */
@@ -109,17 +113,6 @@ L(align64):
 	   required to check alignment for the vectorized loop.  This is a
 	   necessary tradeoff we are willing to take in order to speed up the
 	   calculation for larger strings.  */
-	andi.	r10,r9,63
-	beq	cr0,L(preloop)
-	ld	r6,8(r4)
-	ldu	r5,16(r4)
-	cmpb	r10,r6,r0
-	cmpb	r11,r5,r0
-	or	r5,r10,r11
-	cmpdi	cr7,r5,0
-	addi	r9,r9,16
-	bne	cr7,L(dword_zero)
-
 	andi.	r10,r9,63
 	beq	cr0,L(preloop)
 	ld	r6,8(r4)
@@ -293,5 +286,5 @@ L(vmx_zero):
 	add	r3,r5,r0      /* Compute final length.  */
 	blr
 
-END (strlen)
+END (STRLEN)
 libc_hidden_builtin_def (strlen)

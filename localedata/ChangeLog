@@ -1,3 +1,757 @@
+2017-07-27  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21848]
+	* locales/mai_NP (LC_IDENTIFICATION): Fix country name in title.
+
+2017-07-27  Ihar Hrachyshka <ihrachys@redhat.com>
+
+	* locales/be_BY@latin (LC_ADDRESS): Improve country_name.
+
+2017-07-27  Mike FABIAN  <mfabian@redhat.com>
+
+	* locales/az_IR (LC_MESSAGES): Improve yesexpr and noexpr.
+	* locales/az_IR (LC_ADDRESS): Fix typo in comment  and
+	use the individual iso-639-3 code for South Azerbaijani
+	"azb" in lang_term.
+	* locales/az_IR (LC_NAME): Improve readability of name_fmt in source.
+
+2017-07-27  Mousa Moradi <mousamk@gmail.com>
+
+	[BZ #14172]
+	* locales/az_IR: New file.
+	* SUPPORTED: Add az_IR/UTF-8.
+
+2017-07-27  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21839]
+	* locales/ta_LK (LC_MONETARY): copy "si_LK"
+
+2017-07-27  Mike FABIAN  <mfabian@redhat.com>
+
+	* locales/nds_NL (LC_ADDRESS): Fix country name.
+
+2017-07-27  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21844]
+	* locales/mai_IN (LC_TIME): Fix Latin characters and month sequence.
+
+2017-07-26  Mike FABIAN  <mfabian@redhat.com>
+
+	Revert:
+	2017-07-26  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	Remove redundant data for LC_MONETARY
+
+	[BZ #21836]
+	* locales/ar_IN (LC_MONETARY): copy "hi_IN"
+	* locales/as_IN (LC_MONETARY): copy "hi_IN"
+	* locales/bhb_IN (LC_MONETARY): copy "hi_IN"
+	* locales/bn_IN (LC_MONETARY): copy "hi_IN"
+	* locales/en_IN (LC_MONETARY): copy "hi_IN"
+	* locales/gu_IN (LC_MONETARY): copy "hi_IN"
+	* locales/kn_IN (LC_MONETARY): copy "hi_IN"
+	* locales/kok_IN (LC_MONETARY): copy "hi_IN"
+	* locales/ks_IN (LC_MONETARY): copy "hi_IN"
+	* locales/ml_IN (LC_MONETARY): copy "hi_IN"
+	* locales/mr_IN (LC_MONETARY): copy "hi_IN"
+	* locales/or_IN (LC_MONETARY): copy "hi_IN"
+	* locales/pa_IN (LC_MONETARY): copy "hi_IN"
+	* locales/sa_IN (LC_MONETARY): copy "hi_IN"
+	* locales/sd_IN (LC_MONETARY): copy "hi_IN"
+	* locales/ta_IN (LC_MONETARY): copy "hi_IN"
+	* locales/tcy_IN (LC_MONETARY): copy "hi_IN"
+	* locales/te_IN (LC_MONETARY): copy "hi_IN"
+	* locales/ur_IN (LC_MONETARY): copy "hi_IN"
+
+2017-07-26  Mike FABIAN  <mfabian@redhat.com>
+
+	* locales/hif_FJ (LC_TIME): Remove erroneous spaces from d_t_fmt.
+	* locales/km_KH (LC_TIME): Remove erroneous space from d_t_fmt.
+	* locales/sm_WS (LC_TIME): Remove erroneous spaces from day.
+
+2017-07-26  Mike FABIAN  <mfabian@redhat.com>
+
+	* locales/et_EE (LC_ADDRESS): Remove tabs in postal_fmt.
+	* locales/hif_FJ (LC_TIME): Remove tabs in t_fmt_ampm.
+	* locales/hif_FJ (LC_NAME): Remove tabs in name_fmt.
+
+2017-07-26  Mike FABIAN  <mfabian@redhat.com>
+
+	* locales/agr_PE (LC_IDENTIFICATION): Fix inappropriate character.
+	* locales/an_ES (LC_IDENTIFICATION): Fix inappropriate character.
+	* locales/gv_GB (LC_IDENTIFICATION): Fix inappropriate character.
+	* locales/kw_GB (LC_IDENTIFICATION): Fix inappropriate character.
+	* locales/ln_CD (LC_IDENTIFICATION): Fix inappropriate character.
+	* locales/nb_NO (LC_IDENTIFICATION): Fix inappropriate character.
+	* locales/pap_CW (LC_IDENTIFICATION): Fix inappropriate character.
+	* locales/se_NO (LC_IDENTIFICATION): Fix inappropriate character.
+	* locales/sgs_LT (LC_IDENTIFICATION): Fix inappropriate character.
+
+2017-07-26  Mike FABIAN  <mfabian@redhat.com>
+
+	* locales/aa_DJ (LC_IDENTIFICATION): Fix inappropriate escape sequence.
+	* locales/aa_ER (LC_IDENTIFICATION): Fix inappropriate escape sequence.
+	* locales/aa_ET (LC_IDENTIFICATION): Fix inappropriate escape sequence.
+	* locales/ak_GH (LC_IDENTIFICATION): Fix inappropriate escape sequence.
+	* locales/bn_BD (LC_IDENTIFICATION): Fix inappropriate escape sequence.
+	* locales/de_IT (LC_IDENTIFICATION): Fix inappropriate escape sequence.
+	* locales/es_CU (LC_IDENTIFICATION): Fix inappropriate escape sequence.
+	* locales/gd_GB (LC_IDENTIFICATION): Fix inappropriate escape sequence.
+	* locales/gl_ES (LC_IDENTIFICATION): Fix inappropriate escape sequence.
+	* locales/he_IL (LC_IDENTIFICATION): Fix inappropriate escape sequence.
+	* locales/hr_HR (LC_IDENTIFICATION): Fix inappropriate escape sequence.
+	* locales/ht_HT (LC_IDENTIFICATION): Fix inappropriate escape sequence.
+	* locales/hy_AM (LC_IDENTIFICATION): Fix inappropriate escape sequence.
+	* locales/lg_UG (LC_IDENTIFICATION): Fix inappropriate escape sequence.
+	* locales/mai_IN (LC_IDENTIFICATION): Fix inappropriate escape sequence.
+	* locales/mg_MG (LC_IDENTIFICATION): Fix inappropriate escape sequence.
+	* locales/pl_PL (LC_IDENTIFICATION): Fix inappropriate escape sequence.
+	* locales/quz_PE (LC_IDENTIFICATION): Fix inappropriate escape sequence.
+	* locales/se_NO (LC_IDENTIFICATION): Fix inappropriate escape sequence.
+	* locales/sl_SI (LC_IDENTIFICATION): Fix inappropriate escape sequence.
+	* locales/ta_LK (LC_IDENTIFICATION): Fix inappropriate escape sequence.
+
+2017-07-21  Rafal Luzynski <digitalfreak@lingonborough.com>
+
+	Indian scripts: abmon imported from CLDRv31 (related with
+	BZ#21217).
+
+	* locales/as_IN (abmon): Update from CLDR.
+	* locales/bn_BD (abmon): Likewise.
+	* locales/bn_IN (abmon): Likewise.
+	* locales/gu_IN (abmon): Likewise.
+	* locales/hi_IN (abmon): Likewise.
+	* locales/kn_IN (abmon): Likewise.
+	* locales/ml_IN (abmon): Likewise.
+	* locales/mr_IN (abmon): Likewise.
+	* locales/ne_NP (abmon): Likewise.
+	* locales/or_IN (abmon): Likewise.
+	* locales/pa_IN (abmon): Likewise.
+	* locales/ta_IN (abmon): Likewise.
+	* locales/te_IN (abmon): Likewise.
+
+	* locales/kok_IN (abmon): Likewise but copied from mon.
+
+2017-07-26  Mike FABIAN  <mfabian@redhat.com>
+
+	* localedata/locales/mai_NP: Use POSIX Portable Character Set.
+
+2017-07-26  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21835]
+	* localedata/locales/mai_NP: New file.
+	* localedata/SUPPORTED: Add mai_NP/UTF-8.
+
+2017-07-26  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21838]
+	* locales/the_NP (LC_CTYPE): copy "ne_NP"
+	* locales/the_NP (LC_COLLATE): copy "ne_NP"
+	* locales/the_NP (LC_MONETARY): copy "ne_NP"
+	* locales/the_NP (LC_TELEPHONE): copy "ne_NP"
+
+2017-07-26  Mike FABIAN  <mfabian@redhat.com>
+
+	* locales/sd_IN@devanagari (LC_MONETARY): copy "sd_IN"
+
+2017-07-26  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	Remove redundant data for LC_MONETARY
+
+	[BZ #21836]
+	* locales/ar_IN (LC_MONETARY): copy "hi_IN"
+	* locales/as_IN (LC_MONETARY): copy "hi_IN"
+	* locales/bhb_IN (LC_MONETARY): copy "hi_IN"
+	* locales/bn_IN (LC_MONETARY): copy "hi_IN"
+	* locales/en_IN (LC_MONETARY): copy "hi_IN"
+	* locales/gu_IN (LC_MONETARY): copy "hi_IN"
+	* locales/kn_IN (LC_MONETARY): copy "hi_IN"
+	* locales/kok_IN (LC_MONETARY): copy "hi_IN"
+	* locales/ks_IN (LC_MONETARY): copy "hi_IN"
+	* locales/ml_IN (LC_MONETARY): copy "hi_IN"
+	* locales/mr_IN (LC_MONETARY): copy "hi_IN"
+	* locales/or_IN (LC_MONETARY): copy "hi_IN"
+	* locales/pa_IN (LC_MONETARY): copy "hi_IN"
+	* locales/sa_IN (LC_MONETARY): copy "hi_IN"
+	* locales/sd_IN (LC_MONETARY): copy "hi_IN"
+	* locales/ta_IN (LC_MONETARY): copy "hi_IN"
+	* locales/tcy_IN (LC_MONETARY): copy "hi_IN"
+	* locales/te_IN (LC_MONETARY): copy "hi_IN"
+	* locales/ur_IN (LC_MONETARY): copy "hi_IN"
+
+2017-07-25  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21797]
+	* locales/et_EE (LC_ADDRESS): Fix country_isbn.
+	* locales/hy_AM (LC_ADDRESS): Fix country_isbn.
+
+2017-07-24  Mike FABIAN  <mfabian@redhat.com>
+
+	* locales/an_ES (LC_ADDRESS): Add country_name.
+	* locales/ayc_PE (LC_ADDRESS): Add country_name.
+	* locales/be_BY@latin (LC_ADDRESS): Add country_name.
+	* locales/dv_MV (LC_ADDRESS): Add country_name,
+	country_ab2, and country_ab3
+	* locales/ia_FR (LC_ADDRESS): Add country_name.
+	* locales/ik_CA (LC_ADDRESS): Add country_name.
+	* locales/lij_IT (LC_ADDRESS): Add country_name.
+	* locales/mi_NZ (LC_ADDRESS): Add country_name.
+	* locales/nds_DE (LC_ADDRESS): Add country_name.
+	* locales/nds_NL (LC_ADDRESS): Add country_name.
+	* locales/oc_FR (LC_ADDRESS): Add country_name.
+	* locales/sa_IN (LC_ADDRESS): Add country_name.
+	* locales/sc_IT (LC_ADDRESS): Add country_name.
+	* locales/sd_IN (LC_ADDRESS): Add country_name.
+	* locales/tcy_IN (LC_ADDRESS): Add country_name.
+	* locales/tg_TJ (LC_ADDRESS): Add country_name.
+	* locales/tl_PH (LC_ADDRESS): Add country_name.
+	* locales/tt_RU (LC_ADDRESS): Add country_name.
+	* locales/wo_SN (LC_ADDRESS): Add country_name.
+	* locales/zh_SG (LC_ADDRESS): Add country_name.
+
+2017-07-25  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21825]
+	* locales/mag_IN(LC_NAME): Fix name_mrs.
+
+2017-07-25  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21823]
+	* locales/sa_IN (LC_MESSAGES): Add yesstr,nostr
+
+2017-07-25  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21822]
+	* locales/mai_IN (LC_TIME): Fix abday, day, mon etc...
+
+2017-07-24  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21821]
+	* locales/mai_IN (LC_ADDRESS): Add country_name.
+
+2017-07-24  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21796]
+	* locales/ko_KR (LC_ADDRESS): Add country_isbn.
+
+2017-07-24  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21794]
+	* locales/ca_IT (LC_ADDRESS): Add country_isbn.
+	* locales/de_IT (LC_ADDRESS): Add country_isbn.
+	* locales/fur_IT (LC_ADDRESS): Add country_isbn.
+	* locales/it_IT (LC_ADDRESS): Add country_isbn.
+	* locales/lij_IT (LC_ADDRESS): Add country_isbn.
+	* locales/sc_IT (LC_ADDRESS): Add country_isbn.
+
+2017-07-21  Massimeddu Cireddu <massimeddu@gmail.com>
+
+	[BZ #12068]
+	* locales/sc_IT (LC_MESSAGES): Fix yesexpr and add yesstr and nostr.
+	* locales/sc_IT (LC_TIME): Fix mispelled day/abday/mon/abmon and
+	fix date_fmt.
+
+2017-07-21  Rafal Luzynski <digitalfreak@lingonborough.com>
+
+	[BZ #21783]
+	* locales/lg_UG (LC_TELEPHONE): Move all comments above the
+	values, correct some of them.
+
+2017-07-21  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21795]
+	* locales/br_FR (LC_ADDRESS): Add country_isbn.
+	* locales/ca_FR (LC_ADDRESS): Add country_isbn.
+	* locales/fr_FR (LC_ADDRESS): Add country_isbn.
+	* locales/ia_FR (LC_ADDRESS): Fix country_isbn.
+	* locales/oc_FR (LC_ADDRESS): Fix country_isbn.
+
+2017-07-21  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21807]
+	[BZ #21808]
+	* locales/pap_AW (LC_ADDRESS): Add country_name and country_post.
+	* locales/pap_CW (LC_ADDRESS): Add country_name, country_post,
+	and country_isbn.
+
+2017-07-20  Mike FABIAN  <mfabian@redhat.com>
+
+	* locales/ar_JO (LC_TELEPHONE): Add int_select.
+	* locales/ar_LB (LC_TELEPHONE): Add int_select.
+	* locales/ar_MA (LC_TELEPHONE): Add int_select.
+	* locales/ar_OM (LC_TELEPHONE): Add int_select.
+	* locales/ber_DZ (LC_TELEPHONE): Add int_select.
+	* locales/ber_MA (LC_TELEPHONE): Add int_select.
+	* locales/ca_ES (LC_TELEPHONE): Add int_select.
+	* locales/crh_UA (LC_TELEPHONE): Add int_select.
+	* locales/de_CH (LC_TELEPHONE): Add int_select.
+	* locales/de_LI (LC_TELEPHONE): Add int_select.
+	* locales/de_LU (LC_TELEPHONE): Add int_select.
+	* locales/dz_BT (LC_TELEPHONE): Add int_select.
+	* locales/en_HK (LC_TELEPHONE): Add int_select.
+	* locales/en_IE (LC_TELEPHONE): Add int_select.
+	* locales/en_NZ (LC_TELEPHONE): Add int_select.
+	* locales/en_PH (LC_TELEPHONE): Add int_select.
+	* locales/en_SG (LC_TELEPHONE): Add int_select.
+	* locales/es_ES (LC_TELEPHONE): Add int_select.
+	* locales/es_PA (LC_TELEPHONE): Add int_select.
+	* locales/es_US (LC_TELEPHONE): Add int_select.
+	* locales/es_UY (LC_TELEPHONE): Add int_select.
+	* locales/eu_ES (LC_TELEPHONE): Add int_select.
+	* locales/he_IL (LC_TELEPHONE): Add int_select.
+	* locales/id_ID (LC_TELEPHONE): Add int_select.
+	* locales/it_CH (LC_TELEPHONE): Add int_select.
+	* locales/it_CH (LC_TELEPHONE): Add int_select.
+	* locales/it_IT (LC_TELEPHONE): Add int_select.
+	* locales/kl_GL (LC_TELEPHONE): Add int_select.
+	* locales/ko_KR (LC_TELEPHONE): Add int_select.
+	* locales/kw_GB (LC_TELEPHONE): Add int_select.
+	* locales/ky_KG (LC_TELEPHONE): Add int_select.
+	* locales/lij_IT (LC_TELEPHONE): Add int_select.
+	* locales/lt_LT (LC_TELEPHONE): Add int_select.
+	* locales/lv_LV (LC_TELEPHONE): Add int_select.
+	* locales/mi_NZ (LC_TELEPHONE): Add int_select.
+	* locales/ms_MY (LC_TELEPHONE): Add int_select.
+	* locales/mt_MT (LC_TELEPHONE): Add int_select.
+	* locales/ne_NP (LC_TELEPHONE): Add int_select.
+	* locales/niu_NU (LC_TELEPHONE): Add int_select.
+	* locales/nl_NL (LC_TELEPHONE): Add int_select.
+	* locales/pl_PL (LC_TELEPHONE): Add int_select.
+	* locales/ro_RO (LC_TELEPHONE): Add int_select.
+	* locales/ru_UA (LC_TELEPHONE): Add int_select.
+	* locales/rw_RW (LC_TELEPHONE): Add int_select.
+	* locales/sk_SK (LC_TELEPHONE): Add int_select.
+	* locales/sl_SI (LC_TELEPHONE): Add int_select.
+	* locales/so_SO (LC_TELEPHONE): Add int_select.
+	* locales/the_NP (LC_TELEPHONE): Add int_select.
+	* locales/tk_TM (LC_TELEPHONE): Add int_select.
+	* locales/uz_UZ (LC_TELEPHONE): Add int_select.
+	* locales/uz_UZ@cyrillic (LC_TELEPHONE): Add int_select.
+	* locales/zh_SG (LC_TELEPHONE): Add int_select.
+
+2017-07-20  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ # 21801]
+	* locales/es_NI (LC_TELEPHONE): Add int_select.
+	* locales/es_PE (LC_TELEPHONE): Add int_select.
+	* locales/es_PR (LC_TELEPHONE): Add int_select.
+	* locales/es_PY (LC_TELEPHONE): Add int_select.
+	* locales/es_VE (LC_TELEPHONE): Add int_select.
+	* locales/fo_FO (LC_TELEPHONE): Add int_select.
+	* locales/fr_CH (LC_TELEPHONE): Add int_select.
+	* locales/fr_LU (LC_TELEPHONE): Add int_select.
+	* locales/ga_IE (LC_TELEPHONE): Add int_select.
+	* locales/gl_ES (LC_TELEPHONE): Add int_select.
+	* locales/gv_GB (LC_TELEPHONE): Add int_select.
+
+2017-07-20  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21799]
+	* locales/ar_KW (LC_TELEPHONE): Add int_select.
+	* locales/ar_LY (LC_TELEPHONE): Add int_select.
+	* locales/ar_QA (LC_TELEPHONE): Add int_select.
+	* locales/ar_SA (LC_TELEPHONE): Add int_select.
+	* locales/ar_SS (LC_TELEPHONE): Add int_select.
+	* locales/ar_SY (LC_TELEPHONE): Add int_select.
+	* locales/ar_TN (LC_TELEPHONE): Add int_select.
+	* locales/ar_YE (LC_TELEPHONE): Add int_select.
+	* locales/ca_AD (LC_TELEPHONE): Add int_select.
+	* locales/es_MX (LC_TELEPHONE): Add int_select.
+
+2017-07-19  Mike FABIAN  <mfabian@redhat.com>
+
+	* locales/iu_CA (LC_ADDRESS): Add country_name.
+
+2017-07-19  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21788]
+	* locales/cy_GB (LC_ADDRESS): Add country_post.
+	* locales/hy_AM (LC_ADDRESS): Add country_post.
+	* locales/iu_CA (LC_ADDRESS): Add country_post.
+	* locales/nan_TW@latin (LC_ADDRESS): Add country_post.
+	* locales/ps_AF (LC_ADDRESS): Add country_post.
+	* locales/sr_RS (LC_ADDRESS): Fix country_post.
+	* locales/sr_RS@latin (LC_ADDRESS): Fix country_post.
+	* locales/zh_TW (LC_ADDRESS): Fix country_post.
+
+2017-07-19  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21784]
+	* locales/bo_CN (LC_ADDRESS): Fix inconsistency in country_isbn.
+	* locales/fa_IR (LC_ADDRESS): Fix inconsistency in country_isbn.
+	* locales/nan_TW@latin (LC_ADDRESS): Fix inconsistency in country_isbn.
+	* locales/nr_ZA (LC_ADDRESS): Add country_num.
+	* locales/sr_RS (LC_ADDRESS): Fix inconsistency in country_isbn.
+	* locales/sr_RS@latin (LC_ADDRESS): Fix inconsistency in country_isbn.
+	* locales/ug_CN (LC_ADDRESS): Fix inconsistency in country_isbn.
+	* locales/yue_HK (LC_ADDRESS): Fix inconsistency in country_isbn.
+	* locales/zh_CN (LC_ADDRESS): Fix inconsistency in country_isbn.
+	* locales/zh_TW (LC_ADDRESS): Fix inconsistency in country_isbn.
+
+2017-07-19  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21783 ]
+	* locales/ar_AE (LC_TELEPHONE): Add int_select.
+	* locales/ar_BH (LC_TELEPHONE): Fix int_select.
+	* locales/ar_IQ (LC_TELEPHONE): Add int_select.
+	* locales/es_CU (LC_TELEPHONE): Add int_select.
+	* locales/ja_JP (LC_TELEPHONE): Add int_select.
+	* locales/lg_UG (LC_TELEPHONE): Fix int_select.
+	* locales/mn_MN (LC_TELEPHONE): Fix int_select.
+	* locales/om_KE (LC_TELEPHONE): Add int_select.
+	* locales/sm_WS (LC_TELEPHONE): Fix int_select.
+
+2017-07-17  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21770]
+	* locales/li_NL: Fix country_name.
+
+2017-07-17  Mike FABIAN  <mfabian@redhat.com>
+
+	* locales/to_TO (LC_MESSAGES): Use U+02BB instead of U+0027 in yesstr and nostr
+
+2017-07-17  Mike FABIAN  <mfabian@redhat.com>
+
+	* locales/agr_PE (LC_MESSAGES): Add yY to yesexpr.
+
+2017-07-17  Mike FABIAN  <mfabian@redhat.com>
+
+	* locales/hif_FJ: Write "Latin" in title case in "title"
+
+2017-07-14  Mike FABIAN  <mfabian@redhat.com>
+
+	* locales/li_BE: Fix country name and encoding problem in abday.
+	* locales/li_NL: Fix encoding problem in abday.
+
+2017-07-14  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21767]
+	* locales/bi_VU: new file.
+	* localedata/SUPPORTED: Add bi_VU/UTF-8.
+
+2017-07-13  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21768]
+	* locales/aa_ET (LC_MESSAGES): Added yesstr and nostr.
+
+2017-07-12  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21728]
+	* localedata/locales/to_TO: new file
+	* localedata/SUPPORTED: added to_TO/UTF-8
+
+2017-07-12  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21757]
+	* locales/pap_AW (LC_MESSAGES): add yesstr and nostr, fix yesexpr
+	* locales/pap_CW (LC_MESSAGES): add yesstr and nostr, fix yesexpr
+
+2017-07-12  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21760]
+	* locales/anp_IN (LC_MESSAGES): add yesstr and nostr.
+	* locales/anp_IN (LC_ADDRESS): add country_name
+
+2017-07-12  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21759]
+	* locales/ti_ET (LC_MESSAGES): Add yesstr and nostr.
+	* locales/ti_ER (LC_MESSAGES): Add yesstr and nostr.
+
+2017-07-12  Mike FABIAN  <mfabian@redhat.com>
+
+	* locales/om_ET (LC_MESSAGES): add yesstr and nostr.
+
+2017-07-12  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21756]
+	* locales/nds_DE (LC_MESSAGES): Add yesstr and nostr.
+	* locales/nds_NL (LC_MESSAGES): Add yesstr and nostr.
+
+2017-07-12  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21694]
+	* locales/hif_FJ: New file.
+	* SUPPORTED: Add hif_FJ/UTF-8.
+
+2017-07-11  Chris Leonard <cjl@sugarlabs.org>
+
+	[BZ #20496]
+	* SUPPORTED: Add agr_PE.
+	* locales/agr_PE: New file, Awajún / Aguaruna locale for Peru.
+
+2017-07-11  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21710]
+	* locales/sm_WS: New file.
+	* SUPPORTED: Add sm_WS/UTF-8.
+
+2017-07-11  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21749]
+	* locales/ar_JO (LC_TIME): Fix abday
+	* locales/ar_LB (LC_TIME): Fix abday
+	* locales/ar_SY (LC_TIME): Fix abday
+
+2017-07-11  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21748, BZ #19066]
+	* locales/ar_SA (LC_TIME): Fix abday
+
+2017-07-10  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21733]
+	* locales/zh_HK (LC_MESSAGES): Add yesstr and nostr
+
+2017-07-10  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21743]
+	* locales/ks_IN@devanagari (LC_TIME): Fixed abday strings
+
+2017-07-10  Mike FABIAN  <mfabian@redhat.com>
+
+	* locales/ts_ZA (LC_MESSAGES): add iI and eE to  yesexpr and noexpr
+
+2017-07-07  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21734]
+	* locales/kw_GB (LC_MESSAGES): Add yesstr and nostr
+
+2017-07-07  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21727]
+	* locales/ts_ZA (LC_MESSAGES): Add yesstr and nostr
+
+2017-07-07  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21729]
+	* locales/hi_IN (LC_NAME): Fix name_mr, name_mrs, name_miss, name_ms
+
+2017-07-07  Peng Wu <pwu@redhat.com>
+
+	[BZ #21724]
+	* locales/xh_ZA (LC_MESSAGES): Add yesstr and nostr
+
+2017-07-07  Akhilesh Kumar <akhilesh.k@samsung.com>
+	[BZ #21723]
+	* locales/zh_CN (LC_MESSAGES): Add yesstr and nostr
+
+2017-07-07  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21721]
+	* locales/ks_IN@devanagari: Fix full weekday names, add yesstr and nostr
+
+2017-07-06  Rafal Luzynski <digitalfreak@lingonborough.com>
+
+	Arabic scripts: More fixes after the recent import.
+
+	After the recent import of month names from CLDRv31 (bug 21217,
+	commit c853f14) more imports are also needed, mostly abbreviated month
+	names.
+
+	This patch also updates May (full month name) in ps_AF which was
+	skipped in the previous patch.
+
+	Incidentally, this import fixes bug 17225 (ar_SY) and partially
+	bug 19066 (ar_SA).
+
+	* locales/ar_DZ (abmon): Full import from CLDR, abmon
+	is no longer abbreviated.
+	* locales/ar_IQ (abmon): Likewise.
+	* locales/ar_MA (abmon): Likewise.
+	* locales/ar_TN (abmon): Likewise.
+	* locales/ps_AF (abmon): Likewise.
+	* locales/ug_CN (abmon): Likewise.
+	* locales/ar_SA (abmon): Likewise, partially fixes bug 19066.
+	* locales/ks_IN (abmon): A copy of mon.
+	* locales/ur_IN (abmon): Oct reworded "اكتوبر" to
+	"اکتوبر" (same change as mon).
+	* locales/ur_PK (abmon): Same changes as mon applied.
+	* locales/ps_AF (mon): May reworded "می" to "مۍ".
+
+	[BZ #17225]
+	* locales/ar_SY (abmon): May reworded "نوار" to
+	"أيار", this closes bug 17225.
+	* locales/ar_JO (abmon): Likewise.
+	* locales/ar_LB (abmon): Likewise.
+
+2017-07-06  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21711]
+	* locales/ps_AF: Add yesstr and nostr.
+
+2017-07-05  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	Added tok-pisin language locale for Papua New Guinea.
+
+	[BZ #21694]
+	* locales/tpi_PG: New file.
+	* SUPPORTED: Add tpi_PG/UTF-8.
+
+2017-07-04  Akhilesh Kumar <akhilesh.k@samsung.com>
+
+	[BZ #21706]
+	* locales/br_FR (LC_MESSAGES): add yesstr and nostr
+
+2017-06-30  Rafal Luzynski  <digitalfreak@lingonborough.com>
+
+	* locales/br_FR (abmon): Reworded "Eve " to "Mezh".
+	* locales/fy_NL (abmon): Reworded "Maa" (March) to
+	"Mrt" and "Maa" (May) to "Mai".
+	* locales/lg_UG (abmon): Reworded "Jun" to "Juu".
+	* locales/ln_CD (abmon): "yan", "fbl", "msi",
+	and so on.
+	* locales/mn_MN (abmon): "1-р сар", "2-р сар",
+	"3-р сар", and so on.
+	* locales/vi_VN (abmon): Reworded "Th01" to "Thg 1",
+	"Th02" to "Thg 2" and so on.
+	* locales/yo_NG (abday): "Àìkú", "Ajé", "Ìsẹ́gun",
+	and so on, also comment updated to match the new content.
+	(day): "Ọjọ́ Àìkú", "Ọjọ́ Ajé", "Ọjọ́ Ìsẹ́gun", and so on.
+	(abmon): "Ṣẹ́rẹ́", "Èrèlè", "Ẹrẹ̀nà", and so on.
+	(mon): Comment updated to match the actual content.
+	(d_t_fmt): Changed "%A" to "%a" and "%B" to "%b".
+	* locales/zu_ZA (abmon): "Jan", "Feb", "Mas",
+	and so on, also comment updated to match the new content.
+	(mon): comment updated to match the actual content.
+
+2017-06-30  Mike Frysinger  <vapier@gentoo.org>
+
+	* CLDRv29: update LC_ADDRESS.lang_name translations. This
+	updates the language endonym in a bunch of locales based
+	on CLDR v 31.0.1 data
+
+2017-06-16  Rafal Luzynski  <digitalfreak@lingonborough.com>
+
+	[BZ #21217]
+	* locales/be_BY (mon, abmon): Reworded "Травень" ("travyen'")
+	and abbreviated "Тра" ("tra") to "Май" ("may").
+	* locales/be_BY@latin (mon, abmon): Likewise, "Travień" and
+	abbreviated "Tra" reworded to "Maj".
+	* locales/br_FR (day, abmon, mon, d_t_fmt): Use the proper
+	Unicode apostrophe (Cʼhwevrer, mercʼher, Dʼar).
+	* locales/es_PE (mon, abmon): Reworded "septiembre" to
+	"setiembre" and abbreviated "sep" to "set".
+	* locales/es_UY: Likewise.
+	* locales/fil_PH (mon): Reworded "Septiyembre" to "Setyembre"
+	and "Nobiyembre" to "Nobyembre".
+	* locales/fur_IT (mon, abmon): Reworded "Decembar" to
+	"Dicembar" and abbreviated "Dec" to "Dic".
+	* locales/fy_NL (mon): Reworded "Janaris" to "Jannewaris".
+	* locales/ha_NG (mon, abmon): Reworded "Fabrairu" to
+	"Faburairu" and "Afrilu" to "Afirilu", also abbreviated
+	"Afr" to "Afi".
+	* locales/ig_NG (mon, abmon): All months begin with uppercase.
+	Reworded: "febụrụwarị" to "Febrụwarị", "epreel" to "Eprel",
+	"ọgọstụ" to "Ọgọọst", "nọvemba" to "Novemba", "nọv" to "Nov".
+	* locales/kw_GB (mon): Months imported from CLDR, many
+	changes: all "Mys" to "mis", "Mys Whevrel" to "mis Hwevrer",
+	"Mys Merth" to "mis Meurth", "Mys Evan" to "mis Metheven",
+	and so on.
+	(abmon): "Whe>" to "Hwe", "Mer" to "Meu", "Evn" to "Met".
+	* locales/lg_UG (mon): Reworded "Julaai" to "Julaayi".
+	* locales/mg_MG (mon, abmon): All months now begin with
+	uppercase.
+	* locales/se_NO (mon): Months imported from CLDR, all
+	suffixes changed from "mánu" to "mánnu".
+	* locales/sr_RS@latin (mon): Reworded "juni" to "jun"
+	and "juli" to "jul".
+	* locales/uz_UZ (mon): Reworded "Sentyabr" to "Sentabr"
+	and "Oktyabr" to "Oktabr".
+	* locales/uz_UZ@cyrillic (mon): Most of the names reworded,
+	no longer end with a soft sign.
+	* locales/wae_CH (mon): reworded "Bráchet" to "Bráčet",
+	"Öigschte" to "Öigšte", "Herbschtmánet" to "Herbštmánet",
+	"Chrischtmánet" to "Chrištmánet".
+	* locales/ln_CD (mon): Months imported from CLDR, all changed:
+	"Yanwáli" to "sánzá ya yambo", "Febwáli" to "sánzá ya míbalé" and so on.
+	* locales/mn_MN (mon): reworded "Хулгана сарын" to "Нэгдүгээр сар",
+	"Үхэр сарын" to "Хоёрдугаар сар", and so on.
+	* locales/vi_VN (mon): reworded "Tháng một" to "Tháng 1", "Tháng hai"
+	to "Tháng 2", "Tháng ba" to "Tháng 3", and so on.
+	* locales/yo_NG (mon): reworded "Jánúárì" to "Oṣù Ṣẹ́rẹ́", "Fẹ́búárì"
+	to "Oṣù Èrèlè", "Máàṣì" to "Oṣù Ẹrẹ̀nà", and so on.
+	* locales/zu_ZA (mon): reworded "uMasingana" to "Januwari",
+	"uNhlolanja" to "Februwari", "uNdasa" to "Mashi", and so on.
+	* locales/ar_DZ (mon): Updated from CLDR.
+	* locales/ar_IQ (mon): Likewise.
+	* locales/ar_JO (mon): Likewise.
+	* locales/ar_LB (mon): Likewise.
+	* locales/ar_MA (mon): Likewise.
+	* locales/ar_SA (mon): Likewise.
+	* locales/ar_SY (mon): Likewise.
+	* locales/ar_TN (mon): Likewise.
+	* locales/ks_IN (mon): Likewise.
+	* locales/ps_AF (mon): Likewise.
+	* locales/ug_CN (mon): Likewise.
+	* locales/ur_IN (mon): Likewise.
+	* locales/ur_PK (mon): Likewise.
+	* locales/as_IN (mon): Likewise.
+	* locales/bn_BD (mon): Likewise.
+	* locales/bn_IN (mon): Likewise.
+	* locales/brx_IN (mon): Likewise.
+	* locales/hi_IN (mon): Likewise.
+	* locales/kok_IN (mon): Likewise.
+	* locales/mr_IN (mon): Likewise.
+	* locales/ne_NP (mon): Likewise.
+	* locales/gu_IN (mon): Likewise.
+	* locales/kn_IN (mon): Likewise.
+	* locales/ml_IN (mon): Likewise.
+	* locales/pa_IN (mon): Likewise.
+	* locales/te_IN (mon): Likewise.
+	* locales/am_ET (mon): Likewise.
+	* locales/km_KH (mon): Likewise.
+	* locales/lo_LA (mon): Likewise.
+	* locales/si_LK (mon): Likewise.
+	* locales/yi_US (mon): Likewise.
+	* locales/yue_HK (mon): Likewise.
+
+2017-06-22  Rafal Luzynski  <digitalfreak@lingonborough.com>
+
+	* locales/fur_IT (day, abday): reworded "Miarcus" to "Miercus"
+	and abbreviated "Mia" to "Mie".
+
+2017-06-13  Rafal Luzynski  <digitalfreak@lingonborough.com>
+
+	[BZ #21207]
+	* locales/ce_RU (day): Updated (imported) from CLDR.  Uppercase letters
+	left unchanged.
+	* locales/ce_RU (abday): Minor updates to match (day): Latin uppercase
+	"I" replaced with Cyrillic "Ӏ" ("Palochka", Unicode: U04C0).  Trailing
+	spaces removed.
+
+2017-06-13  Rafal Luzynski  <digitalfreak@lingonborough.com>
+
+	* localedata/locales/mag_IN (abday, day): Consistently use
+	uppercase hexadecimal in <Uxxxx> notation.
+	* localedata/locales/so_DJ (mon): Use "<U0020>" instead of " ".
+	* localedata/locales/so_ET (mon): Likewise.
+	* localedata/locales/so_KE (mon): Likewise.
+	* localedata/locales/so_SO (mon): Likewise.
+
+	[BZ #20275]
+	* localedata/locales/anp_IN (abday, day): Remove trailing spaces.
+	* localedata/locales/bho_IN (abday, day): Likewise.
+	* localedata/locales/doi_IN (abday, day): Likewise.
+	* localedata/locales/hi_IN (day, abday): Likewise.
+	* localedata/locales/hne_IN (abday, day): Likewise.
+	* localedata/locales/mag_IN (abday, day): Likewise.
+	* localedata/locales/ne_NP (abday, day): Likewise.
+	* localedata/locales/pa_IN (abday, day): Likewise.
+	* localedata/locales/raj_IN (abday, day): Likewise.
+	* localedata/locales/the_NP (abday, day): Likewise.
+	* localedata/locales/sq_AL (abday, day): Likewise.
+	* localedata/locales/ln_CD (name_ms): Likewise.
+	* localedata/locales/quz_PE (lang_name): Likewise.
+	* localedata/locales/ta_IN (name_mr, name_mrs, name_miss): Likewise.
+	* localedata/locales/te_IN (name_mr, name_mrs, name_miss): Likewise.
+
+	* localedata/locales/ht_HT (abday, day): Remove trailing space
+	after "len" and "lendi".
+
+	* localedata/locales/mt_MT (mon): Remove trailing space after
+	"Diċembru".
+
 2017-06-11  Santhosh Thottingal  <santhosh.thottingal@gmail.com>
 
 	[BZ #19922]
@@ -5,6 +759,39 @@
 
 	[BZ #19919]
 	* locales/iso14651_t1_common: Correct collation of U+0D36 and U+0D37.
+
+2017-05-03  Carlos O'Donell  <carlos@redhat.com>
+
+	[BZ #20686]
+	* SUPPORTED: Add el_GR@euro/ISO-8859-7.
+
+2017-04-19  Christopher Chittleborough  <cchittleborough@cluemail.com>
+
+	[BZ #21399]
+	* charmaps/CP1254: Fix U+00EC comment.
+
+2017-03-28  Egmont Koblinger  <egmont@gmail.com>
+
+	[BZ #18934]
+	* locales/hu_HU: Fix multiple collate bugs.
+	* hu_HU.in: New file.
+	* Makefile (test-input): Add hu_HU.UTF-8.
+
+2017-02-20  Mike FABIAN  <mfabian@redhat.com>
+
+	[BZ #20313]
+	* unicode-gen/Makefile (UNICODE_VERSION): Set to 9.0.0.
+	* unicode-gen/UnicodeData.txt: Update to Unicode 9.0.0 release.
+	* unicode-gen/DerivedCoreProperties.txt: Likewise.
+	* unicode-gen/EastAsianWidth.txt: Likewise.
+	* charmaps/UTF-8: Regenerate.
+	* locales/i18n: Regenerate.
+	* locales/translit_circle: Regenerate.
+	* locales/translit_cjk_compat: Regenerate.
+	* locales/translit_combining: Regenerate.
+	* locales/translit_compat: Regenerate.
+	* locales/translit_font: Regenerate.
+	* locales/translit_fraction: Regenerate.
 
 2017-01-01  Joseph Myers  <joseph@codesourcery.com>
 

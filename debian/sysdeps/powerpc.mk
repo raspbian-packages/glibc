@@ -1,5 +1,5 @@
 # configuration options for all flavours
-extra_config_options = --enable-multi-arch --enable-lock-elision
+extra_config_options = --enable-multi-arch
 
 # multilib flavours
 ifeq (,$(filter nobiarch, $(DEB_BUILD_PROFILES)))

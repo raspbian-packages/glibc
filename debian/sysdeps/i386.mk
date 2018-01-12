@@ -1,6 +1,5 @@
 # configuration options for all flavours
 extra_config_options = --enable-multi-arch
-MIN_KERNEL_SUPPORTED := 2.6.32
 
 ifeq (,$(filter stage1 stage2, $(DEB_BUILD_PROFILES)))
 # We use -mno-tls-direct-seg-refs to not wrap-around segments, as it

@@ -25,8 +25,11 @@
    cache line (256 bits). There is a special case for setting cache lines
    to 0, to take advantage of the dcbz instruction.  */
 
+#ifndef MEMSET
+# define MEMSET memset
+#endif
 	.machine power4
-EALIGN (memset, 5, 0)
+ENTRY_TOCLESS (MEMSET, 5)
 	CALL_MCOUNT 3
 
 #define rTMP	r0
@@ -232,12 +235,12 @@ L(medium_27f):
 L(medium_28t):
 	std	rCHR, -8(rMEMP)
 	blr
-END_GEN_TB (memset,TB_TOCLESS)
+END_GEN_TB (MEMSET,TB_TOCLESS)
 libc_hidden_builtin_def (memset)
 
 /* Copied from bzero.S to prevent the linker from inserting a stub
    between bzero and memset.  */
-ENTRY (__bzero)
+ENTRY_TOCLESS (__bzero)
 	CALL_MCOUNT 3
 	mr	r5,r4
 	li	r4,0

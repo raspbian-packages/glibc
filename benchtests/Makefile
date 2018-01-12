@@ -23,9 +23,9 @@ subdir := benchtests
 include ../Makeconfig
 bench-math := acos acosh asin asinh atan atanh cos cosh exp exp2 log log2 \
 	      modf pow rint sin sincos sinh sqrt tan tanh fmin fmax fminf \
-	      fmaxf
+	      fmaxf powf
 
-bench-pthread := pthread_once
+bench-pthread := pthread_once thread_create
 
 bench-string := ffs ffsll
 
@@ -37,7 +37,7 @@ string-benchset := bcopy bzero memccpy memchr memcmp memcpy memmem memmove \
 		   strcat strchr strchrnul strcmp strcpy strcspn strlen \
 		   strncasecmp strncat strncmp strncpy strnlen strpbrk strrchr \
 		   strspn strstr strcpy_chk stpcpy_chk memrchr strsep strtok \
-		   strcoll memcpy-large memmove-large memset-large
+		   strcoll memcpy-large memcpy-random memmove-large memset-large
 
 # Build and run locale-dependent benchmarks only if we're building natively.
 ifeq (no,$(cross-compiling))
@@ -123,7 +123,7 @@ endif
 cpp-srcs-left := $(binaries-benchset:=.c) $(binaries-bench:=.c) \
 		 $(binaries-bench-malloc:=.c)
 lib := nonlib
-include $(patsubst %,$(..)cppflags-iterator.mk,$(cpp-srcs-left))
+include $(patsubst %,$(..)libof-iterator.mk,$(cpp-srcs-left))
 
 bench-extra-objs = json-lib.o
 

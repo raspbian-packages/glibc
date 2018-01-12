@@ -17,11 +17,11 @@
    <http://www.gnu.org/licenses/>.  */
 
 #include <stddef.h>
-#include <xlocale.h>
+#include <locale.h>
 
 #define USE_WIDE_CHAR	1
 
 extern long double ____wcstold_l_internal (const wchar_t *, wchar_t **, int,
-					   __locale_t);
+					   locale_t);
 
 #include <stdlib/strtold.c>

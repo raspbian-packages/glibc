@@ -23,12 +23,16 @@
 /* __ptr_t [r3] memcpy (__ptr_t dst [r3], __ptr_t src [r4], size_t len [r5]);
    Returns 'dst'.  */
 
+#ifndef MEMCPY
+# define MEMCPY memcpy
+#endif
+
 #define dst 11		/* Use r11 so r3 kept unchanged.  */
 #define src 4
 #define cnt 5
 
 	.machine power7
-EALIGN (memcpy, 5, 0)
+ENTRY_TOCLESS (MEMCPY, 5)
 	CALL_MCOUNT 3
 
 	cmpldi	cr1,cnt,31
@@ -87,63 +91,63 @@ L(aligned_copy):
 	srdi	12,cnt,7
 	cmpdi	12,0
 	beq	L(aligned_tail)
-	lxvd2x	6,0,src
-	lxvd2x	7,src,6
+	lvx	6,0,src
+	lvx	7,src,6
 	mtctr	12
 	b	L(aligned_128loop)
 
 	.align  4
 L(aligned_128head):
 	/* for the 2nd + iteration of this loop. */
-	lxvd2x	6,0,src
-	lxvd2x	7,src,6
+	lvx	6,0,src
+	lvx	7,src,6
 L(aligned_128loop):
-	lxvd2x	8,src,7
-	lxvd2x	9,src,8
-	stxvd2x	6,0,dst
+	lvx	8,src,7
+	lvx	9,src,8
+	stvx	6,0,dst
 	addi	src,src,64
-	stxvd2x	7,dst,6
-	stxvd2x	8,dst,7
-	stxvd2x	9,dst,8
-	lxvd2x	6,0,src
-	lxvd2x	7,src,6
+	stvx	7,dst,6
+	stvx	8,dst,7
+	stvx	9,dst,8
+	lvx	6,0,src
+	lvx	7,src,6
 	addi	dst,dst,64
-	lxvd2x	8,src,7
-	lxvd2x	9,src,8
+	lvx	8,src,7
+	lvx	9,src,8
 	addi	src,src,64
-	stxvd2x	6,0,dst
-	stxvd2x	7,dst,6
-	stxvd2x	8,dst,7
-	stxvd2x	9,dst,8
+	stvx	6,0,dst
+	stvx	7,dst,6
+	stvx	8,dst,7
+	stvx	9,dst,8
 	addi	dst,dst,64
 	bdnz	L(aligned_128head)
 
 L(aligned_tail):
 	mtocrf	0x01,cnt
 	bf	25,32f
-	lxvd2x	6,0,src
-	lxvd2x	7,src,6
-	lxvd2x	8,src,7
-	lxvd2x	9,src,8
+	lvx	6,0,src
+	lvx	7,src,6
+	lvx	8,src,7
+	lvx	9,src,8
 	addi	src,src,64
-	stxvd2x	6,0,dst
-	stxvd2x	7,dst,6
-	stxvd2x	8,dst,7
-	stxvd2x	9,dst,8
+	stvx	6,0,dst
+	stvx	7,dst,6
+	stvx	8,dst,7
+	stvx	9,dst,8
 	addi	dst,dst,64
 32:
 	bf	26,16f
-	lxvd2x	6,0,src
-	lxvd2x	7,src,6
+	lvx	6,0,src
+	lvx	7,src,6
 	addi	src,src,32
-	stxvd2x	6,0,dst
-	stxvd2x	7,dst,6
+	stvx	6,0,dst
+	stvx	7,dst,6
 	addi	dst,dst,32
 16:
 	bf	27,8f
-	lxvd2x	6,0,src
+	lvx	6,0,src
 	addi	src,src,16
-	stxvd2x	6,0,dst
+	stvx	6,0,dst
 	addi	dst,dst,16
 8:
 	bf	28,4f
@@ -422,5 +426,5 @@ L(end_unaligned_loop):
 	/* Return original DST pointer.  */
 	blr
 
-END_GEN_TB (memcpy,TB_TOCLESS)
+END_GEN_TB (MEMCPY,TB_TOCLESS)
 libc_hidden_builtin_def (memcpy)

@@ -18,7 +18,17 @@
 
 #include <cpuid.h>
 #include <cpu-features.h>
-#include <libc-internal.h>
+#include <dl-hwcap.h>
+#include <libc-pointer-arith.h>
+
+#if HAVE_TUNABLES
+# define TUNABLE_NAMESPACE tune
+# include <unistd.h>		/* Get STDOUT_FILENO for _dl_printf.  */
+# include <elf/dl-tunables.h>
+
+extern void TUNABLE_CALLBACK (set_hwcaps) (tunable_val_t *)
+  attribute_hidden;
+#endif
 
 static void
 get_common_indeces (struct cpu_features *cpu_features,
@@ -104,8 +114,13 @@ get_common_indeces (struct cpu_features *cpu_features,
 	  __cpuid_count (0xd, 0, eax, ebx, ecx, edx);
 	  if (ebx != 0)
 	    {
-	      cpu_features->xsave_state_size
+	      unsigned int xsave_state_full_size
 		= ALIGN_UP (ebx + STATE_SAVE_OFFSET, 64);
+
+	      cpu_features->xsave_state_size
+		= xsave_state_full_size;
+	      cpu_features->xsave_state_full_size
+		= xsave_state_full_size;
 
 	      __cpuid_count (0xd, 1, eax, ebx, ecx, edx);
 
@@ -192,7 +207,6 @@ init_cpu_features (struct cpu_features *cpu_features)
 
       if (family == 0x06)
 	{
-	  ecx = cpu_features->cpuid[COMMON_CPUID_INDEX_1].ecx;
 	  model += extended_model;
 	  switch (model)
 	    {
@@ -240,7 +254,7 @@ init_cpu_features (struct cpu_features *cpu_features)
 	    default:
 	      /* Unknown family 0x06 processors.  Assuming this is one
 		 of Core i3/i5/i7 processors if AVX is available.  */
-	      if ((ecx & bit_cpu_AVX) == 0)
+	      if (!CPU_FEATURES_CPU_P (cpu_features, AVX))
 		break;
 
 	    case 0x1a:
@@ -279,7 +293,7 @@ init_cpu_features (struct cpu_features *cpu_features)
 		 with stepping >= 4) to avoid TSX on kernels that weren't
 		 updated with the latest microcode package (which disables
 		 broken feature by default).  */
-	      cpu_features->cpuid[COMMON_CPUID_INDEX_7].ebx &= ~(bit_cpu_RTM);
+	      cpu_features->cpuid[index_cpu_RTM].reg_RTM &= ~bit_cpu_RTM;
 	      break;
 	    }
 	}
@@ -363,4 +377,68 @@ no_cpuid:
   cpu_features->family = family;
   cpu_features->model = model;
   cpu_features->kind = kind;
+
+#if HAVE_TUNABLES
+  TUNABLE_GET (hwcaps, tunable_val_t *, TUNABLE_CALLBACK (set_hwcaps));
+  cpu_features->non_temporal_threshold
+    = TUNABLE_GET (x86_non_temporal_threshold, long int, NULL);
+  cpu_features->data_cache_size
+    = TUNABLE_GET (x86_data_cache_size, long int, NULL);
+  cpu_features->shared_cache_size
+    = TUNABLE_GET (x86_shared_cache_size, long int, NULL);
+#endif
+
+  /* Reuse dl_platform, dl_hwcap and dl_hwcap_mask for x86.  */
+#if !HAVE_TUNABLES && defined SHARED
+  /* The glibc.tune.hwcap_mask tunable is initialized already, so no need to do
+     this.  */
+  GLRO(dl_hwcap_mask) = HWCAP_IMPORTANT;
+#endif
+
+#ifdef __x86_64__
+  GLRO(dl_hwcap) = HWCAP_X86_64;
+  if (cpu_features->kind == arch_kind_intel)
+    {
+      const char *platform = NULL;
+
+      if (CPU_FEATURES_ARCH_P (cpu_features, AVX512F_Usable)
+	  && CPU_FEATURES_CPU_P (cpu_features, AVX512CD))
+	{
+	  if (CPU_FEATURES_CPU_P (cpu_features, AVX512ER))
+	    {
+	      if (CPU_FEATURES_CPU_P (cpu_features, AVX512PF))
+		platform = "xeon_phi";
+	    }
+	  else
+	    {
+	      if (CPU_FEATURES_CPU_P (cpu_features, AVX512BW)
+		  && CPU_FEATURES_CPU_P (cpu_features, AVX512DQ)
+		  && CPU_FEATURES_CPU_P (cpu_features, AVX512VL))
+		GLRO(dl_hwcap) |= HWCAP_X86_AVX512_1;
+	    }
+	}
+
+      if (platform == NULL
+	  && CPU_FEATURES_ARCH_P (cpu_features, AVX2_Usable)
+	  && CPU_FEATURES_ARCH_P (cpu_features, FMA_Usable)
+	  && CPU_FEATURES_CPU_P (cpu_features, BMI1)
+	  && CPU_FEATURES_CPU_P (cpu_features, BMI2)
+	  && CPU_FEATURES_CPU_P (cpu_features, LZCNT)
+	  && CPU_FEATURES_CPU_P (cpu_features, MOVBE)
+	  && CPU_FEATURES_CPU_P (cpu_features, POPCNT))
+	platform = "haswell";
+
+      if (platform != NULL)
+	GLRO(dl_platform) = platform;
+    }
+#else
+  GLRO(dl_hwcap) = 0;
+  if (CPU_FEATURES_CPU_P (cpu_features, SSE2))
+    GLRO(dl_hwcap) |= HWCAP_X86_SSE2;
+
+  if (CPU_FEATURES_ARCH_P (cpu_features, I686))
+    GLRO(dl_platform) = "i686";
+  else if (CPU_FEATURES_ARCH_P (cpu_features, I586))
+    GLRO(dl_platform) = "i586";
+#endif
 }

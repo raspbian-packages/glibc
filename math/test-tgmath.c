@@ -21,6 +21,7 @@
 #ifndef HAVE_MAIN
 #undef __NO_MATH_INLINES
 #define __NO_MATH_INLINES 1
+#include <float.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -30,7 +31,7 @@
 
 static void compile_test (void);
 static void compile_testf (void);
-#ifndef NO_LONG_DOUBLE
+#if LDBL_MANT_DIG > DBL_MANT_DIG
 static void compile_testl (void);
 #endif
 
@@ -51,7 +52,7 @@ int count_cdouble;
 int count_cfloat;
 int count_cldouble;
 
-#define NCALLS     138
+#define NCALLS     134
 #define NCALLS_INT 4
 #define NCCALLS    47
 
@@ -135,7 +136,7 @@ do_test (void)
       result = 1;
     }
 
-#ifndef NO_LONG_DOUBLE
+#if LDBL_MANT_DIG > DBL_MANT_DIG
   count_float = count_double = count_ldouble = 0;
   count_cfloat = count_cdouble = count_cldouble = 0;
   compile_testl ();
@@ -200,7 +201,7 @@ do_test (void)
 #define ccount count_cfloat
 #include "test-tgmath.c"
 
-#ifndef NO_LONG_DOUBLE
+#if LDBL_MANT_DIG > DBL_MANT_DIG
 #define F(name) name##l
 #define TYPE long double
 #define x lx
@@ -294,8 +295,8 @@ F(compile_test) (void)
   b = fmaxmag (fmaxmag (a, x), fmaxmag (c, b));
   a = fminmag (fminmag (x, a), fminmag (c, b));
   b = fma (sin (a), sin (x), sin (c));
-  a = totalorder (totalorder (x, b), totalorder (c, x));
-  b = totalordermag (totalordermag (x, a), totalordermag (c, x));
+  a = totalorder (x, b);
+  b = totalordermag (x, a);
 
 #ifdef TEST_INT
   a = atan2 (i, b);

@@ -55,8 +55,6 @@ routines :=								\
 	sendfile sendfile64 \
 	utimensat futimens
 
-aux := have_o_cloexec
-
 # These routines will be omitted from the libc shared object.
 # Instead the static object files will be included in a special archive
 # linked against when the shared library will be used.
@@ -82,6 +80,8 @@ include ../Rules
 
 CFLAGS-open.c = -fexceptions -fasynchronous-unwind-tables
 CFLAGS-open64.c = -fexceptions -fasynchronous-unwind-tables
+CFLAGS-creat.c = -fexceptions -fasynchronous-unwind-tables
+CFLAGS-creat64.c = -fexceptions -fasynchronous-unwind-tables
 CFLAGS-fcntl.c = -fexceptions -fasynchronous-unwind-tables
 CFLAGS-poll.c = -fexceptions -fasynchronous-unwind-tables
 CFLAGS-ppoll.c = -fexceptions -fasynchronous-unwind-tables
@@ -99,7 +99,8 @@ CFLAGS-posix_fallocate.c = -fexceptions
 CFLAGS-posix_fallocate64.c = -fexceptions
 CFLAGS-fallocate.c = -fexceptions
 CFLAGS-fallocate64.c = -fexceptions
-CFLAGS-sync_file_range.c = -fexceptions
+CFLAGS-read.c = -fexceptions
+CFLAGS-write.c = -fexceptions
 
 CFLAGS-test-stat.c = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE
 CFLAGS-test-lfs.c = -D_LARGEFILE64_SOURCE

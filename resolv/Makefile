@@ -22,13 +22,14 @@ subdir	:= resolv
 
 include ../Makeconfig
 
-headers	:= resolv.h \
+headers	:= resolv.h bits/types/res_state.h \
 	   netdb.h bits/netdb.h \
 	   arpa/nameser.h arpa/nameser_compat.h \
 	   sys/bitypes.h
 
 routines := herror inet_addr inet_ntop inet_pton nsap_addr res_init \
-	    res_hconf res_libc res-state
+	    res_hconf res_libc res-state res_randomid res-close \
+	    resolv_context resolv_conf
 
 tests = tst-aton tst-leaks tst-inet_ntop
 xtests = tst-leaks2
@@ -43,15 +44,41 @@ routines += gai_sigqueue
 tests += \
   tst-bug18665 \
   tst-bug18665-tcp \
+  tst-ns_name \
+  tst-ns_name_compress \
   tst-res_hconf_reorder \
   tst-res_use_inet6 \
   tst-resolv-basic \
   tst-resolv-edns \
   tst-resolv-network \
+  tst-resolv-res_init-multi \
   tst-resolv-search \
+
+# These tests need libdl.
+ifeq (yes,$(build-shared))
+tests += \
+  tst-resolv-canonname \
+
+# uses DEPRECATED_RES_USE_INET6 from <resolv-internal.h>.
+tests-internal += \
+  tst-resolv-res_init \
+  tst-resolv-res_init-thread \
+
+# Needs resolv_context.
+tests-internal += \
+  tst-resolv-res_ninit \
+  tst-resolv-threads \
+
+endif
+
+# This test accesses __inet_ntop_range, an internal libc function.
+tests-internal += tst-inet_pton
 
 # This test sends millions of packets and is rather slow.
 xtests += tst-resolv-qtypes
+
+# This test has dropped packet tests and runs for a long time.
+xtests += tst-resolv-rotate
 endif
 extra-libs-others = $(extra-libs)
 libresolv-routines := res_comp res_debug \
@@ -82,6 +109,7 @@ ifeq ($(run-built-tests),yes)
 ifneq (no,$(PERL))
 tests-special += $(objpfx)mtrace-tst-leaks.out
 xtests-special += $(objpfx)mtrace-tst-leaks2.out
+tests-special += $(objpfx)mtrace-tst-resolv-res_ninit.out
 endif
 endif
 
@@ -93,7 +121,8 @@ headers += rpc/netdb.h
 endif
 
 generated += mtrace-tst-leaks.out tst-leaks.mtrace \
-	     mtrace-tst-leaks2.out tst-leaks2.mtrace
+	     mtrace-tst-leaks2.out tst-leaks2.mtrace \
+	     mtrace-tst-resolv-res_ninit.out tst-resolv-res_ninit.mtrace \
 
 include ../Rules
 
@@ -121,14 +150,35 @@ $(objpfx)mtrace-tst-leaks2.out: $(objpfx)tst-leaks2.out
 	$(common-objpfx)malloc/mtrace $(objpfx)tst-leaks2.mtrace > $@; \
 	$(evaluate-test)
 
+tst-resolv-res_ninit-ENV = MALLOC_TRACE=$(objpfx)tst-resolv-res_ninit.mtrace
+$(objpfx)mtrace-tst-resolv-res_ninit.out: $(objpfx)tst-resolv-res_ninit.out
+	$(common-objpfx)malloc/mtrace \
+	  $(objpfx)tst-resolv-res_ninit.mtrace > $@; \
+	  $(evaluate-test)
+
 $(objpfx)tst-bug18665-tcp: $(objpfx)libresolv.so $(shared-thread-library)
 $(objpfx)tst-bug18665: $(objpfx)libresolv.so $(shared-thread-library)
 $(objpfx)tst-res_use_inet6: $(objpfx)libresolv.so $(shared-thread-library)
 $(objpfx)tst-resolv-basic: $(objpfx)libresolv.so $(shared-thread-library)
 $(objpfx)tst-resolv-edns: $(objpfx)libresolv.so $(shared-thread-library)
 $(objpfx)tst-resolv-network: $(objpfx)libresolv.so $(shared-thread-library)
+$(objpfx)tst-resolv-res_init: $(libdl) $(objpfx)libresolv.so
+$(objpfx)tst-resolv-res_init-multi: $(objpfx)libresolv.so \
+  $(shared-thread-library)
+$(objpfx)tst-resolv-res_init-thread: $(libdl) $(objpfx)libresolv.so \
+  $(shared-thread-library)
 $(objpfx)tst-resolv-qtypes: $(objpfx)libresolv.so $(shared-thread-library)
+$(objpfx)tst-resolv-rotate: $(objpfx)libresolv.so $(shared-thread-library)
 $(objpfx)tst-resolv-search: $(objpfx)libresolv.so $(shared-thread-library)
+$(objpfx)tst-resolv-threads: \
+  $(libdl) $(objpfx)libresolv.so $(shared-thread-library)
+$(objpfx)tst-resolv-canonname: \
+  $(libdl) $(objpfx)libresolv.so $(shared-thread-library)
+
+$(objpfx)tst-ns_name: $(objpfx)libresolv.so
+$(objpfx)tst-ns_name.out: tst-ns_name.data
+$(objpfx)tst-ns_name_compress: $(objpfx)libresolv.so
+
 
 # This test case uses the deprecated RES_USE_INET6 resolver option.
 CFLAGS-tst-res_use_inet6.c += -Wno-error

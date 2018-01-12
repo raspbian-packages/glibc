@@ -1,6 +1,8 @@
 #ifndef _STRING_H
 
 #ifndef _ISOMAC
+/* Some of these are defined as macros in the real string.h, so we must
+   prototype them before including it.  */
 #include <sys/types.h>
 
 extern void *__memccpy (void *__dest, const void *__src,
@@ -41,16 +43,16 @@ extern void *__memrchr (const void *__s, int __c, size_t __n)
 extern void *__memchr (const void *__s, int __c, size_t __n)
      __attribute_pure__;
 
+extern void __bzero (void *__s, size_t __n) __THROW __nonnull ((1));
+
 extern int __ffs (int __i) __attribute__ ((const));
 
 extern char *__strerror_r (int __errnum, char *__buf, size_t __buflen);
-#endif
 
 /* Get _STRING_ARCH_unaligned.  */
 #include <string_private.h>
+#endif
 
-/* Now the real definitions.  We do this here since some of the functions
-   above are defined as macros in the headers.  */
 #include <string/string.h>
 
 #ifndef _ISOMAC
@@ -74,12 +76,20 @@ extern __typeof (strncasecmp_l) __strncasecmp_l;
 #endif
 
 libc_hidden_proto (__mempcpy)
+#ifndef __NO_STRING_INLINES
+# define __mempcpy(dest, src, n) __builtin_mempcpy (dest, src, n)
+#endif
 libc_hidden_proto (__stpcpy)
+#ifndef __NO_STRING_INLINES
+# define __stpcpy(dest, src) __builtin_stpcpy (dest, src)
+#endif
 libc_hidden_proto (__stpncpy)
 libc_hidden_proto (__rawmemchr)
 libc_hidden_proto (__strcasecmp)
 libc_hidden_proto (__strcasecmp_l)
 libc_hidden_proto (__strncasecmp_l)
+extern __typeof (strncat) __strncat;
+libc_hidden_proto (__strncat)
 libc_hidden_proto (__strdup)
 libc_hidden_proto (__strndup)
 libc_hidden_proto (__strerror_r)
@@ -132,7 +142,7 @@ libc_hidden_builtin_proto (strspn)
 libc_hidden_builtin_proto (strstr)
 libc_hidden_builtin_proto (ffs)
 
-#if IS_IN (rtld)
+#if IS_IN (rtld) && !defined NO_RTLD_HIDDEN
 extern __typeof (__stpcpy) __stpcpy attribute_hidden;
 extern __typeof (__strdup) __strdup attribute_hidden;
 extern __typeof (__strerror_r) __strerror_r attribute_hidden;
@@ -159,15 +169,6 @@ extern __typeof (strsep) strsep attribute_hidden;
 extern __typeof (mempcpy) mempcpy __asm__ ("__mempcpy");
 extern __typeof (stpcpy) stpcpy __asm__ ("__stpcpy");
 #endif
-
-# ifndef _ISOMAC
-#  ifndef index
-#   define index(s, c)	(strchr ((s), (c)))
-#  endif
-#  ifndef rindex
-#   define rindex(s, c)	(strrchr ((s), (c)))
-#  endif
-# endif
 
 extern void *__memcpy_chk (void *__restrict __dest,
 			   const void *__restrict __src, size_t __len,

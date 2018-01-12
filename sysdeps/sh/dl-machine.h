@@ -230,6 +230,7 @@ dl_platform_init (void)
 
 static inline Elf32_Addr
 elf_machine_fixup_plt (struct link_map *map, lookup_t t,
+		       const ElfW(Sym) *refsym, const ElfW(Sym) *sym,
 		       const Elf32_Rela *reloc,
 		       Elf32_Addr *reloc_addr, Elf32_Addr value)
 {
@@ -389,7 +390,7 @@ elf_machine_rela (struct link_map *map, const Elf32_Rela *reloc,
 	  break;
 	case R_SH_DIR32:
 	  {
-#ifndef RTLD_BOOTSTRAP
+#if !defined RTLD_BOOTSTRAP && !defined RESOLVE_CONFLICT_FIND_MAP
 	   /* This is defined in rtld.c, but nowhere in the static
 	      libc.a; make the reference weak so static programs can
 	      still link.  This declaration cannot be done when

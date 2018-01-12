@@ -18,6 +18,7 @@
 
 #include <string.h>
 #include <rpcsvc/nis.h>
+#include <shlib-compat.h>
 
 /* internal_nis_ismember ()
    return codes: -1 principal is in -group
@@ -146,3 +147,4 @@ nis_ismember (const_nis_name principal, const_nis_name group)
   else
     return FALSE;
 }
+libnsl_hidden_nolink_def (nis_ismember, GLIBC_2_1)

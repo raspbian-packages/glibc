@@ -1,9 +1,243 @@
-glibc (2.25-5+rpi1) buster-staging; urgency=medium
+glibc (2.26-2+rpi1) buster-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Wed, 27 Dec 2017 21:11:39 +0000
+ -- Peter Michael Green <plugwash@raspbian.org>  Fri, 12 Jan 2018 01:31:25 +0000
+
+glibc (2.26-2) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * patches/hurd-i386/unsubmitted-mount_namespace.diff: Rename to
+    git-mount_namespace.diff.
+
+  [ Helmut Grohne ]
+  * debian/rules.d/build.mk: Remove a left-over closing brace, breaking
+    stage 1.  Closes: #886301.
+
+  [ Aurelien Jarno ]
+  * debian/sysdeps/hppa.mk: increase TIMEOUTFACTOR to 600 on HPPA.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Fri, 05 Jan 2018 19:09:39 +0100
+
+glibc (2.26-1) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * patches/hurd-i386/unsubmitted-mount_namespace.diff: New patch to fix build
+    of support/support_enter_mount_namespace.c on hurd-i386.
+
+  [ Aurelien Jarno ]
+  * debian/control.in/main: this upload targets unstable, update Vcs-Git
+    accordingly.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Wed, 03 Jan 2018 18:30:46 +0100
+
+glibc (2.26-0experimental3) experimental; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/patches/any/local-ldso-disable-hwcap.diff: Include <fcntl.h>
+    before <not-errno.h>.
+  * debian/rules, debian/rules.d/build.mk: stop logging build/check messages
+    to files, both sbuild and debuild are able to do that.
+  * debian/rules, debian/rules.d/build.mk: allow TIMEOUTFACTOR to be override
+    per architecture.
+  * debian/sysdeps/hppa.mk: set TIMEOUTFACTOR to 100 on HPPA.
+  * debian/testsuite-xfail-debian.mk: remove tst-create-detached from XFAIL
+    on HPPA.
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix tst-realloc when heap space is exhausted.
+  * debian/testsuite-xfail-debian.mk: convert alpha math XFAILs into granular
+    XFAILs.
+  * debian/testsuite-xfail-debian.mk: remove tst-realloc from XFAIL on
+    sparc64.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Mon, 01 Jan 2018 13:50:41 +0100
+
+glibc (2.26-0experimental2) experimental; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/testsuite-xfail-debian.mk: move double-lround XFAILs from mips64el
+    to mipsel.
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix malloc returning pointer from tcache_get when it should returns
+      NULL (CVE-2017-17426).  Closes: #883729.
+    - Drop debian/patches/ia64/git-ia64-crash-thread-exit.diff (merged
+      upstream).
+  * debian/control.in/libc: add a Breaks: libperl5.26 (<< 5.26.1-3) to
+    @libc@-dev to handle the xlocale.h removal.  Closes: #883392.
+  * debian/control.in/main: point the Vcs-Git field to the glibc-2.26 branch
+    to shut up tracker.debian.org about missing commits.
+  * debian/testsuite-xfail-debian.mk: x32: remove a bunch of conform issues,
+    add tst-platform-1, as this test has x86-64 specific expectations.
+  * debian/sysdeps/sparc64.mk: don't force -mcpu=ultrasparc as that
+    miscompiles at least pthread_barrier_wait.c. Mark tst-realloc as XFAIL, as
+    there are way to trigger the issue on older libc and/or other
+    architectures.
+  * debian/patches/locale/fix-LC_COLLATE-rules.diff: drop, not useful anymore
+    and has side effects.
+  * debian/patches/localedata/local-hu_HU-sort.diff: removed, the hu_HU
+    collation is now the same than upstream.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 17 Dec 2017 18:44:55 +0100
+
+glibc (2.26-0experimental1) experimental; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/testsuite-xfail-debian.mk: Update hurd-i386 xfail with new test.
+
+  [ Aurelien Jarno ]
+  * Bump build-dependency on binutils to >= 2.25, as required by glibc 2.26.
+  * debian/testsuite-xfail-debian.mk: re-add double-lround XFAILs for
+    mips64el.
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Wed, 22 Nov 2017 17:46:32 +0100
+
+glibc (2.26-0experimental0) experimental; urgency=medium
+
+  [ Adam Conrad ]
+  * New upstream release (LP: #1703368), with git updates to 2017-10-10:
+    - debian/{symbols.wildcards,control}: Update and regen for 2.26.
+    - debian/patches/alpha/submitted-termios_h.diff: upstreamed.
+    - debian/patches/arm/submitted-strip-bit-0.diff: upstreamed.
+    - debian/patches/hurd-i386/git-__inet6_scopeid_pton.diff: upstreamed.
+    - debian/patches/any/submitted-string2-strcmp.diff: obsolete.
+    - debian/patches/any/local-tst-writev.diff: fixed upstream.
+    - debian/patches/any/local-dynamic-resolvconf.diff: fixed upstream.
+    - debian/patches/any/submitted-unicode-9.0.0.diff: obsolete.
+    - debian/patches/any/cvs-malloc-hardening.diff: upstreamed.
+    - debian/patches/any/local-bits-sigstack.diff: fixed upstream.
+    - debian/patches/powerpc/submitted-tst-tlsopt-powerpc.diff: upstreamed.
+    - debian/patches/i386/local-cmov.diff: dropped, no longer useful.
+    - debian/patches/all/local-ldd.diff: rebased.
+    - debian/patches/any/local-ldso-disable-hwcap.diff: rebased.
+    - debian/patches/any/local-tcsetaddr.diff: rebased.
+    - debian/patches/any/submitted-resolv-unaligned.diff: rebased.
+    - debian/patches/arm/local-arm-futex.diff: rebased.
+    - debian/patches/hurd-i386/local-ED.diff: rebased.
+    - debian/patches/hurd-i386/tg-EGREGIOUS-fr.diff: rebased.
+    - debian/patches/hurd-i386/tg-EIEIO-fr.diff: rebased.
+    - debian/patches/kfreebsd/submitted-auxv.diff: rebased.
+    - debian/patches/kfreebsd/submitted-waitid.diff: rebased.
+    - debian/patches/localedata/locales-fr.diff: rebased.
+    - debian/patches/sparc/submitted-sparc64-socketcall.diff: rebased.
+    - debian/patches/localedata/local-hu_HU-sort.diff: Make testsuite
+      agree with the sorting we see in Debian, may need another look.
+    - debian/patches/any/local-cudacc-float128.diff: Local patch to prevent
+      defining __HAVE_FLOAT128 on NVIDIA's CUDA compilers (LP: #1717257)
+    - debian/patches/arm/git-arm64-memcmp.diff: Backport optimized memcmp
+      for AArch64, improving performance from 25% to 500% (LP: #1720832)
+    - debian/control.in/libc: Drop ancient Breaks satisfied in oldoldstable.
+    - debian/{debhelper.in/libc.preinst,sysdeps/amd64.mk,sysdeps/i386.mk}:
+      Bump MIN_KERNEL_SUPPORTED to 3.2 on x86, following upstream's change.
+    - debian/sysdeps/{powerpc.mk,ppc64.mk,s390x.mk}: Disable lock-elision on
+      powerpc and s390, following IBM's recommendation.
+    - debian/testsuite-xfail-debian.mk: Re-enable xfailed resolv tests.
+    - debian/testsuite-xfail-debian.mk: Allow tst-create-detached to fail on
+      all platforms; the design of this test is such that the outcome relies
+      on cache sizes and noisiness of the build system, which is unreliable.
+    - debian/rules.d/build.mk: Configure with --enable-obsolete-nsl until we
+      sort out a reasonable nsswitch migration strategy from compat to files.
+
+  [ Samuel Thibault ]
+  * Adjust hurd-i386 patches to restore build and functionality with 2.26:
+    - patches/hurd-i386/tg-gsync-libc.diff: rebased.
+    - patches/hurd-i386/tg-hurdsig-global-dispositions.diff: rebased.
+    - patches/hurd-i386/tg-pipe2.diff: rebased.
+    - patches/hurd-i386/tg-socket_flags.diff: rebased.
+    - patches/hurd-i386/tg2.25-tls.diff: rebased.
+    - patches/hurd-i386/tg2.26-sched_param.diff: New patch.
+    - patches/hurd-i386/git-sigsetops.h.diff: New patch.
+    - patches/hurd-i386/git-sigsetops-2.h.diff: New patch.
+    - patches/hurd-i386/git-sigsetops-3.h.diff: New patch.
+    - patches/hurd-i386/tg2.26-sigsetops.h.diff: New patch.
+    - patches/hurd-i386/git-bits_socket.h.diff: New patch.
+    - patches/hurd-i386/git-preadwritev2.diff: New patch.
+    - patches/hurd-i386/git-preadwritev2-2.diff: New patch.
+    - patches/hurd-i386/git-preadwritev2-3.diff: New patch.
+    - patches/hurd-i386/git-rtld-access.diff: New patch.
+    - patches/hurd-i386/git-rtld-sbrk.diff: New patch.
+    - patches/hurd-i386/git-rtld-sbrk-2.diff: New patch.
+    - patches/hurd-i386/git-divdi.diff: New patch.
+    - patches/hurd-i386/git-feraiseexcept.diff: New patch.
+    - patches/hurd-i386/cvs-libpthread.diff: Update.
+    - patches/hurd-i386/git-libpthread-2.26.diff: New patch.
+    - patches/hurd-i386/git-i386-implies-x86.diff: New patch.
+    - patches/hurd-i386/git-x86-tunables.diff: New patch.
+    - patches/hurd-i386/git-rtld-strtoul_internal.diff: New patch.
+    - patches/hurd-i386/git-clone.diff: New patch.
+    - patches/hurd-i386/git-gethostname.diff: New patch.
+    - patches/hurd-i386/cvs-libpthread-sigstate.diff: Remove unused merged
+    patch.
+    - patches/hurd-i386/cvs-send-recv-posix.diff: Remove unused merged patch.
+    - patches/hurd-i386/cvs-truncate64.diff: Remove unused merged patch.
+    - patches/hurd-i386/git-tst-udp-timeout.diff: New patch.
+    - patches/hurd-i386/git-tst-udp-nonblocking.diff: New patch.
+    - patches/hurd-i386/unsubmitted-exp-hidden-jump.diff: New patch.
+    - patches/hurd-i386/git-hidden-def.diff: New patch.
+    - patches/hurd-i386/git-hidden-def.diff-2: New patch.
+    - patches/hurd-i386/git-dl-sysdep-check.diff: New patch.
+    - patches/hurd-i386/git-socket-limit.diff: New patch.
+    - patches/hurd-i386/tg-thread-linkspace.diff: New patch.
+    - patches/hurd-i386/git-clock_gettime_gettimeofday.diff: New patch.
+    - patches/hurd-i386/tg-gsync-libc.diff: Update.
+    - patches/hurd-i386/tg-libpthread-gsync-mutex.diff: Update.
+    - patches/hurd-i386/tg-sendmsg-SCM_CREDS.diff: Update.
+    - patches/hurd-i386/git-sigsuspend_not_cancel.diff: New patch.
+    - patches/hurd-i386/tg-sysvshm.diff: Update.
+    - patches/hurd-i386/tg-ifaddrs_v6.diff: Update.
+    - patches/hurd-i386/git-dirfd-linknamespace.diff: New patch.
+    - patches/hurd-i386/git-revoke-linknamespace.diff: New patch.
+    - patches/hurd-i386/git-seekdir-linknamespace.diff: New patch.
+    - patches/hurd-i386/git-ifaddrs-linknamespace.diff: New patch.
+    - patches/hurd-i386/git-NO_HIDDEN.diff: New patch.
+    - patches/hurd-i386/unsubmitted-NO_HIDDEN.diff: Remove patch.
+    - patches/hurd-i386/unsubmitted-exp-hidden-jump.diff: Remove patch.
+    - testsuite-xfail-debian.mk: Update.
+    - testsuite-xfail-debian.mk: Remove now-removed XPG3 entries.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix buffer overflow in glob with GLOB_TILDE (CVE-2017-15670).  Closes:
+      #879501.
+    - Fix memory leak in glob with GLOB_TILDE (CVE-2017-15671).  Closes:
+      #879500.
+  * debian/rules, debian/control.in/main: build with GCC 7.
+  * debian/testsuite-xfail-debian.mk: remove a few XFAIL on s390x that were
+    due to GCC 6 issues.
+  * debian/testsuite-xfail-debian.mk: drop support for s390.
+  * debian/testsuite-xfail-debian.mk: Use granular fma XFAIL on mips*.
+  * debian/testsuite-xfail-debian.mk: mark misc/tst-set_ppr as XFAIL on
+    powerpc as it requires a recent CPU or a recent kernel for CPU feature
+    detection.
+  * debian/patches/any/local-libgcc-compat-{abilists,main,ports}.diff: drop
+    workaround for binaries built with some broken versions of GCC 3.2 more
+    than 10 years ago.
+  * debian/testsuite-xfail-debian.mk: remove many XFAIL from mips, mipsel and
+    mips64el.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 19 Nov 2017 12:49:13 +0100
+
+glibc (2.25-6) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/control.in/main: add mips r6 architectures to Build-Depends:
+    g++-6-multilib.  Closes: #884774.
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fixes incorrect RPATH/RUNPATH handling for SUID binaries
+      (CVE-2017-16997).  Closes: #884615.
+  * debian/control.in/main, debian/copyright, rules.d/tarball.mk: prefer
+    https for upstream links.
+  * debian/control.in/main: bump Standards-Version to 4.1.3.
+  * debian/patches/alpha/submitted-rlimit.diff: new patch to fix getrlimit
+    and setrlimit with RLIM_INFINITY on alpha.
+  * debian/patches/alpha/submitted-fminmax.diff: new patch to fix fmin and
+    fmax on alpha.
+  * debian/testsuite-xfail-debian.mk: mark test-fexcept, test-ldouble and
+    test-ldouble-finite as XFAIL as the failures are due to new tests, and
+    thus not a regression.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 31 Dec 2017 18:50:30 +0100
 
 glibc (2.25-5) unstable; urgency=medium
 
@@ -257,7 +491,7 @@ glibc (2.25-0experimental1) experimental; urgency=medium
     arguments, causing nptl/tst-rwlock15 to fail on mips and mipsel.
   * debian/control.in/main,debian/compat: switch to debhelper 10.
 
-  [ John David Anglin ]
+  [ John David Anglin ]
   * debian/patches/any/submitted-resolv-unaligned.diff: new patch to fix
     misaligned accesses in res_query.c to fields in HEADER struct (closes:
     #827703).
@@ -1747,7 +1981,7 @@ glibc (2.21-5) unstable; urgency=medium
   [ Aurelien Jarno ]
   * sysdeps/armel.mk, sysdeps/armhf.mk: pass --disable-multi-arch on armel and
     armhf as IFUNC support is broken in binutils (see #807974).
-  
+
  -- Samuel Thibault <sthibault@debian.org>  Tue, 22 Dec 2015 15:23:35 +0100
 
 glibc (2.21-4) unstable; urgency=medium
@@ -1783,7 +2017,7 @@ glibc (2.21-2) unstable; urgency=medium
 
   [ Aurelien Jarno ]
   * debhelper.in/libc.preinst: drop outdated code about pre-2.6 kernels.
-  * rules.d/debhelper.mk: prefix calls to objcopy and strip with 
+  * rules.d/debhelper.mk: prefix calls to objcopy and strip with
     $(DEB_HOST_GNU_TYPE)-.
   * testsuite-checking/expected-results-hppa-linux-gnu-libc: update testsuite
     result, from John David Anglin.  Closes: #806839.
@@ -1797,7 +2031,7 @@ glibc (2.21-2) unstable; urgency=medium
 glibc (2.21-1) unstable; urgency=medium
 
   [ Aurelien Jarno ]
-  * testsuite-checking/expected-results-mips64el-linux-gnu-*: allow 
+  * testsuite-checking/expected-results-mips64el-linux-gnu-*: allow
     nptl/tst-cancel24-static to fail on mips64el.  It's an upstream regression
     only affecting static binaries currently under investigation.
   * patches/hppa/submitted-mathdef.diff: update to include the ABI baseline
@@ -1885,7 +2119,7 @@ glibc (2.21-0experimental3) experimental; urgency=medium
   * patches/hppa/submitted-gmon-start.diff: new patch from upstream to
     fix __gmon_start__ symbol proliferation on hppa.  Closes: #805730.
   * Update from upstream stable branch:
-    - patches/any/cvs-make-typo.diff: Merged. 
+    - patches/any/cvs-make-typo.diff: Merged.
     - Fix FTBFS with libselinux 2.4.
 
   [ Samuel Thibault ]
@@ -1985,7 +2219,7 @@ glibc (2.21-0experimental2) experimental; urgency=medium
     and fix the pulsesink (and others) regression on ARM (closes: #788799)
 
   [ Henrique de Moraes Holschuh ]
-  * Replace patches/amd64/local-blacklist-on-TSX-Haswell.diff by 
+  * Replace patches/amd64/local-blacklist-on-TSX-Haswell.diff by
     local-blacklist-for-Intel-TSX.diff also blacklisting some Broadwell
     models.  Closes: #800574.
 

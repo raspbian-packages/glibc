@@ -87,7 +87,7 @@ __registerrpc (u_long prognum, u_long versnum, u_long procnum,
       transp = svcudp_create (RPC_ANYSOCK);
       if (transp == NULL)
 	{
-	  buf = strdup (_("couldn't create an rpc server\n"));
+	  buf = __strdup (_("couldn't create an rpc server\n"));
 	  goto err_out;
 	}
     }
@@ -103,7 +103,7 @@ __registerrpc (u_long prognum, u_long versnum, u_long procnum,
   pl = (struct proglst_ *) malloc (sizeof (struct proglst_));
   if (pl == NULL)
     {
-      buf = strdup (_("registerrpc: out of memory\n"));
+      buf = __strdup (_("registerrpc: out of memory\n"));
       goto err_out;
     }
   pl->p_progname = progname;
@@ -154,7 +154,7 @@ universal (struct svc_req *rqstp, SVCXPRT *transp_l)
     if (pl->p_prognum == prog && pl->p_procnum == proc)
       {
 	/* decode arguments into a CLEAN buffer */
-	__bzero (xdrbuf, sizeof (xdrbuf));	/* required ! */
+	memset (xdrbuf, 0, sizeof (xdrbuf));	/* required ! */
 	if (!svc_getargs (transp_l, pl->p_inproc, xdrbuf))
 	  {
 	    svcerr_decode (transp_l);

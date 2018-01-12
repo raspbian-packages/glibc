@@ -23,7 +23,9 @@
 #else
 # define TEST_NAME "wmemchr"
 #endif /* WIDE */
+
 #include "test-string.h"
+#include <stdint.h>
 
 #ifndef WIDE
 # define MEMCHR memchr
@@ -177,6 +179,10 @@ test_main (void)
 
   for (i = 1; i < 8; ++i)
     {
+      /* Test n == 0.  */
+      do_test (i, i, 0, 0, 23);
+      do_test (i, i, 0, 0, 0);
+
       do_test (0, 16 << i, 2048, 2048, 23);
       do_test (i, 64, 256, 256, 23);
       do_test (0, 16 << i, 2048, 2048, 0);
@@ -218,4 +224,4 @@ test_main (void)
   return ret;
 }
 
-#include "../test-skeleton.c"
+#include <support/test-driver.c>

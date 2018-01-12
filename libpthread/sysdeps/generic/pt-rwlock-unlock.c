@@ -96,4 +96,4 @@ __pthread_rwlock_unlock (pthread_rwlock_t *rwlock)
   __pthread_spin_unlock (&rwlock->__lock);
   return 0;
 }
-strong_alias (__pthread_rwlock_unlock, pthread_rwlock_unlock);
+weak_alias (__pthread_rwlock_unlock, pthread_rwlock_unlock);

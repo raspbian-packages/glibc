@@ -25,11 +25,16 @@
 
 #define ITERATIONS	64
 
+#ifndef STRSTR
+# define STRSTR strstr
+#endif
+
 #ifndef STRLEN
 /* For builds with no IFUNC support, local calls should be made to internal
    GLIBC symbol (created by libc_hidden_builtin_def).  */
 # ifdef SHARED
 #  define STRLEN   __GI_strlen
+#  define STRLEN_is_local
 # else
 #  define STRLEN   strlen
 # endif
@@ -40,6 +45,7 @@
    GLIBC symbol (created by libc_hidden_builtin_def).  */
 # ifdef SHARED
 #  define STRNLEN   __GI_strnlen
+#  define STRNLEN_is_local
 # else
 #  define STRNLEN  __strnlen
 # endif
@@ -48,6 +54,7 @@
 #ifndef STRCHR
 # ifdef SHARED
 #  define STRCHR   __GI_strchr
+#  define STRCHR_is_local
 # else
 #  define STRCHR   strchr
 # endif
@@ -55,7 +62,8 @@
 
 #define	FRAMESIZE	(FRAME_MIN_SIZE+32)
 	.machine  power7
-EALIGN (strstr, 4, 0)
+/* Can't be ENTRY_TOCLESS due to calling __strstr_ppc which uses r2.  */
+ENTRY (STRSTR, 4)
 	CALL_MCOUNT 2
 	mflr	r0			/* Load link register LR to r0.  */
 	std	r31, -8(r1)		/* Save callers register r31.  */
@@ -82,7 +90,9 @@ EALIGN (strstr, 4, 0)
 	mr	r30, r4
 	mr	r3, r4
 	bl	STRLEN
+#ifndef STRLEN_is_local
 	nop
+#endif
 
 	cmpdi	cr7, r3, 0	/* If search str is null.  */
 	beq	cr7, L(ret_r3)
@@ -91,14 +101,18 @@ EALIGN (strstr, 4, 0)
 	mr	r4, r3
 	mr	r3, r29
 	bl	STRNLEN
+#ifndef STRNLEN_is_local
 	nop
+#endif
 
 	cmpd	cr7, r3, r31 	/* If len(r3) < len(r4).  */
 	blt	cr7, L(retnull)
 	mr	r3, r29
 	lbz	r4, 0(r30)
 	bl	STRCHR
+#ifndef STRCHR_is_local
 	nop
+#endif
 
 	mr	r11, r3
 	/* If first char of search str is not present.  */
@@ -330,7 +344,9 @@ L(begin):
 	beq	cr7, L(default)
 	lbz	r4, 0(r30)
 	bl	STRCHR
+#ifndef STRCHR_is_local
 	nop
+#endif
 	/* If first char of search str is not present.  */
 	cmpdi	cr7, r3, 0
 	ble	cr7, L(end)
@@ -433,7 +449,9 @@ L(nextbyte):
 	beq	cr7, L(default)
 	lbz	r4, 0(r30)
 	bl	STRCHR
+#ifndef STRCHR_is_local
 	nop
+#endif
 	/* If first char of search str is not present.  */
 	cmpdi	cr7, r3, 0
 	ble	cr7, L(end)
@@ -513,5 +531,5 @@ L(end):
 	ld	r31, -8(r1)	/* Restore callers save register r31.  */
 	mtlr	r0		/* Branch to link register.  */
 	blr
-END (strstr)
+END (STRSTR)
 libc_hidden_builtin_def (strstr)
