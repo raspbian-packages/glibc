@@ -1,3 +1,17 @@
+2017-06-11  Santhosh Thottingal  <santhosh.thottingal@gmail.com>
+
+	[BZ #19922]
+	* locales/iso14651_t1_common: Add collation rules for U+07DA to U+07DF.
+
+	[BZ #19919]
+	* locales/iso14651_t1_common: Correct collation of U+0D36 and U+0D37.
+
+2016-12-30  Mike Frysinger  <vapier@gentoo.org>
+
+	[BZ #20974]
+	* localedata/bs_BA (LC_MESSAGES): Delete "*." from the end of
+	yesexpr and noexpr.
+
 2016-07-07  Aurelien Jarno  <aurelien@aurel32.net>
 
 	* locales/de_LI (postal_fmt): Fix indentation.

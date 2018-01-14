@@ -58,22 +58,19 @@
    normal program exit with the exit code 127.  */
 #define SPAWN_ERROR	127
 
-/* We need to block both SIGCANCEL and SIGSETXID.  */
-#define SIGALL_SET \
-  ((__sigset_t) { .__val = {[0 ...  _SIGSET_NWORDS-1 ] =  -1 } })
-
 #ifdef __ia64__
-# define CLONE(__fn, __stack, __stacksize, __flags, __args) \
-  __clone2 (__fn, __stack, __stacksize, __flags, __args, 0, 0, 0)
+# define CLONE(__fn, __stackbase, __stacksize, __flags, __args) \
+  __clone2 (__fn, __stackbase, __stacksize, __flags, __args, 0, 0, 0)
 #else
 # define CLONE(__fn, __stack, __stacksize, __flags, __args) \
   __clone (__fn, __stack, __flags, __args)
 #endif
 
-#if _STACK_GROWS_DOWN
-# define STACK(__stack, __stack_size) (__stack + __stack_size)
-#elif _STACK_GROWS_UP
+/* Since ia64 wants the stackbase w/clone2, re-use the grows-up macro.  */
+#if _STACK_GROWS_UP || defined (__ia64__)
 # define STACK(__stack, __stack_size) (__stack)
+#elif _STACK_GROWS_DOWN
+# define STACK(__stack, __stack_size) (__stack + __stack_size)
 #endif
 
 
@@ -329,6 +326,11 @@ __spawnix (pid_t * pid, const char *file,
 
   /* Add a slack area for child's stack.  */
   size_t argv_size = (argc * sizeof (void *)) + 512;
+  /* We need at least a few pages in case the compiler's stack checking is
+     enabled.  In some configs, it is known to use at least 24KiB.  We use
+     32KiB to be "safe" from anything the compiler might do.  Besides, the
+     extra pages won't actually be allocated unless they get used.  */
+  argv_size += (32 * 1024);
   size_t stack_size = ALIGN_UP (argv_size, GLRO(dl_pagesize));
   void *stack = __mmap (NULL, stack_size, prot,
 			MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK, -1, 0);
@@ -340,7 +342,9 @@ __spawnix (pid_t * pid, const char *file,
     }
 
   /* Disable asynchronous cancellation.  */
-  int cs = LIBC_CANCEL_ASYNC ();
+  int state;
+  __libc_ptf_call (__pthread_setcancelstate,
+                   (PTHREAD_CANCEL_DISABLE, &state), 0);
 
   args.file = file;
   args.exec = exec;
@@ -351,7 +355,7 @@ __spawnix (pid_t * pid, const char *file,
   args.envp = envp;
   args.xflags = xflags;
 
-  __sigprocmask (SIG_BLOCK, &SIGALL_SET, &args.oldmask);
+  __libc_signal_block_all (&args.oldmask);
 
   /* The clone flags used will create a new child that will run in the same
      memory space (CLONE_VM) and the execution of calling thread will be
@@ -384,9 +388,9 @@ __spawnix (pid_t * pid, const char *file,
   if ((ec == 0) && (pid != NULL))
     *pid = new_pid;
 
-  __sigprocmask (SIG_SETMASK, &args.oldmask, 0);
+  __libc_signal_restore_set (&args.oldmask);
 
-  LIBC_CANCEL_RESET (cs);
+  __libc_ptf_call (__pthread_setcancelstate, (state, NULL), 0);
 
   return ec;
 }
