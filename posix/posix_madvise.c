@@ -27,4 +27,4 @@ posix_madvise (__ptr_t addr, size_t len, int advice)
 {
   return ENOSYS;
 }
-stub_warning (posix_madvise)
+/* stub_warning (posix_madvise) */
