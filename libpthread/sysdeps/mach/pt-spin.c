@@ -17,20 +17,16 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
-#include <pthread.h>
 #include <machine-lock.h>
 
 /* In glibc.  */
-extern void __spin_lock_solid (__pthread_spinlock_t *lock);
+extern void __spin_lock_solid (__spin_lock_t *lock);
 
 /* Lock the spin lock object LOCK.  If the lock is held by another
    thread spin until it becomes available.  */
 int
-_pthread_spin_lock (__pthread_spinlock_t *lock)
+_pthread_spin_lock (__spin_lock_t *lock)
 {
   __spin_lock_solid (lock);
   return 0;
 }
-
-weak_alias (_pthread_spin_lock, pthread_spin_lock);
-weak_alias (_pthread_spin_lock, __pthread_spin_lock);
