@@ -78,7 +78,7 @@ extern __typeof (scandirat) __scandirat;
 libc_hidden_proto (__scandirat)
 libc_hidden_proto (scandirat64)
 
-#  if IS_IN (rtld)
+#  if IS_IN (rtld) && !defined NO_RTLD_HIDDEN
 extern __typeof (__closedir) __closedir attribute_hidden;
 extern __typeof (__fdopendir) __fdopendir attribute_hidden;
 extern __typeof (__readdir) __readdir attribute_hidden;
