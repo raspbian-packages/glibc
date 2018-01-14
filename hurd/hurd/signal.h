@@ -41,6 +41,11 @@
 #include <setjmp.h>		/* For `jmp_buf'.  */
 #include <spin-lock.h>
 struct hurd_signal_preemptor;	/* <hurd/sigpreempt.h> */
+#if defined __USE_EXTERN_INLINES && defined _LIBC
+#  if IS_IN (libc)
+#    include <sigsetops.h>
+#  endif
+#endif
 
 
 /* Full details of a signal.  */
