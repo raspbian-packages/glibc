@@ -223,8 +223,8 @@ struct __libc_once
    used as argument to __libc_cleanup_region_start.  */
 #define __libc_mutex_unlock __libc_lock_unlock
 
-#define __libc_key_create(KEY,DEST) cthread_keycreate (KEY)
-#define __libc_setspecific(KEY,VAL) cthread_setspecific (KEY, VAL)
+#define __libc_key_create(KEY,DEST) __cthread_keycreate (KEY)
+#define __libc_setspecific(KEY,VAL) __cthread_setspecific (KEY, VAL)
 void *__libc_getspecific (__libc_key_t key);
 
 /* Hide the definitions which are only supposed to be used inside libc in

@@ -1512,11 +1512,11 @@ _hurdsig_init (const int *intarray, size_t intarraysize)
 
   /* Start the signal thread listening on the message port.  */
 
-#pragma weak cthread_fork
-#pragma weak cthread_detach
-#pragma weak pthread_getattr_np
-#pragma weak pthread_attr_getstack
-  if (!cthread_fork)
+#pragma weak __cthread_fork
+#pragma weak __cthread_detach
+#pragma weak __pthread_getattr_np
+#pragma weak __pthread_attr_getstack
+  if (!__cthread_fork)
     {
       err = __thread_create (__mach_task_self (), &_hurd_msgport_thread);
       assert_perror (err);
@@ -1541,7 +1541,7 @@ _hurdsig_init (const int *intarray, size_t intarraysize)
     }
   else
     {
-      cthread_t thread;
+      __cthread_t thread;
       /* When cthreads is being used, we need to make the signal thread a
          proper cthread.  Otherwise it cannot use mutex_lock et al, which
          will be the cthreads versions.  Various of the message port RPC
@@ -1551,17 +1551,17 @@ _hurdsig_init (const int *intarray, size_t intarraysize)
          we'll let the signal thread's per-thread variables be found as for
          any normal cthread, and just leave the magic __hurd_sigthread_*
          values all zero so they'll be ignored.  */
-      cthread_detach (thread = cthread_fork ((cthread_fn_t) &_hurd_msgport_receive, 0));
+      __cthread_detach (thread = __cthread_fork ((__cthread_fn_t) &_hurd_msgport_receive, 0));
 
-      if (pthread_getattr_np)
+      if (__pthread_getattr_np)
 	{
 	  /* Record stack layout for fork() */
 	  pthread_attr_t attr;
 	  void *addr;
 	  size_t size;
 
-	  pthread_getattr_np ((pthread_t) thread, &attr);
-	  pthread_attr_getstack (&attr, &addr, &size);
+	  __pthread_getattr_np ((pthread_t) thread, &attr);
+	  __pthread_attr_getstack (&attr, &addr, &size);
 	  __hurd_sigthread_stack_base = (uintptr_t) addr;
 	  __hurd_sigthread_stack_end = __hurd_sigthread_stack_base + size;
 	}
