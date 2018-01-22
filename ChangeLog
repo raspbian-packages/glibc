@@ -1,3 +1,24 @@
+2018-01-12  Dmitry V. Levin  <ldv@altlinux.org>
+
+	[BZ #22679]
+	CVE-2018-1000001
+	* sysdeps/unix/sysv/linux/getcwd.c (__getcwd): Fall back to
+	generic_getcwd if the path returned by getcwd syscall is not absolute.
+	* io/tst-getcwd-abspath.c: New test.
+	* io/Makefile (tests): Add tst-getcwd-abspath.
+
+2017-12-19  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+	    James Clarke <jrtc27@jrtc27.com>
+
+	[BZ #22603]
+	* sysdeps/ia64/memchr.S (__memchr): Avoid overflow in pointer
+	addition.
+
+2018-01-08  Dmitry V. Levin  <ldv@altlinux.org>
+
+	* sysdeps/unix/sysv/linux/tst-ttyname.c (do_in_chroot_1): Skip the
+	test instead of failing in case of ENOENT returned by posix_openpt.
+
 2017-12-29  Aurelien Jarno  <aurelien@aurel32.net>
 
 	[BZ #22611]
@@ -8,6 +29,7 @@
 	    Dmitry V. Levin  <ldv@altlinux.org>
 
 	[BZ #22625]
+	CVE-2017-16997
 	* elf/dl-load.c (fillin_rpath): Check for empty tokens before dynamic
 	string token expansion. Check for NULL pointer or empty string possibly
 	returned by expand_dynamic_string_token.
@@ -961,6 +983,7 @@
 
 2017-09-01  Florian Weimer  <fweimer@redhat.com>
 
+	[BZ #20532]
 	* sysdeps/posix/getaddrinfo.c (gaih_inet): Make reporting of NSS
 	function lookup failures more reliable.
 

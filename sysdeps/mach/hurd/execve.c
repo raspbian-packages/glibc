@@ -28,7 +28,7 @@ __execve (const char *file_name, char *const argv[], char *const envp[])
 {
   error_t err;
   char *concat_name = NULL;
-  const char *abs_name;
+  const char *abs_path;
 
   file_t file = __file_name_lookup (file_name, O_EXEC, 0);
   if (file == MACH_PORT_NULL)
@@ -36,8 +36,8 @@ __execve (const char *file_name, char *const argv[], char *const envp[])
 
   if (file_name[0] == '/')
     {
-      /* Absolute path */
-      abs_name = file_name;
+      /* Already an absolute path */
+      abs_path = file_name;
     }
   else
     {
@@ -48,6 +48,7 @@ __execve (const char *file_name, char *const argv[], char *const envp[])
 	  __mach_port_deallocate (__mach_task_self (), file);
 	  return -1;
 	}
+
       int res = __asprintf (&concat_name, "%s/%s", cwd, file_name);
       free (cwd);
       if (res == -1)
@@ -55,17 +56,18 @@ __execve (const char *file_name, char *const argv[], char *const envp[])
 	  __mach_port_deallocate (__mach_task_self (), file);
 	  return -1;
 	}
-      abs_name = concat_name;
+
+      abs_path = concat_name;
     }
 
   /* Hopefully this will not return.  */
-  err = _hurd_exec_file_name (__mach_task_self (), file,
-			      abs_name, argv, envp);
+  err = _hurd_exec_paths (__mach_task_self (), file,
+			  file_name, abs_path, argv, envp);
 
   /* Oh well.  Might as well be tidy.  */
   __mach_port_deallocate (__mach_task_self (), file);
-
   free (concat_name);
+
   return __hurd_fail (err);
 }
 

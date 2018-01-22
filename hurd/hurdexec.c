@@ -34,27 +34,35 @@
 /* Overlay TASK, executing FILE with arguments ARGV and environment ENVP.
    If TASK == mach_task_self (), some ports are dealloc'd by the exec server.
    ARGV and ENVP are terminated by NULL pointers.
-   Deprecated: use _hurd_exec_file_name instead.  */
+   Deprecated: use _hurd_exec_paths instead.  */
 error_t
 _hurd_exec (task_t task, file_t file,
 	    char *const argv[], char *const envp[])
 {
-  return _hurd_exec_file_name (task, file, NULL, argv, envp);
+  return _hurd_exec_paths (task, file, NULL, NULL, argv, envp);
+}
+
+error_t
+__hurd_exec_file_name (task_t task, file_t file, const char *filename,
+	    char *const argv[], char *const envp[])
+{
+  return _hurd_exec_paths (task, file, filename, filename, argv, envp);
 }
 
 link_warning (_hurd_exec,
-	      "_hurd_exec is deprecated, use _hurd_exec_file_name instead");
+	      "_hurd_exec is deprecated, use _hurd_exec_paths instead");
 
 /* Overlay TASK, executing FILE with arguments ARGV and environment ENVP.
    If TASK == mach_task_self (), some ports are dealloc'd by the exec server.
-   ARGV and ENVP are terminated by NULL pointers.  FILENAME is the path
-   (either absolute or relative) to FILE.  Passing NULL, though possible,
+   ARGV and ENVP are terminated by NULL pointers.  PATH is the relative path to
+   FILE and ABSPATH is the absolute path to FILE. Passing NULL, though possible,
    should be avoided, since then the exec server may not know the path to
    FILE if FILE is a script, and will then pass /dev/fd/N to the
    interpreter.  */
 error_t
-__hurd_exec_file_name (task_t task, file_t file, const char *filename,
-		      char *const argv[], char *const envp[])
+_hurd_exec_paths (task_t task, file_t file,
+		   const char *path, const char *abspath,
+		   char *const argv[], char *const envp[])
 {
   error_t err;
   char *args, *env;
@@ -237,7 +245,7 @@ __hurd_exec_file_name (task_t task, file_t file, const char *filename,
       /* We have euid != svuid or egid != svgid.  POSIX.1 says that exec
 	 sets svuid = euid and svgid = egid.  So we must get a new auth
 	 port and reauthenticate everything with it.  We'll pass the new
-	 ports in file_exec_file_name instead of our own ports.  */
+	 ports in file_exec_paths instead of our own ports.  */
 
       auth_t newauth;
 
@@ -381,16 +389,30 @@ __hurd_exec_file_name (task_t task, file_t file, const char *filename,
       if (__sigismember (&_hurdsig_traced, SIGKILL))
 	flags |= EXEC_SIGTRAP;
 #endif
-      err = __file_exec_file_name (file, task, flags,
-				   filename ? filename : "",
-				   args, argslen, env, envlen,
-				   dtable, MACH_MSG_TYPE_COPY_SEND, dtablesize,
-				   ports, MACH_MSG_TYPE_COPY_SEND,
-				   _hurd_nports,
-				   ints, INIT_INT_MAX,
-				   please_dealloc, pdp - please_dealloc,
-				   &_hurd_msgport,
-				   task == __mach_task_self () ? 1 : 0);
+      err = __file_exec_paths (file, task, flags,
+			       path ? path : "",
+			       abspath ? abspath : "",
+			       args, argslen, env, envlen,
+			       dtable, MACH_MSG_TYPE_COPY_SEND, dtablesize,
+			       ports, MACH_MSG_TYPE_COPY_SEND,
+			       _hurd_nports,
+			       ints, INIT_INT_MAX,
+			       please_dealloc, pdp - please_dealloc,
+			       &_hurd_msgport,
+			       task == __mach_task_self () ? 1 : 0);
+      /* Fall back for backwards compatibility.  This can just be removed
+         when __file_exec goes away.  */
+      if (err == MIG_BAD_ID)
+	err = __file_exec_file_name (file, task, flags,
+				    path ? path : "",
+				    args, argslen, env, envlen,
+				    dtable, MACH_MSG_TYPE_COPY_SEND, dtablesize,
+				    ports, MACH_MSG_TYPE_COPY_SEND,
+				    _hurd_nports,
+				    ints, INIT_INT_MAX,
+				    please_dealloc, pdp - please_dealloc,
+				    &_hurd_msgport,
+				    task == __mach_task_self () ? 1 : 0);
       /* Fall back for backwards compatibility.  This can just be removed
          when __file_exec goes away.  */
       if (err == MIG_BAD_ID)
@@ -436,13 +458,9 @@ __hurd_exec_file_name (task_t task, file_t file, const char *filename,
   free (env);
   return err;
 }
+extern error_t _hurd_exec_file_name (task_t task,
+				     file_t file,
+				     const char *filename,
+				     char *const argv[],
+				     char *const envp[]);
 versioned_symbol (libc, __hurd_exec_file_name, _hurd_exec_file_name, GLIBC_2_21);
-#if SHLIB_COMPAT (libc, GLIBC_2_13, GLIBC_2_21)
-error_t
-__hurd_exec_file_name_2_13 (task_t task, file_t file, const char *filename,
-		      char *const argv[], char *const envp[])
-{
-  return __hurd_exec_file_name (task, file, filename, argv, envp);
-}
-compat_symbol (libc, __hurd_exec_file_name_2_13, _hurd_exec_file_name, GLIBC_2_13_DEBIAN_33);
-#endif

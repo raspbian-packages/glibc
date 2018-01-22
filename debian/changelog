@@ -1,9 +1,47 @@
-glibc (2.26-2+rpi1) buster-staging; urgency=medium
+glibc (2.26-4+rpi1) buster-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
 
- -- Peter Michael Green <plugwash@raspbian.org>  Fri, 12 Jan 2018 01:31:25 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Mon, 22 Jan 2018 03:33:21 +0000
+
+glibc (2.26-4) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/testsuite-xfail-debian.mk: since we now also run the testsuite for
+    the multilib flavours, simplify the mips* entries into mips*, mips be and
+    mips le, instead of trying to keep all the flavours in sync. Remove
+    XFAILs for tests that have been fixed.
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix a buffer underflow in getcwd() (CVE-2018-1000001).  Closes:
+      #887001.
+  * debian/control.in/*: add conflicts to only allow one to install one set
+    of multilib packages simultaneously.  Closes: #702962, #743618, #784015,
+    #820826, #870257.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 14 Jan 2018 11:24:48 +0100
+
+glibc (2.26-3) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/testsuite-xfail-debian.mk: the Loongson 3 FPU bug also applies
+    to mips64el.
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix memchr pointer overflow on ia64.  Closes: #886840.
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/submitted-malloc-setstate.diff: Disable for now, it
+    actually introduces issues.
+  * debian/patches/hurd-i386/submitted-exec_filename.diff: Update submitted
+    patch into committed git-exec_filename.diff.
+  * debian/patches/hurd-i386/local-exec_filename.diff: New patch to keep
+    compatibility with previous submission.
+  * debian/patches/hurd-i386/tg-io_select_timeout.diff: Refresh.
+  * debian/control: Bump hurd-dev build-dependency to get exec_paths RPC
+    definitions.
+  * debian/libc0.3.symbols.hurd-i386: Update accordingly.
+
+ -- Samuel Thibault <sthibault@debian.org>  Thu, 11 Jan 2018 23:12:24 +0100
 
 glibc (2.26-2) unstable; urgency=medium
 
