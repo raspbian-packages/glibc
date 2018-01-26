@@ -48,6 +48,7 @@ extern DIR *__alloc_dir (int fd, bool close_fd, int flags,
 			 const struct stat64 *statp)
      internal_function attribute_hidden;
 extern __typeof (rewinddir) __rewinddir;
+extern __typeof (dirfd) __dirfd;
 
 extern void __scandir_cancel_handler (void *arg) attribute_hidden;
 extern int __scandir_tail (DIR *dp,
