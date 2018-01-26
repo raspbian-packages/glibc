@@ -2742,14 +2742,23 @@ collate_read (struct linereader *ldfile, struct localedef_t *result,
       switch (nowtok)
 	{
 	case tok_copy:
-	  /* Allow copying other locales.  */
+	  /* Ignore the rest of the line if we don't need the input of
+	     this line.  */
+	  if (ignore_content)
+	    {
+	      lr_ignore_rest (ldfile, 0);
+	      break;
+	    }
+
 	  now = lr_token (ldfile, charmap, result, NULL, verbose);
 	  if (now->tok != tok_string)
 	    goto err_label;
 
-	  if (! ignore_content)
-	    load_locale (LC_COLLATE, now->val.str.startmb, repertoire_name,
-			 charmap, result);
+	  if (state == 1 || state == 3 || state == 5)
+	    goto err_label;
+
+	  load_locale (LC_COLLATE, now->val.str.startmb, repertoire_name,
+		       charmap, result);
 
 	  lr_ignore_rest (ldfile, 1);
 	  break;
@@ -2762,9 +2771,6 @@ collate_read (struct linereader *ldfile, struct localedef_t *result,
 	      lr_ignore_rest (ldfile, 0);
 	      break;
 	    }
-
-	  if (state != 0)
-	    goto err_label;
 
 	  arg = lr_token (ldfile, charmap, result, NULL, verbose);
 	  if (arg->tok != tok_number)
@@ -2786,7 +2792,7 @@ collate_read (struct linereader *ldfile, struct localedef_t *result,
 	      break;
 	    }
 
-	  if (state != 0)
+	  if (state == 1 || state == 3 || state == 5)
 	    goto err_label;
 
 	  arg = lr_token (ldfile, charmap, result, repertoire, verbose);
@@ -2833,7 +2839,7 @@ collate_read (struct linereader *ldfile, struct localedef_t *result,
 	      break;
 	    }
 
-	  if (state != 0 && state != 2)
+	  if (state == 1 || state == 3 || state == 5)
 	    goto err_label;
 
 	  arg = lr_token (ldfile, charmap, result, repertoire, verbose);
@@ -2899,7 +2905,7 @@ collate_read (struct linereader *ldfile, struct localedef_t *result,
 	      break;
 	    }
 
-	  if (state != 0 && state != 2)
+	  if (state == 1 || state == 3 || state == 5)
 	    goto err_label;
 
 	  arg = lr_token (ldfile, charmap, result, repertoire, verbose);
@@ -3045,7 +3051,7 @@ collate_read (struct linereader *ldfile, struct localedef_t *result,
 	      break;
 	    }
 
-	  if (state != 0)
+	  if (state == 1 || state == 3 || state == 5)
 	    goto err_label;
 
 	  arg = lr_token (ldfile, charmap, result, repertoire, verbose);
@@ -3166,7 +3172,7 @@ error while adding equivalent collating symbol"));
 	      break;
 	    }
 
-	  if (state != 0 && state != 1 && state != 2)
+	  if (state == 3 || state == 5)
 	    goto err_label;
 	  state = 1;
 
@@ -3474,8 +3480,6 @@ error while adding equivalent collating symbol"));
 %s: missing `reorder-end' keyword"), "LC_COLLATE"));
 	      state = 4;
 	    }
-	  else if (state != 2 && state != 4)
-	    goto err_label;
 	  state = 5;
 
 	  /* Get the name of the sections we are adding after.  */
