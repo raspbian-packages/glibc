@@ -227,6 +227,10 @@ CFLAGS-pt-system.c = -fexceptions
 LDLIBS-tst-once5 = -lstdc++
 CFLAGS-tst-thread_local1.o = -std=gnu++11
 LDLIBS-tst-thread_local1 = -lstdc++
+CFLAGS-tst-thread-exit-clobber.o = -std=gnu++11
+LDLIBS-tst-thread-exit-clobber = -lstdc++
+CFLAGS-tst-minstack-throw.o = -std=gnu++11
+LDLIBS-tst-minstack-throw = -lstdc++
 
 tests = tst-attr1 tst-attr2 tst-attr3 tst-default-attr \
 	tst-mutex1 tst-mutex2 tst-mutex3 tst-mutex4 tst-mutex5 tst-mutex6 \
@@ -302,7 +306,9 @@ tests = tst-attr1 tst-attr2 tst-attr3 tst-default-attr \
 			    c89 gnu89 c99 gnu99 c11 gnu11) \
 	tst-bad-schedattr \
 	tst-thread_local1 tst-mutex-errorcheck tst-robust10 \
-	tst-robust-fork tst-create-detached tst-memstream
+	tst-robust-fork tst-create-detached tst-memstream \
+	tst-thread-exit-clobber tst-minstack-cancel tst-minstack-exit \
+	tst-minstack-throw
 
 tests-internal := tst-typesizes \
 		  tst-rwlock19 tst-rwlock20 \
@@ -367,7 +373,7 @@ tests += tst-cancelx2 tst-cancelx3 tst-cancelx4 tst-cancelx5 \
 	 tst-cleanupx0 tst-cleanupx1 tst-cleanupx2 tst-cleanupx3 tst-cleanupx4 \
 	 tst-oncex3 tst-oncex4
 ifeq ($(build-shared),yes)
-tests += tst-atfork2 tst-tls4 tst-_res1 tst-fini1
+tests += tst-atfork2 tst-tls4 tst-_res1 tst-fini1 tst-compat-forwarder
 tests-internal += tst-tls3 tst-tls3-malloc tst-tls5 tst-stackguard1
 tests-nolibpthread += tst-fini1
 ifeq ($(have-z-execstack),yes)
@@ -379,7 +385,7 @@ modules-names = tst-atfork2mod tst-tls3mod tst-tls4moda tst-tls4modb \
 		tst-tls5mod tst-tls5moda tst-tls5modb tst-tls5modc \
 		tst-tls5modd tst-tls5mode tst-tls5modf tst-stack4mod \
 		tst-_res1mod1 tst-_res1mod2 tst-execstack-mod tst-fini1mod \
-		tst-join7mod
+		tst-join7mod tst-compat-forwarder-mod
 extra-test-objs += $(addsuffix .os,$(strip $(modules-names))) \
 		   tst-cleanup4aux.o tst-cleanupx4aux.o
 test-extras += tst-cleanup4aux tst-cleanupx4aux
@@ -453,7 +459,8 @@ endif
 
 ifeq (,$(CXX))
 # These tests require a C++ compiler and runtime.
-tests-unsupported += tst-cancel24 tst-cancel24-static tst-once5
+tests-unsupported += tst-cancel24 tst-cancel24-static tst-once5 \
+  tst-thread-exit-clobber tst-minstack-throw
 endif
 # These tests require a C++ compiler and runtime with thread_local support.
 ifneq ($(have-cxx-thread_local),yes)
@@ -717,6 +724,8 @@ $(objpfx)tst-oddstacklimit.out: $(objpfx)tst-oddstacklimit $(objpfx)tst-basic1
 	$(test-program-prefix) $< --command '$(host-test-program-cmd)' > $@; \
 	$(evaluate-test)
 endif
+
+$(objpfx)tst-compat-forwarder: $(objpfx)tst-compat-forwarder-mod.so
 
 # The tests here better do not run in parallel
 ifneq ($(filter %tests,$(MAKECMDGOALS)),)

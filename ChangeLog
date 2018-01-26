@@ -1,3 +1,1206 @@
+2017-10-18  Renlin Li  <renlin.li@arm.com>
+
+	* sysdeps/aarch64/dl-machine.h (elf_machine_load_address): Use
+	_DYNAMIC symbol to calculate load address.
+
+2018-01-19  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #22715]
+	* sysdeps/x86_64/dl-trampoline.h (_dl_runtime_profile): Properly
+	align La_x86_64_retval to VEC_SIZE.
+
+2018-01-16  Florian Weimer  <fweimer@redhat.com>
+
+	* nptl/Makefile [$(have-cxx-thread_local)] (tests-unsupported):
+	Move tst-thread-exit-clobber ...
+	[$(CXX)] (tests-unsupported): ... to here.
+
+2018-01-16  Florian Weimer  <fweimer@redhat.com>
+
+	* nptl/Makefile (CFLAGS-tst-minstack-throw.o): Compile in C++11
+	mode with GNU extensions.
+
+2018-01-15  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #22636]
+	* nptl/tst-minstack-throw.cc: New file.
+	* nptl/Makefile (tests): Add tst-minstack-throw.
+	(LDLIBS-tst-minstack-throw): Link with libstdc++.
+	[!CXX] (tests-unsupported): Add tst-minstack-throw.
+
+2018-01-11  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #22636]
+	* nptl/Makefile (tests): Add tst-minstack-cancel, tst-minstack-exit.
+	* nptl/tst-minstack-cancel.c, nptl/tst-minstack-exit.c: New files.
+
+2018-01-10  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #22636]
+	* sysdeps/nptl/unwind-forcedunwind.c (pthread_cancel_init): Open
+	libgcc.so with RTLD_NOW, to avoid lazy binding during unwind.
+
+2018-01-08  Szabolcs Nagy  <szabolcs.nagy@arm.com>
+
+	[BZ #22637]
+	* nptl/descr.h (stackblock, stackblock_size): Update comments.
+	* nptl/allocatestack.c (allocate_stack): Add guardsize to stacksize.
+	* nptl/nptl-init.c (__pthread_get_minstack): Remove guardsize from
+	stacksize.
+	* nptl/pthread_getattr_np.c (pthread_getattr_np): Likewise.
+
+2018-01-08  Florian Weimer  <fweimer@redhat.com>
+
+	* nptl/tst-thread-exit-clobber.cc: New file.
+	* nptl/Makefile (CFLAGS-tst-thread-exit-clobber.o): Compile in
+	C++11 mode.
+	(LDLIBS-tst-thread-exit-clobber): Link with libstdc++.
+	(tests): Add tst-thread-exit-clobber.
+	[!CXX] (tests-unsupported): Add tst-thread-exit-clobber.
+
+2018-01-12  Dmitry V. Levin  <ldv@altlinux.org>
+
+	[BZ #22679]
+	CVE-2018-1000001
+	* sysdeps/unix/sysv/linux/getcwd.c (__getcwd): Fall back to
+	generic_getcwd if the path returned by getcwd syscall is not absolute.
+	* io/tst-getcwd-abspath.c: New test.
+	* io/Makefile (tests): Add tst-getcwd-abspath.
+
+2017-12-19  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+	    James Clarke <jrtc27@jrtc27.com>
+
+	[BZ #22603]
+	* sysdeps/ia64/memchr.S (__memchr): Avoid overflow in pointer
+	addition.
+
+2018-01-08  Dmitry V. Levin  <ldv@altlinux.org>
+
+	* sysdeps/unix/sysv/linux/tst-ttyname.c (do_in_chroot_1): Skip the
+	test instead of failing in case of ENOENT returned by posix_openpt.
+
+2017-12-29  Aurelien Jarno  <aurelien@aurel32.net>
+
+	[BZ #22611]
+	* malloc/tst-realloc.c (do_test): Remove the test checking that errno
+	is unchanged on success.
+
+2017-12-30  Aurelien Jarno  <aurelien@aurel32.net>
+	    Dmitry V. Levin  <ldv@altlinux.org>
+
+	[BZ #22625]
+	CVE-2017-16997
+	* elf/dl-load.c (fillin_rpath): Check for empty tokens before dynamic
+	string token expansion. Check for NULL pointer or empty string possibly
+	returned by expand_dynamic_string_token.
+	(decompose_rpath): Check for empty path after dynamic string
+	token expansion.
+
+2017-12-18  Dmitry V. Levin  <ldv@altlinux.org>
+
+	[BZ #22627]
+	* elf/dl-load.c (_dl_init_paths): Remove _dl_dst_substitute preparatory
+	code and invocation.
+
+2017-11-18  Florian Weimer  <fweimer@redhat.com>
+
+	* sysdeps/unix/sysv/linux/tst-ttyname.c
+	(become_root_in_mount_ns): Remove.
+	(do_in_chroot_1): Call support_enter_mount_namespace.
+	(do_in_chroot_2): Likewise.
+	(do_test): Call support_become_root early.
+
+2017-11-15  Luke Shumaker  <lukeshu@parabola.nu>
+
+	[BZ #22145]
+	* sysdeps/unix/sysv/linux/tst-ttyname.c: New file.
+	* sysdeps/unix/sysv/linux/Makefile: Add tst-ttyname to tests.
+
+2017-11-15  Luke Shumaker  <lukeshu@parabola.nu>
+
+	[BZ #22145]
+	* sysdeps/unix/sysv/linux/ttyname.c (ttyname):
+	Defer is_pty check until end of the function.
+	* sysdeps/unix/sysv/linux/ttyname_r.c (__ttyname_r): Likewise.
+
+2017-11-15  Luke Shumaker  <lukeshu@parabola.nu>
+
+	[BZ #22145]
+	* sysdeps/unix/sysv/linux/ttyname.h (is_mytty): New function.
+	* sysdeps/unix/sysv/linux/ttyname.c (getttyname): Call is_mytty.
+	(ttyname): Likewise.
+	* sysdeps/unix/sysv/linux/ttyname_r.c (getttyname_r): Likewise.
+	(__ttyname_r): Likewise.
+
+2017-11-15  Luke Shumaker  <lukeshu@parabola.nu>
+
+	* sysdeps/unix/sysv/linux/ttyname.h (is_pty): Change return type from
+	int to bool.
+
+2017-11-15  Luke Shumaker  <lukeshu@parabola.nu>
+
+	* sysdeps/unix/sysv/linux/ttyname.h (is_pty): Update doc reference.
+
+2017-11-15  Luke Shumaker  <lukeshu@parabola.nu>
+
+	* manual/terminal.texi (Is It a Terminal):
+	Mention ENODEV for ttyname and ttyname_r.
+
+2017-12-14  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #22607]
+	CVE-2017-1000409
+	* elf/dl-load.c (_dl_init_paths): Compute number of components in
+	the expanded path string.
+
+2017-12-14  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #22606]
+	CVE-2017-1000408
+	* elf/dl-load.c (system_dirs): Update comment.
+	(nsystem_dirs_len): Use array_length.
+	(_dl_init_paths): Use nsystem_dirs_len to compute the array size.
+
+2017-11-02  Florian Weimer  <fweimer@redhat.com>
+
+	Add array_length and array_end macros.
+	* include/array_length.h: New file.
+
+2017-10-27  H.J. Lu  <hongjiu.lu@intel.com>
+
+	* sysdeps/i386/fpu/libm-test-ulps: Regenerated for GCC 7 with
+	"-O2 -march=i586".
+
+2017-12-13  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	* sysdeps/ia64/fpu/libm-test-ulps: Update.
+
+2017-12-12  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	[BZ #21672]
+	* nptl/allocatestack.c [_STACK_GROWS_DOWN] (setup_stack_prot):
+	Set to use !NEED_SEPARATE_REGISTER_STACK as well.
+	(advise_stack_range): New function.
+	* nptl/pthread_create.c (START_THREAD_DEFN): Move logic to mark
+	stack non required to advise_stack_range at allocatestack.c
+
+2017-12-12  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+	    Sergei Trofimovich  <slyfox@inbox.ru>
+
+	[BZ #21908]
+	* sysdeps/unix/sysv/linux/m68k/mmap_internal.h (MMAP2_PAGE_SHIFT):
+	Rename to MMAP2_PAGE_UNIT.
+	* sysdeps/unix/sysv/linux/ia64/mmap_internal.h: New file.
+	* sysdeps/unix/sysv/linux/mmap.c: Include mmap_internal iff
+	__OFF_T_MATCHES_OFF64_T is not defined.
+	* sysdeps/unix/sysv/linux/mmap_internal.h (page_unit): Declare as
+	uint64_t.
+	(MMAP2_PAGE_UNIT) [MMAP2_PAGE_UNIT == -1]: Redefine to page_unit.
+	(page_unit) [MMAP2_PAGE_UNIT != -1]: Remove definition.
+
+2017-12-12  James Clarke <jrtc27@jrtc27.com>
+
+	* sysdeps/unix/sysv/linux/ia64/ipc_priv.h: New file defining
+	__IPC_64 to 0 to avoid IPC_64 being set.
+
+2017-10-15  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #22052]
+	* malloc/hooks.c (realloc_check): Use DIAG_IGNORE_NEEDS_COMMENT
+	to silence -O3 -Wall warning with GCC 7.
+
+2017-11-30  Arjun Shankar  <arjun@redhat.com>
+
+	[BZ #22375]
+	CVE-2017-17426
+	* malloc/malloc.c (__libc_malloc): Use checked_request2size
+	instead of request2size.
+
+2017-11-02  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #22332]
+	* posix/tst-glob-tilde.c (do_noescape): New variable.
+	(one_test): Process it.
+	(do_test): Set do_noescape.  Add unescaping test case.
+
+2017-10-22  Paul Eggert <eggert@cs.ucla.edu>
+
+	[BZ #22332]
+	* posix/glob.c (__glob): Fix buffer overflow during GLOB_TILDE
+	unescaping.
+
+2017-10-23  Wilco Dijkstra  <wdijkstr@arm.com>
+
+	* malloc/malloc.c (_int_malloc): Add SINGLE_THREAD_P path.
+
+2017-10-23  Wilco Dijkstra  <wdijkstr@arm.com>
+
+	* malloc/malloc.c (__libc_malloc): Add SINGLE_THREAD_P path.
+	(__libc_realloc): Likewise.
+	(_mid_memalign): Likewise.
+	(__libc_calloc): Likewise.
+
+2017-10-20  Wilco Dijkstra  <wdijkstr@arm.com>
+
+	* malloc/malloc.c (sysdep-cancel.h): Add include.
+
+2017-10-20  Wilco Dijkstra  <wdijkstr@arm.com>
+
+	* malloc/malloc.c (_int_free): Add SINGLE_THREAD_P fast paths.
+
+2017-10-19  Wilco Dijkstra  <wdijkstr@arm.com>
+
+	* malloc/malloc.c (_int_free): Fix deadlock bug in consistency check.
+
+2017-08-31  Florian Weimer  <fweimer@redhat.com>
+
+	* malloc/malloc.c (_int_free): Remove locked variable and related
+	asserts.
+
+2017-08-31  Florian Weimer  <fweimer@redhat.com>
+
+	* malloc/malloc.c (top_check): Change return type to void.  Remove
+	internal_function.
+	* malloc/hooks.c (top_check): Likewise.
+	(malloc_check, realloc_check, memalign_check): Adjust.
+
+2017-08-30  Florian Weimer  <fweimer@redhat.com>
+
+	* malloc/malloc.c (ARENA_CORRUPTION_BIT, arena_is_corrupt)
+	(set_arena_corrupt): Remove definitions.
+	(mtrim): Do not check for corrupt arena.
+	* malloc/arena.c (arena_lock, reused_arena, arena_get_retry):
+	Likewise.
+
+2017-08-30  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #21754]
+	* malloc/arena.c (TUNABLE_CALLBACK set_mallopt_check): Do not set
+	check_action.
+	(ptmalloc_init): Do not set or use check_action.
+	* malloc/hooks.c (malloc_check_get_size, realloc_check): Adjust
+	call to malloc_printerr.  Remove return statement.
+	(free_check): Likewise.  Remove arena unlock.
+	(top_check): Update comment.  Adjust call to malloc_printerr.
+	Remove heap repair code.
+	* malloc/malloc.c (unlink): Adjust calls to malloc_printerr.
+	(DEFAULT_CHECK_ACTION, check_action): Remove definitions.
+	(sysmalloc): Adjust call to malloc_printerr.
+	(munmap_chunk, __libc_realloc): Likewise.  Remove return
+	statement.
+	(_int_malloc, int_realloc): Likewise.  Remove errstr variable.
+	Remove errout label and corresponding gotos.
+	(_int_free): Likewise.  Remove arena unlock.
+	(do_set_mallopt_check): Do not set check_action.
+	(malloc_printerr): Adjust parameter list.  Do not mark arena as
+	corrupt.
+	* manual/memory.texi (Malloc Tunable Parameters): Remove TODO
+	comment.
+	* manual/probes.texi (Memory Allocation Probes): Remove
+	memory_mallopt_check_action.
+
+2017-08-30  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #21754]
+	* malloc/malloc.c (malloc_printerr): Always terminate the process,
+	without printing a backtrace.  Do not leak any information in the
+	error message.
+	* manual/memory.texi (Heap Consistency Checking): Update.
+	* manual/tunables.texi (Memory Allocation Tunables): Likewise.
+
+2017-11-17  Tulio Magno Quites Machado Filho  <tuliom@linux.vnet.ibm.com>
+
+	* sysdeps/powerpc/bits/hwcap.h (PPC_FEATURE2_HTM_NO_SUSPEND): New
+	macro.
+
+2017-08-09  Andreas Schwab  <schwab@suse.de>
+
+	* nptl/Makefile (tests) [$(build-shared) = yes]: Add
+	tst-compat-forwarder.
+	(modules-names): Add tst-compat-forwarder-mod.
+	($(objpfx)tst-compat-forwarder): Depend on
+	$(objpfx)tst-compat-forwarder-mod.so.
+	* nptl/tst-compat-forwarder.c: New file.
+	* nptl/tst-compat-forwarder-mod.c: New file.
+
+2017-08-09  Andreas Schwab  <schwab@suse.de>
+
+	* sysdeps/unix/sysv/linux/s390/pt-longjmp.c: Update reference to
+	renamed alias.
+
+2017-08-08  Andreas Schwab  <schwab@suse.de>
+
+	[BZ #21041]
+	* nptl/pt-longjmp.c (longjmp, siglongjmp): Don't use IFUNC resolver.
+	* nptl/pt-system.c (system): Likewise.
+
+2017-11-21  Rajalakshmi Srinivasaraghavan  <raji@linux.vnet.ibm.com>
+
+	* sysdeps/powerpc/powerpc64/power7/memcpy.S: Replace
+	lxvd2x/stxvd2x with lvx/stvx.
+	* sysdeps/powerpc/powerpc64/power7/memmove.S: Likewise.
+
+2017-10-04  Florian Weimer  <fweimer@redhat.com>
+
+	* scripts/check-local-headers.sh: Ignore nspr4 header file
+	directory in addition to nspr.
+
+2017-10-04  Guido Trentalancia  <guido@trentalancia.net>
+
+	[BZ #17956]
+	* configure.ac (--enable-nss-crypt): Use NSPR include directory.
+	* configure: Regenerate.
+	* crypt/Makefile (nss-cpp-flags): New variable.
+	(CPPFLAGS-sha256-crypt.c, CPPFLAGS-sha512-crypt.c)
+	(CPPFLAGS-md5-crypt.c): Use it.
+	* scripts/check-local-headers.sh: Ignore nspr header file
+	directory.
+
+2017-10-18  Wilco Dijkstra  <wdijkstr@arm.com>
+
+	* malloc/malloc.c (malloc_state): Use int for have_fastchunks since
+	not all targets support atomics on bool.
+
+2017-10-17  Wilco Dijkstra  <wdijkstr@arm.com>
+
+	* malloc/malloc.c (FASTCHUNKS_BIT): Remove.
+	(have_fastchunks): Remove.
+	(clear_fastchunks): Remove.
+	(set_fastchunks): Remove.
+	(malloc_state): Add have_fastchunks.
+	(malloc_init_state): Use have_fastchunks.
+	(do_check_malloc_state): Remove incorrect invariant checks.
+	(_int_malloc): Use have_fastchunks.
+	(_int_free): Likewise.
+	(malloc_consolidate): Likewise.
+
+2017-10-17  Wilco Dijkstra  <wdijkstr@arm.com>
+
+	* malloc/malloc.c (tcache_put): Inline.
+	(tcache_get): Inline.
+
+2017-10-13  James Clarke  <jrtc27@jrtc27.com>
+
+	* sysdeps/powerpc/powerpc32/dl-machine.h (elf_machine_rela):
+	Assign sym_map to be map for local symbols, as TLS relocations
+	use sym_map to determine whether the symbol is defined and to
+	extract the TLS information.
+	* sysdeps/sparc/sparc32/dl-machine.h (elf_machine_rela): Likewise.
+	* sysdeps/sparc/sparc64/dl-machine.h (elf_machine_rela): Likewise.
+
+2017-08-23  H.J. Lu  <hongjiu.lu@intel.com>
+
+	* sysdeps/x86_64/fpu/libm-test-ulps: Regenerated.
+
+2017-11-07  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	[BZ #22298]
+	* nptl/allocatestack.c (allocate_stack): Check if
+	__PTHREAD_MUTEX_HAVE_PREV is non-zero, instead if
+	__PTHREAD_MUTEX_HAVE_PREV is defined.
+	* nptl/descr.h (pthread): Likewise.
+	* nptl/nptl-init.c (__pthread_initialize_minimal_internal):
+	Likewise.
+	* nptl/pthread_create.c (START_THREAD_DEFN): Likewise.
+	* sysdeps/nptl/fork.c (__libc_fork): Likewise.
+	* sysdeps/nptl/pthread.h (PTHREAD_MUTEX_INITIALIZER): Likewise.
+	* sysdeps/nptl/bits/thread-shared-types.h
+	(__PTHREAD_MUTEX_NUSERS_AFTER_KIND, __PTHREAD_MUTEX_USE_UNION): New
+	defines.
+	(__pthread_internal_list): Check __PTHREAD_MUTEX_USE_UNION instead
+	of __WORDSIZE for internal layout.
+	(__pthread_mutex_s): Check __PTHREAD_MUTEX_NUSERS_AFTER_KIND instead
+	of __WORDSIZE for internal __nusers layout and __PTHREAD_MUTEX_USE_UNION
+	instead of __WORDSIZE whether to use an union for __spins and __list
+	fields.
+	(__PTHREAD_MUTEX_HAVE_PREV): Define also for __PTHREAD_MUTEX_USE_UNION
+	case.
+	* sysdeps/aarch64/nptl/bits/pthreadtypes-arch.h
+	(__PTHREAD_MUTEX_NUSERS_AFTER_KIND, __PTHREAD_MUTEX_USE_UNION): New
+	defines.
+	* sysdeps/alpha/nptl/bits/pthreadtypes-arch.h
+	(__PTHREAD_MUTEX_NUSERS_AFTER_KIND, __PTHREAD_MUTEX_USE_UNION):
+	Likewise.
+	* sysdeps/arm/nptl/bits/pthreadtypes-arch.h
+	(__PTHREAD_MUTEX_NUSERS_AFTER_KIND, __PTHREAD_MUTEX_USE_UNION):
+	Likewise.
+	* sysdeps/hppa/nptl/bits/pthreadtypes-arch.h
+	(__PTHREAD_MUTEX_NUSERS_AFTER_KIND, __PTHREAD_MUTEX_USE_UNION):
+	Likewise.
+	* sysdeps/ia64/nptl/bits/pthreadtypes-arch.h
+	(__PTHREAD_MUTEX_NUSERS_AFTER_KIND, __PTHREAD_MUTEX_USE_UNION):
+	Likewise.
+	* sysdeps/m68k/nptl/bits/pthreadtypes-arch.h
+	(__PTHREAD_MUTEX_NUSERS_AFTER_KIND, __PTHREAD_MUTEX_USE_UNION):
+	Likewise.
+	* sysdeps/microblaze/nptl/bits/pthreadtypes-arch.h
+	(__PTHREAD_MUTEX_NUSERS_AFTER_KIND, __PTHREAD_MUTEX_USE_UNION):
+	Likewise.
+	* sysdeps/mips/nptl/bits/pthreadtypes-arch.h
+	(__PTHREAD_MUTEX_NUSERS_AFTER_KIND, __PTHREAD_MUTEX_USE_UNION):
+	Likewise.
+	* sysdeps/nios2/nptl/bits/pthreadtypes-arch.h
+	(__PTHREAD_MUTEX_NUSERS_AFTER_KIND, __PTHREAD_MUTEX_USE_UNION):
+	Likewise.
+	* sysdeps/powerpc/nptl/bits/pthreadtypes-arch.h
+	(__PTHREAD_MUTEX_NUSERS_AFTER_KIND, __PTHREAD_MUTEX_USE_UNION):
+	Likewise.
+	* sysdeps/s390/nptl/bits/pthreadtypes-arch.h
+	(__PTHREAD_MUTEX_NUSERS_AFTER_KIND, __PTHREAD_MUTEX_USE_UNION):
+	Likewise.
+	* sysdeps/sh/nptl/bits/pthreadtypes-arch.h
+	(__PTHREAD_MUTEX_NUSERS_AFTER_KIND, __PTHREAD_MUTEX_USE_UNION):
+	Likewise.
+	* sysdeps/sparc/nptl/bits/pthreadtypes-arch.h
+	(__PTHREAD_MUTEX_NUSERS_AFTER_KIND, __PTHREAD_MUTEX_USE_UNION):
+	Likewise.
+	* sysdeps/tile/nptl/bits/pthreadtypes-arch.h
+	(__PTHREAD_MUTEX_NUSERS_AFTER_KIND, __PTHREAD_MUTEX_USE_UNION):
+	Likewise.
+	* sysdeps/x86/nptl/bits/pthreadtypes-arch.h
+	(__PTHREAD_MUTEX_NUSERS_AFTER_KIND, __PTHREAD_MUTEX_USE_UNION):
+	Likewise.
+
+	* nptl/pthreadP.h (ASSERT_PTHREAD_STRING,
+	ASSERT_PTHREAD_INTERNAL_OFFSET): New macro.
+	* nptl/pthread_mutex_init.c (__pthread_mutex_init): Add build time
+	checks for internal pthread_mutex_t offsets.
+	* sysdeps/aarch64/nptl/pthread-offsets.h
+	(__PTHREAD_MUTEX_NUSERS_OFFSET, __PTHREAD_MUTEX_KIND_OFFSET,
+	__PTHREAD_MUTEX_SPINS_OFFSET, __PTHREAD_MUTEX_ELISION_OFFSET,
+	__PTHREAD_MUTEX_LIST_OFFSET): New macro.
+	* sysdeps/alpha/nptl/pthread-offsets.h: Likewise.
+	* sysdeps/arm/nptl/pthread-offsets.h: Likewise.
+	* sysdeps/hppa/nptl/pthread-offsets.h: Likewise.
+	* sysdeps/i386/nptl/pthread-offsets.h: Likewise.
+	* sysdeps/ia64/nptl/pthread-offsets.h: Likewise.
+	* sysdeps/m68k/nptl/pthread-offsets.h: Likewise.
+	* sysdeps/microblaze/nptl/pthread-offsets.h: Likewise.
+	* sysdeps/mips/nptl/pthread-offsets.h: Likewise.
+	* sysdeps/nios2/nptl/pthread-offsets.h: Likewise.
+	* sysdeps/powerpc/nptl/pthread-offsets.h: Likewise.
+	* sysdeps/s390/nptl/pthread-offsets.h: Likewise.
+	* sysdeps/sh/nptl/pthread-offsets.h: Likewise.
+	* sysdeps/sparc/nptl/pthread-offsets.h: Likewise.
+	* sysdeps/tile/nptl/pthread-offsets.h: Likewise.
+	* sysdeps/x86_64/nptl/pthread-offsets.h: Likewise.
+
+	* sysdeps/unix/sysv/linux/spawni.c (__spawnix): Use 0 instead of
+	WNOHANG in waitpid call.
+
+	[BZ #22273]
+	* sysdeps/unix/sysv/linux/spawni.c (__spawnix): Handle the case where
+	the auxiliary process is terminated by a signal before calling _exit
+	or execve.
+
+2017-09-13  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	* sysdeps/unix/sysv/linux/s390/s390-32/oldglob.c: New file.
+	* sysdeps/unix/sysv/linux/alpha/Makefile
+	[$(subdir) = csu] (sysdep_routines): Remove rule.
+
+2017-09-08  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	* sysdeps/unix/sysv/linux/arm/glob64.c: Remove file.
+	* sysdeps/unix/sysv/linux/i386/glob64.c: Likewise.
+	* sysdeps/unix/sysv/linux/m68k/glob64.c: Likewise.
+	* sysdeps/unix/sysv/linux/mips/mips64/n64/glob64.c: Likewise.
+	* sysdeps/unix/sysv/linux/mips/mips64/n64/globfree64.c: Likewise.
+	* sysdeps/unix/sysv/linux/powerpc/powerpc32/glob64.c: Likewise.
+	* sysdeps/unix/sysv/linux/sparc/sparc32/glob64.c: Likewise.
+	* sysdeps/unix/sysv/linux/wordsize-64/glob64.c: Likewise.
+	* sysdeps/unix/sysv/linux/wordsize-64/globfree64.c: Likewise.
+	* sysdeps/unix/sysv/linux/x86_64/x32/glob.c: Likewise.
+	* sysdeps/unix/sysv/linux/x86_64/x32/globfree.c: Likewise.
+	* sysdeps/wordsize-64/glob.c: Likewise.
+	* sysdeps/wordsize-64/glob64.c: Likewise.
+	* sysdeps/wordsize-64/globfree.c: Likewise.
+	* sysdeps/wordsize-64/globfree64.c: Likewise.
+	* sysdeps/unix/sysv/linux/glob.c: New file.
+	* sysdeps/unix/sysv/linux/glob64.c: Likewise.
+	* sysdeps/unix/sysv/linux/globfree.c: Likewise.
+	* sysdeps/unix/sysv/linux/globfree64.c: Likewise.
+	* sysdeps/unix/sysv/linux/s390/s390-32/glob64.c: Likewise.
+	* sysdeps/unix/sysv/linux/oldglob.c [SHLIB_COMPAT]: Also
+	adds !GLOB_NO_OLD_VERSION as an extra condition.
+	* sysdeps/unix/sysv/linux/i386/alphasort64.c: Include olddirent.h
+	using relative path instead of absolute one.
+	* sysdeps/unix/sysv/linux/i386/getdents64.c: Likewise.
+	* sysdeps/unix/sysv/linux/i386/readdir64.c: Likewise.
+	* sysdeps/unix/sysv/linux/i386/readdir64_r.c: Likewise.
+	* sysdeps/unix/sysv/linux/i386/versionsort64.c: Likewise.
+	* sysdeps/unix/sysv/linux/i386/olddirent.h: Move to ...
+	* sysdeps/unix/sysv/linux//olddirent.h: ... here.
+
+2017-10-26  Valery Reznic <valery_reznic@yahoo.com>
+	    H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #22299]
+	* sysdeps/x86/cpu-features.c (init_cpu_features): Don't set
+	GLRO(dl_platform) to NULL.
+	* sysdeps/x86_64/Makefile (tests): Add tst-platform-1.
+	(modules-names): Add tst-platformmod-1 and
+	x86_64/tst-platformmod-2.
+	(CFLAGS-tst-platform-1.c): New.
+	(CFLAGS-tst-platformmod-1.c): Likewise.
+	(CFLAGS-tst-platformmod-2.c): Likewise.
+	(LDFLAGS-tst-platformmod-2.so): Likewise.
+	($(objpfx)tst-platform-1): Likewise.
+	($(objpfx)tst-platform-1.out): Likewise.
+	(tst-platform-1-ENV): Likewise.
+	($(objpfx)x86_64/tst-platformmod-2.os): Likewise.
+	* sysdeps/x86_64/tst-platform-1.c: New file.
+	* sysdeps/x86_64/tst-platformmod-1.c: Likewise.
+	* sysdeps/x86_64/tst-platformmod-2.c: Likewise.
+
+2017-10-23  Alexey Makhalov  <amakhalov@vmware.com>
+
+	* elf/dl-tunables.c (do_tunable_update_val): Range checking fix.
+	* scripts/gen-tunables.awk: Set unspecified minval and/or maxval
+	values to correct default value for given type.
+
+2017-10-19  Joseph Myers  <joseph@codesourcery.com>
+
+	[BZ #22322]
+	* sysdeps/mips/bits/long-double.h: Move to ....
+	* sysdeps/mips/ieee754/bits/long-double.h: ... here.
+
+2017-10-17  Romain Naour  <romain.naour@gmail.com>  (tiny change)
+
+	[BZ #22296]
+	* math/math.h: Let signbit use the builtin in C++ mode with gcc
+	< 6.x
+
+2017-10-22  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #21265]
+	* sysdeps/x86/cpu-features-offsets.sym (XSAVE_STATE_SIZE_OFFSET):
+	New.
+	* sysdeps/x86/cpu-features.c: Include <libc-pointer-arith.h>.
+	(get_common_indeces): Set xsave_state_size, xsave_state_full_size
+	and bit_arch_XSAVEC_Usable if needed.
+	(init_cpu_features): Remove bit_arch_Use_dl_runtime_resolve_slow
+	and bit_arch_Use_dl_runtime_resolve_opt.
+	* sysdeps/x86/cpu-features.h (bit_arch_Use_dl_runtime_resolve_opt):
+	Removed.
+	(bit_arch_Use_dl_runtime_resolve_slow): Likewise.
+	(bit_arch_Prefer_No_AVX512): Updated.
+	(bit_arch_MathVec_Prefer_No_AVX512): Likewise.
+	(bit_arch_XSAVEC_Usable): New.
+	(STATE_SAVE_OFFSET): Likewise.
+	(STATE_SAVE_MASK): Likewise.
+	[__ASSEMBLER__]: Include <cpu-features-offsets.h>.
+	(cpu_features): Add xsave_state_size and xsave_state_full_size.
+	(index_arch_Use_dl_runtime_resolve_opt): Removed.
+	(index_arch_Use_dl_runtime_resolve_slow): Likewise.
+	(index_arch_XSAVEC_Usable): New.
+	* sysdeps/x86/cpu-tunables.c (TUNABLE_CALLBACK (set_hwcaps)):
+	Support XSAVEC_Usable.  Remove Use_dl_runtime_resolve_slow.
+	* sysdeps/x86_64/Makefile (tst-x86_64-1-ENV): New if tunables
+	is enabled.
+	* sysdeps/x86_64/dl-machine.h (elf_machine_runtime_setup):
+	Replace _dl_runtime_resolve_sse, _dl_runtime_resolve_avx,
+	_dl_runtime_resolve_avx_slow, _dl_runtime_resolve_avx_opt,
+	_dl_runtime_resolve_avx512 and _dl_runtime_resolve_avx512_opt
+	with _dl_runtime_resolve_fxsave, _dl_runtime_resolve_xsave and
+	_dl_runtime_resolve_xsavec.
+	* sysdeps/x86_64/dl-trampoline.S (DL_RUNTIME_UNALIGNED_VEC_SIZE):
+	Removed.
+	(DL_RUNTIME_RESOLVE_REALIGN_STACK): Check STATE_SAVE_ALIGNMENT
+	instead of VEC_SIZE.
+	(REGISTER_SAVE_BND0): Removed.
+	(REGISTER_SAVE_BND1): Likewise.
+	(REGISTER_SAVE_BND3): Likewise.
+	(REGISTER_SAVE_RAX): Always defined to 0.
+	(VMOV): Removed.
+	(_dl_runtime_resolve_avx): Likewise.
+	(_dl_runtime_resolve_avx_slow): Likewise.
+	(_dl_runtime_resolve_avx_opt): Likewise.
+	(_dl_runtime_resolve_avx512): Likewise.
+	(_dl_runtime_resolve_avx512_opt): Likewise.
+	(_dl_runtime_resolve_sse): Likewise.
+	(_dl_runtime_resolve_sse_vex): Likewise.
+	(USE_FXSAVE): New.
+	(_dl_runtime_resolve_fxsave): Likewise.
+	(USE_XSAVE): Likewise.
+	(_dl_runtime_resolve_xsave): Likewise.
+	(USE_XSAVEC): Likewise.
+	(_dl_runtime_resolve_xsavec): Likewise.
+	* sysdeps/x86_64/dl-trampoline.h (_dl_runtime_resolve_avx512):
+	Removed.
+	(_dl_runtime_resolve_avx512_opt): Likewise.
+	(_dl_runtime_resolve_avx): Likewise.
+	(_dl_runtime_resolve_avx_opt): Likewise.
+	(_dl_runtime_resolve_sse): Likewise.
+	(_dl_runtime_resolve_sse_vex): Likewise.
+	(_dl_runtime_resolve_fxsave): New.
+	(_dl_runtime_resolve_xsave): Likewise.
+	(_dl_runtime_resolve_xsavec): Likewise.
+
+2017-10-22  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #22093]
+	* sysdeps/x86/cpu-features.c (init_cpu_features): Initialize
+	GLRO(dl_hwcap) to HWCAP_X86_64 for x86-64.
+	* sysdeps/x86/dl-hwcap.h (HWCAP_COUNT): Updated.
+	(HWCAP_IMPORTANT): Likewise.
+	(HWCAP_X86_64): New enum.
+	(HWCAP_X86_AVX512_1): Updated.
+	* sysdeps/x86/dl-procinfo.c (_dl_x86_hwcap_flags): Add "x86_64".
+	* sysdeps/x86_64/Makefile (tests): Add tst-x86_64-1.
+	(modules-names): Add x86_64/tst-x86_64mod-1.
+	(LDFLAGS-tst-x86_64mod-1.so): New.
+	($(objpfx)tst-x86_64-1): Likewise.
+	($(objpfx)x86_64/tst-x86_64mod-1.os): Likewise.
+	(tst-x86_64-1-clean): Likewise.
+	* sysdeps/x86_64/tst-x86_64-1.c: New file.
+	* sysdeps/x86_64/tst-x86_64mod-1.c: Likewise.
+
+2017-10-21  Florian Weimer  <fweimer@redhat.com>
+
+	* posix/Makefile (tests): Add tst-glob-tilde.
+	(tests-special): Add tst-glob-tilde-mem.out
+	(tst-glob-tilde-ENV): Set MALLOC_TRACE.
+	(tst-glob-tilde-mem.out): Add mtrace check.
+	* posix/tst-glob-tilde.c: New file.
+
+2017-10-20  Paul Eggert <eggert@cs.ucla.edu>
+
+	[BZ #22320]
+	CVE-2017-15670
+	* posix/glob.c (__glob): Fix one-byte overflow.
+
+2017-09-08  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	[BZ #1062]
+	[BZ #22325]
+	CVE-2017-15671
+	* posix/Makefile (routines): Add globfree, globfree64, and
+	glob_pattern_p.
+	* posix/flexmember.h: New file.
+	* posix/glob_internal.h: Likewise.
+	* posix/glob_pattern_p.c: Likewise.
+	* posix/globfree.c: Likewise.
+	* posix/globfree64.c: Likewise.
+	* sysdeps/gnu/globfree64.c: Likewise.
+	* sysdeps/unix/sysv/linux/alpha/globfree.c: Likewise.
+	* sysdeps/unix/sysv/linux/mips/mips64/n64/globfree64.c: Likewise.
+	* sysdeps/unix/sysv/linux/oldglob.c: Likewise.
+	* sysdeps/unix/sysv/linux/wordsize-64/globfree64.c: Likewise.
+	* sysdeps/unix/sysv/linux/x86_64/x32/globfree.c: Likewise.
+	* sysdeps/wordsize-64/globfree.c: Likewise.
+	* sysdeps/wordsize-64/globfree64.c: Likewise.
+	* posix/glob.c (HAVE_CONFIG_H): Use !_LIBC instead.
+	[NDEBUG): Remove comments.
+	(GLOB_ONLY_P, _AMIGA, VMS): Remove define.
+	(dirent_type): New type.  Use uint_fast8_t not
+	uint8_t, as C99 does not require uint8_t.
+	(DT_UNKNOWN, DT_DIR, DT_LNK): New macros.
+	(struct readdir_result): Use dirent_type.  Do not define skip_entry
+	unless it is needed; this saves a byte on platforms lacking d_ino.
+	(readdir_result_type, readdir_result_skip_entry):
+	New functions, replacing ...
+	(readdir_result_might_be_symlink, readdir_result_might_be_dir):
+	 these functions, which were removed.  This makes the callers
+	easier to read.  All callers changed.
+	(D_INO_TO_RESULT): Now empty if there is no d_ino.
+	(size_add_wrapv, glob_use_alloca): New static functions.
+	(glob, glob_in_dir): Check for size_t overflow in several places,
+	and fix some size_t checks that were not quite right.
+	Remove old code using SHELL since Bash no longer
+	uses this.
+	(glob, prefix_array): Separate MS code better.
+	(glob_in_dir): Remove old Amiga and VMS code.
+	(globfree, __glob_pattern_type, __glob_pattern_p): Move to
+	separate files.
+	(glob_in_dir): Do not rely on undefined behavior in accessing
+	struct members beyond their bounds.  Use a flexible array member
+	instead
+	(link_stat): Rename from link_exists2_p and return -1/0 instead of
+	0/1.  Caller changed.
+	(glob): Fix memory leaks.
+	* posix/glob64 (globfree64): Move to separate file.
+	* sysdeps/gnu/glob64.c (NO_GLOB_PATTERN_P): Remove define.
+	(globfree64): Remove hidden alias.
+	* sysdeps/unix/sysv/linux/Makefile (sysdeps_routines): Add
+	oldglob.
+	* sysdeps/unix/sysv/linux/alpha/glob.c (__new_globfree): Move to
+	separate file.
+	* sysdeps/unix/sysv/linux/i386/glob64.c (NO_GLOB_PATTERN_P): Remove
+	define.
+	Move compat code to separate file.
+	* sysdeps/wordsize-64/glob.c (globfree): Move definitions to
+	separate file.
+
+2017-08-20  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #18822]
+	* sysdeps/unix/sysv/linux/i386/glob64.c (__old_glob64): Add
+	libc_hidden_proto and libc_hidden_def.
+
+2017-10-20  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #22321]
+	sysconf: Fix missing definition of UIO_MAXIOV on Linux.
+	* sysdeps/posix/sysconf.c: Include <sys/uio.h>.
+	* sysdeps/unix/sysv/linux/Makefile (tests): Add tst-sysconf-iov_max.
+	(tst-sysconf-iov_max): Link with tst-sysconf-iov_max-uapi.o.
+	* sysdeps/unix/sysv/linux/tst-sysconf-iov_max.c: New file.
+	* sysdeps/unix/sysv/linux/tst-sysconf-iov_max-uapi.c: Likewise.
+
+2017-10-11  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #22078]
+	Avoid large NSS buffers with many addresses, aliases.
+	* nss/nss_files/files-hosts.c (gethostbyname3_multi): Rewrite
+	using dynarrays and struct alloc_buffer.
+	* nss/Makefile (tests): Add tst-nss-files-hosts-multi.
+	(tst-nss-files-hosts-multi): Link with -ldl.
+	* nss/tst-nss-files-hosts-multi.c: New file.
+
+2017-10-11  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #18023]
+	* nss/nss_files/files-hosts.c (gethostbyname3_multi): Use struct
+	scratch_buffer.  Eliminate gotos.
+
+2017-10-10  Florian Weimer  <fweimer@redhat.com>
+
+	* nss/nss_files/files-hosts.c (gethostbyname3_multi): New
+	function.
+	(_nss_files_gethostbyname3_r): Call it.
+
+2017-09-21  Gabriel F. T. Gomes  <gabriel@inconstante.eti.br>
+
+	* sysdeps/ieee754/ldbl-128/e_lgammal_r.c (__ieee754_lgammal_r):
+	Remove conditionals on LDBL_MANT_DIG.
+	* sysdeps/ieee754/ldbl-128ibm/e_lgammal_r.c
+	(__ieee754_lgammal_r): Likewise.
+
+2017-09-21  Gabriel F. T. Gomes  <gabriel@inconstante.eti.br>
+
+	* sysdeps/ieee754/ldbl-128ibm/e_expl.c: Remove definitions of
+	_Float128 and L().
+	* sysdeps/ieee754/ldbl-128ibm/e_j0l.c: Remove definitions of
+	_Float128 and L(). Replace _Float128 with long double and L(x)
+	with xL, throughout the file.
+	* sysdeps/ieee754/ldbl-128ibm/e_j1l.c: Likewise.
+	* sysdeps/ieee754/ldbl-128ibm/e_lgammal_r.c: Likewise.
+	* sysdeps/ieee754/ldbl-128ibm/s_cbrtl.c: Likewise.
+	* sysdeps/ieee754/ldbl-128ibm/t_expl.h: Likewise.
+
+2017-09-21  Gabriel F. T. Gomes  <gabriel@inconstante.eti.br>
+
+	* sysdeps/ieee754/ldbl-128ibm/e_expl.c: Include tables from
+	sysdeps/ieee754/ldbl-128ibm.
+	* sysdeps/ieee754/ldbl-128ibm/e_j0l.c: Copy contents from the
+	equivalent implementation in sysdeps/ieee754/ldbl-128/ instead
+	of including it.  Keep _Float128 and L() intact.  These will be
+	reviewed by a separate patch.
+	* sysdeps/ieee754/ldbl-128ibm/e_j1l.c: Likewise.
+	* sysdeps/ieee754/ldbl-128ibm/e_lgammal_r.c: Likewise.
+	* sysdeps/ieee754/ldbl-128ibm/s_cbrtl.c: Likewise.
+	* sysdeps/ieee754/ldbl-128ibm/t_expl.h: Likewise.
+
+2017-09-21  Gabriel F. T. Gomes  <gabriel@inconstante.eti.br>
+
+	* sysdeps/powerpc/powerpc64/fpu/multiarch/s_finite.c
+	(__finitef128): Define to __redirect___finitef128.
+	* sysdeps/powerpc/powerpc64/fpu/multiarch/s_isinf.c
+	(__isinff128): Define to __redirect___isinff128.
+	* sysdeps/powerpc/powerpc64/fpu/multiarch/s_isnan.c
+	(__isnanf128): Define to __redirect___isnanf128.
+
+2017-09-21  Gabriel F. T. Gomes  <gabriel@inconstante.eti.br>
+
+	* sysdeps/powerpc/powerpc64le/Makefile
+	(CFLAGS-tst-strtod-nan-locale.c): New variable.
+	(CFLAGS-tst-wcstod-nan-locale.c): New variable.
+
+2017-10-10  Steve Ellcey  <sellcey@cavium.com>
+
+	* sysdeps/unix/sysv/linux/aarch64/cpu-features.c (get_midr_from_mcpu):
+	Use strcmp instead of tunable_is_name.
+
+2017-10-10  Siddhesh Poyarekar  <siddhesh@sourceware.org>
+
+	* sysdeps/aarch64/multiarch/Makefile (sysdep_routines): Add
+	memmove_falkor.
+	* sysdeps/aarch64/multiarch/ifunc-impl-list.c
+	(__libc_ifunc_impl_list): Likewise.
+	* sysdeps/aarch64/multiarch/memmove.c: Likewise.
+	* sysdeps/aarch64/multiarch/memmove_falkor.S: New file.
+
+	* benchtests/bench-memmove-walk.c: New file.
+	* benchtests/Makefile (string-benchset): Add it.
+
+	* benchtests/bench-memset-walk.c: New file.
+	* benchtests/Makefile (string-benchset): Add it.
+
+	* benchtests/bench-memcpy-walk.c: New file.
+	* benchtests/Makefile (string-benchset): Add it.
+
+	* po/sv.po: Update translations.
+	* po/fr.po: Likewise.
+
+	* sysdeps/aarch64/multiarch/memcpy_falkor.S: Fix code style in
+	comments.
+
+	* manual/tunables.texi (Tunable glibc.tune.cpu): Add falkor.
+	* sysdeps/aarch64/multiarch/Makefile (sysdep_routines): Add
+	memcpy_falkor.
+	* sysdeps/aarch64/multiarch/ifunc-impl-list.c (MAX_IFUNC):
+	Bump.
+	(__libc_ifunc_impl_list): Add __memcpy_falkor.
+	* sysdeps/aarch64/multiarch/memcpy.c: Likewise.
+	* sysdeps/aarch64/multiarch/memcpy_falkor.S: New file.
+	* sysdeps/unix/sysv/linux/aarch64/cpu-features.c (cpu_list):
+	Add falkor.
+	* sysdeps/unix/sysv/linux/aarch64/cpu-features.h (IS_FALKOR):
+	New macro.
+
+2017-10-06  Carlos O'Donell  <carlos@redhat.com>
+
+	[BZ #22111]
+	* malloc/malloc.c (tcache_shutting_down): Use bool type.
+	(tcache_thread_freeres): Set tcache_shutting_down before
+	freeing the tcache.
+	* malloc/Makefile (tests): Add tst-malloc-tcache-leak.
+	* malloc/tst-malloc-tcache-leak.c: New file.
+
+2017-10-04  H.J. Lu  <hongjiu.lu@intel.com>
+
+	* math/test-math-iscanonical.cc (error): Replace bool with int.
+	(do_test): Return errors != 0.
+
+2017-10-03  Gabriel F. T. Gomes  <gabriel@inconstante.eti.br>
+
+	[BZ #22235]
+	* math/math.h: Trivial fix for unbalanced parentheses in comment.
+	* math/Makefile [CXX] (tests): Add test-math-iscanonical.cc.
+	(CFLAGS-test-math-iscanonical.cc): New variable.
+	* math/test-math-iscanonical.cc: New file.
+	* sysdeps/ieee754/ldbl-96/bits/iscanonical.h (iscanonical):
+	Provide a C++ implementation based on function overloading,
+	rather than using __MATH_TG, which uses C-only builtins.
+	* sysdeps/ieee754/ldbl-128ibm/bits/iscanonical.h (iscanonical):
+	Likewise.
+	* sysdeps/powerpc/powerpc64le/Makefile
+	(CFLAGS-test-math-iscanonical.cc): New variable.
+
+2017-08-22  Joseph Myers  <joseph@codesourcery.com>
+
+	[BZ #21987]
+	* sysdeps/unix/sysv/linux/sparc/bits/long-double.h: Remove file
+	and copy to ...
+	* sysdeps/unix/sysv/linux/sparc/sparc32/bits/long-double.h:
+	... here.
+	* sysdeps/unix/sysv/linux/sparc/sparc64/bits/long-double.h:
+	... and here.
+
+2017-09-28  Joseph Myers  <joseph@codesourcery.com>
+
+	[BZ #22225]
+	* sysdeps/ieee754/dbl-64/s_nearbyint.c (__nearbyint): Use
+	math_opt_barrier on argument when doing arithmetic on it.
+	* sysdeps/ieee754/dbl-64/wordsize-64/s_nearbyint.c (__nearbyint):
+	Likewise.  Use math_force_eval not math_opt_barrier after
+	arithmetic.
+	* sysdeps/ieee754/flt-32/s_nearbyintf.c (__nearbyintf): Use
+	math_opt_barrier on argument when doing arithmetic on it.
+	* sysdeps/ieee754/ldbl-128/s_nearbyintl.c (__nearbyintl):
+	Likewise.
+
+2017-09-22  Gabriel F. T. Gomes  <gabriel@inconstante.eti.br>
+
+	[BZ #22146]
+	math/math.h: Let fpclassify use the builtin in C++ mode, even
+	when optimazing for size.
+
+2017-08-22  Gabriel F. T. Gomes  <gftg@linux.vnet.ibm.com>
+
+	* include/libc-symbols.h: [!defined HAVE_GCC_IFUNC] (__ifunc):
+	Change the return type of the ifunc resolver to match the return
+	type of the target function.
+
+2017-08-22  Martin Sebor  <msebor@redhat.com>
+
+	* include/libc-symbols.h (__ifunc_resolver): Declare resolver
+	to return a pointer to the same type as the target function.
+
+2017-08-03  Alan Modra  <amodra@gmail.com>
+
+	* sysdeps/powerpc/mod-tlsopt-powerpc.c: Extract from
+	tst-tlsopt-powerpc.c with function name change and no test harness.
+	* sysdeps/powerpc/tst-tlsopt-powerpc.c: Remove body of test.
+	Call tls_get_addr_opt_test.
+	* sysdeps/powerpc/Makefile (LDFLAGS-tst-tlsopt-powerpc): Don't define.
+	(modules-names): Add mod-tlsopt-powerpc.
+	(mod-tlsopt-powerpc.so-no-z-defs): Define.
+	(tst-tlsopt-powerpc): Depend on .so.
+	* sysdeps/powerpc/powerpc64/tls-macros.h (__TLS_GET_ADDR): Don't
+	define.  Expand use in TLS_GD and TLS_LD.
+
+2017-09-11  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #21982]
+	* string/stratcliff.c (do_test): Declare size, nchars, inner,
+	middle and outer with size_t instead of int.  Repleace %d and
+	%Zd with %zu in printf.  Update "MAX (0, nchars - 128)" and
+	"MAX (outer, nchars - 64)" to support unsigned outer and
+	nchars.  Also exit loop when outer == 0.
+
+2017-09-08  Markus Trippelsdorf  <markus@trippelsdorf.de>
+
+	* sysdeps/x86_64/fpu/libm-test-ulps: Update for AMD Ryzen.
+
+2017-09-07  H.J. Lu  <hongjiu.lu@intel.com>
+
+	* resolv/tst-resolv-qtypes.c (domain): Changed to
+	"const char domain[] =".
+
+2017-08-31  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #22051]
+	* Makerules (build-module-helper-objlist): Filter out
+	$(elf-objpfx)sofini.os.
+	(build-shlib-objlist): Append $(elf-objpfx)sofini.os if it is
+	needed.
+
+2017-08-30  Florian Weimer  <fweimer@redhat.com>
+
+	* malloc/dynarray_emplace_enlarge.c
+	(__libc_dynarray_emplace_enlarge): Set errno on overflow.
+	* malloc/dynarray_resize.c (__libc_dynarray_resize): Likewise.
+	* malloc/tst-dynarray.c (test_long_overflow): New function.
+	(do_test): Call it.
+
+2017-09-06  Florian Weimer  <fweimer@redhat.com>
+
+	* malloc/dynarray_emplace_enlarge.c
+	(__libc_dynarray_emplace_enlarge): Add missing else.
+
+2017-09-06  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #22096]
+	* resolv/resolv_conf.c (__resolv_conf_attach): Do not free conf in
+	case of failure to obtain the global conf object.
+
+2017-09-06  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #22095]
+	* resolv/res_init.c (res_vinit_1): Avoid memory leak in case of
+	dynarray allocation failure.
+
+2017-09-06  Florian Weimer  <fweimer@redhat.com>
+
+	Remove dead PTR IPv4-to-IPv6 mapping code from nss_dns.
+	* resolv/nss_dns/dns-host.c (getanswer_r): Remove dead code.
+	* resolv/tst-res_use_inet6.c (response_ptr_v4, response_ptr_v6):
+	New functions.
+	(response): Call them.  Add 'p', '6' flag processing.
+	(test_reverse): New function.
+	(test_get2_any): Call it.
+	(test_no_inet6): Add 'p' test.
+	(test_inet6): Likewise.
+
+2017-09-06  Florian Weimer  <fweimer@redhat.com>
+
+	Enhance tst-res_use_inet6 to test IPv4-to-IPv6 address mapping.
+	* resolv/tst-res_use_inet6.c (response): Process flags embedded in
+	the QNAME.
+	(test_gai): Adjust query names.  Add additional tests.
+	(test_get2_any, test_get2_no_inet6, test_get2_inet6): Split from
+	test_get2.  Adjust query names.  Add additional tests.
+	(test_no_inet6): New function, extracted from threadfunc.
+	(threadfunc): Call test_get2_any, test_get2_inet6, test_no_inet6.
+	Add additional tests.
+
+2017-09-01  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #21915]
+	[BZ #21922]
+	* sysdeps/posix/getaddrinfo.c (gethosts): Look at NSS function
+	result to determine success or failure, not the errno value.
+	* nss/Makefile (tests): Add tst-nss-files-hosts-erange.
+	(tst-nss-files-hosts-erange): Link with -ldl.
+	* nss/tst-nss-files-hosts-erange.c: New file.
+	* nss/tst-resolv-basic.c (response): Handle nodata.example.
+	(do_test): Add NO_DATA tests.
+	* resolv/tst-resolv-basic.c (test_nodata_nxdomain): New function.
+	(do_test): Call it.
+
+2017-09-01  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #21922]
+	* sysdeps/posix/getaddrinfo.c (gaih_inet): Report EAI_NODATA error
+	coming from gethostbyname2_r.
+
+2017-09-01  Florian Weimer  <fweimer@redhat.com>
+
+	* sysdeps/posix/getaddrinfo.c (gaih_inet): Only use h_errno if
+	status indicates it is set.
+
+2017-09-01  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #20532]
+	* sysdeps/posix/getaddrinfo.c (gaih_inet): Make reporting of NSS
+	function lookup failures more reliable.
+
+2017-09-01  Florian Weimer  <fweimer@redhat.com>
+
+	* sysdeps/posix/getaddrinfo.c (gethosts): Use h_errno directly.
+	(getcanonname): Likewise.
+	(gaih_inet): Likewise.
+
+2017-09-01  Florian Weimer  <fweimer@redhat.com>
+
+	* sysdeps/posix/getaddrinfo.c (gethosts): Use errno directly.
+	(getcanonname): Likewise.
+	(gaih_inet): Likewise.
+
+2017-08-08  Florian Weimer  <fweimer@redhat.com>
+
+	* sysdeps/posix/getaddrinfo.c (gaih_inet): Remove unreachable
+	return statement.
+
+2017-08-22  Joseph Myers  <joseph@codesourcery.com>
+
+	* assert/Makefile [$(have-cxx-thread_local)]: Move conditional
+	variable definitions above inclusion of ../Rules.
+
+2017-08-28  Gabriel F. T. Gomes  <gftg@linux.vnet.ibm.com>
+
+	[BZ #21930]
+	* math/math.h [defined __cplusplus && defined __SUPPORT_SNAN__]
+	(iszero): New C++ implementation that does not use
+	fpclassify/__MATH_TG/__builtin_types_compatible_p, when
+	signaling nans are enabled, since __builtin_types_compatible_p
+	is a C-only feature.
+	* math/test-math-iszero.cc: When __HAVE_DISTINCT_FLOAT128 is
+	defined, include ieee754_float128.h for access to the union and
+	member ieee854_float128.ieee.
+	[__HAVE_DISTINCT_FLOAT128] (do_test): Call check_float128.
+	[__HAVE_DISTINCT_FLOAT128] (check_float128): New function.
+	* sysdeps/powerpc/powerpc64le/Makefile [subdir == math]
+	(CXXFLAGS-test-math-iszero.cc): Add -mfloat128 to the build
+	options of test-math-zero on powerpc64le.
+
+2017-08-24  Gabriel F. T. Gomes  <gftg@linux.vnet.ibm.com>
+
+	* math/math.h [defined __cplusplus] (issignaling): In the long
+	double case, call __issignalingl only if __NO_LONG_DOUBLE_MATH
+	is not defined.  Call __issignaling, otherwise.
+
+2017-08-22  Gabriel F. T. Gomes  <gftg@linux.vnet.ibm.com>
+
+	* math/math.h [defined __cplusplus] (issignaling): Provide a C++
+	definition for issignaling that does not rely on __MATH_TG,
+	since __MATH_TG uses __builtin_types_compatible_p, which is only
+	available in C mode.
+	(CFLAGS-test-math-issignaling.cc): New variable.
+	* math/Makefile [CXX] (tests): Add test-math-issignaling.
+	* math/test-math-issignaling.cc: New test for C++ implementation
+	of type-generic issignaling.
+	* sysdeps/powerpc/powerpc64le/Makefile [subdir == math]
+	(CXXFLAGS-test-math-issignaling.cc): Add -mfloat128 to the build
+	options of test-math-issignaling on powerpc64le.
+
+2017-08-16  Andreas Schwab  <schwab@suse.de>
+
+	[BZ #16750]
+	CVE-2009-5064
+	* elf/ldd.bash.in: Never run file directly.
+
+2017-08-10  Florian Weimer  <fweimer@redhat.com>
+
+	* inet/net-internal.h (__inet6_scopeid_pton): Remove
+	attribute_hidden, internal_function.
+	* inet/inet6_scopeid_pton.c (__inet6_scopeid_pton): Remove
+	internal_function.
+
+2017-08-21  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #21972]
+	* assert/assert.h (assert): Use static_cast (bool) for C++.
+	Use the ternary operator in the warning branch for GNU C.
+	* assert/Makefile (tests): Add tst-assert-c++, tst-assert-g++.
+	(CFLAGS-tst-assert-c++.o): Compile in C++11 mode.
+	(CFLAGS-tst-assert-g++.o): Compile in GnU C++11 mode.
+	(LDLIBS-tst-assert-c++, LDLIBS-tst-assert-g++): Link with libstdc++.
+	* assert/tst-assert-c++.cc, assert/tst-assert-g++.cc: New files.
+
+2017-08-18  Gabriel F. T. Gomes  <gftg@linux.vnet.ibm.com>
+
+	* misc/sys/cdefs.h (__HAVE_GENERIC_SELECTION): Define to 0, if
+	in C++ mode.
+
+2017-08-18  Gabriel F. T. Gomes  <gftg@linux.vnet.ibm.com>
+
+	[BZ #21930]
+	* math/math.h (isinf): Check if in C or C++ mode before using
+	__builtin_types_compatible_p, since this is a C mode feature.
+
+2017-08-10  Gabriel F. T. Gomes  <gftg@linux.vnet.ibm.com>
+
+	[BZ #21941]
+	* sysdeps/powerpc/fpu/math_private.h (__ieee754_sqrtf128): Since
+	xssqrtqp requires operands to be in Vector Registers
+	(Altivec/VMX), replace the register constraint 'wq' with 'v'.
+	* sysdeps/powerpc/powerpc64le/power9/fpu/e_sqrtf128.c
+	(__ieee754_sqrtf128): Likewise.
+
+2017-08-11  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #21242]
+	* assert/assert.h [__GNUC__ && !__STRICT_ANSI__] (assert):
+	Suppress pedantic warning resulting from statement expression.
+	(__ASSERT_FUNCTION): Add missing __extension__.
+
+2017-08-10  Florian Weimer  <fweimer@redhat.com>
+
+	* malloc/malloc.c (get_max_fast): Reimplement as an inline
+	function which calls __builtin_unreachable.
+
+2017-08-09  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #21932]
+	* nss/getXXbyYY_r.c (REENTRANT_NAME): Call __resolv_context_put
+	before early return.
+
+2017-08-09  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	[BZ #21780]
+	* sysdeps/posix/preadv2.c (preadv2): Use ENOTSUP instead of
+	EOPNOTSUPP.
+	* sysdeps/posix/preadv64v2.c (preadv64v2): Likewise.
+	* sysdeps/posix/pwritev2.c (pwritev2): Likewise.
+	* sysdeps/posix/pwritev64v2.c (pwritev64v2): Likewise.
+	* sysdeps/unix/sysv/linux/preadv2.c (preadv2): Likewise.
+	* sysdeps/unix/sysv/linux/preadv64v2.c (preadv64v2): Likewise.
+	* sysdeps/unix/sysv/linux/pwritev2.c (pwritev2): Likewise.
+	* sysdeps/unix/sysv/linux/pwritev64v2.c (pwritev64v2): Likewise.
+
+2017-08-06  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #21871]
+	* sysdeps/x86/cpu-features.c (init_cpu_features): Set
+	bit_arch_Use_dl_runtime_resolve_opt only with AVX512F.
+
+2017-08-03  Aurelien Jarno  <aurelien@aurel32.net>
+
+	* stdlib/getentropy.c (getentropy): Change return type to int.
+
+2017-08-03  Aurelien Jarno  <aurelien@aurel32.net>
+
+	* sysdeps/i386/i686/fpu/multiarch/libm-test-ulps: Regenerated.
+
+2017-08-03  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #21885]
+	* sysdeps/posix/getaddrinfo.c (gethosts): Release resolver context
+	on memory allocation failure.
+
 2017-08-02  Siddhesh Poyarekar  <siddhesh@sourceware.org>
 
 	* version.h (RELEASE): Set to "stable"

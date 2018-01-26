@@ -1,5 +1,5 @@
 /* Setup a chroot environment for use within tests.
-   Copyright (C) 2017 Free Software Foundation, Inc.
+   Copyright (C) 2017-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,30 +24,38 @@
 #include <support/test-driver.h>
 #include <support/xunistd.h>
 
+/* If CONTENTS is not NULL, write it to the file at DIRECTORY/RELPATH,
+   and store the name in *ABSPATH.  If CONTENTS is NULL, store NULL in
+   *ABSPATH.  */
+static void
+write_file (const char *directory, const char *relpath, const char *contents,
+            char **abspath)
+{
+  if (contents != NULL)
+    {
+      *abspath = xasprintf ("%s/%s", directory, relpath);
+      add_temp_file (*abspath);
+      support_write_file_string (*abspath, contents);
+    }
+  else
+    *abspath = NULL;
+}
+
 struct support_chroot *
 support_chroot_create (struct support_chroot_configuration conf)
 {
   struct support_chroot *chroot = xmalloc (sizeof (*chroot));
-
-  chroot->path_chroot = xasprintf ("%s/tst-resolv-res_init-XXXXXX", test_dir);
-  if (mkdtemp (chroot->path_chroot) == NULL)
-    FAIL_EXIT1 ("mkdtemp (\"%s\"): %m", chroot->path_chroot);
-  add_temp_file (chroot->path_chroot);
+  chroot->path_chroot = support_create_temp_directory ("tst-resolv-res_init-");
 
   /* Create the /etc directory in the chroot environment.  */
   char *path_etc = xasprintf ("%s/etc", chroot->path_chroot);
   xmkdir (path_etc, 0777);
   add_temp_file (path_etc);
 
-  if (conf.resolv_conf != NULL)
-    {
-      /* Create an empty resolv.conf file.  */
-      chroot->path_resolv_conf = xasprintf ("%s/resolv.conf", path_etc);
-      add_temp_file (chroot->path_resolv_conf);
-      support_write_file_string (chroot->path_resolv_conf, conf.resolv_conf);
-    }
-  else
-    chroot->path_resolv_conf = NULL;
+  write_file (path_etc, "resolv.conf", conf.resolv_conf,
+              &chroot->path_resolv_conf);
+  write_file (path_etc, "hosts", conf.hosts, &chroot->path_hosts);
+  write_file (path_etc, "host.conf", conf.host_conf, &chroot->path_host_conf);
 
   free (path_etc);
 
@@ -67,5 +75,7 @@ support_chroot_free (struct support_chroot *chroot)
 {
   free (chroot->path_chroot);
   free (chroot->path_resolv_conf);
+  free (chroot->path_hosts);
+  free (chroot->path_host_conf);
   free (chroot);
 }
