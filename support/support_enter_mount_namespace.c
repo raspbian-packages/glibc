@@ -1,5 +1,5 @@
 /* Enter a mount namespace.
-   Copyright (C) 2017 Free Software Foundation, Inc.
+   Copyright (C) 2017-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -21,7 +21,7 @@
 #include <sched.h>
 #include <stdio.h>
 #ifdef CLONE_NEWNS
-#include <sys/mount.h>
+# include <sys/mount.h>
 #endif /* CLONE_NEWNS */
 
 bool

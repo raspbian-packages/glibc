@@ -1,3 +1,63 @@
+2017-10-18  Renlin Li  <renlin.li@arm.com>
+
+	* sysdeps/aarch64/dl-machine.h (elf_machine_load_address): Use
+	_DYNAMIC symbol to calculate load address.
+
+2018-01-19  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #22715]
+	* sysdeps/x86_64/dl-trampoline.h (_dl_runtime_profile): Properly
+	align La_x86_64_retval to VEC_SIZE.
+
+2018-01-16  Florian Weimer  <fweimer@redhat.com>
+
+	* nptl/Makefile [$(have-cxx-thread_local)] (tests-unsupported):
+	Move tst-thread-exit-clobber ...
+	[$(CXX)] (tests-unsupported): ... to here.
+
+2018-01-16  Florian Weimer  <fweimer@redhat.com>
+
+	* nptl/Makefile (CFLAGS-tst-minstack-throw.o): Compile in C++11
+	mode with GNU extensions.
+
+2018-01-15  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #22636]
+	* nptl/tst-minstack-throw.cc: New file.
+	* nptl/Makefile (tests): Add tst-minstack-throw.
+	(LDLIBS-tst-minstack-throw): Link with libstdc++.
+	[!CXX] (tests-unsupported): Add tst-minstack-throw.
+
+2018-01-11  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #22636]
+	* nptl/Makefile (tests): Add tst-minstack-cancel, tst-minstack-exit.
+	* nptl/tst-minstack-cancel.c, nptl/tst-minstack-exit.c: New files.
+
+2018-01-10  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #22636]
+	* sysdeps/nptl/unwind-forcedunwind.c (pthread_cancel_init): Open
+	libgcc.so with RTLD_NOW, to avoid lazy binding during unwind.
+
+2018-01-08  Szabolcs Nagy  <szabolcs.nagy@arm.com>
+
+	[BZ #22637]
+	* nptl/descr.h (stackblock, stackblock_size): Update comments.
+	* nptl/allocatestack.c (allocate_stack): Add guardsize to stacksize.
+	* nptl/nptl-init.c (__pthread_get_minstack): Remove guardsize from
+	stacksize.
+	* nptl/pthread_getattr_np.c (pthread_getattr_np): Likewise.
+
+2018-01-08  Florian Weimer  <fweimer@redhat.com>
+
+	* nptl/tst-thread-exit-clobber.cc: New file.
+	* nptl/Makefile (CFLAGS-tst-thread-exit-clobber.o): Compile in
+	C++11 mode.
+	(LDLIBS-tst-thread-exit-clobber): Link with libstdc++.
+	(tests): Add tst-thread-exit-clobber.
+	[!CXX] (tests-unsupported): Add tst-thread-exit-clobber.
+
 2018-01-12  Dmitry V. Levin  <ldv@altlinux.org>
 
 	[BZ #22679]

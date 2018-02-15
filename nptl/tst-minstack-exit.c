@@ -1,5 +1,5 @@
-/* pthread_cond_wait with error checking.
-   Copyright (C) 2016-2018 Free Software Foundation, Inc.
+/* Test that pthread_exit works with the minimum stack size.
+   Copyright (C) 2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,11 +16,31 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+/* Note: This test is similar to tst-minstack-cancel, but is separate
+   to avoid spurious test passes due to warm-up effects.  */
+
+#include <limits.h>
+#include <unistd.h>
+#include <support/check.h>
 #include <support/xthread.h>
 
-void
-xpthread_cond_wait (pthread_cond_t *cond, pthread_mutex_t *mutex)
+static void *
+threadfunc (void *closure)
 {
-  xpthread_check_return
-    ("pthread_cond_wait", pthread_cond_wait (cond, mutex));
+  pthread_exit (threadfunc);
+  return NULL;
 }
+
+static int
+do_test (void)
+{
+  pthread_attr_t attr;
+  xpthread_attr_init (&attr);
+  xpthread_attr_setstacksize (&attr, PTHREAD_STACK_MIN);
+  pthread_t thr = xpthread_create (&attr, threadfunc, NULL);
+  TEST_VERIFY (xpthread_join (thr) == threadfunc);
+  xpthread_attr_destroy (&attr);
+  return 0;
+}
+
+#include <support/test-driver.c>
