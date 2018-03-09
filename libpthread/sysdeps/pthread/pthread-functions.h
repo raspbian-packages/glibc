@@ -133,7 +133,7 @@ struct pthread_functions
 extern struct pthread_functions __libc_pthread_functions attribute_hidden;
 extern int __libc_pthread_functions_init attribute_hidden;
 
-void __libc_pthread_init (const struct pthread_functions *functions) internal_function;
+void __libc_pthread_init (const struct pthread_functions *functions);
 
 # define PTHFCT_CALL(fct, params) \
     __libc_pthread_functions.fct params
