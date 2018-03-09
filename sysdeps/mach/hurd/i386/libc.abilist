@@ -2360,6 +2360,7 @@ HURD_CTHREADS_0.3 HURD_CTHREADS_0.3 A
 HURD_CTHREADS_0.3 __cthread_getspecific F
 HURD_CTHREADS_0.3 __cthread_keycreate F
 HURD_CTHREADS_0.3 __cthread_setspecific F
+HURD_CTHREADS_0.3 __libc_getspecific F
 HURD_CTHREADS_0.3 __mutex_init F
 HURD_CTHREADS_0.3 __mutex_lock F
 HURD_CTHREADS_0.3 __mutex_lock_solid F
