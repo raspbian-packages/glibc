@@ -1,4 +1,4 @@
-/* Copyright (C) 1998-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1998-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Thorsten Kukuk <kukuk@uni-paderborn.de>, 1998.
 
@@ -38,8 +38,7 @@ int __nss_not_use_nscd_passwd;
 
 static int nscd_getpw_r (const char *key, size_t keylen, request_type type,
 			 struct passwd *resultbuf, char *buffer,
-			 size_t buflen, struct passwd **result)
-     internal_function;
+			 size_t buflen, struct passwd **result);
 
 int
 __nscd_getpwnam_r (const char *name, struct passwd *resultbuf, char *buffer,
@@ -81,7 +80,6 @@ libc_freeres_fn (pw_map_free)
 
 
 static int
-internal_function
 nscd_getpw_r (const char *key, size_t keylen, request_type type,
 	      struct passwd *resultbuf, char *buffer, size_t buflen,
 	      struct passwd **result)
@@ -218,7 +216,7 @@ nscd_getpw_r (const char *key, size_t keylen, request_type type,
 
  out_close:
   if (sock != -1)
-    close_not_cancel_no_status (sock);
+    __close_nocancel_nostatus (sock);
  out:
   if (__nscd_drop_map_ref (mapped, &gc_cycle) != 0)
     {

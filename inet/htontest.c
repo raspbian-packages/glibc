@@ -1,5 +1,5 @@
 /* Test hton/ntoh functions.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 
@@ -38,8 +38,8 @@
 # error "Bah, what kind of system do you use?"
 #endif
 
-u_int32_t lo = 0x67452301;
-u_int16_t foo = 0x1234;
+uint32_t lo = 0x67452301;
+uint16_t foo = 0x1234;
 
 int
 main (void)

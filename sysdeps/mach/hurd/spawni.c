@@ -1,5 +1,5 @@
 /* spawn a new process running an executable.  Hurd version.
-   Copyright (C) 2001-2017 Free Software Foundation, Inc.
+   Copyright (C) 2001-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -46,7 +46,8 @@ __spawni (pid_t *pid, const char *file,
 {
   pid_t new_pid;
   char *path, *p, *name;
-  char *concat_name = NULL, *relpath, *abspath;
+  char *concat_name = NULL;
+  const char *relpath, *abspath;
   int res;
   size_t len;
   size_t pathlen;

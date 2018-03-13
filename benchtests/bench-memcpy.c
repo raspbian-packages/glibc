@@ -1,5 +1,5 @@
 /* Measure memcpy functions.
-   Copyright (C) 2013-2017 Free Software Foundation, Inc.
+   Copyright (C) 2013-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -56,26 +56,6 @@ do_one_test (json_ctx_t *json_ctx, impl_t *impl, char *dst, const char *src,
 {
   size_t i, iters = INNER_LOOP_ITERS;
   timing_t start, stop, cur;
-
-  /* Must clear the destination buffer set by the previous run.  */
-  for (i = 0; i < len; i++)
-    dst[i] = 0;
-
-  if (CALL (impl, dst, src, len) != MEMCPY_RESULT (dst, len))
-    {
-      error (0, 0, "Wrong result in function %s %p %p", impl->name,
-	     CALL (impl, dst, src, len), MEMCPY_RESULT (dst, len));
-      ret = 1;
-      return;
-    }
-
-  if (memcmp (dst, src, len) != 0)
-    {
-      error (0, 0, "Wrong result in function %s dst \"%s\" src \"%s\"",
-	     impl->name, dst, src);
-      ret = 1;
-      return;
-    }
 
   TIMING_NOW (start);
   for (i = 0; i < iters; ++i)
@@ -136,7 +116,7 @@ test_main (void)
   json_attr_string (&json_ctx, "timing_type", TIMING_TYPE);
 
   json_attr_object_begin (&json_ctx, "functions");
-  json_attr_object_begin (&json_ctx, "memcpy");
+  json_attr_object_begin (&json_ctx, TEST_NAME);
   json_attr_string (&json_ctx, "bench-variant", "default");
 
   json_array_begin (&json_ctx, "ifuncs");

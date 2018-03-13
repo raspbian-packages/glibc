@@ -1,5 +1,5 @@
 /* Implementation of gamma function according to ISO C.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 
@@ -115,7 +115,7 @@ gammal_positive (long double x, int *exp2_adj)
 long double
 __ieee754_gammal_r (long double x, int *signgamp)
 {
-  u_int32_t es, hx, lx;
+  uint32_t es, hx, lx;
   long double ret;
 
   GET_LDOUBLE_WORDS (es, hx, lx, x);

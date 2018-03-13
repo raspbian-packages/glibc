@@ -1,5 +1,5 @@
 /* Return maximum numeric value of X and Y.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 
@@ -33,7 +33,3 @@ M_DECL_FUNC (__fmax) (FLOAT x, FLOAT y)
 }
 
 declare_mgen_alias (__fmax, fmax);
-
-#if M_LIBM_NEED_COMPAT (fmax)
-declare_mgen_libm_compat (__fmax, fmax)
-#endif

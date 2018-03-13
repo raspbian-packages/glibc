@@ -1,5 +1,5 @@
 /* Cache handling for iconv modules.
-   Copyright (C) 2001-2017 Free Software Foundation, Inc.
+   Copyright (C) 2001-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 2001.
 
@@ -45,7 +45,6 @@ __gconv_get_cache (void)
 
 
 int
-internal_function
 __gconv_load_cache (void)
 {
   int fd;
@@ -59,7 +58,7 @@ __gconv_load_cache (void)
     return -1;
 
   /* See whether the cache file exists.  */
-  fd = open_not_cancel (GCONV_MODULES_CACHE, O_RDONLY, 0);
+  fd = __open_nocancel (GCONV_MODULES_CACHE, O_RDONLY, 0);
   if (__builtin_expect (fd, 0) == -1)
     /* Not available.  */
     return -1;
@@ -71,7 +70,7 @@ __gconv_load_cache (void)
       || (size_t) st.st_size < sizeof (struct gconvcache_header))
     {
     close_and_exit:
-      close_not_cancel_no_status (fd);
+      __close_nocancel_nostatus (fd);
       return -1;
     }
 
@@ -108,7 +107,7 @@ __gconv_load_cache (void)
     }
 
   /* We don't need the file descriptor anymore.  */
-  close_not_cancel_no_status (fd);
+  __close_nocancel_nostatus (fd);
 
   /* Check the consistency.  */
   header = (struct gconvcache_header *) gconv_cache;
@@ -142,7 +141,6 @@ __gconv_load_cache (void)
 
 
 static int
-internal_function
 find_module_idx (const char *str, size_t *idxp)
 {
   unsigned int idx;
@@ -181,7 +179,6 @@ find_module_idx (const char *str, size_t *idxp)
 
 #ifndef STATIC_GCONV
 static int
-internal_function
 find_module (const char *directory, const char *filename,
 	     struct __gconv_step *result)
 {
@@ -207,17 +204,16 @@ find_module (const char *directory, const char *filename,
       result->__data = NULL;
 
       /* Call the init function.  */
-      if (result->__init_fct != NULL)
-	{
-	  __gconv_init_fct init_fct = result->__init_fct;
+      __gconv_init_fct init_fct = result->__init_fct;
 #ifdef PTR_DEMANGLE
-	  PTR_DEMANGLE (init_fct);
+      PTR_DEMANGLE (init_fct);
 #endif
+      if (init_fct != NULL)
+	{
 	  status = DL_CALL_FCT (init_fct, (result));
 
 #ifdef PTR_MANGLE
-	  if (result->__btowc_fct != NULL)
-	    PTR_MANGLE (result->__btowc_fct);
+	  PTR_MANGLE (result->__btowc_fct);
 #endif
 	}
     }
@@ -228,7 +224,6 @@ find_module (const char *directory, const char *filename,
 
 
 int
-internal_function
 __gconv_compare_alias_cache (const char *name1, const char *name2, int *result)
 {
   size_t name1_idx;
@@ -248,7 +243,6 @@ __gconv_compare_alias_cache (const char *name1, const char *name2, int *result)
 
 
 int
-internal_function
 __gconv_lookup_cache (const char *toset, const char *fromset,
 		      struct __gconv_step **handle, size_t *nsteps, int flags)
 {
@@ -450,7 +444,6 @@ __gconv_lookup_cache (const char *toset, const char *fromset,
 
 /* Free memory allocated for the transformation record.  */
 void
-internal_function
 __gconv_release_cache (struct __gconv_step *steps, size_t nsteps)
 {
   if (gconv_cache != NULL)

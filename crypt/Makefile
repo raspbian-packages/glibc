@@ -1,4 +1,4 @@
-# Copyright (C) 1996-2017 Free Software Foundation, Inc.
+# Copyright (C) 1996-2018 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -39,9 +39,9 @@ endif
 ifeq ($(nss-crypt),yes)
 nss-cpp-flags := -DUSE_NSS \
   -I$(shell nss-config --includedir) -I$(shell nspr-config --includedir)
-CPPFLAGS-sha256-crypt.c = $(nss-cpp-flags)
-CPPFLAGS-sha512-crypt.c = $(nss-cpp-flags)
-CPPFLAGS-md5-crypt.c = $(nss-cpp-flags)
+CPPFLAGS-sha256-crypt.c += $(nss-cpp-flags)
+CPPFLAGS-sha512-crypt.c += $(nss-cpp-flags)
+CPPFLAGS-md5-crypt.c += $(nss-cpp-flags)
 LDLIBS-crypt.so = -lfreebl3
 else
 libcrypt-routines += md5 sha256 sha512

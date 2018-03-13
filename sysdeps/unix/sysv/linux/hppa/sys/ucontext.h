@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -23,9 +23,14 @@
 #include <features.h>
 
 #include <bits/types/sigset_t.h>
-#include <bits/sigcontext.h>
 #include <bits/types/stack_t.h>
 
+
+#ifdef __USE_MISC
+# define __ctx(fld) fld
+#else
+# define __ctx(fld) __ ## fld
+#endif
 
 #ifdef __USE_MISC
 /* Type for general register.  */
@@ -52,16 +57,26 @@ typedef struct fpregset
 #endif
 
 /* Context to describe whole processor state.  */
-typedef struct sigcontext mcontext_t;
+typedef struct
+  {
+    unsigned long int __ctx(sc_flags);
+    unsigned long int __ctx(sc_gr)[32];
+    unsigned long long int __ctx(sc_fr)[32];
+    unsigned long int __ctx(sc_iasq)[2];
+    unsigned long int __ctx(sc_iaoq)[2];
+    unsigned long int __ctx(sc_sar);
+  } mcontext_t;
 
 /* Userlevel context.  */
 typedef struct ucontext_t
   {
-    unsigned long int uc_flags;
+    unsigned long int __ctx(uc_flags);
     struct ucontext_t *uc_link;
     stack_t uc_stack;
     mcontext_t uc_mcontext;
     sigset_t uc_sigmask;
   } ucontext_t;
+
+#undef __ctx
 
 #endif /* sys/ucontext.h */

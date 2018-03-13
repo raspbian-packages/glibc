@@ -1,5 +1,5 @@
 /* Profiling of shared libraries.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
    Based on the BSD mcount implementation.
@@ -180,7 +180,6 @@ static unsigned int log_hashfraction;
 /* Set up profiling data to profile object desribed by MAP.  The output
    file is found (or created) in OUTPUT_DIR.  */
 void
-internal_function
 _dl_start_profile (void)
 {
   char *filename;

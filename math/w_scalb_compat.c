@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@gmail.com>, 2011.
 
@@ -19,8 +19,10 @@
 #include <errno.h>
 #include <math.h>
 #include <math_private.h>
+#include <math-svid-compat.h>
 
 
+#if LIBM_SVID_COMPAT
 static double
 __attribute__ ((noinline))
 sysv_scalb (double x, double fn)
@@ -39,15 +41,18 @@ sysv_scalb (double x, double fn)
 
   return z;
 }
+#endif
 
 
 /* Wrapper scalb */
 double
 __scalb (double x, double fn)
 {
+#if LIBM_SVID_COMPAT
   if (__glibc_unlikely (_LIB_VERSION == _SVID_))
     return sysv_scalb (x, fn);
   else
+#endif
     {
       double z = __ieee754_scalb (x, fn);
 

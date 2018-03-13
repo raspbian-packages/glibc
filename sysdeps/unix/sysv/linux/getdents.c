@@ -1,4 +1,4 @@
-/* Copyright (C) 1993-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1993-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -76,7 +76,6 @@ struct kernel_dirent64
    reset the file descriptor.  In practice the kernel is limiting the
    amount of data returned much more then the reduced buffer size.  */
 ssize_t
-internal_function
 __GETDENTS (int fd, char *buf, size_t nbytes)
 {
   ssize_t retval;

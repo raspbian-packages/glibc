@@ -45,6 +45,7 @@ static char rcsid[] = "$NetBSD: $";
 #include <float.h>
 #include <math.h>
 #include <math_private.h>
+#include <libm-alias-ldouble.h>
 
 static const long double one=1.0, two=2.0, tiny = 1.0e-4900L;
 
@@ -52,7 +53,7 @@ long double __tanhl(long double x)
 {
 	long double t,z;
 	int32_t se;
-	u_int32_t j0,j1,ix;
+	uint32_t j0,j1,ix;
 
     /* High word of |x|. */
 	GET_LDOUBLE_WORDS(se,j0,j1,x);
@@ -87,4 +88,4 @@ long double __tanhl(long double x)
 	}
 	return (se&0x8000)? -z: z;
 }
-weak_alias (__tanhl, tanhl)
+libm_alias_ldouble (__tanh, tanh)

@@ -1,5 +1,5 @@
 /* Machine-dependent ELF dynamic relocation inline functions.  MIPS version.
-   Copyright (C) 1996-2017 Free Software Foundation, Inc.
+   Copyright (C) 1996-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Kazumoto Kojima <kkojima@info.kanagawa-u.ac.jp>.
 
@@ -191,7 +191,7 @@ elf_machine_load_address (void)
    fiddles with global data.  */
 #define ELF_MACHINE_BEFORE_RTLD_RELOC(dynamic_info)			\
 do {									\
-  struct link_map *map = &bootstrap_map;				\
+  struct link_map *map = BOOTSTRAP_MAP;					\
   ElfW(Sym) *sym;							\
   ElfW(Addr) *got;							\
   int i, n;								\
@@ -696,7 +696,8 @@ elf_machine_reloc (struct link_map *map, ElfW(Addr) r_info,
 			      RTLD_PROGNAME, strtab + refsym->st_name);
 	  }
 	memcpy (reloc_addr, (void *) value,
-		MIN (sym->st_size, refsym->st_size));
+		sym->st_size < refsym->st_size
+		? sym->st_size : refsym->st_size);
 	break;
       }
 

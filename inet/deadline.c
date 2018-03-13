@@ -1,5 +1,5 @@
 /* Computing deadlines for timeouts.
-   Copyright (C) 2017 Free Software Foundation, Inc.
+   Copyright (C) 2017-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,7 +24,7 @@
 #include <stdint.h>
 #include <time.h>
 
-struct deadline_current_time internal_function
+struct deadline_current_time
 __deadline_current_time (void)
 {
   struct deadline_current_time result;
@@ -48,7 +48,7 @@ infinite_deadline (void)
   return (struct deadline) { { -1, -1 } };
 }
 
-struct deadline internal_function
+struct deadline
 __deadline_from_timeval (struct deadline_current_time current,
                          struct timeval tv)
 {
@@ -79,7 +79,7 @@ __deadline_from_timeval (struct deadline_current_time current,
   return (struct deadline) { { sec, nsec } };
 }
 
-int internal_function
+int
 __deadline_to_ms (struct deadline_current_time current,
                   struct deadline deadline)
 {

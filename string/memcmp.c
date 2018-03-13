@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Torbjorn Granlund (tege@sics.se).
 
@@ -19,9 +19,6 @@
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
-
-#undef	__ptr_t
-#define __ptr_t	void *
 
 #if defined HAVE_STRING_H || defined _LIBC
 # include <string.h>
@@ -301,7 +298,7 @@ memcmp_not_common_alignment (long int srcp1, long int srcp2, size_t len)
 }
 
 int
-MEMCMP (const __ptr_t s1, const __ptr_t s2, size_t len)
+MEMCMP (const void *s1, const void *s2, size_t len)
 {
   op_t a0;
   op_t b0;

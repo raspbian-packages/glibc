@@ -1,5 +1,5 @@
 /* memcpy optimized with SSE2 unaligned memory access instructions.
-   Copyright (C) 2014-2017 Free Software Foundation, Inc.
+   Copyright (C) 2014-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -56,7 +56,7 @@
 # define RETURN	RETURN_END; CFI_PUSH (%ebx)
 
 	.section .text.sse2,"ax",@progbits
-# if !defined USE_AS_BCOPY
+# if !defined USE_AS_BCOPY && defined SHARED
 ENTRY (MEMCPY_CHK)
 	movl	12(%esp), %eax
 	cmpl	%eax, 16(%esp)
@@ -157,7 +157,7 @@ L(mm_len_128_or_more_backward):
 # ifdef SHARED_CACHE_SIZE_HALF
 	cmp	$SHARED_CACHE_SIZE_HALF, %edi
 # else
-#  ifdef SHARED
+#  ifdef PIC
 	PUSH (%ebx)
 	SETUP_PIC_REG (bx)
 	add	$_GLOBAL_OFFSET_TABLE_, %ebx
@@ -351,7 +351,7 @@ L(mm_len_128_or_more_forward):
 # ifdef SHARED_CACHE_SIZE_HALF
 	cmp	$SHARED_CACHE_SIZE_HALF, %edi
 # else
-#  ifdef SHARED
+#  ifdef PIC
 	PUSH (%ebx)
 	SETUP_PIC_REG(bx)
 	add	$_GLOBAL_OFFSET_TABLE_, %ebx
@@ -469,7 +469,7 @@ L(forward):
 # ifdef SHARED_CACHE_SIZE_HALF
 	cmp	$SHARED_CACHE_SIZE_HALF, %ecx
 # else
-#  ifdef SHARED
+#  ifdef PIC
 	SETUP_PIC_REG(bx)
 	add	$_GLOBAL_OFFSET_TABLE_, %ebx
 	cmp	__x86_shared_cache_size_half@GOTOFF(%ebx), %ecx

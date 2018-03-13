@@ -1,5 +1,5 @@
 /* Machine-dependent ELF dynamic relocation inline functions.  IA-64 version.
-   Copyright (C) 1995-2017 Free Software Foundation, Inc.
+   Copyright (C) 1995-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -45,7 +45,7 @@ __ia64_init_bootstrap_fdesc_table (struct link_map *map)
 }
 
 #define ELF_MACHINE_BEFORE_RTLD_RELOC(dynamic_info)		\
-	__ia64_init_bootstrap_fdesc_table (&bootstrap_map);
+	__ia64_init_bootstrap_fdesc_table (BOOTSTRAP_MAP);
 
 /* Return nonzero iff ELF header is compatible with the running host.  */
 static inline int __attribute__ ((unused))

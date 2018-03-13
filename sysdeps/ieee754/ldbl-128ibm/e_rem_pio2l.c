@@ -1,5 +1,5 @@
 /* Quad-precision floating point argument reduction.
-   Copyright (C) 1999-2017 Free Software Foundation, Inc.
+   Copyright (C) 1999-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Jakub Jelinek <jj@ultra.linux.cz>
 
@@ -200,7 +200,7 @@ int32_t __ieee754_rem_pio2l(long double x, long double *y)
   double tx[8];
   int exp;
   int64_t n, ix, hx, ixd;
-  u_int64_t lxd;
+  uint64_t lxd;
   double xhi;
 
   xhi = ldbl_high (x);

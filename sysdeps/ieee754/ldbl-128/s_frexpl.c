@@ -29,13 +29,14 @@ static char rcsid[] = "$NetBSD: $";
 
 #include <math.h>
 #include <math_private.h>
+#include <libm-alias-ldouble.h>
 
 static const _Float128
 two114 = L(2.0769187434139310514121985316880384E+34); /* 0x4071000000000000, 0 */
 
 _Float128 __frexpl(_Float128 x, int *eptr)
 {
-	u_int64_t hx, lx, ix;
+	uint64_t hx, lx, ix;
 	GET_LDOUBLE_WORDS64(hx,lx,x);
 	ix = 0x7fffffffffffffffULL&hx;
 	*eptr = 0;
@@ -51,4 +52,4 @@ _Float128 __frexpl(_Float128 x, int *eptr)
 	SET_LDOUBLE_MSW64(x,hx);
 	return x;
 }
-weak_alias (__frexpl, frexpl)
+libm_alias_ldouble (__frexp, frexp)

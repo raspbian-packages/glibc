@@ -1,4 +1,4 @@
-/* Copyright (C) 1993-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1993-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -69,7 +69,6 @@ _hurd_fd_opendir (struct hurd_fd *d)
 
 
 DIR *
-internal_function
 __opendirat (int dfd, const char *name)
 {
   if (name[0] == '\0')
@@ -84,9 +83,9 @@ __opendirat (int dfd, const char *name)
   int fd;
 #if IS_IN (rtld)
   assert (dfd == AT_FDCWD);
-  fd = open_not_cancel_2 (name, flags);
+  fd = __open_nocancel (name, flags);
 #else
-  fd = openat_not_cancel_3 (dfd, name, flags);
+  fd = __openat_nocancel (dfd, name, flags);
 #endif
   if (fd < 0)
     return NULL;

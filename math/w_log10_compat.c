@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@gmail.com>, 2011.
 
@@ -19,8 +19,11 @@
 #include <fenv.h>
 #include <math.h>
 #include <math_private.h>
+#include <math-svid-compat.h>
+#include <libm-alias-double.h>
 
 
+#if LIBM_SVID_COMPAT
 /* wrapper log10(x) */
 double
 __log10 (double x)
@@ -41,8 +44,5 @@ __log10 (double x)
 
   return  __ieee754_log10 (x);
 }
-weak_alias (__log10, log10)
-#ifdef NO_LONG_DOUBLE
-strong_alias (__log10, __log10l)
-weak_alias (__log10, log10l)
+libm_alias_double (__log10, log10)
 #endif

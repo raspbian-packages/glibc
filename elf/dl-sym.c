@@ -1,5 +1,5 @@
 /* Look up a symbol in a shared object loaded by `dlopen'.
-   Copyright (C) 1999-2017 Free Software Foundation, Inc.
+   Copyright (C) 1999-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -41,7 +41,6 @@
 /* Return the symbol address given the map of the module it is in and
    the symbol record.  This is used in dl-sym.c.  */
 static void *
-internal_function
 _dl_tls_symaddr (struct link_map *map, const ElfW(Sym) *ref)
 {
 # ifndef DONT_USE_TLS_INDEX
@@ -83,7 +82,6 @@ call_dl_lookup (void *ptr)
 
 
 static void *
-internal_function
 do_sym (void *handle, const char *name, void *who,
 	struct r_found_version *vers, int flags)
 {
@@ -119,26 +117,11 @@ do_sym (void *handle, const char *name, void *who,
 	  args.refp = &ref;
 
 	  THREAD_GSCOPE_SET_FLAG ();
-
-	  const char *objname;
-	  const char *errstring = NULL;
-	  bool malloced;
-	  int err = _dl_catch_error (&objname, &errstring, &malloced,
-				     call_dl_lookup, &args);
-
+	  struct dl_exception exception;
+	  int err = _dl_catch_exception (&exception, call_dl_lookup, &args);
 	  THREAD_GSCOPE_RESET_FLAG ();
-
-	  if (__glibc_unlikely (errstring != NULL))
-	    {
-	      /* The lookup was unsuccessful.  Rethrow the error.  */
-	      char *errstring_dup = strdupa (errstring);
-	      char *objname_dup = strdupa (objname);
-	      if (malloced)
-		free ((char *) errstring);
-
-	      _dl_signal_error (err, objname_dup, NULL, errstring_dup);
-	      /* NOTREACHED */
-	    }
+	  if (__glibc_unlikely (exception.errstring != NULL))
+	    _dl_signal_exception (err, &exception, NULL);
 
 	  result = args.map;
 	}
@@ -250,7 +233,6 @@ RTLD_NEXT used in code not dynamically loaded"));
 
 
 void *
-internal_function
 _dl_vsym (void *handle, const char *name, const char *version, void *who)
 {
   struct r_found_version vers;
@@ -267,7 +249,6 @@ _dl_vsym (void *handle, const char *name, const char *version, void *who)
 
 
 void *
-internal_function
 _dl_sym (void *handle, const char *name, void *who)
 {
   return do_sym (handle, name, who, NULL, DL_LOOKUP_RETURN_NEWEST);

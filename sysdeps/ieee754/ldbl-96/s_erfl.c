@@ -108,6 +108,7 @@
 #include <float.h>
 #include <math.h>
 #include <math_private.h>
+#include <libm-alias-ldouble.h>
 
 static const long double
 tiny = 1e-4931L,
@@ -254,7 +255,7 @@ __erfl (long double x)
 {
   long double R, S, P, Q, s, y, z, r;
   int32_t ix, i;
-  u_int32_t se, i0, i1;
+  uint32_t se, i0, i1;
 
   GET_LDOUBLE_WORDS (se, i0, i1, x);
   ix = se & 0x7fff;
@@ -335,13 +336,13 @@ __erfl (long double x)
     return r / x - one;
 }
 
-weak_alias (__erfl, erfl)
+libm_alias_ldouble (__erf, erf)
 long double
 __erfcl (long double x)
 {
   int32_t hx, ix;
   long double R, S, P, Q, s, y, z, r;
-  u_int32_t se, i0, i1;
+  uint32_t se, i0, i1;
 
   GET_LDOUBLE_WORDS (se, i0, i1, x);
   ix = se & 0x7fff;
@@ -448,4 +449,4 @@ __erfcl (long double x)
     }
 }
 
-weak_alias (__erfcl, erfcl)
+libm_alias_ldouble (__erfc, erfc)

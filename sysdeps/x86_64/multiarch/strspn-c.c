@@ -1,5 +1,5 @@
 /* strspn with SSE4.2 intrinsics
-   Copyright (C) 2009-2017 Free Software Foundation, Inc.
+   Copyright (C) 2009-2018 Free Software Foundation, Inc.
    Contributed by Intel Corporation.
    This file is part of the GNU C Library.
 
@@ -52,7 +52,7 @@
 
    We exit from the loop for case 1.  */
 
-extern size_t __strspn_sse2 (const char *, const char *);
+extern size_t __strspn_sse2 (const char *, const char *) attribute_hidden;
 
 
 size_t

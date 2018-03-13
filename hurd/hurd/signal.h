@@ -1,5 +1,5 @@
 /* Implementing POSIX.1 signals under the Hurd.
-   Copyright (C) 1993-2017 Free Software Foundation, Inc.
+   Copyright (C) 1993-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -42,9 +42,9 @@
 #include <spin-lock.h>
 struct hurd_signal_preemptor;	/* <hurd/sigpreempt.h> */
 #if defined __USE_EXTERN_INLINES && defined _LIBC
-#  if IS_IN (libc)
-#    include <sigsetops.h>
-#  endif
+# if IS_IN (libc) || IS_IN (libpthread)
+#  include <sigsetops.h>
+# endif
 #endif
 
 
@@ -164,7 +164,7 @@ extern void _hurd_sigstate_delete (thread_t thread);
 #endif
 
 #if defined __USE_EXTERN_INLINES && defined _LIBC
-#  if IS_IN (libc)
+# if IS_IN (libc)
 _HURD_SIGNAL_H_EXTERN_INLINE struct hurd_sigstate *
 _hurd_self_sigstate (void)
 {
@@ -176,7 +176,7 @@ _hurd_self_sigstate (void)
     }
   return THREAD_SELF->_hurd_sigstate;
 }
-#  endif
+# endif
 #endif
 
 /* Thread listening on our message port; also called the "signal thread".  */
@@ -198,10 +198,10 @@ extern int _hurd_core_limit;
    interrupted lest the signal handler try to take the same lock and
    deadlock result.  */
 
-void *_hurd_critical_section_lock (void);
+extern void *_hurd_critical_section_lock (void);
 
 #if defined __USE_EXTERN_INLINES && defined _LIBC
-#  if IS_IN (libc)
+# if IS_IN (libc)
 _HURD_SIGNAL_H_EXTERN_INLINE void *
 _hurd_critical_section_lock (void)
 {
@@ -235,13 +235,13 @@ _hurd_critical_section_lock (void)
      _hurd_critical_section_unlock to unlock it.  */
   return ss;
 }
-#  endif
+# endif
 #endif
 
-void _hurd_critical_section_unlock (void *our_lock);
+extern void _hurd_critical_section_unlock (void *our_lock);
 
 #if defined __USE_EXTERN_INLINES && defined _LIBC
-#  if IS_IN (libc)
+# if IS_IN (libc)
 _HURD_SIGNAL_H_EXTERN_INLINE void
 _hurd_critical_section_unlock (void *our_lock)
 {
@@ -264,7 +264,7 @@ _hurd_critical_section_unlock (void *our_lock)
 	__msg_sig_post (_hurd_msgport, 0, 0, __mach_task_self ());
     }
 }
-#  endif
+# endif
 #endif
 
 /* Convenient macros for simple uses of critical sections.

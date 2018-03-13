@@ -1,5 +1,5 @@
 /* Check recvmsg results for netlink sockets.
-   Copyright (C) 2015-2017 Free Software Foundation, Inc.
+   Copyright (C) 2015-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -39,7 +39,6 @@ get_address_family (int fd)
 }
 
 void
-internal_function
 __netlink_assert_response (int fd, ssize_t result)
 {
   if (result < 0)

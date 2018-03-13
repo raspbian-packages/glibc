@@ -1,5 +1,5 @@
 /* Return the least floating-point number greater than X.
-   Copyright (C) 2016-2017 Free Software Foundation, Inc.
+   Copyright (C) 2016-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -18,6 +18,7 @@
 
 #include <math.h>
 #include <math_private.h>
+#include <libm-alias-float.h>
 
 /* Return the least floating-point number greater than X.  */
 float
@@ -43,4 +44,4 @@ __nextupf (float x)
   return x;
 }
 
-weak_alias (__nextupf, nextupf)
+libm_alias_float (__nextup, nextup)

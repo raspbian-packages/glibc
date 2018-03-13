@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # Generate tests for <tgmath.h> macros.
-# Copyright (C) 2017 Free Software Foundation, Inc.
+# Copyright (C) 2017-2018 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 #
 # The GNU C Library is free software; you can redistribute it and/or
@@ -128,9 +128,7 @@ class Type(object):
         real_type = Type(name, suffix=suffix, mant_dig=mant_dig,
                          condition=condition, order=order, integer=integer,
                          complex=False)
-        # Complex integer types currently disabled because of problems
-        # in tgmath.h.
-        if complex_ok and not integer:
+        if complex_ok:
             if complex_name is None:
                 complex_name = '_Complex %s' % name
             complex_type = Type(complex_name, condition=condition,
@@ -195,16 +193,21 @@ class Type(object):
         Type.create_type('unsigned long int', integer=True)
         Type.create_type('long long int', integer=True)
         Type.create_type('unsigned long long int', integer=True)
+        Type.create_type('__int128', integer=True,
+                         condition='defined __SIZEOF_INT128__')
+        Type.create_type('unsigned __int128', integer=True,
+                         condition='defined __SIZEOF_INT128__')
         Type.create_type('enum e', integer=True, complex_ok=False)
         Type.create_type('_Bool', integer=True, complex_ok=False)
+        Type.create_type('bit_field', integer=True, complex_ok=False)
         # Internal types represent the combination of long double with
         # _Float64 or _Float64x, for which the ordering depends on
         # whether long double has the same format as double.
-        Type.create_type('long_double_Float64', 'LDBL_MANT_DIG',
+        Type.create_type('long_double_Float64', None, 'LDBL_MANT_DIG',
                          complex_name='complex_long_double_Float64',
                          condition='defined HUGE_VAL_F64', order=(6, 7),
                          internal=True)
-        Type.create_type('long_double_Float64x', 'FLT64X_MANT_DIG',
+        Type.create_type('long_double_Float64x', None, 'FLT64X_MANT_DIG',
                          complex_name='complex_long_double_Float64x',
                          condition='defined HUGE_VAL_F64X', order=(7, 7),
                          internal=True)
@@ -273,6 +276,11 @@ def vol_var_for_type(name):
 
 def define_vars_for_type(name):
     """Return the definitions of variables with a given type (name)."""
+    if name == 'bit_field':
+        struct_vars = define_vars_for_type('struct s');
+        return '%s#define %s %s.bf\n' % (struct_vars,
+                                         vol_var_for_type(name),
+                                         vol_var_for_type('struct s'))
     return ('%s %s __attribute__ ((unused));\n'
             '%s volatile %s __attribute__ ((unused));\n'
             % (name, var_for_type(name), name, vol_var_for_type(name)))
@@ -311,7 +319,11 @@ class Tests(object):
                             'int num_pass, num_fail;\n'
                             'volatile int called_mant_dig;\n'
                             'const char *volatile called_func_name;\n'
-                            'enum e { E, F };\n']
+                            'enum e { E, F };\n'
+                            'struct s\n'
+                            '  {\n'
+                            '    int bf:2;\n'
+                            '  };\n']
         float64_text = ('# if LDBL_MANT_DIG == DBL_MANT_DIG\n'
                         'typedef _Float64 long_double_Float64;\n'
                         'typedef __CFLOAT64 complex_long_double_Float64;\n'

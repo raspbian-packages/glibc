@@ -47,8 +47,8 @@ typedef union
   double value;
   struct
   {
-    u_int32_t msw;
-    u_int32_t lsw;
+    uint32_t msw;
+    uint32_t lsw;
   } parts;
   uint64_t word;
 } ieee_double_shape_type;
@@ -62,8 +62,8 @@ typedef union
   double value;
   struct
   {
-    u_int32_t lsw;
-    u_int32_t msw;
+    uint32_t lsw;
+    uint32_t msw;
   } parts;
   uint64_t word;
 } ieee_double_shape_type;
@@ -161,7 +161,7 @@ do {								\
 typedef union
 {
   float value;
-  u_int32_t word;
+  uint32_t word;
 } ieee_float_shape_type;
 
 /* Get a 32 bit int from a float.  */
@@ -249,11 +249,6 @@ fabsf128 (_Float128 x)
 
 
 
-/* fdlibm kernel function */
-extern double __kernel_standard (double,double,int);
-extern float __kernel_standard_f (float,float,int);
-extern long double __kernel_standard_l (long double,long double,int);
-
 /* Prototypes for functions of the IBM Accurate Mathematical Library.  */
 extern double __exp1 (double __x, double __xx, double __error);
 extern double __sin (double __x);
@@ -301,24 +296,17 @@ extern void __docos (double __x, double __dx, double __v[]);
    })
 #endif
 
-#if __HAVE_DISTINCT_FLOAT128
-# define __EXPR_FLT128(x, yes, no)				\
-  __builtin_choose_expr (__builtin_types_compatible_p		\
-			 (x, long double), no, yes)
-#else
-# define __EXPR_FLT128(x, yes, no) no
-#endif
-
-
 #define fabs_tg(x) __MATH_TG ((x), (__typeof (x)) __builtin_fabs, (x))
 
-#define min_of_type(type) __builtin_choose_expr		\
-  (__builtin_types_compatible_p (type, float),		\
-   FLT_MIN,						\
-   __builtin_choose_expr				\
-   (__builtin_types_compatible_p (type, double),	\
-    DBL_MIN,						\
-    __EXPR_FLT128 (type, FLT128_MIN, LDBL_MIN)))
+/* These must be function-like macros because some __MATH_TG
+   implementations macro-expand the function-name argument before
+   concatenating a suffix to it.  */
+#define min_of_type_f() FLT_MIN
+#define min_of_type_() DBL_MIN
+#define min_of_type_l() LDBL_MIN
+#define min_of_type_f128() FLT128_MIN
+
+#define min_of_type(x) __MATH_TG ((x), (__typeof (x)) min_of_type_, ())
 
 /* If X (which is not a NaN) is subnormal, force an underflow
    exception.  */
@@ -327,7 +315,7 @@ extern void __docos (double __x, double __dx, double __v[]);
     {								\
       __typeof (x) force_underflow_tmp = (x);			\
       if (fabs_tg (force_underflow_tmp)				\
-	  < min_of_type (__typeof (force_underflow_tmp)))	\
+	  < min_of_type (force_underflow_tmp))			\
 	{							\
 	  __typeof (force_underflow_tmp) force_underflow_tmp2	\
 	    = force_underflow_tmp * force_underflow_tmp;	\
@@ -341,7 +329,7 @@ extern void __docos (double __x, double __dx, double __v[]);
     {								\
       __typeof (x) force_underflow_tmp = (x);			\
       if (force_underflow_tmp					\
-	  < min_of_type (__typeof (force_underflow_tmp)))	\
+	  < min_of_type (force_underflow_tmp))			\
 	{							\
 	  __typeof (force_underflow_tmp) force_underflow_tmp2	\
 	    = force_underflow_tmp * force_underflow_tmp;	\
@@ -510,7 +498,7 @@ default_libc_feupdateenv_test (fenv_t *e, int ex)
 # define libc_feresetroundl libc_feupdateenvl
 #endif
 
-/* ... and a version that may also discard exceptions.  */
+/* ... and a version that also discards exceptions.  */
 
 #ifndef libc_feresetround_noex
 # define libc_feresetround_noex  libc_fesetenv
@@ -584,8 +572,9 @@ libc_feresetround_ctx (struct rm_ctx *ctx)
 static __always_inline void
 libc_feholdsetround_noex_ctx (struct rm_ctx *ctx, int round)
 {
-  /* Save exception flags and rounding mode.  */
-  __fegetenv (&ctx->env);
+  /* Save exception flags and rounding mode, and disable exception
+     traps.  */
+  __feholdexcept (&ctx->env);
 
   /* Update rounding mode only if different.  */
   if (__glibc_unlikely (round != get_rounding_mode ()))
@@ -638,7 +627,7 @@ libc_feresetround_noex_ctx (struct rm_ctx *ctx)
    the value at the start of the block.  The exception mode must be preserved.
    Exceptions raised within the block must be discarded, and exception flags
    are restored to the value at the start of the block.
-   Non-stop mode may be enabled inside the block.  */
+   Non-stop mode must be enabled inside the block.  */
 
 #define SET_RESTORE_ROUND_NOEX(RM) \
   SET_RESTORE_ROUND_GENERIC (RM, libc_feholdsetround_noex, \

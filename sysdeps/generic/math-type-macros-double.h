@@ -1,5 +1,5 @@
 /* Helper macros for double variants of type generic functions of libm.
-   Copyright (C) 2016-2017 Free Software Foundation, Inc.
+   Copyright (C) 2016-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -27,27 +27,22 @@
 #define CFLOAT _Complex double
 #define M_STRTO_NAN __strtod_nan
 
-/* Machines without a distinct long double type
-   alias long double functions to their double
-   equivalent.  */
-#if defined NO_LONG_DOUBLE && !defined declare_mgen_alias
-# define declare_mgen_alias(from, to)	    \
-   weak_alias (from, to)		    \
-   strong_alias (from, from ## l)	    \
-   weak_alias (from, to ## l)
+#include <libm-alias-double.h>
+
+#ifndef declare_mgen_alias
+# define declare_mgen_alias(from, to) libm_alias_double (from, to)
 #endif
 
-#if defined NO_LONG_DOUBLE && !defined declare_mgen_alias_2
-# define declare_mgen_alias_2(from, to, to2) \
-   declare_mgen_alias (from, to)	     \
-   weak_alias (from, to2)		     \
-   weak_alias (from, to2 ## l)
+#ifndef declare_mgen_alias_r
+# define declare_mgen_alias_r(from, to) libm_alias_double_r (from, to, _r)
 #endif
 
 /* Supply the generic macros.  */
 #include <math-type-macros.h>
 
-/* Do not use the type-generic wrapper templates.  */
-#define __USE_WRAPPER_TEMPLATE 0
+/* Do not use the type-generic wrapper templates if compatibility with
+   SVID error handling is needed.  */
+#include <math-svid-compat.h>
+#define __USE_WRAPPER_TEMPLATE !LIBM_SVID_COMPAT
 
 #endif

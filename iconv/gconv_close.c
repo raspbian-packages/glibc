@@ -1,5 +1,5 @@
 /* Release any resource associated with given conversion descriptor.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 
@@ -23,7 +23,6 @@
 
 
 int
-internal_function
 __gconv_close (__gconv_t cd)
 {
   struct __gconv_step *srunp;

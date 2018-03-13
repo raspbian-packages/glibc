@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Chris Metcalf <cmetcalf@tilera.com>, 2011.
 
@@ -28,4 +28,6 @@ __chmod (const char *file, mode_t mode)
 {
   return INLINE_SYSCALL (fchmodat, 3, AT_FDCWD, file, mode);
 }
+
+libc_hidden_def (__chmod)
 weak_alias (__chmod, chmod)

@@ -1,5 +1,5 @@
 /* Host and service name lookups using Name Service Switch modules.
-   Copyright (C) 1996-2017 Free Software Foundation, Inc.
+   Copyright (C) 1996-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -86,10 +86,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <inet/net-internal.h>
 
 #ifdef HAVE_LIBIDN
-extern int __idna_to_ascii_lz (const char *input, char **output, int flags);
-extern int __idna_to_unicode_lzlz (const char *input, char **output,
-				   int flags);
-# include <libidn/idna.h>
+# include <idna.h>
 #endif
 
 struct gaih_service
@@ -313,7 +310,6 @@ typedef enum nss_status (*nss_gethostbyname3_r)
 typedef enum nss_status (*nss_getcanonname_r)
   (const char *name, char *buffer, size_t buflen, char **result,
    int *errnop, int *h_errnop);
-extern service_user *__nss_hosts_database attribute_hidden;
 
 /* This function is called if a canonical name is requested, but if
    the service function did not provide it.  It tries to obtain the
@@ -2399,7 +2395,7 @@ getaddrinfo (const char *name, const char *service,
 		{
 		  if (fd != -1)
 		  close_retry:
-		    close_not_cancel_no_status (fd);
+		    __close_nocancel_nostatus (fd);
 		  af = q->ai_family;
 		  fd = __socket (af, SOCK_DGRAM | SOCK_CLOEXEC, IPPROTO_IP);
 		}
@@ -2515,7 +2511,7 @@ getaddrinfo (const char *name, const char *service,
 	}
 
       if (fd != -1)
-	close_not_cancel_no_status (fd);
+	__close_nocancel_nostatus (fd);
 
       /* We got all the source addresses we can get, now sort using
 	 the information.  */

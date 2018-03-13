@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@gmail.com>, 2011.
 
@@ -19,8 +19,11 @@
 #include <fenv.h>
 #include <math.h>
 #include <math_private.h>
+#include <math-svid-compat.h>
+#include <libm-alias-ldouble.h>
 
 
+#if LIBM_SVID_COMPAT
 /* wrapper j0l */
 long double
 __j0l (long double x)
@@ -32,7 +35,7 @@ __j0l (long double x)
 
   return __ieee754_j0l (x);
 }
-weak_alias (__j0l, j0l)
+libm_alias_ldouble (__j0, j0)
 
 
 /* wrapper y0l */
@@ -61,4 +64,5 @@ __y0l (long double x)
 
   return __ieee754_y0l (x);
 }
-weak_alias (__y0l, y0l)
+libm_alias_ldouble (__y0, y0)
+#endif

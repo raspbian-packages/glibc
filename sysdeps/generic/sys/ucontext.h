@@ -1,5 +1,5 @@
 /* Data structures for user-level context switching.  Generic version.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -17,7 +17,9 @@
    <http://www.gnu.org/licenses/>.  */
 
 /* This file's definitions suffice for any platform where all
-   the machine-specific state is described in `struct sigcontext'.  */
+   the machine-specific state is described in `struct sigcontext', but
+   use of struct sigcontext does not conform to POSIX namespace
+   requirements.  */
 
 #ifndef _SYS_UCONTEXT_H
 #define _SYS_UCONTEXT_H	1
@@ -31,14 +33,22 @@
 
 typedef struct sigcontext mcontext_t;
 
+#ifdef __USE_MISC
+# define __ctx(fld) fld
+#else
+# define __ctx(fld) __ ## fld
+#endif
+
 /* Userlevel context.  */
 typedef struct ucontext_t
   {
-    unsigned long int uc_flags;
+    unsigned long int __ctx(uc_flags);
     struct ucontext_t *uc_link;
     stack_t uc_stack;
     mcontext_t uc_mcontext;
     sigset_t uc_sigmask;
   } ucontext_t;
+
+#undef __ctx
 
 #endif /* sys/ucontext.h */

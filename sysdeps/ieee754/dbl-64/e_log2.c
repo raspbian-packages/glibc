@@ -75,7 +75,7 @@ __ieee754_log2 (double x)
 {
   double hfsq, f, s, z, R, w, t1, t2, dk;
   int32_t k, hx, i, j;
-  u_int32_t lx;
+  uint32_t lx;
 
   EXTRACT_WORDS (hx, lx, x);
 
@@ -83,7 +83,7 @@ __ieee754_log2 (double x)
   if (hx < 0x00100000)
     {                           /* x < 2**-1022  */
       if (__glibc_unlikely (((hx & 0x7fffffff) | lx) == 0))
-	return -two54 / __fabs (x);        /* log(+-0)=-inf */
+	return -two54 / fabs (x);        /* log(+-0)=-inf */
       if (__glibc_unlikely (hx < 0))
 	return (x - x) / (x - x);       /* log(-#) = NaN */
       k -= 54;

@@ -1,5 +1,5 @@
 /* Run initializers for newly loaded objects.
-   Copyright (C) 1995-2017 Free Software Foundation, Inc.
+   Copyright (C) 1995-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -75,7 +75,6 @@ call_init (struct link_map *l, int argc, char **argv, char **env)
 
 
 void
-internal_function
 _dl_init (struct link_map *main_map, int argc, char **argv, char **env)
 {
   ElfW(Dyn) *preinit_array = main_map->l_info[DT_PREINIT_ARRAY];

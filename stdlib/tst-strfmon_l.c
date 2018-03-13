@@ -1,5 +1,5 @@
 /* Test locale dependence of strfmon_l.
-   Copyright (C) 2016-2017 Free Software Foundation, Inc.
+   Copyright (C) 2016-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -150,17 +150,30 @@ static const struct locale_pair tests[] =
       "tg_TJ.UTF-8",
       {
         {
-          "1 234 567.89 TJS", "1 234 567.89 \u0440\u0443\u0431",
+          "1\u202f234\u202f567.89 TJS", "1\u202f234\u202f567.89 \u0440\u0443\u0431",
           "1234567.89 TJS", "1234567.89 \u0440\u0443\u0431"
         },
         {
-          "-1 234 567.89 TJS", "-1 234 567.89 \u0440\u0443\u0431",
+          "-1\u202f234\u202f567.89 TJS", "-1\u202f234\u202f567.89 \u0440\u0443\u0431",
           "-1234567.89 TJS", "-1234567.89 \u0440\u0443\u0431"
         }
       }
     },
     {
-      "te_IN.UTF-8",
+      "hr_HR.UTF-8",
+      {
+        {
+          "HRK 1\u202f234\u202f567,89", "1\u202f234\u202f567,89 kn",
+          "HRK 1234567,89", "1234567,89 kn"
+        },
+        {
+          "-HRK 1\u202f234\u202f567,89", "-1\u202f234\u202f567,89 kn",
+          "-HRK 1234567,89", "-1234567,89 kn"
+        }
+      }
+    },
+    {
+      "hi_IN.UTF-8",
       {
         {
           "INR12,34,567.89", "\u20b912,34,567.89",
@@ -173,19 +186,6 @@ static const struct locale_pair tests[] =
       }
     },
     {
-      "bn_IN.UTF-8",
-      {
-        {
-          "INR 12,345,67.89", "\u20b9 12,345,67.89",
-          "INR 1234567.89", "\u20b9 1234567.89"
-        },
-        {
-          "-INR 12,345,67.89", "-\u20b9 12,345,67.89",
-          "-INR 1234567.89", "-\u20b9 1234567.89"
-        }
-      }
-    },
-    {
       "el_GR.UTF-8",
       {
         {
@@ -193,8 +193,8 @@ static const struct locale_pair tests[] =
           "1234567,89EUR", "1234567,89\u20ac"
         },
         {
-          "-EUR1.234.567,89", "-\u20ac1.234.567,89",
-          "-EUR1234567,89", "-\u20ac1234567,89",
+          "-1.234.567,89EUR", "-1.234.567,89\u20ac",
+          "-1234567,89EUR", "-1234567,89\u20ac",
         }
       }
     },

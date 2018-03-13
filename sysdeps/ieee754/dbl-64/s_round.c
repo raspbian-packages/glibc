@@ -1,5 +1,5 @@
 /* Round double to integer away from zero.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 
@@ -20,13 +20,14 @@
 #include <math.h>
 
 #include <math_private.h>
+#include <libm-alias-double.h>
 
 
 double
 __round (double x)
 {
   int32_t i0, j0;
-  u_int32_t i1;
+  uint32_t i1;
 
   EXTRACT_WORDS (i0, i1, x);
   j0 = ((i0 >> 20) & 0x7ff) - 0x3ff;
@@ -41,7 +42,7 @@ __round (double x)
 	}
       else
 	{
-	  u_int32_t i = 0x000fffff >> j0;
+	  uint32_t i = 0x000fffff >> j0;
 	  if (((i0 & i) | i1) == 0)
 	    /* X is integral.  */
 	    return x;
@@ -61,12 +62,12 @@ __round (double x)
     }
   else
     {
-      u_int32_t i = 0xffffffff >> (j0 - 20);
+      uint32_t i = 0xffffffff >> (j0 - 20);
       if ((i1 & i) == 0)
 	/* X is integral.  */
 	return x;
 
-      u_int32_t j = i1 + (1 << (51 - j0));
+      uint32_t j = i1 + (1 << (51 - j0));
       if (j < i1)
 	i0 += 1;
       i1 = j;
@@ -76,8 +77,4 @@ __round (double x)
   INSERT_WORDS (x, i0, i1);
   return x;
 }
-weak_alias (__round, round)
-#ifdef NO_LONG_DOUBLE
-strong_alias (__round, __roundl)
-weak_alias (__round, roundl)
-#endif
+libm_alias_double (__round, round)

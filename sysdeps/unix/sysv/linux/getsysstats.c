@@ -1,5 +1,5 @@
 /* Determine various system internal values, Linux version.
-   Copyright (C) 1996-2017 Free Software Foundation, Inc.
+   Copyright (C) 1996-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1996.
 
@@ -85,7 +85,7 @@ next_line (int fd, char *const buffer, char **cp, char **re,
 	      *re = buffer + (*re - *cp);
 	      *cp = buffer;
 
-	      ssize_t n = read_not_cancel (fd, *re, buffer_end - *re);
+	      ssize_t n = __read_nocancel (fd, *re, buffer_end - *re);
 	      if (n < 0)
 		return NULL;
 
@@ -96,7 +96,7 @@ next_line (int fd, char *const buffer, char **cp, char **re,
 		{
 		  /* Truncate too long lines.  */
 		  *re = buffer + 3 * (buffer_end - buffer) / 4;
-		  n = read_not_cancel (fd, *re, buffer_end - *re);
+		  n = __read_nocancel (fd, *re, buffer_end - *re);
 		  if (n < 0)
 		    return NULL;
 
@@ -143,7 +143,7 @@ __get_nprocs (void)
   char *re = buffer_end;
 
   const int flags = O_RDONLY | O_CLOEXEC;
-  int fd = open_not_cancel_2 ("/sys/devices/system/cpu/online", flags);
+  int fd = __open_nocancel ("/sys/devices/system/cpu/online", flags);
   char *l;
   int result = 0;
   if (fd != -1)
@@ -180,7 +180,7 @@ __get_nprocs (void)
 	  }
 	while (l < re);
 
-      close_not_cancel_no_status (fd);
+      __close_nocancel_nostatus (fd);
 
       if (result > 0)
 	goto out;
@@ -194,7 +194,7 @@ __get_nprocs (void)
   result = 2;
 
   /* The /proc/stat format is more uniform, use it by default.  */
-  fd = open_not_cancel_2 ("/proc/stat", flags);
+  fd = __open_nocancel ("/proc/stat", flags);
   if (fd != -1)
     {
       result = 0;
@@ -207,15 +207,15 @@ __get_nprocs (void)
 	else if (isdigit (l[3]))
 	  ++result;
 
-      close_not_cancel_no_status (fd);
+      __close_nocancel_nostatus (fd);
     }
   else
     {
-      fd = open_not_cancel_2 ("/proc/cpuinfo", flags);
+      fd = __open_nocancel ("/proc/cpuinfo", flags);
       if (fd != -1)
 	{
 	  GET_NPROCS_PARSER (fd, buffer, cp, re, buffer_end, result);
-	  close_not_cancel_no_status (fd);
+	  __close_nocancel_nostatus (fd);
 	}
     }
 
@@ -226,6 +226,7 @@ __get_nprocs (void)
 
   return result;
 }
+libc_hidden_def (__get_nprocs)
 weak_alias (__get_nprocs, get_nprocs)
 
 
@@ -279,6 +280,7 @@ __get_nprocs_conf (void)
 
   return result;
 }
+libc_hidden_def (__get_nprocs_conf)
 weak_alias (__get_nprocs_conf, get_nprocs_conf)
 
 
@@ -320,6 +322,7 @@ __get_phys_pages (void)
   __sysinfo (&info);
   return sysinfo_mempages (info.totalram, info.mem_unit);
 }
+libc_hidden_def (__get_phys_pages)
 weak_alias (__get_phys_pages, get_phys_pages)
 
 long int
@@ -330,4 +333,5 @@ __get_avphys_pages (void)
   __sysinfo (&info);
   return sysinfo_mempages (info.freeram, info.mem_unit);
 }
+libc_hidden_def (__get_avphys_pages)
 weak_alias (__get_avphys_pages, get_avphys_pages)

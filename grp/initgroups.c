@@ -1,4 +1,4 @@
-/* Copyright (C) 1989, 1991-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1989, 1991-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -26,23 +26,22 @@
 #include <sys/types.h>
 #include <nsswitch.h>
 #include <scratch_buffer.h>
+#include <config.h>
 
 #include "../nscd/nscd-client.h"
 #include "../nscd/nscd_proto.h"
 
+#ifdef LINK_OBSOLETE_NSL
+# define DEFAULT_CONFIG "compat [NOTFOUND=return] files"
+#else
+# define DEFAULT_CONFIG "files"
+#endif
 
 /* Type of the lookup function.  */
 typedef enum nss_status (*initgroups_dyn_function) (const char *, gid_t,
 						    long int *, long int *,
 						    gid_t **, long int, int *);
 
-/* The lookup function for the first entry of this service.  */
-extern int __nss_group_lookup (service_user **nip, const char *name,
-				   void **fctp);
-extern void *__nss_lookup_function (service_user *ni, const char *fct_name);
-
-extern service_user *__nss_group_database attribute_hidden;
-service_user *__nss_initgroups_database;
 static bool use_initgroups_entry;
 
 
@@ -84,7 +83,7 @@ internal_getgrouplist (const char *user, gid_t group, long int *size,
 				 &__nss_initgroups_database) < 0)
 	{
 	  if (__nss_group_database == NULL)
-	    no_more = __nss_database_lookup ("group", NULL, "compat files",
+	    no_more = __nss_database_lookup ("group", NULL, DEFAULT_CONFIG,
 					     &__nss_group_database);
 
 	  __nss_initgroups_database = __nss_group_database;

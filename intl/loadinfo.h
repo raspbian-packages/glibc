@@ -1,4 +1,4 @@
-/* Copyright (C) 1996-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1996-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1996.
 
@@ -29,10 +29,6 @@
    The main function _nl_find_domain() in finddomain.c is declared
    in gettextP.h.
  */
-
-#ifndef internal_function
-# define internal_function
-#endif
 
 #ifndef LIBINTL_DLL_EXPORTED
 # define LIBINTL_DLL_EXPORTED

@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -175,8 +175,8 @@ extern char *alloca ();
 # include <not-cancel.h>
 # include <kernel-features.h>
 #else
-# define openat64_not_cancel_3(dfd, name, mode) openat64 (dfd, name, mode)
-# define close_not_cancel_no_status(fd) close (fd)
+# define __openat64_nocancel(dfd, name, mode) openat64 (dfd, name, mode)
+# define __close_nocancel_nostatus(fd) close (fd)
 #endif
 
 #ifndef PATH_MAX
@@ -281,7 +281,7 @@ __getcwd (char *buf, size_t size)
   while (!(thisdev == rootdev && thisino == rootino))
     {
       if (__have_atfcts >= 0)
-	  fd = openat64_not_cancel_3 (fd, "..", O_RDONLY | O_CLOEXEC);
+	  fd = __openat64_nocancel (fd, "..", O_RDONLY | O_CLOEXEC);
       else
 	fd = -1;
       if (fd >= 0)
@@ -318,7 +318,7 @@ __getcwd (char *buf, size_t size)
 		}
 	      else
 		{
-		  new = realloc ((__ptr_t) dotlist, dotsize * 2 + 1);
+		  new = realloc ((void *) dotlist, dotsize * 2 + 1);
 		  if (new == NULL)
 		    goto lose;
 		  dotp = &new[dotsize];
@@ -492,7 +492,7 @@ __getcwd (char *buf, size_t size)
 
 #ifndef __ASSUME_ATFCTS
   if (dotlist != dots)
-    free ((__ptr_t) dotlist);
+    free ((void *) dotlist);
 #endif
 
   size_t used = path + allocated - pathp;
@@ -516,12 +516,12 @@ __getcwd (char *buf, size_t size)
   int save_errno = errno;
 #ifndef __ASSUME_ATFCTS
   if (dotlist != dots)
-    free ((__ptr_t) dotlist);
+    free ((void *) dotlist);
 #endif
   if (dirstream != NULL)
     __closedir (dirstream);
   if (fd_needs_closing)
-    close_not_cancel_no_status (fd);
+    __close_nocancel_nostatus (fd);
 #ifndef NO_ALLOCATION
   if (buf == NULL)
     free (path);

@@ -1,5 +1,5 @@
 /* Linux high resolution nanosleep implementation.
-   Copyright (C) 2017 Free Software Foundation, Inc.
+   Copyright (C) 2017-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -18,6 +18,7 @@
 
 #include <time.h>
 #include <sysdep-cancel.h>
+#include <not-cancel.h>
 
 /* Pause execution for a number of nanoseconds.  */
 int
@@ -28,3 +29,11 @@ __nanosleep (const struct timespec *requested_time,
 }
 hidden_def (__nanosleep)
 weak_alias (__nanosleep, nanosleep)
+
+int
+__nanosleep_nocancel (const struct timespec *requested_time,
+		      struct timespec *remaining)
+{
+  return INLINE_SYSCALL_CALL (nanosleep, requested_time, remaining);
+}
+hidden_def (__nanosleep_nocancel)

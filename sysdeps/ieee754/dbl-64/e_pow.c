@@ -1,7 +1,7 @@
 /*
  * IBM Accurate Mathematical Library
  * written by International Business Machines Corp.
- * Copyright (C) 2001-2017 Free Software Foundation, Inc.
+ * Copyright (C) 2001-2018 Free Software Foundation, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -452,7 +452,8 @@ checkint (double x)
     int4 i[2];
     double x;
   } u;
-  int k, m, n;
+  int k;
+  unsigned int m, n;
   u.x = x;
   m = u.i[HIGH_HALF] & 0x7fffffff;	/* no sign */
   if (m >= 0x7ff00000)

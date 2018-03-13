@@ -1,4 +1,4 @@
-/* Copyright (C) 1998-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1998-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -36,7 +36,7 @@ typedef struct
        are used instead of the normal file access functions.  */
     void (*gl_closedir) (void *);
     struct dirent *(*gl_readdir) (void *);
-    __ptr_t (*gl_opendir) (const char *);
+    void *(*gl_opendir) (const char *);
     int (*gl_lstat) (const char *, struct stat *);
     int (*gl_stat) (const char *, struct stat *);
   } old_glob_t;
@@ -59,7 +59,9 @@ __old_glob (const char *pattern, int flags,
   correct.gl_closedir = pglob->gl_closedir;
   correct.gl_readdir = pglob->gl_readdir;
   correct.gl_opendir = pglob->gl_opendir;
-  correct.gl_lstat = pglob->gl_lstat;
+  /* Set gl_lstat and gl_stat for both gl_stat for compatibility with old
+     implementation that did not follow dangling symlinks.  */
+  correct.gl_lstat = pglob->gl_stat;
   correct.gl_stat = pglob->gl_stat;
 
   result = glob (pattern, flags, errfunc, &correct);
@@ -72,7 +74,7 @@ __old_glob (const char *pattern, int flags,
   pglob->gl_closedir = correct.gl_closedir;
   pglob->gl_readdir = correct.gl_readdir;
   pglob->gl_opendir = correct.gl_opendir;
-  pglob->gl_lstat = correct.gl_lstat;
+  /* Only need to restore gl_stat.  */
   pglob->gl_stat = correct.gl_stat;
 
   return result;

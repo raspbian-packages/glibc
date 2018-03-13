@@ -102,7 +102,7 @@ typedef struct rec_strm
     caddr_t out_base;		/* output buffer (points to frag header) */
     caddr_t out_finger;		/* next output position */
     caddr_t out_boundry;	/* data cannot up to this address */
-    u_int32_t *frag_header;	/* beginning of curren fragment */
+    uint32_t *frag_header;	/* beginning of curren fragment */
     bool_t frag_sent;		/* true if buffer sent in middle of record */
     /*
      * in-coming bits
@@ -119,11 +119,11 @@ typedef struct rec_strm
   }
 RECSTREAM;
 
-static u_int fix_buf_size (u_int) internal_function;
-static bool_t skip_input_bytes (RECSTREAM *, long) internal_function;
-static bool_t flush_out (RECSTREAM *, bool_t) internal_function;
-static bool_t set_input_fragment (RECSTREAM *) internal_function;
-static bool_t get_input_bytes (RECSTREAM *, caddr_t, int) internal_function;
+static u_int fix_buf_size (u_int);
+static bool_t skip_input_bytes (RECSTREAM *, long);
+static bool_t flush_out (RECSTREAM *, bool_t);
+static bool_t set_input_fragment (RECSTREAM *);
+static bool_t get_input_bytes (RECSTREAM *, caddr_t, int);
 
 /*
  * Create an xdr handle for xdrrec
@@ -181,7 +181,7 @@ xdrrec_create (XDR *xdrs, u_int sendsize,
   rstrm->readit = readit;
   rstrm->writeit = writeit;
   rstrm->out_finger = rstrm->out_boundry = rstrm->out_base;
-  rstrm->frag_header = (u_int32_t *) rstrm->out_base;
+  rstrm->frag_header = (uint32_t *) rstrm->out_base;
   rstrm->out_finger += 4;
   rstrm->out_boundry += sendsize;
   rstrm->frag_sent = FALSE;
@@ -526,7 +526,7 @@ xdrrec_endofrecord (XDR *xdrs, bool_t sendnow)
   len = (rstrm->out_finger - (char *) rstrm->frag_header
 	 - BYTES_PER_XDR_UNIT);
   *rstrm->frag_header = htonl ((u_long) len | LAST_FRAG);
-  rstrm->frag_header = (u_int32_t *) rstrm->out_finger;
+  rstrm->frag_header = (uint32_t *) rstrm->out_finger;
   rstrm->out_finger += BYTES_PER_XDR_UNIT;
   return TRUE;
 }
@@ -537,7 +537,6 @@ libc_hidden_nolink_sunrpc (xdrrec_endofrecord, GLIBC_2_0)
  * Internal useful routines
  */
 static bool_t
-internal_function
 flush_out (RECSTREAM *rstrm, bool_t eor)
 {
   u_long eormask = (eor == TRUE) ? LAST_FRAG : 0;
@@ -549,7 +548,7 @@ flush_out (RECSTREAM *rstrm, bool_t eor)
   if ((*(rstrm->writeit)) (rstrm->tcp_handle, rstrm->out_base, (int) len)
       != (int) len)
     return FALSE;
-  rstrm->frag_header = (u_int32_t *) rstrm->out_base;
+  rstrm->frag_header = (uint32_t *) rstrm->out_base;
   rstrm->out_finger = (caddr_t) rstrm->out_base + BYTES_PER_XDR_UNIT;
   return TRUE;
 }
@@ -574,7 +573,6 @@ fill_input_buf (RECSTREAM *rstrm)
 }
 
 static bool_t	/* knows nothing about records!  Only about input buffers */
-internal_function
 get_input_bytes (RECSTREAM *rstrm, caddr_t addr, int len)
 {
   int current;
@@ -598,7 +596,6 @@ get_input_bytes (RECSTREAM *rstrm, caddr_t addr, int len)
 }
 
 static bool_t /* next two bytes of the input stream are treated as a header */
-internal_function
 set_input_fragment (RECSTREAM *rstrm)
 {
   uint32_t header;
@@ -624,7 +621,6 @@ set_input_fragment (RECSTREAM *rstrm)
 }
 
 static bool_t	/* consumes input bytes; knows nothing about records! */
-internal_function
 skip_input_bytes (RECSTREAM *rstrm, long cnt)
 {
   int current;
@@ -646,7 +642,6 @@ skip_input_bytes (RECSTREAM *rstrm, long cnt)
 }
 
 static u_int
-internal_function
 fix_buf_size (u_int s)
 {
   if (s < 100)

@@ -34,7 +34,7 @@ __ieee754_log10f(float x)
 	k=0;
 	if (hx < 0x00800000) {			/* x < 2**-126  */
 	    if (__builtin_expect((hx&0x7fffffff)==0, 0))
-	      return -two25/__fabsf (x);	/* log(+-0)=-inf  */
+	      return -two25/fabsf (x);	/* log(+-0)=-inf  */
 	    if (__builtin_expect(hx<0, 0))
 		return (x-x)/(x-x);	/* log(-#) = NaN */
 	    k -= 25; x *= two25; /* subnormal number, scale up x */
@@ -42,7 +42,7 @@ __ieee754_log10f(float x)
 	}
 	if (__builtin_expect(hx >= 0x7f800000, 0)) return x+x;
 	k += (hx>>23)-127;
-	i  = ((u_int32_t)k&0x80000000)>>31;
+	i  = ((uint32_t)k&0x80000000)>>31;
 	hx = (hx&0x007fffff)|((0x7f-i)<<23);
 	y  = (float)(k+i);
 	if (FIX_INT_FP_CONVERT_ZERO && y == 0.0f)

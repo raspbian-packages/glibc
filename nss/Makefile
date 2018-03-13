@@ -1,4 +1,4 @@
-# Copyright (C) 1996-2017 Free Software Foundation, Inc.
+# Copyright (C) 1996-2018 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -27,7 +27,8 @@ headers			:= nss.h
 # This is the trivial part which goes into libc itself.
 routines		= nsswitch getnssent getnssent_r digits_dots \
 			  valid_field valid_list_field rewrite_field \
-			  $(addsuffix -lookup,$(databases))
+			  $(addsuffix -lookup,$(databases)) \
+			  compat-lookup nss_hash
 
 # These are the databases that go through nss dispatch.
 # Caution: if you add a database here, you must add its real name
@@ -46,6 +47,7 @@ CPPFLAGS-getent.c	= -DHAVE_SUNRPC=$(have-sunrpc)
 others                  := getent makedb
 install-bin             := getent makedb
 makedb-modules = xmalloc hash-string
+others-extras		= $(makedb-modules)
 extra-objs		+= $(makedb-modules:=.o)
 
 tests-static            = tst-field
@@ -71,7 +73,7 @@ tests += tst-cancel-getpwuid_r
 endif
 
 # Specify rules for the nss_* modules.  We have some services.
-services		:= files
+services		:= files compat
 
 extra-libs		= $(services:%=libnss_%)
 # These libraries will be built in the `others' pass rather than
@@ -94,11 +96,15 @@ libnss_db-routines	:= $(libnss_db-dbs) db-open db-init hash-string
 generated		+= $(filter-out db-alias.c db-netgrp.c, \
 					$(addsuffix .c,$(libnss_db-dbs)))
 
+libnss_compat-routines	:= $(addprefix compat-,grp pwd spwd initgroups) \
+			   nisdomain
+
 install-others		+= $(inst_vardbdir)/Makefile
 
 # Build static module into libc if requested
 libnss_files-inhibit-o	= $(filter-out .os,$(object-suffixes))
 libnss_db-inhibit-o	= $(filter-out .os,$(object-suffixes))
+libnss_compat-inhibit-o	= $(filter-out .os,$(object-suffixes))
 ifeq ($(build-static-nss),yes)
 routines                += $(libnss_files-routines)
 static-only-routines    += $(libnss_files-routines)

@@ -1,5 +1,5 @@
 /* Special .init and .fini section support for tile.
-   Copyright (C) 2012-2017 Free Software Foundation, Inc.
+   Copyright (C) 2012-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -63,14 +63,13 @@ _init:
 	{
 	 move r29, sp
 	 ADDI_PTR r28, sp, -REGSIZE
-	 ST sp, lr
+	 st sp, lr
 	}
 	ADDI_PTR sp, sp, -(2 * REGSIZE)
-	ST r28, r29
+	st r28, r29
 #if PREINIT_FUNCTION_WEAK
 	lnk r2
 0:
-# ifdef __tilegx__
 	moveli r1, hw2_last(_GLOBAL_OFFSET_TABLE_ - 0b)
 	{
 	 shl16insli r1, r1, hw1(_GLOBAL_OFFSET_TABLE_ - 0b)
@@ -80,22 +79,12 @@ _init:
 	 shl16insli r1, r1, hw0(_GLOBAL_OFFSET_TABLE_ - 0b)
 	 shl16insli r0, r0, hw0_got(PREINIT_FUNCTION)
 	}
-# else
-	{
-	 moveli r1, lo16(_GLOBAL_OFFSET_TABLE_ - 0b)
-	 moveli r0, got_lo16(PREINIT_FUNCTION)
-	}
-	{
-	 auli r1, r1, ha16(_GLOBAL_OFFSET_TABLE_ - 0b)
-	 auli r0, r0, got_ha16(PREINIT_FUNCTION)
-	}
-# endif
 	ADD_PTR r0, r0, r1
 	ADD_PTR r0, r0, r2
 	LD_PTR r0, r0
-	BEQZ r0, .Lno_weak_fn
+	beqz r0, .Lno_weak_fn
 	jalr r0
-#elif defined(__tilegx__) && !defined(NO_PLT_PCREL)
+#elif !defined(NO_PLT_PCREL)
 	/* Since we are calling from the start of the object to the PLT,
 	   call by loading the full address into a register.  */
 	lnk r2
@@ -118,7 +107,7 @@ _fini:
 	{
 	 move r29, sp
 	 ADDI_PTR r28, sp, -REGSIZE
-	 ST sp, lr
+	 st sp, lr
 	}
 	ADDI_PTR sp, sp, -(2 * REGSIZE)
-	ST r28, r29
+	st r28, r29

@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# Copyright (C) 2017 Free Software Foundation, Inc.
+# Copyright (C) 2017-2018 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 #
 # The GNU C Library is free software; you can redistribute it and/or
@@ -21,10 +21,14 @@ Given a string benchmark result file, print a table with comparisons with a
 baseline.  The baseline is the first function, which typically is the builtin
 function.
 """
+import matplotlib as mpl
+mpl.use('Agg')
+
 import sys
 import os
 import json
 import pylab
+import argparse
 
 try:
     import jsonschema as validator
@@ -53,6 +57,7 @@ def draw_graph(f, v, ifuncs, results):
         ifuncs: List of ifunc names
         results: Dictionary of results for each test criterion
     """
+    print('Generating graph for %s, variant \'%s\'' % (f, v))
     xkeys = results.keys()
 
     pylab.clf()
@@ -74,7 +79,7 @@ def draw_graph(f, v, ifuncs, results):
     pylab.savefig('%s-%s.png' % (f, v), bbox_inches='tight')
 
 
-def process_results(results, attrs):
+def process_results(results, attrs, base_func, graph):
     """ Process results and print them
 
     Args:
@@ -84,28 +89,34 @@ def process_results(results, attrs):
 
     for f in results['functions'].keys():
         print('Function: %s' % f)
-        print('\t'.join(results['functions'][f]['ifuncs']))
         v = results['functions'][f]['bench-variant']
         print('Variant: %s' % v)
-        print("=" * 80)
+
+        base_index = 0
+        if base_func:
+            base_index = results['functions'][f]['ifuncs'].index(base_func)
+
+        print("%36s%s" % (' ', '\t'.join(results['functions'][f]['ifuncs'])))
+        print("=" * 120)
         graph_res = {}
         for res in results['functions'][f]['results']:
             attr_list = ['%s=%s' % (a, res[a]) for a in attrs]
-            first = True
-            key = ','.join(attr_list)
-            sys.stdout.write('%s: \t' % key)
+            i = 0
+            key = ', '.join(attr_list)
+            sys.stdout.write('%36s: ' % key)
             graph_res[key] = res['timings']
             for t in res['timings']:
-                sys.stdout.write ('%.2f' % t)
-                if first:
-                    first = False
-                else:
-                    diff = (res['timings'][0] - t) * 100 / res['timings'][0]
-
-                    sys.stdout.write (' (%.2f%%)' % diff)
+                sys.stdout.write ('%12.2f' % t)
+                if i != base_index:
+                    base = res['timings'][base_index]
+                    diff = (base - t) * 100 / base
+                    sys.stdout.write (' (%6.2f%%)' % diff)
                 sys.stdout.write('\t')
+                i = i + 1
             print('')
-        draw_graph(f, v, results['functions'][f]['ifuncs'], graph_res)
+
+        if graph:
+            draw_graph(f, v, results['functions'][f]['ifuncs'], graph_res)
 
 
 def main(args):
@@ -113,17 +124,34 @@ def main(args):
 
     Take a string benchmark output file and compare timings.
     """
-    if len(args) < 3:
-        print('Usage: %s <input file> <schema file> attr1 [attr2 ...]' % sys.argv[0])
-        sys.exit(os.EX_USAGE)
 
-    filename = args[0]
-    schema_filename = args[1]
-    attrs = args[2:]
+    base_func = None
+    filename = args.input
+    schema_filename = args.schema
+    base_func = args.base
+    attrs = args.attributes.split(',')
 
-    results = parse_file(filename, schema_filename)
-    process_results(results, attrs)
+    results = parse_file(args.input, args.schema)
+    process_results(results, attrs, base_func, args.graph)
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    parser = argparse.ArgumentParser()
+
+    # The required arguments.
+    req = parser.add_argument_group(title='required arguments')
+    req.add_argument('-a', '--attributes', required=True,
+                        help='Comma separated list of benchmark attributes.')
+    req.add_argument('-i', '--input', required=True,
+                        help='Input JSON benchmark result file.')
+    req.add_argument('-s', '--schema', required=True,
+                        help='Schema file to validate the result file.')
+
+    # Optional arguments.
+    parser.add_argument('-b', '--base',
+                        help='IFUNC variant to set as baseline.')
+    parser.add_argument('-g', '--graph', action='store_true',
+                        help='Generate a graph from results.')
+
+    args = parser.parse_args()
+    main(args)

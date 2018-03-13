@@ -1,4 +1,4 @@
-/* Copyright (C) 2015-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2015-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,7 +24,6 @@
    overwritten with a pointer the caller has to free if the function
    returns successfully.  On failure, return NULL.  */
 const char *
-internal_function
 __nss_rewrite_field (const char *value, char **to_be_freed)
 {
   *to_be_freed = NULL;

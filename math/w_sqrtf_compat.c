@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@gmail.com>, 2011.
 
@@ -18,8 +18,11 @@
 
 #include <math.h>
 #include <math_private.h>
+#include <math-svid-compat.h>
+#include <libm-alias-float.h>
 
 
+#if LIBM_SVID_COMPAT
 /* wrapper sqrtf */
 float
 __sqrtf (float x)
@@ -29,4 +32,5 @@ __sqrtf (float x)
 
   return __ieee754_sqrtf (x);
 }
-weak_alias (__sqrtf, sqrtf)
+libm_alias_float (__sqrt, sqrt)
+#endif

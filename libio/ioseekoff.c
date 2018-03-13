@@ -1,4 +1,4 @@
-/* Copyright (C) 1993-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1993-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -27,12 +27,6 @@
 #include <stdlib.h>
 #include <libioP.h>
 #include <errno.h>
-#ifndef errno
-extern int errno;
-#endif
-#ifndef __set_errno
-# define __set_errno(Val) errno = (Val)
-#endif
 
 _IO_off64_t
 _IO_seekoff_unlocked (_IO_FILE *fp, _IO_off64_t offset, int dir, int mode)

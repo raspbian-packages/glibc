@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -54,11 +54,6 @@ struct waitlist
     volatile unsigned int *counterp;
     /* The next field is used in asynchronous `lio_listio' operations.  */
     struct sigevent *sigevp;
-#ifdef BROKEN_THREAD_SIGNALS
-    /* XXX See requestlist, it's used to work around the broken signal
-       handling in Linux.  */
-    pid_t caller_pid;
-#endif
   };
 
 
@@ -86,12 +81,6 @@ struct requestlist
     /* Pointer to the actual data.  */
     aiocb_union *aiocbp;
 
-#ifdef BROKEN_THREAD_SIGNALS
-    /* PID of the initiator thread.
-       XXX This is only necessary for the broken signal handling on Linux.  */
-    pid_t caller_pid;
-#endif
-
     /* List of waiting processes.  */
     struct waitlist *waiting;
   };
@@ -104,40 +93,30 @@ extern pthread_mutex_t __aio_requests_mutex attribute_hidden;
 /* Enqueue request.  */
 extern struct requestlist *__aio_enqueue_request (aiocb_union *aiocbp,
 						  int operation)
-     attribute_hidden internal_function;
+  attribute_hidden;
 
 /* Find request entry for given AIO control block.  */
-extern struct requestlist *__aio_find_req (aiocb_union *elem)
-     attribute_hidden internal_function;
+extern struct requestlist *__aio_find_req (aiocb_union *elem) attribute_hidden;
 
 /* Find request entry for given file descriptor.  */
-extern struct requestlist *__aio_find_req_fd (int fildes)
-     attribute_hidden internal_function;
+extern struct requestlist *__aio_find_req_fd (int fildes) attribute_hidden;
 
 /* Remove request from the list.  */
 extern void __aio_remove_request (struct requestlist *last,
 				  struct requestlist *req, int all)
-     attribute_hidden internal_function;
+     attribute_hidden;
 
 /* Release the entry for the request.  */
-extern void __aio_free_request (struct requestlist *req)
-     attribute_hidden internal_function;
+extern void __aio_free_request (struct requestlist *req) attribute_hidden;
 
 /* Notify initiator of request and tell this everybody listening.  */
-extern void __aio_notify (struct requestlist *req)
-     attribute_hidden internal_function;
+extern void __aio_notify (struct requestlist *req) attribute_hidden;
 
 /* Notify initiator of request.  */
-#ifdef BROKEN_THREAD_SIGNALS
-extern int __aio_notify_only (struct sigevent *sigev, pid_t caller_pid)
-     attribute_hidden internal_function;
-#else
-extern int __aio_notify_only (struct sigevent *sigev)
-     attribute_hidden internal_function;
-#endif
+extern int __aio_notify_only (struct sigevent *sigev) attribute_hidden;
 
 /* Send the signal.  */
 extern int __aio_sigqueue (int sig, const union sigval val, pid_t caller_pid)
-     attribute_hidden internal_function;
+     attribute_hidden;
 
 #endif /* aio_misc.h */

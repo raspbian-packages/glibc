@@ -1,5 +1,5 @@
 /* Configuration of lookup functions.
-   Copyright (C) 2006-2017 Free Software Foundation, Inc.
+   Copyright (C) 2006-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -22,6 +22,6 @@
 
 struct link_map;
 
-extern void internal_function _dl_unmap (struct link_map *map);
+extern void _dl_unmap (struct link_map *map);
 
 #define DL_UNMAP(map) _dl_unmap (map)

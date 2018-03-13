@@ -1,5 +1,5 @@
 /* Round long double to integer away from zero.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997 and
 		  Jakub Jelinek <jj@ultra.linux.cz>, 1999.
@@ -21,13 +21,14 @@
 #include <math.h>
 
 #include <math_private.h>
+#include <libm-alias-ldouble.h>
 
 
 _Float128
 __roundl (_Float128 x)
 {
   int32_t j0;
-  u_int64_t i1, i0;
+  uint64_t i1, i0;
 
   GET_LDOUBLE_WORDS64 (i0, i1, x);
   j0 = ((i0 >> 48) & 0x7fff) - 0x3fff;
@@ -42,7 +43,7 @@ __roundl (_Float128 x)
 	}
       else
 	{
-	  u_int64_t i = 0x0000ffffffffffffLL >> j0;
+	  uint64_t i = 0x0000ffffffffffffLL >> j0;
 	  if (((i0 & i) | i1) == 0)
 	    /* X is integral.  */
 	    return x;
@@ -62,12 +63,12 @@ __roundl (_Float128 x)
     }
   else
     {
-      u_int64_t i = -1ULL >> (j0 - 48);
+      uint64_t i = -1ULL >> (j0 - 48);
       if ((i1 & i) == 0)
 	/* X is integral.  */
 	return x;
 
-      u_int64_t j = i1 + (1LL << (111 - j0));
+      uint64_t j = i1 + (1LL << (111 - j0));
       if (j < i1)
 	i0 += 1;
       i1 = j;
@@ -77,4 +78,4 @@ __roundl (_Float128 x)
   SET_LDOUBLE_WORDS64 (x, i0, i1);
   return x;
 }
-weak_alias (__roundl, roundl)
+libm_alias_ldouble (__round, round)

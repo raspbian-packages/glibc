@@ -1,4 +1,4 @@
-/* Copyright (C) 2015-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2015-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,7 +24,6 @@ const char __nss_invalid_field_characters[] = NSS_INVALID_FIELD_CHARACTERS;
    does not contain characters not permitted in NSS database
    fields.  */
 _Bool
-internal_function
 __nss_valid_field (const char *value)
 {
   return value == NULL

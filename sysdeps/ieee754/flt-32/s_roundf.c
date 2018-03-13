@@ -1,5 +1,5 @@
 /* Round float to integer away from zero.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 
@@ -20,6 +20,7 @@
 #include <math.h>
 
 #include <math_private.h>
+#include <libm-alias-float.h>
 
 
 float
@@ -39,7 +40,7 @@ __roundf (float x)
 	}
       else
 	{
-	  u_int32_t i = 0x007fffff >> j0;
+	  uint32_t i = 0x007fffff >> j0;
 	  if ((i0 & i) == 0)
 	    /* X is integral.  */
 	    return x;
@@ -60,4 +61,4 @@ __roundf (float x)
   SET_FLOAT_WORD (x, i0);
   return x;
 }
-weak_alias (__roundf, roundf)
+libm_alias_float (__round, round)

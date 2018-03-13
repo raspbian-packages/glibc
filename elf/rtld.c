@@ -1,5 +1,5 @@
 /* Run time dynamic linker.
-   Copyright (C) 1995-2017 Free Software Foundation, Inc.
+   Copyright (C) 1995-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -439,7 +439,7 @@ _dl_start_final (void *arg, struct dl_start_final_info *info)
   return start_addr;
 }
 
-static ElfW(Addr) __attribute_used__ internal_function
+static ElfW(Addr) __attribute_used__
 _dl_start (void *arg)
 {
 #ifdef DONT_USE_BOOTSTRAP_MAP
@@ -454,7 +454,8 @@ _dl_start (void *arg)
      Since ld.so must not have any undefined symbols the result
      is trivial: always the map of ld.so itself.  */
 #define RTLD_BOOTSTRAP
-#define RESOLVE_MAP(sym, version, flags) (&bootstrap_map)
+#define BOOTSTRAP_MAP (&bootstrap_map)
+#define RESOLVE_MAP(sym, version, flags) BOOTSTRAP_MAP
 #include "dynamic-link.h"
 
   if (HP_TIMING_INLINE && HP_SMALL_TIMING_AVAIL)
@@ -2097,7 +2098,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
   GLRO(dl_initial_searchlist) = *GL(dl_ns)[LM_ID_BASE]._ns_main_searchlist;
 
   /* Remember the last search directory added at startup, now that
-     malloc will no longer be the one from dl-minimal.c.  */
+     malloc will no longer be the one from dl-minimal.c.  As a side
+     effect, this marks ld.so as initialized, so that the rtld_active
+     function returns true from now on.  */
   GLRO(dl_init_all_dirs) = GL(dl_all_dirs);
 
   /* Print scope information.  */

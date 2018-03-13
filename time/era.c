@@ -1,5 +1,5 @@
 /* Helper functions used by strftime/strptime to handle locale-specific "eras".
-   Copyright (C) 1995-2017 Free Software Foundation, Inc.
+   Copyright (C) 1995-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -35,7 +35,7 @@ __libc_rwlock_define (extern, __libc_setlocale_lock attribute_hidden)
 
 /* Look up the era information in CURRENT's locale strings and
    cache it in CURRENT->private.  */
-static void internal_function
+static void
 _nl_init_era_entries (struct __locale_data *current)
 {
   size_t cnt;
@@ -139,7 +139,6 @@ _nl_init_era_entries (struct __locale_data *current)
 }
 
 struct era_entry *
-internal_function
 _nl_get_era_entry (const struct tm *tp, struct __locale_data *current)
 {
   if (current->private.time == NULL || !current->private.time->era_initialized)
@@ -166,7 +165,6 @@ _nl_get_era_entry (const struct tm *tp, struct __locale_data *current)
 
 
 struct era_entry *
-internal_function
 _nl_select_era_entry (int cnt, struct __locale_data *current)
 {
   if (current->private.time == NULL || !current->private.time->era_initialized)

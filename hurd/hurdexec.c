@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -458,6 +458,9 @@ _hurd_exec_paths (task_t task, file_t file,
   free (env);
   return err;
 }
+#if SHLIB_COMPAT (libc, GLIBC_2_26, GLIBC_2_27)
+compat_symbol (libc, _hurd_exec_paths, _hurd_exec_paths, GLIBC_2_26);
+#endif
 extern error_t _hurd_exec_file_name (task_t task,
 				     file_t file,
 				     const char *filename,

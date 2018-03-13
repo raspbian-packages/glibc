@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2001-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -30,7 +30,6 @@
 
 /* Return any pending signal or wait for one for the given time.  */
 int
-internal_function
 __gai_sigqueue (int sig, const union sigval val, pid_t caller_pid)
 {
   siginfo_t info;

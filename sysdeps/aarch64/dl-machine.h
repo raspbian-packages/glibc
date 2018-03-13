@@ -1,4 +1,4 @@
-/* Copyright (C) 1995-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1995-2018 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -101,10 +101,6 @@ elf_machine_runtime_setup (struct link_map *l, int lazy, int profile)
 	  got[2] = (ElfW(Addr)) &_dl_runtime_resolve;
 	}
     }
-
-  if (l->l_info[ADDRIDX (DT_TLSDESC_GOT)] && lazy)
-    *(ElfW(Addr)*)(D_PTR (l, l_info[ADDRIDX (DT_TLSDESC_GOT)]) + l->l_addr)
-      = (ElfW(Addr)) &_dl_tlsdesc_resolve_rela;
 
   return lazy;
 }
@@ -283,7 +279,8 @@ elf_machine_rela (struct link_map *map, const ElfW(Rela) *reloc,
 				RTLD_PROGNAME, strtab + refsym->st_name);
 	    }
 	  memcpy (reloc_addr_arg, (void *) value,
-		  MIN (sym->st_size, refsym->st_size));
+		  sym->st_size < refsym->st_size
+		  ? sym->st_size : refsym->st_size);
 	  break;
 
 	case AARCH64_R(RELATIVE):
@@ -398,12 +395,21 @@ elf_machine_lazy_rel (struct link_map *map,
     }
   else if (__builtin_expect (r_type == AARCH64_R(TLSDESC), 1))
     {
-      struct tlsdesc volatile *td =
-	(struct tlsdesc volatile *)reloc_addr;
+      const Elf_Symndx symndx = ELFW (R_SYM) (reloc->r_info);
+      const ElfW (Sym) *symtab = (const void *)D_PTR (map, l_info[DT_SYMTAB]);
+      const ElfW (Sym) *sym = &symtab[symndx];
+      const struct r_found_version *version = NULL;
 
-      td->arg = (void*)reloc;
-      td->entry = (void*)(D_PTR (map, l_info[ADDRIDX (DT_TLSDESC_PLT)])
-			  + map->l_addr);
+      if (map->l_info[VERSYMIDX (DT_VERSYM)] != NULL)
+	{
+	  const ElfW (Half) *vernum =
+	    (const void *)D_PTR (map, l_info[VERSYMIDX (DT_VERSYM)]);
+	  version = &map->l_versions[vernum[symndx] & 0x7fff];
+	}
+
+      /* Always initialize TLS descriptors completely, because lazy
+	 initialization requires synchronization at every TLS access.  */
+      elf_machine_rela (map, reloc, sym, version, reloc_addr, skip_ifunc);
     }
   else if (__glibc_unlikely (r_type == AARCH64_R(IRELATIVE)))
     {

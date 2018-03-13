@@ -1,5 +1,5 @@
 /* Determine whether the host has multiple processors.  Linux version.
-   Copyright (C) 1996-2017 Free Software Foundation, Inc.
+   Copyright (C) 1996-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -41,13 +41,13 @@ is_smp_system (void)
   else
     {
       /* This was not successful.  Now try reading the /proc filesystem.  */
-      int fd = open_not_cancel_2 ("/proc/sys/kernel/version", O_RDONLY);
+      int fd = __open_nocancel ("/proc/sys/kernel/version", O_RDONLY);
       if (__builtin_expect (fd, 0) == -1
-	  || read_not_cancel (fd, u.buf, sizeof (u.buf)) <= 0)
+	  || __read_nocancel (fd, u.buf, sizeof (u.buf)) <= 0)
 	/* This also didn't work.  We give up and say it's a UP machine.  */
 	u.buf[0] = '\0';
 
-      close_not_cancel_no_status (fd);
+      __close_nocancel_nostatus (fd);
       cp = u.buf;
     }
 

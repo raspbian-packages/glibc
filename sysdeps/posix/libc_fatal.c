@@ -1,5 +1,5 @@
 /* Catastrophic failure reports.  Generic POSIX.1 version.
-   Copyright (C) 1993-2017 Free Software Foundation, Inc.
+   Copyright (C) 1993-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -83,7 +83,7 @@ __libc_message (enum __libc_message_action action, const char *fmt, ...)
 	 requests errors on standard error.  */
       const char *on_2 = __libc_secure_getenv ("LIBC_FATAL_STDERR_");
       if (on_2 == NULL || *on_2 == '\0')
-	fd = open_not_cancel_2 (_PATH_TTY, O_RDWR | O_NOCTTY | O_NDELAY);
+	fd = __open_nocancel (_PATH_TTY, O_RDWR | O_NOCTTY | O_NDELAY);
     }
 
   if (fd == -1)

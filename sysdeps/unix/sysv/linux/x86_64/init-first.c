@@ -1,5 +1,5 @@
 /* Initialization code run first thing by the ELF startup code.  Linux/x86-64.
-   Copyright (C) 2007-2017 Free Software Foundation, Inc.
+   Copyright (C) 2007-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -27,7 +27,7 @@ long int (*VDSO_SYMBOL(clock_gettime)) (clockid_t, struct timespec *)
 long int (*VDSO_SYMBOL(getcpu)) (unsigned *, unsigned *, void *)
   attribute_hidden;
 
-extern long int __syscall_clock_gettime (clockid_t, struct timespec *);
+extern __typeof (clock_gettime) __syscall_clock_gettime attribute_hidden;
 
 
 static inline void

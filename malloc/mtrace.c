@@ -1,5 +1,5 @@
 /* More debugging hooks for `malloc'.
-   Copyright (C) 1991-2017 Free Software Foundation, Inc.
+   Copyright (C) 1991-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
                  Written April 2, 1991 by John Gilmore of Cygnus Support.
                  Based on mcheck.c by Mike Haertel.
@@ -34,6 +34,7 @@
 #include <_itoa.h>
 
 #include <libc-internal.h>
+#include <dso_handle.h>
 
 #include <libio/iolibio.h>
 #define setvbuf(s, b, f, l) _IO_setvbuf (s, b, f, l)
@@ -50,15 +51,15 @@ static char *malloc_trace_buffer;
 __libc_lock_define_initialized (static, lock);
 
 /* Address to breakpoint on accesses to... */
-__ptr_t mallwatch;
+void *mallwatch;
 
 /* Old hook values.  */
-static void (*tr_old_free_hook) (__ptr_t ptr, const __ptr_t);
-static __ptr_t (*tr_old_malloc_hook) (size_t size, const __ptr_t);
-static __ptr_t (*tr_old_realloc_hook) (__ptr_t ptr, size_t size,
-                                       const __ptr_t);
-static __ptr_t (*tr_old_memalign_hook) (size_t __alignment, size_t __size,
-                                        const __ptr_t);
+static void (*tr_old_free_hook) (void *ptr, const void *);
+static void *(*tr_old_malloc_hook) (size_t size, const void *);
+static void *(*tr_old_realloc_hook) (void *ptr, size_t size,
+				     const void *);
+static void *(*tr_old_memalign_hook) (size_t __alignment, size_t __size,
+				      const void *);
 
 /* This function is called when the block being alloc'd, realloc'd, or
    freed has an address matching the variable "mallwatch".  In a debugger,
@@ -73,8 +74,8 @@ tr_break (void)
 }
 libc_hidden_def (tr_break)
 
-static void internal_function
-tr_where (const __ptr_t caller, Dl_info *info)
+static void
+tr_where (const void *caller, Dl_info *info)
 {
   if (caller != NULL)
     {
@@ -87,12 +88,12 @@ tr_where (const __ptr_t caller, Dl_info *info)
               buf = alloca (len + 6 + 2 * sizeof (void *));
 
               buf[0] = '(';
-              __stpcpy (_fitoa (caller >= (const __ptr_t) info->dli_saddr
-                                ? caller - (const __ptr_t) info->dli_saddr
-                                : (const __ptr_t) info->dli_saddr - caller,
+              __stpcpy (_fitoa (caller >= (const void *) info->dli_saddr
+                                ? caller - (const void *) info->dli_saddr
+                                : (const void *) info->dli_saddr - caller,
                                 __stpcpy (__mempcpy (buf + 1, info->dli_sname,
                                                      len),
-                                          caller >= (__ptr_t) info->dli_saddr
+                                          caller >= (void *) info->dli_saddr
                                           ? "+0x" : "-0x"),
                                 16, 0),
                         ")");
@@ -108,7 +109,7 @@ tr_where (const __ptr_t caller, Dl_info *info)
 }
 
 static Dl_info *
-lock_and_info (const __ptr_t caller, Dl_info *mem)
+lock_and_info (const void *caller, Dl_info *mem)
 {
   if (caller == NULL)
     return NULL;
@@ -121,7 +122,7 @@ lock_and_info (const __ptr_t caller, Dl_info *mem)
 }
 
 static void
-tr_freehook (__ptr_t ptr, const __ptr_t caller)
+tr_freehook (void *ptr, const void *caller)
 {
   if (ptr == NULL)
     return;
@@ -146,19 +147,19 @@ tr_freehook (__ptr_t ptr, const __ptr_t caller)
   __libc_lock_unlock (lock);
 }
 
-static __ptr_t
-tr_mallochook (size_t size, const __ptr_t caller)
+static void *
+tr_mallochook (size_t size, const void *caller)
 {
-  __ptr_t hdr;
+  void *hdr;
 
   Dl_info mem;
   Dl_info *info = lock_and_info (caller, &mem);
 
   __malloc_hook = tr_old_malloc_hook;
   if (tr_old_malloc_hook != NULL)
-    hdr = (__ptr_t) (*tr_old_malloc_hook)(size, caller);
+    hdr = (void *) (*tr_old_malloc_hook)(size, caller);
   else
-    hdr = (__ptr_t) malloc (size);
+    hdr = (void *) malloc (size);
   __malloc_hook = tr_mallochook;
 
   tr_where (caller, info);
@@ -173,10 +174,10 @@ tr_mallochook (size_t size, const __ptr_t caller)
   return hdr;
 }
 
-static __ptr_t
-tr_reallochook (__ptr_t ptr, size_t size, const __ptr_t caller)
+static void *
+tr_reallochook (void *ptr, size_t size, const void *caller)
 {
-  __ptr_t hdr;
+  void *hdr;
 
   if (ptr == mallwatch)
     tr_break ();
@@ -188,9 +189,9 @@ tr_reallochook (__ptr_t ptr, size_t size, const __ptr_t caller)
   __malloc_hook = tr_old_malloc_hook;
   __realloc_hook = tr_old_realloc_hook;
   if (tr_old_realloc_hook != NULL)
-    hdr = (__ptr_t) (*tr_old_realloc_hook)(ptr, size, caller);
+    hdr = (void *) (*tr_old_realloc_hook)(ptr, size, caller);
   else
-    hdr = (__ptr_t) realloc (ptr, size);
+    hdr = (void *) realloc (ptr, size);
   __free_hook = tr_freehook;
   __malloc_hook = tr_mallochook;
   __realloc_hook = tr_reallochook;
@@ -221,10 +222,10 @@ tr_reallochook (__ptr_t ptr, size_t size, const __ptr_t caller)
   return hdr;
 }
 
-static __ptr_t
-tr_memalignhook (size_t alignment, size_t size, const __ptr_t caller)
+static void *
+tr_memalignhook (size_t alignment, size_t size, const void *caller)
 {
-  __ptr_t hdr;
+  void *hdr;
 
   Dl_info mem;
   Dl_info *info = lock_and_info (caller, &mem);
@@ -232,9 +233,9 @@ tr_memalignhook (size_t alignment, size_t size, const __ptr_t caller)
   __memalign_hook = tr_old_memalign_hook;
   __malloc_hook = tr_old_malloc_hook;
   if (tr_old_memalign_hook != NULL)
-    hdr = (__ptr_t) (*tr_old_memalign_hook)(alignment, size, caller);
+    hdr = (void *) (*tr_old_memalign_hook)(alignment, size, caller);
   else
-    hdr = (__ptr_t) memalign (alignment, size);
+    hdr = (void *) memalign (alignment, size);
   __memalign_hook = tr_memalignhook;
   __malloc_hook = tr_mallochook;
 
@@ -315,10 +316,9 @@ mtrace (void)
 #ifdef _LIBC
           if (!added_atexit_handler)
             {
-              extern void *__dso_handle __attribute__ ((__weak__));
               added_atexit_handler = 1;
               __cxa_atexit ((void (*)(void *))release_libc_mem, NULL,
-                            &__dso_handle ? __dso_handle : NULL);
+			    __dso_handle);
             }
 #endif
         }

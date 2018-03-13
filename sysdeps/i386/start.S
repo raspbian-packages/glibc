@@ -1,5 +1,5 @@
 /* Startup code compliant to the ELF i386 ABI.
-   Copyright (C) 1995-2017 Free Software Foundation, Inc.
+   Copyright (C) 1995-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -81,7 +81,7 @@ _start:
 	pushl %edx		/* Push address of the shared library
 				   termination function.  */
 
-#ifdef SHARED
+#ifdef PIC
 	/* Load PIC register.  */
 	call 1f
 	addl $_GLOBAL_OFFSET_TABLE_, %ebx
@@ -95,7 +95,17 @@ _start:
 	pushl %ecx		/* Push second argument: argv.  */
 	pushl %esi		/* Push first argument: argc.  */
 
+# ifdef SHARED
 	pushl main@GOT(%ebx)
+# else
+	/* Avoid relocation in static PIE since _start is called before
+	   it is relocated.  Don't use "leal main@GOTOFF(%ebx), %eax"
+	   since main may be in a shared object.  Linker will convert
+	   "movl main@GOT(%ebx), %eax" to "leal main@GOTOFF(%ebx), %eax"
+	   if main is defined locally.  */
+	movl main@GOT(%ebx), %eax
+	pushl %eax
+# endif
 
 	/* Call the user's main function, and exit with its value.
 	   But let the libc call main.    */
@@ -117,7 +127,7 @@ _start:
 
 	hlt			/* Crash if somehow `exit' does return.  */
 
-#ifdef SHARED
+#ifdef PIC
 1:	movl	(%esp), %ebx
 	ret
 #endif

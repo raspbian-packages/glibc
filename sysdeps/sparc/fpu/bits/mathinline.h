@@ -1,5 +1,5 @@
 /* Inline math functions for SPARC.
-   Copyright (C) 1999-2017 Free Software Foundation, Inc.
+   Copyright (C) 1999-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Jakub Jelinek <jakub@redhat.com>.
 
@@ -25,105 +25,6 @@
 
 #ifdef __GNUC__
 
-#if defined __USE_ISOC99 && !__GNUC_PREREQ (3, 0)
-# undef isgreater
-# undef isgreaterequal
-# undef isless
-# undef islessequal
-# undef islessgreater
-# undef isunordered
-
-# if __WORDSIZE == 32
-
-#  ifndef __NO_LONG_DOUBLE_MATH
-
-#   define __unordered_cmp(x, y) \
-  (__extension__							      \
-   ({ unsigned __r;							      \
-      if (sizeof (x) == 4 && sizeof (y) == 4)				      \
-	{								      \
-	  float __x = (x); float __y = (y);				      \
-	  __asm__ ("fcmps %1,%2; st %%fsr, %0" : "=m" (__r) : "f" (__x),      \
-		   "f" (__y) : "cc");					      \
-	}								      \
-      else if (sizeof (x) <= 8 && sizeof (y) <= 8)			      \
-	{								      \
-	  double __x = (x); double __y = (y);				      \
-	  __asm__ ("fcmpd\t%1,%2\n\tst\t%%fsr,%0" : "=m" (__r) : "f" (__x),   \
-		   "f" (__y) : "cc");					      \
-	}								      \
-      else								      \
-	{								      \
-	  long double __x = (x); long double __y = (y);			      \
-	  extern int _Q_cmp (const long double a, const long double b);	      \
-	  __r = _Q_cmp (__x, __y) << 10;				      \
-	}								      \
-      __r; }))
-
-#  else
-
-#   define __unordered_cmp(x, y) \
-  (__extension__							      \
-   ({ unsigned __r;							      \
-      if (sizeof (x) == 4 && sizeof (y) == 4)				      \
-	{								      \
-	  float __x = (x); float __y = (y);				      \
-	  __asm__ ("fcmps %1,%2; st %%fsr, %0" : "=m" (__r) : "f" (__x),      \
-		   "f" (__y) : "cc");					      \
-	}								      \
-      else								      \
-	{								      \
-	  double __x = (x); double __y = (y);				      \
-	  __asm__ ("fcmpd\t%1,%2\n\tst\t%%fsr,%0" : "=m" (__r) : "f" (__x),   \
-		   "f" (__y) : "cc");					      \
-	}								      \
-      __r; }))
-
-#  endif
-
-#  define isgreater(x, y) ((__unordered_cmp (x, y) & (3 << 10)) == (2 << 10))
-#  define isgreaterequal(x, y) ((__unordered_cmp (x, y) & (1 << 10)) == 0)
-#  define isless(x, y) ((__unordered_cmp (x, y) & (3 << 10)) == (1 << 10))
-#  define islessequal(x, y) ((__unordered_cmp (x, y) & (2 << 10)) == 0)
-#  define islessgreater(x, y) (((__unordered_cmp (x, y) + (1 << 10)) & (2 << 10)) != 0)
-#  define isunordered(x, y) ((__unordered_cmp (x, y) & (3 << 10)) == (3 << 10))
-
-# else /* sparc64 */
-
-#  define __unordered_v9cmp(x, y, op, qop) \
-  (__extension__							      \
-   ({ unsigned __r;						      	      \
-      if (sizeof (x) == 4 && sizeof (y) == 4)				      \
-	{								      \
-	  float __x = (x); float __y = (y);				      \
-	  __asm__ ("fcmps\t%%fcc3,%1,%2\n\tmov" op "\t%%fcc3,1,%0"	      \
-		   : "=r" (__r) : "f" (__x), "f" (__y), "0" (0) : "cc");      \
-	}								      \
-      else if (sizeof (x) <= 8 && sizeof (y) <= 8)			      \
-	{								      \
-	  double __x = (x); double __y = (y);				      \
-	  __asm__ ("fcmpd\t%%fcc3,%1,%2\n\tmov" op "\t%%fcc3,1,%0"	      \
-		   : "=r" (__r) : "f" (__x), "f" (__y), "0" (0) : "cc");      \
-	}								      \
-      else								      \
-	{								      \
-	  long double __x = (x); long double __y = (y);			      \
-	  extern int _Qp_cmp (const long double *a, const long double *b);    \
-	  __r = qop;						      	      \
-	}								      \
-      __r; }))
-
-#  define isgreater(x, y) __unordered_v9cmp(x, y, "g", _Qp_cmp (&__x, &__y) == 2)
-#  define isgreaterequal(x, y) __unordered_v9cmp(x, y, "ge", (_Qp_cmp (&__x, &__y) & 1) == 0)
-#  define isless(x, y) __unordered_v9cmp(x, y, "l", _Qp_cmp (&__x, &__y) == 1)
-#  define islessequal(x, y) __unordered_v9cmp(x, y, "le", (_Qp_cmp (&__x, &__y) & 2) == 0)
-#  define islessgreater(x, y) __unordered_v9cmp(x, y, "lg", ((_Qp_cmp (&__x, &__y) + 1) & 2) != 0)
-#  define isunordered(x, y) __unordered_v9cmp(x, y, "u", _Qp_cmp (&__x, &__y) == 3)
-
-# endif /* sparc64 */
-
-#endif /* __USE_ISOC99 */
-
 #if (!defined __NO_MATH_INLINES || defined __LIBC_INTERNAL_MATH_INLINES) && defined __OPTIMIZE__
 
 # ifndef __extern_inline
@@ -135,60 +36,6 @@
 /* The gcc, version 2.7 or below, has problems with all this inlining
    code.  So disable it for this version of the compiler.  */
 # if __GNUC_PREREQ (2, 8)
-
-#  ifdef __USE_ISOC99
-
-/* Test for negative number.  Used in the signbit() macro.  */
-__MATH_INLINE int
-__NTH (__signbitf (float __x))
-{
-  __extension__ union { float __f; int __i; } __u = { __f: __x };
-  return __u.__i < 0;
-}
-
-#   if __WORDSIZE == 32
-
-__MATH_INLINE int
-__NTH (__signbit (double __x))
-{
-  __extension__ union { double __d; int __i[2]; } __u = { __d: __x };
-  return __u.__i[0] < 0;
-}
-
-#    ifndef __NO_LONG_DOUBLE_MATH
-__MATH_INLINE int
-__NTH (__signbitl (long double __x))
-{
-  __extension__ union { long double __l; int __i[4]; } __u = { __l: __x };
-  return __u.__i[0] < 0;
-}
-#    else
-__MATH_INLINE int
-__NTH (__signbitl (long double __x))
-{
-  return __signbit ((double)__x);
-}
-#    endif
-
-#   else /* sparc64 */
-
-__MATH_INLINE int
-__NTH (__signbit (double __x))
-{
-  __extension__ union { double __d; long int __i; } __u = { __d: __x };
-  return __u.__i < 0;
-}
-
-__MATH_INLINE int
-__NTH (__signbitl (long double __x))
-{
-  __extension__ union { long double __l; long int __i[2]; } __u = { __l: __x };
-  return __u.__i[0] < 0;
-}
-
-#   endif /* sparc64 */
-
-#  endif /* __USE_ISOC99 */
 
 #  if !defined __NO_MATH_INLINES && !__GNUC_PREREQ (3, 2)
 

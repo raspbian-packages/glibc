@@ -1,4 +1,4 @@
-/* Copyright (C) 1993-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1993-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -66,7 +66,6 @@ _IO_fgets (char *buf, int n, _IO_FILE *fp)
   return result;
 }
 
-#ifdef weak_alias
 weak_alias (_IO_fgets, fgets)
 
 # ifndef _IO_MTSAFE_IO
@@ -75,4 +74,3 @@ libc_hidden_def (__fgets_unlocked)
 weak_alias (_IO_fgets, fgets_unlocked)
 libc_hidden_weak (fgets_unlocked)
 # endif
-#endif

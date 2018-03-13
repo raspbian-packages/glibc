@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Chris Metcalf <cmetcalf@tilera.com>, 2011.
 
@@ -22,6 +22,6 @@
 
 struct link_map;
 
-void internal_function _dl_unmap (struct link_map *map);
+void _dl_unmap (struct link_map *map);
 
 #define DL_UNMAP(map) _dl_unmap (map)

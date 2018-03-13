@@ -1,5 +1,5 @@
 /* Special .init and .fini section support for tile.
-   Copyright (C) 2012-2017 Free Software Foundation, Inc.
+   Copyright (C) 2012-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -42,7 +42,7 @@
 	ADDI_PTR r29, sp, (2 * REGSIZE)
 	{
 	 ADDI_PTR sp, sp, (2 * REGSIZE)
-	 LD lr, r29
+	 ld lr, r29
 	}
 	jrp lr
 
@@ -50,6 +50,6 @@
 	ADDI_PTR r29, sp, (2 * REGSIZE)
 	{
 	 ADDI_PTR sp, sp, (2 * REGSIZE)
-	 LD lr, r29
+	 ld lr, r29
 	}
 	jrp lr

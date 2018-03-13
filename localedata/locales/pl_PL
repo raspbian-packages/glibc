@@ -22,7 +22,6 @@ escape_char /
 % Date: 1997-03-18
 % Application: general
 % Users: general
-% Charset: ISO-8859-2
 
 LC_IDENTIFICATION
 title      "Polish locale for Poland"
@@ -52,86 +51,61 @@ category "i18n:2012";LC_MEASUREMENT
 END LC_IDENTIFICATION
 
 LC_COLLATE
+
 copy "iso14651_t1"
 
-collating-symbol <aogonek>
-collating-symbol <cacute>
-collating-symbol <eogonek>
-collating-symbol <lstroke>
-collating-symbol <nacute>
-collating-symbol <oacute>
-collating-symbol <sacute>
-collating-symbol <zacute>
-collating-symbol <zdot>
+collating-symbol <space>
+collating-symbol <a-ogonek>
+collating-symbol <c-acute>
+collating-symbol <e-ogonek>
+collating-symbol <l-stroke>
+collating-symbol <n-acute>
+collating-symbol <o-acute>
+collating-symbol <s-acute>
+collating-symbol <z-acute>
+collating-symbol <z-dot-above>
+
+reorder-after <RES-1>
+<space>
 
 reorder-after <a>
-<aogonek>
-
+<a-ogonek>
 reorder-after <c>
-<cacute>
-
+<c-acute>
 reorder-after <e>
-<eogonek>
-
+<e-ogonek>
 reorder-after <l>
-<lstroke>
-
+<l-stroke>
 reorder-after <n>
-<nacute>
-
+<n-acute>
 reorder-after <o>
-<oacute>
-
+<o-acute>
 reorder-after <s>
-<sacute>
-
+<s-acute>
 reorder-after <z>
-<zacute>
-<zdot>
+<z-acute>
+<z-dot-above>
 
-reorder-after <U00A0>
-<U0020> <U0020>;IGNORE;<U0020>;<U0020>
-reorder-after <U0061>
-<U0105> <aogonek>;<BAS>;<MIN>;IGNORE
-reorder-after <U0041>
-<U0104> <aogonek>;<BAS>;<CAP>;IGNORE
-
-reorder-after <U0063>
-<U0107> <cacute>;<BAS>;<MIN>;IGNORE
-reorder-after <U0043>
-<U0106> <cacute>;<BAS>;<CAP>;IGNORE
-
-reorder-after <U0065>
-<U0119> <eogonek>;<BAS>;<MIN>;IGNORE
-reorder-after <U0045>
-<U0118> <eogonek>;<BAS>;<CAP>;IGNORE
-
-reorder-after <U006C>
-<U0142> <lstroke>;<BAS>;<MIN>;IGNORE
-reorder-after <U004C>
-<U0141> <lstroke>;<BAS>;<CAP>;IGNORE
-
-reorder-after <U006E>
-<U0144> <nacute>;<BAS>;<MIN>;IGNORE
-reorder-after <U004E>
-<U0143> <nacute>;<BAS>;<CAP>;IGNORE
-
-reorder-after <U006F>
-<U00F3> <oacute>;<BAS>;<MIN>;IGNORE
-reorder-after <U004F>
-<U00D3> <oacute>;<BAS>;<CAP>;IGNORE
-
-reorder-after <U0073>
-<U015B> <sacute>;<BAS>;<MIN>;IGNORE
-reorder-after <U0053>
-<U015A> <sacute>;<BAS>;<CAP>;IGNORE
-
-reorder-after <U007A>
-<U017A> <zacute>;<BAS>;<MIN>;IGNORE
-<U017C> <zdot>;<BAS>;<MIN>;IGNORE
-reorder-after <U005A>
-<U0179> <zacute>;<BAS>;<CAP>;IGNORE
-<U017B> <zdot>;<BAS>;<CAP>;IGNORE
+<U0020> <space>;IGNORE;IGNORE;<U0020>
+<U00A0> <space>;IGNORE;IGNORE;<U00A0>
+<U0105> <a-ogonek>;<BAS>;<MIN>;IGNORE % ą
+<U0104> <a-ogonek>;<BAS>;<CAP>;IGNORE % Ą
+<U0107> <c-acute>;<BAS>;<MIN>;IGNORE % ć
+<U0106> <c-acute>;<BAS>;<CAP>;IGNORE % Ć
+<U0119> <e-ogonek>;<BAS>;<MIN>;IGNORE % ę
+<U0118> <e-ogonek>;<BAS>;<CAP>;IGNORE % Ę
+<U0142> <l-stroke>;<BAS>;<MIN>;IGNORE % ł
+<U0141> <l-stroke>;<BAS>;<CAP>;IGNORE % Ł
+<U0144> <n-acute>;<BAS>;<MIN>;IGNORE % ń
+<U0143> <n-acute>;<BAS>;<CAP>;IGNORE % Ń
+<U00F3> <o-acute>;<BAS>;<MIN>;IGNORE % ó
+<U00D3> <o-acute>;<BAS>;<CAP>;IGNORE % Ó
+<U015B> <s-acute>;<BAS>;<MIN>;IGNORE % ś
+<U015A> <s-acute>;<BAS>;<CAP>;IGNORE % Ś
+<U017A> <z-acute>;<BAS>;<MIN>;IGNORE % ź
+<U0179> <z-acute>;<BAS>;<CAP>;IGNORE % Ź
+<U017C> <z-dot-above>;<BAS>;<MIN>;IGNORE % ż
+<U017B> <z-dot-above>;<BAS>;<CAP>;IGNORE % Ż
 
 reorder-end
 
@@ -146,20 +120,20 @@ translit_end
 END LC_CTYPE
 
 LC_MESSAGES
-yesexpr "<U005E><U005B><U002B><U0031><U0054><U0074><U0059><U0079><U005D>"
-noexpr  "<U005E><U005B><U002D><U0030><U006E><U004E><U005D>"
-yesstr  "<U0074><U0061><U006B>"
-nostr   "<U006E><U0069><U0065>"
+yesexpr "^[+1TtYy]"
+noexpr  "^[-0nN]"
+yesstr  "tak"
+nostr   "nie"
 END LC_MESSAGES
 
 LC_MONETARY
-int_curr_symbol           "<U0050><U004C><U004E><U0020>"
-currency_symbol           "<U007A><U0142>"
-mon_decimal_point         "<U002C>"
-mon_thousands_sep         "<U002E>"
-mon_grouping              3;3
+int_curr_symbol           "PLN "
+currency_symbol           "z<U0142>"
+mon_decimal_point         ","
+mon_thousands_sep         "<U202F>"
+mon_grouping              3
 positive_sign             ""
-negative_sign             "<U002D>"
+negative_sign             "-"
 int_frac_digits           2
 frac_digits               2
 p_cs_precedes             0
@@ -171,9 +145,9 @@ n_sign_posn               1
 END LC_MONETARY
 
 LC_NUMERIC
-decimal_point             "<U002C>"
-thousands_sep             ""
-grouping                  0;0
+decimal_point             ","
+thousands_sep             "<U202F>"
+grouping                  3
 END LC_NUMERIC
 
 LC_TIME
@@ -184,45 +158,53 @@ LC_TIME
 %
 %   https://bugzilla.redhat.com/show_bug.cgi?id=242296
 %
-abday   "<U006E><U0069><U0065>";"<U0070><U006F><U006E>";/
-        "<U0077><U0074><U006F>";"<U015B><U0072><U006F>";/
-        "<U0063><U007A><U0077>";"<U0070><U0069><U0105>";/
-        "<U0073><U006F><U0062>"
-day     "<U006E><U0069><U0065><U0064><U007A><U0069><U0065><U006C><U0061>";/
-        "<U0070><U006F><U006E><U0069><U0065><U0064><U007A><U0069><U0061><U0142><U0065><U006B>";/
-        "<U0077><U0074><U006F><U0072><U0065><U006B>";/
-        "<U015B><U0072><U006F><U0064><U0061>";/
-        "<U0063><U007A><U0077><U0061><U0072><U0074><U0065><U006B>";/
-        "<U0070><U0069><U0105><U0074><U0065><U006B>";/
-        "<U0073><U006F><U0062><U006F><U0074><U0061>"
-abmon   "<U0073><U0074><U0079>";"<U006C><U0075><U0074>";/
-        "<U006D><U0061><U0072>";"<U006B><U0077><U0069>";/
-        "<U006D><U0061><U006A>";"<U0063><U007A><U0065>";/
-        "<U006C><U0069><U0070>";"<U0073><U0069><U0065>";/
-        "<U0077><U0072><U007A>";"<U0070><U0061><U017A>";/
-        "<U006C><U0069><U0073>";"<U0067><U0072><U0075>"
-mon     "<U0073><U0074><U0079><U0063><U007A><U0065><U0144>";/
-        "<U006C><U0075><U0074><U0079>";/
-        "<U006D><U0061><U0072><U007A><U0065><U0063>";/
-        "<U006B><U0077><U0069><U0065><U0063><U0069><U0065><U0144>";/
-        "<U006D><U0061><U006A>";/
-        "<U0063><U007A><U0065><U0072><U0077><U0069><U0065><U0063>";/
-        "<U006C><U0069><U0070><U0069><U0065><U0063>";/
-        "<U0073><U0069><U0065><U0072><U0070><U0069><U0065><U0144>";/
-        "<U0077><U0072><U007A><U0065><U0073><U0069><U0065><U0144>";/
-        "<U0070><U0061><U017A><U0064><U007A><U0069><U0065><U0072><U006E><U0069><U006B>";/
-        "<U006C><U0069><U0073><U0074><U006F><U0070><U0061><U0064>";/
-        "<U0067><U0072><U0075><U0064><U007A><U0069><U0065><U0144>"
-d_t_fmt "<U0025><U0061><U002C><U0020>/
-<U0025><U002D><U0064><U0020><U0025><U0062><U0020><U0025><U0059><U002C><U0020>/
-<U0025><U0054>"
-d_fmt   "<U0025><U0064><U002E><U0025><U006D><U002E><U0025><U0059>"
-t_fmt   "<U0025><U0054>"
+abday   "nie";"pon";/
+        "wto";"<U015B>ro";/
+        "czw";"pi<U0105>";/
+        "sob"
+day     "niedziela";/
+        "poniedzia<U0142>ek";/
+        "wtorek";/
+        "<U015B>roda";/
+        "czwartek";/
+        "pi<U0105>tek";/
+        "sobota"
+abmon   "sty";"lut";/
+        "mar";"kwi";/
+        "maj";"cze";/
+        "lip";"sie";/
+        "wrz";"pa<U017A>";/
+        "lis";"gru"
+alt_mon "stycze<U0144>";/
+        "luty";/
+        "marzec";/
+        "kwiecie<U0144>";/
+        "maj";/
+        "czerwiec";/
+        "lipiec";/
+        "sierpie<U0144>";/
+        "wrzesie<U0144>";/
+        "pa<U017A>dziernik";/
+        "listopad";/
+        "grudzie<U0144>"
+mon     "stycznia";/
+        "lutego";/
+        "marca";/
+        "kwietnia";/
+        "maja";/
+        "czerwca";/
+        "lipca";/
+        "sierpnia";/
+        "wrze<U015B>nia";/
+        "pa<U017A>dziernika";/
+        "listopada";/
+        "grudnia"
+d_t_fmt "%a, %-d %b %Y, %T"
+d_fmt   "%d.%m.%Y"
+t_fmt   "%T"
 am_pm   "";""
 t_fmt_ampm ""
-date_fmt "<U0025><U0061><U002C><U0020>/
-<U0025><U002D><U0064><U0020><U0025><U0062><U0020><U0025><U0059><U002C><U0020>/
-<U0025><U0054><U0020><U0025><U005A>"
+date_fmt "%a, %-d %b %Y, %T %Z"
 week	7;19971130;4
 first_weekday	2
 END LC_TIME
@@ -232,10 +214,9 @@ copy "i18n"
 END LC_PAPER
 
 LC_TELEPHONE
-tel_int_fmt    "<U002B><U0025><U0063><U0020><U0025><U0061><U0020><U0025>/
-<U006C>"
-int_prefix     "<U0034><U0038>"
-int_select     "<U0030><U0030>"
+tel_int_fmt    "+%c %a %l"
+int_prefix     "48"
+int_select     "00"
 END LC_TELEPHONE
 
 LC_MEASUREMENT
@@ -243,28 +224,18 @@ copy "i18n"
 END LC_MEASUREMENT
 
 LC_NAME
-name_fmt    "<U0025><U0064><U0025><U0074><U0025><U0067><U0025><U0074>/
-<U0025><U006D><U0025><U0074><U0025><U0066>"
+name_fmt    "%d%t%g%t%m%t%f"
 END LC_NAME
 
 LC_ADDRESS
-postal_fmt    "<U0025><U0066><U0025><U004E><U0025><U0061><U0025><U004E>/
-<U0025><U0064><U0025><U004E><U0025><U0062><U0025><U004E><U0025><U0073>/
-<U0020><U0025><U0068><U0020><U0025><U0065><U0020><U0025><U0072><U0025>/
-<U004E><U0025><U007A><U0020><U0025><U0054><U0025>/
-<U004E><U0025><U0063><U0025><U004E>"
-country_name "<U0050><U006F><U006C><U0073><U006B><U0061>"
-country_ab2 "<U0050><U004C>"
-country_ab3 "<U0050><U004F><U004C>"
+postal_fmt    "%f%N%a%N%d%N%b%N%s %h %e %r%N%z %T%N%c%N"
+country_name "Polska"
+country_ab2 "PL"
+country_ab3 "POL"
 country_num 616
-% PL
-country_car    "<U0050><U004C>"
-% polski
-lang_name    "<U0070><U006F><U006C><U0073><U006B><U0069>"
-% pl
-lang_ab      "<U0070><U006C>"
-% pol
-lang_term    "<U0070><U006F><U006C>"
-% pol
-lang_lib    "<U0070><U006F><U006C>"
+country_car    "PL"
+lang_name    "polski"
+lang_ab      "pl"
+lang_term    "pol"
+lang_lib    "pol"
 END LC_ADDRESS

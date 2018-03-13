@@ -1,5 +1,5 @@
 /* POSIX spawn interface.  Linux version.
-   Copyright (C) 2016-2017 Free Software Foundation, Inc.
+   Copyright (C) 2016-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -204,7 +204,7 @@ __spawni_child (void *arguments)
 	  switch (action->tag)
 	    {
 	    case spawn_do_close:
-	      if (close_not_cancel (action->action.close_action.fd) != 0)
+	      if (__close_nocancel (action->action.close_action.fd) != 0)
 		{
 		  if (!have_fdlimit)
 		    {
@@ -227,9 +227,9 @@ __spawni_child (void *arguments)
 		   with the process already at maximum number of file descriptor
 		   opened and also for multiple actions on single-open special
 		   paths (like /dev/watchdog).  */
-		close_not_cancel (action->action.open_action.fd);
+		__close_nocancel (action->action.open_action.fd);
 
-		int ret = open_not_cancel (action->action.open_action.path,
+		int ret = __open_nocancel (action->action.open_action.path,
 					   action->action.
 					   open_action.oflag | O_LARGEFILE,
 					   action->action.open_action.mode);
@@ -246,7 +246,7 @@ __spawni_child (void *arguments)
 			!= action->action.open_action.fd)
 		      goto fail;
 
-		    if (close_not_cancel (new_fd) != 0)
+		    if (__close_nocancel (new_fd) != 0)
 		      goto fail;
 		  }
 	      }

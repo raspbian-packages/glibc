@@ -1,5 +1,5 @@
 /* Support code for testing libm functions (compiled once per type).
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -44,6 +44,9 @@
    DBL, or FLT).
 
    TYPE_STR: The name of the type as used in ulps files, as a string.
+
+   ULP_IDX, ULP_I_IDX: The array indexes for ulps values for this
+   function.
 
    LIT: Append the correct suffix to a literal.
 
@@ -191,8 +194,8 @@ compare_ulp_data (const void *key, const void *ulp)
   return strcmp (keystr, ulpdat->name);
 }
 
-static const int ulp_i_idx = __CONCATX (ULP_I_, PREFIX);
-static const int ulp_idx = __CONCATX (ULP_, PREFIX);
+static const int ulp_i_idx = ULP_I_IDX;
+static const int ulp_idx = ULP_IDX;
 
 /* Return the ulps for NAME in array DATA with NMEMB elements, or 0 if
    no ulps listed.  */
@@ -986,13 +989,6 @@ enable_test (int exceptions)
   if (flag_test_mathvec && (exceptions & NO_TEST_MATHVEC) != 0)
     return 0;
 
-  return 1;
-}
-
-/* This is to prevent messages from the SVID libm emulation.  */
-int
-matherr (struct exception *x __attribute__ ((unused)))
-{
   return 1;
 }
 

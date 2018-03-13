@@ -1,5 +1,5 @@
 /* Machine-dependent definitions for profiling support.  ARM EABI version.
-   Copyright (C) 2008-2017 Free Software Foundation, Inc.
+   Copyright (C) 2008-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,9 +24,9 @@
 /* We must not pollute the global namespace.  */
 #define mcount_internal __mcount_internal
 
-extern void mcount_internal (u_long frompc, u_long selfpc) internal_function;
+extern void mcount_internal (u_long frompc, u_long selfpc);
 #define _MCOUNT_DECL(frompc, selfpc) \
-  void internal_function mcount_internal (u_long frompc, u_long selfpc)
+  void mcount_internal (u_long frompc, u_long selfpc)
 
 
 /* Define MCOUNT as empty since we have the implementation in another file.  */

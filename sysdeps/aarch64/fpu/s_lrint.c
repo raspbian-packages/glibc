@@ -1,4 +1,4 @@
-/* Copyright (C) 1996-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1996-2018 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -17,37 +17,72 @@
    <http://www.gnu.org/licenses/>.  */
 
 #include <math.h>
+#include <get-rounding-mode.h>
+#include <stdint.h>
+#include <math_private.h>
+#include <libm-alias-double.h>
 
-#ifndef FUNC
-# define FUNC lrint
-#endif
+# define IREG_SIZE 64
 
-#ifndef ITYPE
-# define ITYPE double
-# define IREGS "d"
-#else
-# ifndef IREGS
-#  error IREGS not defined
+# ifdef __ILP32__
+#  define OREG_SIZE 32
+# else
+#  define OREG_SIZE 64
 # endif
+
+# define IREGS "d"
+
+#if OREG_SIZE == 32
+# define OREGS "w"
+#else
+# define OREGS "x"
 #endif
 
-#ifndef OTYPE
-# define OTYPE long int
-#endif
 
-#define OREGS "x"
-
-#define __CONCATX(a,b) __CONCAT(a,b)
-
-OTYPE
-__CONCATX(__,FUNC) (ITYPE x)
+long int
+__lrint (double x)
 {
-  OTYPE result;
-  ITYPE temp;
-  asm ( "frintx" "\t%" IREGS "1, %" IREGS "2\n\t"
-        "fcvtzs" "\t%" OREGS "0, %" IREGS "1"
-        : "=r" (result), "=w" (temp) : "w" (x) );
-  return result;
+
+#if IREG_SIZE == 64 && OREG_SIZE == 32
+  long int result;
+
+  if (__builtin_fabs (x) > INT32_MAX)
+    {
+      /* Converting large values to a 32 bit int may cause the frintx/fcvtza
+	 sequence to set both FE_INVALID and FE_INEXACT.  To avoid this
+	 check the rounding mode and do a single instruction with the
+	 appropriate rounding mode.  */
+
+      switch (get_rounding_mode ())
+	{
+	case FE_TONEAREST:
+	  asm volatile ("fcvtns" "\t%" OREGS "0, %" IREGS "1"
+			: "=r" (result) : "w" (x));
+	  break;
+	case FE_UPWARD:
+	  asm volatile ("fcvtps" "\t%" OREGS "0, %" IREGS "1"
+			: "=r" (result) : "w" (x));
+	  break;
+	case FE_DOWNWARD:
+	  asm volatile ("fcvtms" "\t%" OREGS "0, %" IREGS "1"
+			: "=r" (result) : "w" (x));
+	  break;
+	case FE_TOWARDZERO:
+	default:
+	  asm volatile ("fcvtzs" "\t%" OREGS "0, %" IREGS "1"
+			: "=r" (result) : "w" (x));
+	}
+      return result;
+    }
+#endif
+
+  double r =  __builtin_rint (x);
+
+  /* Prevent gcc from calling lrint directly when compiled with
+     -fno-math-errno by inserting a barrier.  */
+
+  math_opt_barrier (r);
+  return r;
 }
 
-weak_alias (__CONCATX(__,FUNC), FUNC)
+libm_alias_double (__lrint, lrint)

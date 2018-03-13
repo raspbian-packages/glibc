@@ -1,4 +1,4 @@
-/* Copyright (C) 1993-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1993-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -44,7 +44,6 @@ _IO_getc (FILE *fp)
 
 #undef getc
 
-#ifdef weak_alias
 weak_alias (_IO_getc, getc)
 weak_alias (_IO_getc, fgetc)
 
@@ -52,5 +51,4 @@ weak_alias (_IO_getc, fgetc)
 #undef getc_unlocked
 weak_alias (_IO_getc, getc_unlocked)
 weak_alias (_IO_getc, fgetc_unlocked)
-#endif
 #endif

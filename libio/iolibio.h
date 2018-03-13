@@ -1,4 +1,4 @@
-#include <libio.h>
+#include <stdio.h>
 
 /* These emulate stdio functionality, but with a different name
    (_IO_ungetc instead of ungetc), and using _IO_FILE instead of FILE. */
@@ -23,8 +23,9 @@ extern _IO_FILE *_IO_fopen (const char*, const char*);
 extern _IO_FILE *_IO_old_fopen (const char*, const char*);
 extern _IO_FILE *_IO_new_fopen (const char*, const char*);
 extern _IO_FILE *_IO_fopen64 (const char*, const char*);
-extern _IO_FILE *__fopen_internal (const char*, const char*, int);
-extern _IO_FILE *__fopen_maybe_mmap (_IO_FILE *) __THROW;
+extern _IO_FILE *__fopen_internal (const char*, const char*, int)
+	attribute_hidden;
+extern _IO_FILE *__fopen_maybe_mmap (_IO_FILE *) __THROW attribute_hidden;
 extern int _IO_fprintf (_IO_FILE*, const char*, ...);
 extern int _IO_fputs (const char*, _IO_FILE*);
 libc_hidden_proto (_IO_fputs)

@@ -1,4 +1,4 @@
-/* Copyright (C) 1993-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1993-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -41,10 +41,8 @@ _IO_old_fsetpos (_IO_FILE *fp, const _IO_fpos_t *posp)
     {
       /* ANSI explicitly requires setting errno to a positive value on
 	 failure.  */
-#ifdef EIO
       if (errno == 0)
 	__set_errno (EIO);
-#endif
       result = EOF;
     }
   else
@@ -53,10 +51,8 @@ _IO_old_fsetpos (_IO_FILE *fp, const _IO_fpos_t *posp)
   return result;
 }
 
-#ifdef weak_alias
 compat_symbol (libc, _IO_old_fsetpos, _IO_fsetpos, GLIBC_2_0);
 strong_alias (_IO_old_fsetpos, __old_fsetpos)
 compat_symbol (libc, __old_fsetpos, fsetpos, GLIBC_2_0);
-#endif
 
 #endif

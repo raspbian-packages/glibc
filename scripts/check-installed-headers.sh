@@ -1,5 +1,5 @@
 #! /bin/sh
-# Copyright (C) 2016-2017 Free Software Foundation, Inc.
+# Copyright (C) 2016-2018 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 #
 # The GNU C Library is free software; you can redistribute it and/or
@@ -83,9 +83,14 @@ for header in "$@"; do
         # instead, plus an inclusion of that header.
         (sys/elf.h)
             continue;;
-	    
+
 	# These are completely not following standards
         (hurd.h | hurd/* | faultexc_server.h | mach.h | mach_init.h | mach_error.h | mach-shortcuts.h | mach/* | device/* | lock-intern.h | spin-lock.h | machine-sp.h)
+            continue;;
+
+        # libio.h and _G_config.h are deprecation stubs containing #warnings
+        # to use stdio.h instead.
+        (libio.h | _G_config.h)
             continue;;
 
 	# sys/sysctl.h is unsupported for x32.

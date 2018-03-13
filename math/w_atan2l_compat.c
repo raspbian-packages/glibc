@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@gmail.com>, 2011.
 
@@ -23,8 +23,11 @@
 #include <errno.h>
 #include <math.h>
 #include <math_private.h>
+#include <math-svid-compat.h>
+#include <libm-alias-ldouble.h>
 
 
+#if LIBM_SVID_COMPAT
 long double
 __atan2l (long double y, long double x)
 {
@@ -38,4 +41,5 @@ __atan2l (long double y, long double x)
     __set_errno (ERANGE);
   return z;
 }
-weak_alias (__atan2l, atan2l)
+libm_alias_ldouble (__atan2, atan2)
+#endif

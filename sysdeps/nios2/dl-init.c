@@ -1,5 +1,5 @@
 /* Nios II specific procedures for initializing code.
-   Copyright (C) 2008-2017 Free Software Foundation, Inc.
+   Copyright (C) 2008-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -19,7 +19,6 @@
 #include <elf/dl-init.c>
 
 unsigned int
-internal_function
 _dl_nios2_get_gp_value (struct link_map *main_map)
 {
   ElfW(Dyn) *dyn = main_map->l_ld;

@@ -1,5 +1,5 @@
 /* System-specific malloc support functions.  Linux version.
-   Copyright (C) 2012-2017 Free Software Foundation, Inc.
+   Copyright (C) 2012-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -42,14 +42,14 @@ check_may_shrink_heap (void)
 
   if (__builtin_expect (may_shrink_heap == 0, 1))
     {
-      int fd = open_not_cancel_2 ("/proc/sys/vm/overcommit_memory",
-				  O_RDONLY | O_CLOEXEC);
+      int fd = __open_nocancel ("/proc/sys/vm/overcommit_memory",
+				O_RDONLY | O_CLOEXEC);
       if (fd >= 0)
 	{
 	  char val;
-	  ssize_t n = read_not_cancel (fd, &val, 1);
+	  ssize_t n = __read_nocancel (fd, &val, 1);
 	  may_shrink_heap = n > 0 && val == '2';
-	  close_not_cancel_no_status (fd);
+	  __close_nocancel_nostatus (fd);
 	}
     }
 

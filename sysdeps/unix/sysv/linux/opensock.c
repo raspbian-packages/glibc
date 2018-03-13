@@ -1,4 +1,4 @@
-/* Copyright (C) 1999-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1999-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,7 +24,7 @@
 
 /* Return a socket of any type.  The socket can be used in subsequent
    ioctl calls to talk to the kernel.  */
-int internal_function
+int
 __opensock (void)
 {
   static int last_family;	/* Available socket family we will use.  */

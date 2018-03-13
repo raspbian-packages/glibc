@@ -1,5 +1,5 @@
 /* Unit test for _dl_addr_inside_object.
-   Copyright (C) 2016-2017 Free Software Foundation, Inc.
+   Copyright (C) 2016-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -22,8 +22,7 @@
 #include <elf.h>
 #include <libc-symbols.h>
 
-extern int internal_function _dl_addr_inside_object (struct link_map *l,
-						     const ElfW(Addr) addr);
+extern int _dl_addr_inside_object (struct link_map *l, const ElfW(Addr) addr);
 
 static int
 do_test (void)

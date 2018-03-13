@@ -1,5 +1,5 @@
 /* Determine whether interfaces use native transport.  Linux version.
-   Copyright (C) 2007-2017 Free Software Foundation, Inc.
+   Copyright (C) 2007-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -167,7 +167,7 @@ __check_native (uint32_t a1_index, int *a1_native,
   while (! done);
 
  out:
-  close_not_cancel_no_status (fd);
+  __close_nocancel_nostatus (fd);
 
   return;
 

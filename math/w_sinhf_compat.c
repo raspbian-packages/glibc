@@ -19,7 +19,10 @@
 
 #include <math.h>
 #include <math_private.h>
+#include <math-svid-compat.h>
+#include <libm-alias-float.h>
 
+#if LIBM_SVID_COMPAT
 float
 __sinhf (float x)
 {
@@ -30,4 +33,5 @@ __sinhf (float x)
 
 	return z;
 }
-weak_alias (__sinhf, sinhf)
+libm_alias_float (__sinh, sinh)
+#endif

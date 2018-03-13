@@ -1,4 +1,4 @@
-/* Copyright (C) 2004-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2004-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contribute by Ulrich Drepper <drepper@redhat.com>, 2004.
 
@@ -209,7 +209,7 @@ init_mq_netlink (void)
 
   if (err != 0)
     {
-      close_not_cancel_no_status (netlink_socket);
+      __close_nocancel_nostatus (netlink_socket);
       netlink_socket = -1;
     }
 }

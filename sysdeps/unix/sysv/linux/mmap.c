@@ -1,5 +1,5 @@
 /* mmap - map files or devices into memory.  Linux version.
-   Copyright (C) 2017 Free Software Foundation, Inc.
+   Copyright (C) 2017-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -36,7 +36,7 @@ __mmap (void *addr, size_t len, int prot, int flags, int fd, off_t offset)
   MMAP_CHECK_PAGE_UNIT ();
 
   if (offset & MMAP_OFF_LOW_MASK)
-    return (__ptr_t) INLINE_SYSCALL_ERROR_RETURN_VALUE (EINVAL);
+    return (void *) INLINE_SYSCALL_ERROR_RETURN_VALUE (EINVAL);
 
 #ifdef __NR_mmap2
   return (void *) MMAP_CALL (mmap2, addr, len, prot, flags, fd,

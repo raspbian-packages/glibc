@@ -1,4 +1,4 @@
-# Copyright (C) 1999-2017 Free Software Foundation, Inc.
+# Copyright (C) 1999-2018 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -159,21 +159,6 @@ test-xfail-XPG42/ndbm.h/conform = yes
 test-xfail-UNIX98/ndbm.h/conform = yes
 test-xfail-XOPEN2K/ndbm.h/conform = yes
 test-xfail-XOPEN2K8/ndbm.h/conform = yes
-
-# Unsorted expected failures.
-test-xfail-XPG42/signal.h/conform = yes
-test-xfail-XPG42/sys/wait.h/conform = yes
-test-xfail-XPG42/ucontext.h/conform = yes
-test-xfail-UNIX98/signal.h/conform = yes
-test-xfail-UNIX98/sys/wait.h/conform = yes
-test-xfail-UNIX98/ucontext.h/conform = yes
-test-xfail-XOPEN2K/signal.h/conform = yes
-test-xfail-XOPEN2K/sys/wait.h/conform = yes
-test-xfail-XOPEN2K/ucontext.h/conform = yes
-test-xfail-POSIX2008/signal.h/conform = yes
-test-xfail-POSIX2008/sys/wait.h/conform = yes
-test-xfail-XOPEN2K8/signal.h/conform = yes
-test-xfail-XOPEN2K8/sys/wait.h/conform = yes
 
 conformtest-cc-flags = -I../include $(+sysdep-includes) $(sysincludes) -I..
 # conformtest-xfail-conds may be set by a sysdeps Makefile fragment to

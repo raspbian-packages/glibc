@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -61,11 +61,11 @@ static void
 tryopen_o_directory (void)
 {
   int serrno = errno;
-  int x = open_not_cancel_2 ("/dev/null", O_RDONLY|O_NDELAY|O_DIRECTORY);
+  int x = __open_nocancel ("/dev/null", O_RDONLY|O_NDELAY|O_DIRECTORY);
 
   if (x >= 0)
     {
-      close_not_cancel_no_status (x);
+      __close_nocancel_nostatus (x);
       o_directory_works = -1;
     }
   else if (errno != ENOTDIR)
@@ -129,7 +129,7 @@ opendir_tail (int fd)
     {
       __set_errno (ENOTDIR);
     lose:
-      close_not_cancel_no_status (fd);
+      __close_nocancel_nostatus (fd);
       return NULL;
     }
 
@@ -139,7 +139,6 @@ opendir_tail (int fd)
 
 #if IS_IN (libc)
 DIR *
-internal_function
 __opendirat (int dfd, const char *name)
 {
   if (__glibc_unlikely (invalid_name (name)))
@@ -161,7 +160,7 @@ __opendirat (int dfd, const char *name)
 	}
     }
 
-  return opendir_tail (openat_not_cancel_3 (dfd, name, opendir_oflags));
+  return opendir_tail (__openat_nocancel (dfd, name, opendir_oflags));
 }
 #endif
 
@@ -188,12 +187,11 @@ __opendir (const char *name)
 	}
     }
 
-  return opendir_tail (open_not_cancel_2 (name, opendir_oflags));
+  return opendir_tail (__open_nocancel (name, opendir_oflags));
 }
 weak_alias (__opendir, opendir)
 
 DIR *
-internal_function
 __alloc_dir (int fd, bool close_fd, int flags, const struct stat64 *statp)
 {
   /* We have to set the close-on-exit flag if the user provided the
@@ -227,7 +225,7 @@ __alloc_dir (int fd, bool close_fd, int flags, const struct stat64 *statp)
 	  if (close_fd)
 	    {
 	      int save_errno = errno;
-	      close_not_cancel_no_status (fd);
+	      __close_nocancel_nostatus (fd);
 	      __set_errno (save_errno);
 	    }
 	  return NULL;

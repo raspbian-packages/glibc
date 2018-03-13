@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2017 Free Software Foundation, Inc.
+# Copyright (C) 1991-2018 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -1138,12 +1138,22 @@ rm -f $@.new
 $(SHELL) $(..)scripts/rellns-sh $< $@.new
 mv -f $@.new $@
 endef
+define make-link-multidir
+$(patsubst %/,cd %,$(objpfx)); \
+  $(addprefix $(abspath $(..)scripts/mkinstalldirs) ,$(dir $(multidir))); \
+  $(LN_S) . $(multidir) 2> /dev/null; \
+  test -L $(multidir)
+endef
 else
 # If we have no symbolic links don't bother with rellns-sh.
 define make-link
 rm -f $@.new
 $(LN_S) $< $@.new
 mv -f $@.new $@
+endef
+define make-link-multidir
+$(make-target-directory)
+ln -f $(objpfx)/$(@F) $@
 endef
 endif
 
@@ -1442,7 +1452,8 @@ lib := testsuite
 include $(patsubst %,$(..)libof-iterator.mk,$(cpp-srcs-left))
 endif
 
-all-nonlib := $(strip $(tests-internal) $(test-internal-extras) $(others))
+all-nonlib := $(strip $(tests-internal) $(test-internal-extras) \
+		      $(others) $(others-extras))
 ifneq (,$(all-nonlib))
 cpp-srcs-left = $(all-nonlib)
 lib := nonlib

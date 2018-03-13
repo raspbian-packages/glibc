@@ -1,5 +1,5 @@
 /* Environment handling for dynamic loader.
-   Copyright (C) 1995-2017 Free Software Foundation, Inc.
+   Copyright (C) 1995-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,7 +24,6 @@
 /* Walk through the environment of the process and return all entries
    starting with `LD_'.  */
 char *
-internal_function
 _dl_next_ld_env_entry (char ***position)
 {
   char **current = *position;

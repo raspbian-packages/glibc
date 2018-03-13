@@ -1,4 +1,4 @@
-/* Copyright (C) 1993-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1993-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -46,7 +46,7 @@
 #define _HURD_H_EXTERN_INLINE __extern_inline
 #endif
 
-int __hurd_fail (error_t err);
+extern int __hurd_fail (error_t err);
 
 #ifdef __USE_EXTERN_INLINES
 _HURD_H_EXTERN_INLINE int

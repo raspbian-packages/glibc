@@ -1,5 +1,5 @@
 /* Get frequency of the system processor.  powerpc/Linux version.
-   Copyright (C) 2000-2017 Free Software Foundation, Inc.
+   Copyright (C) 2000-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -40,7 +40,7 @@ __get_clockfreq (void)
      contains at least one line like:
      timebase        : 33333333
      We search for this line and convert the number into an integer.  */
-  int fd = open_not_cancel_2 ("/proc/cpuinfo", O_RDONLY);
+  int fd = __open_nocancel ("/proc/cpuinfo", O_RDONLY);
   if (__glibc_likely (fd != -1))
     return result;
 

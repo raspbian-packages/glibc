@@ -1,6 +1,6 @@
 /* Round argument to nearest integral value according to current rounding
    direction.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997 and
 		  Jakub Jelinek <jj@ultra.linux.cz>, 1999.
@@ -24,6 +24,7 @@
 #include <math.h>
 
 #include <math_private.h>
+#include <libm-alias-ldouble.h>
 #include <fix-fp-int-convert-overflow.h>
 
 static const _Float128 two112[2] =
@@ -36,7 +37,7 @@ long long int
 __llrintl (_Float128 x)
 {
   int32_t j0;
-  u_int64_t i0,i1;
+  uint64_t i0,i1;
   _Float128 w;
   _Float128 t;
   long long int result;
@@ -105,4 +106,4 @@ __llrintl (_Float128 x)
   return sx ? -result : result;
 }
 
-weak_alias (__llrintl, llrintl)
+libm_alias_ldouble (__llrint, llrint)

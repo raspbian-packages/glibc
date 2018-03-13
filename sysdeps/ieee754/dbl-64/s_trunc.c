@@ -1,5 +1,5 @@
 /* Truncate argument to nearest integral value not larger than the argument.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 
@@ -20,13 +20,14 @@
 #include <math.h>
 
 #include <math_private.h>
+#include <libm-alias-double.h>
 
 
 double
 __trunc (double x)
 {
   int32_t i0, j0;
-  u_int32_t i1;
+  uint32_t i1;
   int sx;
 
   EXTRACT_WORDS (i0, i1, x);
@@ -54,9 +55,5 @@ __trunc (double x)
   return x;
 }
 #ifndef __trunc
-weak_alias (__trunc, trunc)
-# ifdef NO_LONG_DOUBLE
-strong_alias (__trunc, __truncl)
-weak_alias (__trunc, truncl)
-# endif
+libm_alias_double (__trunc, trunc)
 #endif

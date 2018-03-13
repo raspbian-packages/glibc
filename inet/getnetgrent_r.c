@@ -1,4 +1,4 @@
-/* Copyright (C) 1996-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1996-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -36,10 +36,6 @@ __libc_lock_define_initialized (static, lock)
    kept in this structure.  */
 static struct __netgrent dataset;
 
-/* The lookup function for the first entry of this service.  */
-extern int __nss_netgroup_lookup (service_user **nipp, const char *name,
-				  void **fctp) internal_function;
-
 /* Set up NIP to run through the services.  Return nonzero if there are no
    services (left).  */
 static int
@@ -54,7 +50,7 @@ setup (void **fctp, service_user **nipp)
     {
       /* Executing this more than once at the same time must yield the
 	 same result every time.  So we need no locking.  */
-      no_more = __nss_netgroup_lookup (nipp, "setnetgrent", fctp);
+      no_more = __nss_netgroup_lookup2 (nipp, "setnetgrent", NULL, fctp);
       startp = no_more ? (service_user *) -1 : *nipp;
 #ifdef PTR_MANGLE
       PTR_MANGLE (startp);
@@ -114,7 +110,6 @@ endnetgrent_hook (struct __netgrent *datap)
 }
 
 static int
-internal_function
 __internal_setnetgrent_reuse (const char *group, struct __netgrent *datap,
 			      int *errnop)
 {
@@ -172,7 +167,6 @@ __internal_setnetgrent_reuse (const char *group, struct __netgrent *datap,
 }
 
 int
-internal_function
 __internal_setnetgrent (const char *group, struct __netgrent *datap)
 {
   /* Free list of all netgroup names from last run.  */
@@ -214,7 +208,6 @@ setnetgrent (const char *group)
 }
 
 void
-internal_function
 __internal_endnetgrent (struct __netgrent *datap)
 {
   endnetgrent_hook (datap);
@@ -263,7 +256,6 @@ nscd_getnetgrent (struct __netgrent *datap, char *buffer, size_t buflen,
 #endif
 
 int
-internal_function
 __internal_getnetgrent_r (char **hostp, char **userp, char **domainp,
 			  struct __netgrent *datap,
 			  char *buffer, size_t buflen, int *errnop)

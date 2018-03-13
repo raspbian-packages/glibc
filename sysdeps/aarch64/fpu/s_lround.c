@@ -1,4 +1,4 @@
-/* Copyright (C) 1996-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1996-2018 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -17,35 +17,12 @@
    <http://www.gnu.org/licenses/>.  */
 
 #include <math.h>
+#include <libm-alias-double.h>
 
-#ifndef FUNC
-# define FUNC lround
-#endif
+long int
+__lround (double x)
+ {
+  return __builtin_lround (x);
+ }
 
-#ifndef ITYPE
-# define ITYPE double
-# define IREGS "d"
-#else
-# ifndef IREGS
-#  error IREGS not defined
-# endif
-#endif
-
-#ifndef OTYPE
-# define OTYPE long int
-#endif
-
-#define OREGS "x"
-
-#define __CONCATX(a,b) __CONCAT(a,b)
-
-OTYPE
-__CONCATX(__,FUNC) (ITYPE x)
-{
-  OTYPE result;
-  asm ( "fcvtas" "\t%" OREGS "0, %" IREGS "1"
-        : "=r" (result) : "w" (x) );
-  return result;
-}
-
-weak_alias (__CONCATX(__,FUNC), FUNC)
+libm_alias_double (__lround, lround)

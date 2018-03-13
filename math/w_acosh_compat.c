@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@gmail.com>, 2011.
 
@@ -18,8 +18,11 @@
 
 #include <math.h>
 #include <math_private.h>
+#include <math-svid-compat.h>
+#include <libm-alias-double.h>
 
 
+#if LIBM_SVID_COMPAT
 /* wrapper acosh */
 double
 __acosh (double x)
@@ -30,8 +33,5 @@ __acosh (double x)
 
   return __ieee754_acosh (x);
 }
-weak_alias (__acosh, acosh)
-#ifdef NO_LONG_DOUBLE
-strong_alias (__acosh, __acoshl)
-weak_alias (__acosh, acoshl)
+libm_alias_double (__acosh, acosh)
 #endif

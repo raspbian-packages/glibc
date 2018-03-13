@@ -1,5 +1,5 @@
 /* ucontext_t definition, Nios II version.
-   Copyright (C) 2015-2017 Free Software Foundation, Inc.
+   Copyright (C) 2015-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,7 +24,6 @@
 #include <features.h>
 
 #include <bits/types/sigset_t.h>
-#include <bits/sigcontext.h>
 #include <bits/types/stack_t.h>
 
 
@@ -47,16 +46,16 @@ typedef struct
     unsigned long __ctx(regs)[32];
   } mcontext_t;
 
-#undef __ctx
-
 /* Userlevel context.  */
 typedef struct ucontext_t
   {
-    unsigned long uc_flags;
+    unsigned long __ctx(uc_flags);
     struct ucontext_t *uc_link;
     stack_t uc_stack;
     mcontext_t uc_mcontext;
     sigset_t uc_sigmask;
   } ucontext_t;
+
+#undef __ctx
 
 #endif /* sys/ucontext.h */

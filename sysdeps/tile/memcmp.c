@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -18,9 +18,6 @@
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
-
-#undef	__ptr_t
-#define __ptr_t	void *
 
 #if defined HAVE_STRING_H || defined _LIBC
 # include <string.h>
@@ -62,13 +59,8 @@ typedef unsigned char byte;
 /* Provide the appropriate builtins to shift two registers based on
    the alignment of a pointer held in a third register, and to reverse
    the bytes in a word.  */
-#ifdef __tilegx__
 #define DBLALIGN __insn_dblalign
 #define REVBYTES __insn_revbytes
-#else
-#define DBLALIGN __insn_dword_align
-#define REVBYTES __insn_bytex
-#endif
 
 #ifdef WORDS_BIGENDIAN
 # define CMP_LT_OR_GT(a, b) ((a) > (b) ? 1 : -1)
@@ -294,7 +286,7 @@ memcmp_not_common_alignment (long int srcp1, long int srcp2, size_t len)
 }
 
 int
-MEMCMP (const __ptr_t s1, const __ptr_t s2, size_t len)
+MEMCMP (const void *s1, const void *s2, size_t len)
 {
   op_t a0;
   op_t b0;

@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -15,6 +15,7 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#include <array_length.h>
 #include <ctype.h>
 #include <limits.h>
 #include <printf.h>
@@ -995,11 +996,10 @@ static const uint8_t jump_table[] =
 	if (string == NULL)						      \
 	  {								      \
 	    /* Write "(null)" if there's space.  */			      \
-	    if (prec == -1						      \
-		|| prec >= (int) (sizeof (null) / sizeof (null[0])) - 1)      \
+	    if (prec == -1 || prec >= (int) array_length (null) - 1)          \
 	      {								      \
 		string = (CHAR_T *) null;				      \
-		len = (sizeof (null) / sizeof (null[0])) - 1;		      \
+		len = array_length (null) - 1;				      \
 	      }								      \
 	    else							      \
 	      {								      \
@@ -1220,7 +1220,7 @@ static const uint8_t jump_table[] =
 
 /* Helper function to provide temporary buffering for unbuffered streams.  */
 static int buffered_vfprintf (FILE *stream, const CHAR_T *fmt, va_list)
-     __THROW __attribute__ ((noinline)) internal_function;
+     __THROW __attribute__ ((noinline));
 
 /* Handle positional format specifiers.  */
 static int printf_positional (_IO_FILE *s,
@@ -2291,7 +2291,6 @@ static const struct _IO_jump_t _IO_helper_jumps libio_vtable =
 #endif
 
 static int
-internal_function
 buffered_vfprintf (_IO_FILE *s, const CHAR_T *format,
 		   _IO_va_list args)
 {

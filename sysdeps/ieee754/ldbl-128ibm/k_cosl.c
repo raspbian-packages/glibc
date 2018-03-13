@@ -1,5 +1,5 @@
 /* Quad-precision floating point cosine on <-pi/4,pi/4>.
-   Copyright (C) 1999-2017 Free Software Foundation, Inc.
+   Copyright (C) 1999-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Jakub Jelinek <jj@ultra.linux.cz>
 
@@ -86,7 +86,7 @@ __kernel_cosl(long double x, long double y)
 
   xhi = ldbl_high (x);
   EXTRACT_WORDS64 (ix, xhi);
-  tix = ((u_int64_t)ix) >> 32;
+  tix = ((uint64_t)ix) >> 32;
   tix &= ~0x80000000;			/* tix = |x|'s high 32 bits */
   if (tix < 0x3fc30000)			/* |x| < 0.1484375 */
     {

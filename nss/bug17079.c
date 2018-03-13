@@ -1,5 +1,5 @@
 /* Test for bug 17079: heap overflow in NSS with small buffers.
-   Copyright (C) 2015-2017 Free Software Foundation, Inc.
+   Copyright (C) 2015-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -17,11 +17,14 @@
    <http://www.gnu.org/licenses/>.  */
 
 #include <errno.h>
+#include <nss.h>
 #include <pwd.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <support/support.h>
 
 /* Check if two passwd structs contain the same data.  */
 static bool
@@ -52,13 +55,13 @@ init_test_items (void)
       if (pwd == NULL)
         break;
       struct passwd *target = test_items + test_count;
-      target->pw_name = strdup (pwd->pw_name);
-      target->pw_passwd = strdup (pwd->pw_passwd);
+      target->pw_name = xstrdup (pwd->pw_name);
+      target->pw_passwd = xstrdup (pwd->pw_passwd);
       target->pw_uid = pwd->pw_uid;
       target->pw_gid = pwd->pw_gid;
-      target->pw_gecos = strdup (pwd->pw_gecos);
-      target->pw_dir = strdup (pwd->pw_dir);
-      target->pw_shell = strdup (pwd->pw_shell);
+      target->pw_gecos = xstrdup (pwd->pw_gecos);
+      target->pw_dir = xstrdup (pwd->pw_dir);
+      target->pw_shell = xstrdup (pwd->pw_shell);
     }
   while (++test_count < MAX_TEST_ITEMS);
   endpwent ();
@@ -108,13 +111,7 @@ static void
 test_one (const struct passwd *item, size_t buffer_size,
            char pad, size_t padding_size)
 {
-  char *buffer = malloc (buffer_size + padding_size);
-  if (buffer == NULL)
-    {
-      puts ("error: malloc failure");
-      errors = true;
-      return;
-    }
+  char *buffer = xmalloc (buffer_size + padding_size);
 
   struct passwd pwd;
   struct passwd *result;
@@ -217,6 +214,8 @@ test_buffer_size (size_t buffer_size)
 int
 do_test (void)
 {
+  __nss_configure_lookup ("passwd", "files");
+
   if (!init_test_items ())
     return 1;
   printf ("info: %d test items\n", test_count);
@@ -240,5 +239,4 @@ do_test (void)
     return 0;
 }
 
-#define TEST_FUNCTION do_test ()
-#include "../test-skeleton.c"
+#include <support/test-driver.c>

@@ -1,5 +1,5 @@
 /* Test for invalid field handling in file-style NSS databases.  [BZ #18724]
-   Copyright (C) 2015-2017 Free Software Foundation, Inc.
+   Copyright (C) 2015-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,6 +24,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <support/support.h>
 
 static bool errors;
 
@@ -97,5 +99,4 @@ do_test (void)
   return errors;
 }
 
-#define TEST_FUNCTION do_test ()
-#include "../test-skeleton.c"
+#include <support/test-driver.c>

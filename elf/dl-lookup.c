@@ -1,5 +1,5 @@
 /* Look up a symbol in the loaded objects.
-   Copyright (C) 1995-2017 Free Software Foundation, Inc.
+   Copyright (C) 1995-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -46,23 +46,6 @@ struct sym_val
     struct link_map *m;
   };
 
-
-#define make_string(string, rest...) \
-  ({									      \
-    const char *all[] = { string, ## rest };				      \
-    size_t len, cnt;							      \
-    char *result, *cp;							      \
-									      \
-    len = 1;								      \
-    for (cnt = 0; cnt < sizeof (all) / sizeof (all[0]); ++cnt)		      \
-      len += strlen (all[cnt]);						      \
-									      \
-    cp = result = alloca (len);						      \
-    for (cnt = 0; cnt < sizeof (all) / sizeof (all[0]); ++cnt)		      \
-      cp = __stpcpy (cp, all[cnt]);					      \
-									      \
-    result;								      \
-  })
 
 /* Statistics function.  */
 #ifdef SHARED
@@ -577,7 +560,6 @@ dl_new_hash (const char *s)
 
 /* Add extra dependency on MAP to UNDEF_MAP.  */
 static int
-internal_function
 add_dependency (struct link_map *undef_map, struct link_map *map, int flags)
 {
   struct link_map *runp;
@@ -787,7 +769,6 @@ add_dependency (struct link_map *undef_map, struct link_map *map, int flags)
 }
 
 static void
-internal_function
 _dl_debug_bindings (const char *undef_name, struct link_map *undef_map,
 		    const ElfW(Sym) **ref, struct sym_val *value,
 		    const struct r_found_version *version, int type_class,
@@ -801,7 +782,6 @@ _dl_debug_bindings (const char *undef_name, struct link_map *undef_map,
    or in any function which gets called.  If this would happen the audit
    code might create a thread which can throw off all the scope locking.  */
 lookup_t
-internal_function
 _dl_lookup_symbol_x (const char *undef_name, struct link_map *undef_map,
 		     const ElfW(Sym) **ref,
 		     struct r_scope_elem *symbol_scope[],
@@ -843,17 +823,16 @@ _dl_lookup_symbol_x (const char *undef_name, struct link_map *undef_map,
 	     for unversioned lookups.  */
 	  assert (version != NULL);
 	  const char *reference_name = undef_map ? undef_map->l_name : "";
-
+	  struct dl_exception exception;
 	  /* XXX We cannot translate the message.  */
-	  _dl_signal_cerror (0, DSO_FILENAME (reference_name),
-			     N_("relocation error"),
-			     make_string ("symbol ", undef_name, ", version ",
-					  version->name,
-					  " not defined in file ",
-					  version->filename,
-					  " with link time reference",
-					  res == -2
-					  ? " (no version symbols)" : ""));
+	  _dl_exception_create_format
+	    (&exception, DSO_FILENAME (reference_name),
+	     "symbol %s version %s not defined in file %s"
+	     " with link time reference%s",
+	     undef_name, version->name, version->filename,
+	     res == -2 ? " (no version symbols)" : "");
+	  _dl_signal_cexception (0, &exception, N_("relocation error"));
+	  _dl_exception_free (&exception);
 	  *ref = NULL;
 	  return 0;
 	}
@@ -869,12 +848,14 @@ _dl_lookup_symbol_x (const char *undef_name, struct link_map *undef_map,
 	  const char *versionstr = version ? ", version " : "";
 	  const char *versionname = (version && version->name
 				     ? version->name : "");
-
+	  struct dl_exception exception;
 	  /* XXX We cannot translate the message.  */
-	  _dl_signal_cerror (0, DSO_FILENAME (reference_name),
-			     N_("symbol lookup error"),
-			     make_string ("undefined symbol: ", undef_name,
-					  versionstr, versionname));
+	  _dl_exception_create_format
+	    (&exception, DSO_FILENAME (reference_name),
+	     "undefined symbol: %s%s%s",
+	     undef_name, versionstr, versionname);
+	  _dl_signal_cexception (0, &exception, N_("symbol lookup error"));
+	  _dl_exception_free (&exception);
 	}
       *ref = NULL;
       return 0;
@@ -951,7 +932,6 @@ _dl_lookup_symbol_x (const char *undef_name, struct link_map *undef_map,
 /* Cache the location of MAP's hash table.  */
 
 void
-internal_function
 _dl_setup_hash (struct link_map *map)
 {
   Elf_Symndx *hash;
@@ -995,7 +975,6 @@ _dl_setup_hash (struct link_map *map)
 
 
 static void
-internal_function
 _dl_debug_bindings (const char *undef_name, struct link_map *undef_map,
 		    const ElfW(Sym) **ref, struct sym_val *value,
 		    const struct r_found_version *version, int type_class,

@@ -1,5 +1,5 @@
 /* Implement powl for x86 using extra-precision log.
-   Copyright (C) 2012-2017 Free Software Foundation, Inc.
+   Copyright (C) 2012-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -120,7 +120,7 @@ __powl_helper (long double x, long double y)
 	 corrected for by adding log2 (e) * X_FRAC_LOW to the final
 	 result.  */
       int32_t se;
-      u_int32_t i0, i1;
+      uint32_t i0, i1;
       GET_LDOUBLE_WORDS (se, i0, i1, x_frac);
       x_frac_low = x_frac;
       i1 &= 0xffffffe0;
@@ -139,7 +139,7 @@ __powl_helper (long double x, long double y)
   long double w = x_frac - 1;
   long double w_hi, w_lo;
   int32_t se;
-  u_int32_t i0, i1;
+  uint32_t i0, i1;
   GET_LDOUBLE_WORDS (se, i0, i1, w);
   i0 &= 0xffff0000;
   i1 = 0;

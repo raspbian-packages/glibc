@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Chris Metcalf <cmetcalf@tilera.com>, 2011.
 
@@ -19,11 +19,7 @@
 #include "pthreadP.h"
 #include <errno.h>
 
-#ifdef __tilegx__
 #define TNS(p) __insn_exch4((p), 1)
-#else
-#define TNS(p) __insn_tns(p)
-#endif
 
 int
 pthread_spin_trylock (pthread_spinlock_t *lock)

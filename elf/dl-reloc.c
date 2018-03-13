@@ -1,5 +1,5 @@
 /* Relocate a shared object and resolve its references to other loaded objects.
-   Copyright (C) 1995-2017 Free Software Foundation, Inc.
+   Copyright (C) 1995-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -45,7 +45,6 @@
    directly, as static TLS should be rare and code handling it should
    not be inlined as much as possible.  */
 int
-internal_function
 _dl_try_allocate_static_tls (struct link_map *map)
 {
   /* If we've already used the variable with dynamic access, or if the
@@ -112,7 +111,7 @@ _dl_try_allocate_static_tls (struct link_map *map)
 }
 
 void
-internal_function __attribute_noinline__
+__attribute_noinline__
 _dl_allocate_static_tls (struct link_map *map)
 {
   if (map->l_tls_offset == FORCED_DYNAMIC_TLS_OFFSET
@@ -308,7 +307,7 @@ _dl_relocate_object (struct link_map *l, struct r_scope_elem *scope[],
 }
 
 
-void internal_function
+void
 _dl_protect_relro (struct link_map *l)
 {
   ElfW(Addr) start = ALIGN_DOWN((l->l_addr
@@ -328,7 +327,7 @@ cannot apply additional memory protection after relocation");
 }
 
 void
-internal_function __attribute_noinline__
+__attribute_noinline__
 _dl_reloc_bad_type (struct link_map *map, unsigned int type, int plt)
 {
 #define DIGIT(b)	_itoa_lower_digits[(b) & 0xf];

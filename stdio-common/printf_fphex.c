@@ -1,5 +1,5 @@
 /* Print floating point number in hexadecimal notation according to ISO C99.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 
@@ -17,6 +17,7 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#include <array_length.h>
 #include <ctype.h>
 #include <ieee754.h>
 #include <math.h>
@@ -320,8 +321,8 @@ __printf_fphex (FILE *fp,
   /* Look for trailing zeroes.  */
   if (! zero_mantissa)
     {
-      wnumend = &wnumbuf[sizeof wnumbuf / sizeof wnumbuf[0]];
-      numend = &numbuf[sizeof numbuf / sizeof numbuf[0]];
+      wnumend = array_end (wnumbuf);
+      numend = array_end (numbuf);
       while (wnumend[-1] == L'0')
 	{
 	  --wnumend;

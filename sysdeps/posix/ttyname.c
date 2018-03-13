@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -28,13 +28,12 @@
 char *__ttyname;
 
 static char *getttyname (int fd, dev_t mydev, ino_t myino,
-			 int save, int *dostat) internal_function;
+			 int save, int *dostat);
 
 
 libc_freeres_ptr (static char *getttyname_name);
 
 static char *
-internal_function
 getttyname (int fd, dev_t mydev, ino_t myino, int save, int *dostat)
 {
   static const char dev[] = "/dev";

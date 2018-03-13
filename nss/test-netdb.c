@@ -1,4 +1,4 @@
-/* Copyright (C) 1998-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1998-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Andreas Jaeger <aj@suse.de>, 1998.
 
@@ -39,6 +39,8 @@
 #include <unistd.h>
 #include <errno.h>
 #include "nss.h"
+
+#include <support/support.h>
 
 /*
   The following define is necessary for glibc 2.0.6
@@ -177,7 +179,7 @@ test_hosts (void)
   while (gethostname (name, namelen) < 0 && errno == ENAMETOOLONG)
     {
       namelen += 2;		/* tiny increments to test a lot */
-      name = realloc (name, namelen);
+      name = xrealloc (name, namelen);
     }
   if (gethostname (name, namelen) == 0)
     {
@@ -232,7 +234,7 @@ static void
 test_network (void)
 {
   struct netent *nptr;
-  u_int32_t ip;
+  uint32_t ip;
 
   /*
      This test needs the following line in /etc/networks:
@@ -336,5 +338,4 @@ do_test (void)
   return (error_count != 0);
 }
 
-#define TEST_FUNCTION do_test ()
-#include "../test-skeleton.c"
+#include <support/test-driver.c>

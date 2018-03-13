@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,10 +14,6 @@
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
-
-#ifndef _LIBC
-# include <config.h>
-#endif
 
 #include <glob.h>
 
@@ -39,10 +35,6 @@
 #endif
 
 #include <errno.h>
-#ifndef __set_errno
-# define __set_errno(val) errno = (val)
-#endif
-
 #include <dirent.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,13 +49,19 @@
 # define readdir(str) __readdir64 (str)
 # define getpwnam_r(name, bufp, buf, len, res) \
     __getpwnam_r (name, bufp, buf, len, res)
+# ifndef __lstat64
+#  define __lstat64(fname, buf) __lxstat64 (_STAT_VER, fname, buf)
+# endif
 # ifndef __stat64
 #  define __stat64(fname, buf) __xstat64 (_STAT_VER, fname, buf)
 # endif
 # define struct_stat64		struct stat64
 # define FLEXIBLE_ARRAY_MEMBER
+# include <shlib-compat.h>
 #else /* !_LIBC */
+# define __glob                 glob
 # define __getlogin_r(buf, len) getlogin_r (buf, len)
+# define __lstat64(fname, buf)  lstat (fname, buf)
 # define __stat64(fname, buf)   stat (fname, buf)
 # define __fxstatat64(_, d, f, st, flag) fstatat (d, f, st, flag)
 # define struct_stat64          struct stat
@@ -78,17 +76,7 @@
 
 #include <flexmember.h>
 #include <glob_internal.h>
-
-#ifdef _SC_GETPW_R_SIZE_MAX
-# define GETPW_R_SIZE_MAX()	sysconf (_SC_GETPW_R_SIZE_MAX)
-#else
-# define GETPW_R_SIZE_MAX()	(-1)
-#endif
-#ifdef _SC_LOGIN_NAME_MAX
-# define GET_LOGIN_NAME_MAX()	sysconf (_SC_LOGIN_NAME_MAX)
-#else
-# define GET_LOGIN_NAME_MAX()	(-1)
-#endif
+#include <scratch_buffer.h>
 
 static const char *next_brace_sub (const char *begin, int flags) __THROWNL;
 
@@ -113,9 +101,6 @@ struct readdir_result
 #if defined _DIRENT_HAVE_D_TYPE || defined HAVE_STRUCT_DIRENT_D_TYPE
   dirent_type type;
 #endif
-#if defined _LIBC || defined D_INO_IN_DIRENT
-  bool skip_entry;
-#endif
 };
 
 /* Initialize and return type member of struct readdir_result.  */
@@ -131,28 +116,12 @@ readdir_result_type (struct readdir_result d)
 #endif
 }
 
-/* Initialize and return skip_entry member of struct readdir_result.  */
-static bool
-readdir_result_skip_entry (struct readdir_result d)
-{
-/* Initializer for skip_entry.  POSIX does not require that the d_ino
-   field be present, and some systems do not provide it. */
-#if defined _LIBC || defined D_INO_IN_DIRENT
-# define D_INO_TO_RESULT(source) (source)->d_ino == 0,
-  return d.skip_entry;
-#else
-# define D_INO_TO_RESULT(source)
-  return false;
-#endif
-}
-
 /* Construct an initializer for a struct readdir_result object from a
    struct dirent *.  No copy of the name is made.  */
 #define READDIR_RESULT_INITIALIZER(source) \
   {					   \
     source->d_name,			   \
     D_TYPE_TO_RESULT (source)		   \
-    D_INO_TO_RESULT (source)		   \
   }
 
 /* Call gl_readdir on STREAM.  This macro can be overridden to reduce
@@ -212,6 +181,29 @@ convert_dirent64 (const struct dirent64 *source)
     ((void) (buf), (void) (len), (void) (newlen), (void) (avar), (void *) 0)
 #endif
 
+static int
+glob_lstat (glob_t *pglob, int flags, const char *fullname)
+{
+/* Use on glob-lstat-compat.c to provide a compat symbol which does not
+   use lstat / gl_lstat.  */
+#ifdef GLOB_NO_LSTAT
+# define GL_LSTAT gl_stat
+# define LSTAT64 __stat64
+#else
+# define GL_LSTAT gl_lstat
+# define LSTAT64 __lstat64
+#endif
+
+  union
+  {
+    struct stat st;
+    struct_stat64 st64;
+  } ust;
+  return (__glibc_unlikely (flags & GLOB_ALTDIRFUNC)
+          ? pglob->GL_LSTAT (fullname, &ust.st)
+          : LSTAT64 (fullname, &ust.st64));
+}
+
 /* Set *R = A + B.  Return true if the answer is mathematically
    incorrect due to overflow; in this case, *R is the low order
    bits of the correct answer.  */
@@ -238,12 +230,21 @@ glob_use_alloca (size_t alloca_used, size_t len)
 static int glob_in_dir (const char *pattern, const char *directory,
 			int flags, int (*errfunc) (const char *, int),
 			glob_t *pglob, size_t alloca_used);
-extern int __glob_pattern_type (const char *pattern, int quote)
-    attribute_hidden;
-
 static int prefix_array (const char *prefix, char **array, size_t n) __THROWNL;
 static int collated_compare (const void *, const void *) __THROWNL;
 
+
+/* Return true if FILENAME is a directory or a symbolic link to a directory.
+   Use FLAGS and PGLOB to resolve the filename.  */
+static bool
+is_dir (char const *filename, int flags, glob_t const *pglob)
+{
+  struct stat st;
+  struct_stat64 st64;
+  return (__glibc_unlikely (flags & GLOB_ALTDIRFUNC)
+          ? pglob->gl_stat (filename, &st) == 0 && S_ISDIR (st.st_mode)
+          : __stat64 (filename, &st64) == 0 && S_ISDIR (st64.st_mode));
+}
 
 /* Find the end of the sub-pattern in a brace expression.  */
 static const char *
@@ -269,6 +270,9 @@ next_brace_sub (const char *cp, int flags)
   return *cp != '\0' ? cp : NULL;
 }
 
+#ifndef GLOB_ATTRIBUTE
+# define GLOB_ATTRIBUTE
+#endif
 
 /* Do glob searching for PATTERN, placing results in PGLOB.
    The bits defined above may be set in FLAGS.
@@ -279,11 +283,9 @@ next_brace_sub (const char *cp, int flags)
    If memory cannot be allocated for PGLOB, GLOB_NOSPACE is returned.
    Otherwise, 'glob' returns zero.  */
 int
-#ifdef GLOB_ATTRIBUTE
 GLOB_ATTRIBUTE
-#endif
-glob (const char *pattern, int flags, int (*errfunc) (const char *, int),
-      glob_t *pglob)
+__glob (const char *pattern, int flags, int (*errfunc) (const char *, int),
+	glob_t *pglob)
 {
   const char *filename;
   char *dirname = NULL;
@@ -427,9 +429,10 @@ glob (const char *pattern, int flags, int (*errfunc) (const char *, int),
 	      /* Construct the new glob expression.  */
 	      mempcpy (mempcpy (alt_start, p, next - p), rest, rest_len);
 
-	      result = glob (onealt,
-			     ((flags & ~(GLOB_NOCHECK | GLOB_NOMAGIC))
-			      | GLOB_APPEND), errfunc, pglob);
+	      result = __glob (onealt,
+			       ((flags & ~(GLOB_NOCHECK | GLOB_NOMAGIC))
+				| GLOB_APPEND),
+			       errfunc, pglob);
 
 	      /* If we got an error, return it.  */
 	      if (result && result != GLOB_NOMATCH)
@@ -578,7 +581,7 @@ glob (const char *pattern, int flags, int (*errfunc) (const char *, int),
 		  flags &= ~(GLOB_NOCHECK | GLOB_NOMAGIC);
 		}
 	    }
-	  int val = glob (dirname, flags | GLOB_MARK, errfunc, pglob);
+	  int val = __glob (dirname, flags | GLOB_MARK, errfunc, pglob);
 	  if (val == 0)
 	    pglob->gl_flags = ((pglob->gl_flags & ~GLOB_MARK)
 			       | (flags & GLOB_MARK));
@@ -625,128 +628,46 @@ glob (const char *pattern, int flags, int (*errfunc) (const char *, int),
 	      else
 		home_dir = "c:/users/default"; /* poor default */
 #else
-	      int success;
-	      char *name;
-	      int malloc_name = 0;
-	      size_t buflen = GET_LOGIN_NAME_MAX () + 1;
-
-	      if (buflen == 0)
-		/* 'sysconf' does not support _SC_LOGIN_NAME_MAX.  Try
-		   a moderate value.  */
-		buflen = 20;
-	      if (glob_use_alloca (alloca_used, buflen))
-		name = alloca_account (buflen, alloca_used);
-	      else
+	      int err;
+	      struct passwd *p;
+	      struct passwd pwbuf;
+	      struct scratch_buffer s;
+	      scratch_buffer_init (&s);
+	      while (true)
 		{
-		  name = malloc (buflen);
-		  if (name == NULL)
+		  p = NULL;
+		  err = __getlogin_r (s.data, s.length);
+		  if (err == 0)
+		    {
+# if defined HAVE_GETPWNAM_R || defined _LIBC
+		      size_t ssize = strlen (s.data) + 1;
+		      char *sdata = s.data;
+		      err = getpwnam_r (sdata, &pwbuf, sdata + ssize,
+					s.length - ssize, &p);
+# else
+		      p = getpwnam (s.data);
+		      if (p == NULL)
+			err = errno;
+# endif
+		    }
+		  if (err != ERANGE)
+		    break;
+		  if (!scratch_buffer_grow (&s))
 		    {
 		      retval = GLOB_NOSPACE;
 		      goto out;
 		    }
-		  malloc_name = 1;
 		}
-
-	      success = __getlogin_r (name, buflen) == 0;
-	      if (success)
+	      if (err == 0)
 		{
-		  struct passwd *p;
-		  char *malloc_pwtmpbuf = NULL;
-		  char *pwtmpbuf;
-# if defined HAVE_GETPWNAM_R || defined _LIBC
-		  long int pwbuflenmax = GETPW_R_SIZE_MAX ();
-		  size_t pwbuflen = pwbuflenmax;
-		  struct passwd pwbuf;
-		  int save = errno;
-
-#  ifndef _LIBC
-		  if (! (0 < pwbuflenmax && pwbuflenmax <= SIZE_MAX))
-		    /* 'sysconf' does not support _SC_GETPW_R_SIZE_MAX.
-		       Try a moderate value.  */
-		    pwbuflen = 1024;
-#  endif
-		  if (glob_use_alloca (alloca_used, pwbuflen))
-		    pwtmpbuf = alloca_account (pwbuflen, alloca_used);
-		  else
-		    {
-		      pwtmpbuf = malloc (pwbuflen);
-		      if (pwtmpbuf == NULL)
-			{
-			  if (__glibc_unlikely (malloc_name))
-			    free (name);
-			  retval = GLOB_NOSPACE;
-			  goto out;
-			}
-		      malloc_pwtmpbuf = pwtmpbuf;
-		    }
-
-		  while (getpwnam_r (name, &pwbuf, pwtmpbuf, pwbuflen, &p)
-			 != 0)
-		    {
-		      size_t newlen;
-		      bool v;
-		      if (errno != ERANGE)
-			{
-			  p = NULL;
-			  break;
-			}
-		      v = size_add_wrapv (pwbuflen, pwbuflen, &newlen);
-		      if (!v && malloc_pwtmpbuf == NULL
-			  && glob_use_alloca (alloca_used, newlen))
-			pwtmpbuf = extend_alloca_account (pwtmpbuf, pwbuflen,
-							  newlen, alloca_used);
-		      else
-			{
-			  char *newp = (v ? NULL
-					: realloc (malloc_pwtmpbuf, newlen));
-			  if (newp == NULL)
-			    {
-			      free (malloc_pwtmpbuf);
-			      if (__glibc_unlikely (malloc_name))
-				free (name);
-			      retval = GLOB_NOSPACE;
-			      goto out;
-			    }
-			  malloc_pwtmpbuf = pwtmpbuf = newp;
-			}
-		      pwbuflen = newlen;
-		      __set_errno (save);
-		    }
-# else
-		  p = getpwnam (name);
-# endif
-		  if (__glibc_unlikely (malloc_name))
-		    free (name);
-		  if (p != NULL)
-		    {
-		      if (malloc_pwtmpbuf == NULL)
-			home_dir = p->pw_dir;
-		      else
-			{
-			  size_t home_dir_len = strlen (p->pw_dir) + 1;
-			  if (glob_use_alloca (alloca_used, home_dir_len))
-			    home_dir = alloca_account (home_dir_len,
-						       alloca_used);
-			  else
-			    {
-			      home_dir = malloc (home_dir_len);
-			      if (home_dir == NULL)
-				{
-				  free (pwtmpbuf);
-				  retval = GLOB_NOSPACE;
-				  goto out;
-				}
-			      malloc_home_dir = 1;
-			    }
-			  memcpy (home_dir, p->pw_dir, home_dir_len);
-			}
-		    }
-		  free (malloc_pwtmpbuf);
+		  home_dir = strdup (p->pw_dir);
+		  malloc_home_dir = 1;
 		}
-	      else
+	      scratch_buffer_free (&s);
+	      if (err == 0 && home_dir == NULL)
 		{
-		  if (__glibc_unlikely (malloc_name))
-		    free (name);
+		  retval = GLOB_NOSPACE;
+		  goto out;
 		}
 #endif /* WINDOWS32 */
 	    }
@@ -878,61 +799,21 @@ glob (const char *pattern, int flags, int (*errfunc) (const char *, int),
 	  /* Look up specific user's home directory.  */
 	  {
 	    struct passwd *p;
-	    char *malloc_pwtmpbuf = NULL;
-#  if defined HAVE_GETPWNAM_R || defined _LIBC
-	    long int buflenmax = GETPW_R_SIZE_MAX ();
-	    size_t buflen = buflenmax;
-	    char *pwtmpbuf;
-	    struct passwd pwbuf;
-	    int save = errno;
+	    struct scratch_buffer pwtmpbuf;
+	    scratch_buffer_init (&pwtmpbuf);
 
-#   ifndef _LIBC
-	    if (! (0 <= buflenmax && buflenmax <= SIZE_MAX))
-	      /* Perhaps 'sysconf' does not support _SC_GETPW_R_SIZE_MAX.  Try a
-		 moderate value.  */
-	      buflen = 1024;
-#   endif
-	    if (glob_use_alloca (alloca_used, buflen))
-	      pwtmpbuf = alloca_account (buflen, alloca_used);
-	    else
+#  if defined HAVE_GETPWNAM_R || defined _LIBC
+	    struct passwd pwbuf;
+
+	    while (getpwnam_r (user_name, &pwbuf,
+			       pwtmpbuf.data, pwtmpbuf.length, &p)
+		   == ERANGE)
 	      {
-		pwtmpbuf = malloc (buflen);
-		if (pwtmpbuf == NULL)
+		if (!scratch_buffer_grow (&pwtmpbuf))
 		  {
-		  nomem_getpw:
-		    if (__glibc_unlikely (malloc_user_name))
-		      free (user_name);
 		    retval = GLOB_NOSPACE;
 		    goto out;
 		  }
-		malloc_pwtmpbuf = pwtmpbuf;
-	      }
-
-	    while (getpwnam_r (user_name, &pwbuf, pwtmpbuf, buflen, &p) != 0)
-	      {
-		size_t newlen;
-		bool v;
-		if (errno != ERANGE)
-		  {
-		    p = NULL;
-		    break;
-		  }
-		v = size_add_wrapv (buflen, buflen, &newlen);
-		if (!v && malloc_pwtmpbuf == NULL
-		    && glob_use_alloca (alloca_used, newlen))
-		  pwtmpbuf = extend_alloca_account (pwtmpbuf, buflen,
-						    newlen, alloca_used);
-		else
-		  {
-		    char *newp = v ? NULL : realloc (malloc_pwtmpbuf, newlen);
-		    if (newp == NULL)
-		      {
-			free (malloc_pwtmpbuf);
-			goto nomem_getpw;
-		      }
-		    malloc_pwtmpbuf = pwtmpbuf = newp;
-		  }
-		__set_errno (save);
 	      }
 #  else
 	    p = getpwnam (user_name);
@@ -946,6 +827,7 @@ glob (const char *pattern, int flags, int (*errfunc) (const char *, int),
 	      {
 		size_t home_len = strlen (p->pw_dir);
 		size_t rest_len = end_name == NULL ? 0 : strlen (end_name);
+		char *d;
 
 		if (__glibc_unlikely (malloc_dirname))
 		  free (dirname);
@@ -959,24 +841,22 @@ glob (const char *pattern, int flags, int (*errfunc) (const char *, int),
 		    dirname = malloc (home_len + rest_len + 1);
 		    if (dirname == NULL)
 		      {
-			free (malloc_pwtmpbuf);
+			scratch_buffer_free (&pwtmpbuf);
 			retval = GLOB_NOSPACE;
 			goto out;
 		      }
 		    malloc_dirname = 1;
 		  }
-		*((char *) mempcpy (mempcpy (dirname, p->pw_dir, home_len),
-				    end_name, rest_len)) = '\0';
+		d = mempcpy (dirname, p->pw_dir, home_len);
+		if (end_name != NULL)
+		  d = mempcpy (d, end_name, rest_len);
+		*d = '\0';
 
 		dirlen = home_len + rest_len;
 		dirname_modified = 1;
-
-		free (malloc_pwtmpbuf);
 	      }
 	    else
 	      {
-		free (malloc_pwtmpbuf);
-
 		if (flags & GLOB_TILDE_CHECK)
 		  {
 		    /* We have to regard it as an error if we cannot find the
@@ -985,6 +865,7 @@ glob (const char *pattern, int flags, int (*errfunc) (const char *, int),
 		    goto out;
 		  }
 	      }
+	    scratch_buffer_free (&pwtmpbuf);
 	  }
 #endif /* !WINDOWS32 */
 	}
@@ -994,68 +875,53 @@ glob (const char *pattern, int flags, int (*errfunc) (const char *, int),
      can give the answer now.  */
   if (filename == NULL)
     {
-      struct stat st;
-      struct_stat64 st64;
+	size_t newcount = pglob->gl_pathc + pglob->gl_offs;
+	char **new_gl_pathv;
 
-      /* Return the directory if we don't check for error or if it exists.  */
-      if ((flags & GLOB_NOCHECK)
-	  || (((__builtin_expect (flags & GLOB_ALTDIRFUNC, 0))
-	       ? ((*pglob->gl_stat) (dirname, &st) == 0
-		  && S_ISDIR (st.st_mode))
-	       : (__stat64 (dirname, &st64) == 0 && S_ISDIR (st64.st_mode)))))
-	{
-	  size_t newcount = pglob->gl_pathc + pglob->gl_offs;
-	  char **new_gl_pathv;
+	if (newcount > SIZE_MAX / sizeof (char *) - 2)
+	  {
+	  nospace:
+	    free (pglob->gl_pathv);
+	    pglob->gl_pathv = NULL;
+	    pglob->gl_pathc = 0;
+	    retval = GLOB_NOSPACE;
+	    goto out;
+	  }
 
-	  if (newcount > SIZE_MAX / sizeof (char *) - 2)
-	    {
-	    nospace:
-	      free (pglob->gl_pathv);
-	      pglob->gl_pathv = NULL;
-	      pglob->gl_pathc = 0;
-	      retval = GLOB_NOSPACE;
-	      goto out;
-	    }
+	new_gl_pathv = realloc (pglob->gl_pathv,
+				(newcount + 2) * sizeof (char *));
+	if (new_gl_pathv == NULL)
+	  goto nospace;
+	pglob->gl_pathv = new_gl_pathv;
 
-	  new_gl_pathv = realloc (pglob->gl_pathv,
-				  (newcount + 2) * sizeof (char *));
-	  if (new_gl_pathv == NULL)
-	    goto nospace;
-	  pglob->gl_pathv = new_gl_pathv;
+	if (flags & GLOB_MARK && is_dir (dirname, flags, pglob))
+	  {
+	    char *p;
+	    pglob->gl_pathv[newcount] = malloc (dirlen + 2);
+	    if (pglob->gl_pathv[newcount] == NULL)
+	      goto nospace;
+	    p = mempcpy (pglob->gl_pathv[newcount], dirname, dirlen);
+	    p[0] = '/';
+	    p[1] = '\0';
+	    if (__glibc_unlikely (malloc_dirname))
+	      free (dirname);
+	  }
+	else
+	  {
+	    if (__glibc_unlikely (malloc_dirname))
+	      pglob->gl_pathv[newcount] = dirname;
+	    else
+	      {
+		pglob->gl_pathv[newcount] = strdup (dirname);
+		if (pglob->gl_pathv[newcount] == NULL)
+		  goto nospace;
+	      }
+	  }
+	pglob->gl_pathv[++newcount] = NULL;
+	++pglob->gl_pathc;
+	pglob->gl_flags = flags;
 
-	  if (flags & GLOB_MARK)
-	    {
-	      char *p;
-	      pglob->gl_pathv[newcount] = malloc (dirlen + 2);
-	      if (pglob->gl_pathv[newcount] == NULL)
-		goto nospace;
-	      p = mempcpy (pglob->gl_pathv[newcount], dirname, dirlen);
-	      p[0] = '/';
-	      p[1] = '\0';
-	      if (__glibc_unlikely (malloc_dirname))
-		free (dirname);
-	    }
-	  else
-	    {
-	      if (__glibc_unlikely (malloc_dirname))
-		pglob->gl_pathv[newcount] = dirname;
-	      else
-		{
-		  pglob->gl_pathv[newcount] = strdup (dirname);
-		  if (pglob->gl_pathv[newcount] == NULL)
-		    goto nospace;
-		}
-	    }
-	  pglob->gl_pathv[++newcount] = NULL;
-	  ++pglob->gl_pathc;
-	  pglob->gl_flags = flags;
-
-	  return 0;
-	}
-
-      /* Not found.  */
-      retval = GLOB_NOMATCH;
-      goto out;
+	return 0;
     }
 
   meta = __glob_pattern_type (dirname, !(flags & GLOB_NOESCAPE));
@@ -1064,7 +930,7 @@ glob (const char *pattern, int flags, int (*errfunc) (const char *, int),
      [ which we handle the same, using fnmatch.  Broken unterminated
      pattern bracket expressions ought to be rare enough that it is
      not worth special casing them, fnmatch will do the right thing.  */
-  if (meta & 5)
+  if (meta & (GLOBPAT_SPECIAL | GLOBPAT_BRACKET))
     {
       /* The directory name contains metacharacters, so we
 	 have to glob for the directory, and then glob for
@@ -1093,11 +959,10 @@ glob (const char *pattern, int flags, int (*errfunc) (const char *, int),
 	  dirs.gl_lstat = pglob->gl_lstat;
 	}
 
-      status = glob (dirname,
-		     ((flags & (GLOB_ERR | GLOB_NOESCAPE
-				| GLOB_ALTDIRFUNC))
-		      | GLOB_NOSORT | GLOB_ONLYDIR),
-		     errfunc, &dirs);
+      status = __glob (dirname,
+		       ((flags & (GLOB_ERR | GLOB_NOESCAPE | GLOB_ALTDIRFUNC))
+			| GLOB_NOSORT | GLOB_ONLYDIR),
+		       errfunc, &dirs);
       if (status != 0)
 	{
 	  if ((flags & GLOB_NOCHECK) == 0 || status != GLOB_NOMATCH)
@@ -1205,7 +1070,7 @@ glob (const char *pattern, int flags, int (*errfunc) (const char *, int),
       size_t old_pathc = pglob->gl_pathc;
       int orig_flags = flags;
 
-      if (meta & 2)
+      if (meta & GLOBPAT_BACKSLASH)
 	{
 	  char *p = strchr (dirname, '\\'), *q;
 	  /* We need to unescape the dirname string.  It is certainly
@@ -1263,15 +1128,9 @@ glob (const char *pattern, int flags, int (*errfunc) (const char *, int),
     {
       /* Append slashes to directory names.  */
       size_t i;
-      struct stat st;
-      struct_stat64 st64;
 
       for (i = oldcount; i < pglob->gl_pathc + pglob->gl_offs; ++i)
-	if ((__builtin_expect (flags & GLOB_ALTDIRFUNC, 0)
-	     ? ((*pglob->gl_stat) (pglob->gl_pathv[i], &st) == 0
-		&& S_ISDIR (st.st_mode))
-	     : (__stat64 (pglob->gl_pathv[i], &st64) == 0
-		&& S_ISDIR (st64.st_mode))))
+	if (is_dir (pglob->gl_pathv[i], flags, pglob))
 	  {
 	    size_t len = strlen (pglob->gl_pathv[i]) + 2;
 	    char *new = realloc (pglob->gl_pathv[i], len);
@@ -1301,8 +1160,9 @@ glob (const char *pattern, int flags, int (*errfunc) (const char *, int),
 
   return retval;
 }
-#if defined _LIBC && !defined glob
-libc_hidden_def (glob)
+#if defined _LIBC && !defined __glob
+versioned_symbol (libc, __glob, glob, GLIBC_2_27);
+libc_hidden_ver (__glob, glob)
 #endif
 
 
@@ -1377,56 +1237,6 @@ prefix_array (const char *dirname, char **array, size_t n)
   return 0;
 }
 
-/* We put this in a separate function mainly to allow the memory
-   allocated with alloca to be recycled.  */
-static int
-__attribute_noinline__
-link_stat (const char *dir, size_t dirlen, const char *fname,
-	   glob_t *pglob
-# if !defined _LIBC && !HAVE_FSTATAT
-	   , int flags
-# endif
-	   )
-{
-  size_t fnamelen = strlen (fname);
-  char *fullname = __alloca (dirlen + 1 + fnamelen + 1);
-  struct stat st;
-
-  mempcpy (mempcpy (mempcpy (fullname, dir, dirlen), "/", 1),
-	   fname, fnamelen + 1);
-
-# if !defined _LIBC && !HAVE_FSTATAT
-  if (__builtin_expect ((flags & GLOB_ALTDIRFUNC) == 0, 1))
-    {
-      struct_stat64 st64;
-      return __stat64 (fullname, &st64);
-    }
-# endif
-  return (*pglob->gl_stat) (fullname, &st);
-}
-
-/* Return true if DIR/FNAME exists.  */
-static int
-link_exists_p (int dfd, const char *dir, size_t dirlen, const char *fname,
-	       glob_t *pglob, int flags)
-{
-  int status;
-# if defined _LIBC || HAVE_FSTATAT
-  if (__builtin_expect (flags & GLOB_ALTDIRFUNC, 0))
-    status = link_stat (dir, dirlen, fname, pglob);
-  else
-    {
-      /* dfd cannot be -1 here, because dirfd never returns -1 on
-	 glibc, or on hosts that have fstatat.  */
-      struct_stat64 st64;
-      status = __fxstatat64 (_STAT_VER, dfd, fname, &st64, 0);
-    }
-# else
-  status = link_stat (dir, dirlen, fname, pglob, flags);
-# endif
-  return status == 0 || errno == EOVERFLOW;
-}
-
 /* Like 'glob', but PATTERN is a final pathname component,
    and matches are searched for in DIRECTORY.
    The GLOB_NOSORT bit in FLAGS is ignored.  No sorting is ever done.
@@ -1459,22 +1269,15 @@ glob_in_dir (const char *pattern, const char *directory, int flags,
                        / sizeof init_names->name[0]);
 
   meta = __glob_pattern_type (pattern, !(flags & GLOB_NOESCAPE));
-  if (meta == 0 && (flags & (GLOB_NOCHECK|GLOB_NOMAGIC)))
+  if (meta == GLOBPAT_NONE && (flags & (GLOB_NOCHECK|GLOB_NOMAGIC)))
     {
       /* We need not do any tests.  The PATTERN contains no meta
 	 characters and we must not return an error therefore the
 	 result will always contain exactly one name.  */
       flags |= GLOB_NOCHECK;
     }
-  else if (meta == 0)
+  else if (meta == GLOBPAT_NONE)
     {
-      /* Since we use the normal file functions we can also use stat()
-	 to verify the file is there.  */
-      union
-      {
-	struct stat st;
-	struct_stat64 st64;
-      } ust;
       size_t patlen = strlen (pattern);
       size_t fullsize;
       bool alloca_fullname
@@ -1493,10 +1296,7 @@ glob_in_dir (const char *pattern, const char *directory, int flags,
       mempcpy (mempcpy (mempcpy (fullname, directory, dirlen),
 			"/", 1),
 	       pattern, patlen + 1);
-      if (((__builtin_expect (flags & GLOB_ALTDIRFUNC, 0)
-	   ? (*pglob->gl_stat) (fullname, &ust.st)
-	    : __stat64 (fullname, &ust.st64))
-	   == 0)
+      if (glob_lstat (pglob, flags, fullname) == 0
 	  || errno == EOVERFLOW)
 	/* We found this file to be existing.  Now tell the rest
 	   of the function to copy this name into the result.  */
@@ -1519,8 +1319,6 @@ glob_in_dir (const char *pattern, const char *directory, int flags,
 	}
       else
 	{
-	  int dfd = (__builtin_expect (flags & GLOB_ALTDIRFUNC, 0)
-		     ? -1 : __dirfd ((DIR *) stream));
 	  int fnm_flags = ((!(flags & GLOB_PERIOD) ? FNM_PERIOD : 0)
 			   | ((flags & GLOB_NOESCAPE) ? FNM_NOESCAPE : 0));
 	  flags |= GLOB_MAGCHAR;
@@ -1542,8 +1340,6 @@ glob_in_dir (const char *pattern, const char *directory, int flags,
 	      }
 	      if (d.name == NULL)
 		break;
-	      if (readdir_result_skip_entry (d))
-		continue;
 
 	      /* If we shall match only directories use the information
 		 provided by the dirent call if possible.  */
@@ -1556,42 +1352,34 @@ glob_in_dir (const char *pattern, const char *directory, int flags,
 
 	      if (fnmatch (pattern, d.name, fnm_flags) == 0)
 		{
-		  /* If the file we found is a symlink we have to
-		     make sure the target file exists.  */
-		  dirent_type type = readdir_result_type (d);
-		  if (! (type == DT_LNK || type == DT_UNKNOWN)
-		      || link_exists_p (dfd, directory, dirlen, d.name,
-					pglob, flags))
+		  if (cur == names->count)
 		    {
-		      if (cur == names->count)
-			{
-			  struct globnames *newnames;
-			  size_t count = names->count * 2;
-			  size_t nameoff = offsetof (struct globnames, name);
-			  size_t size = FLEXSIZEOF (struct globnames, name,
-						    count * sizeof (char *));
-			  if ((SIZE_MAX - nameoff) / 2 / sizeof (char *)
-			      < names->count)
-			    goto memory_error;
-			  if (glob_use_alloca (alloca_used, size))
-			    newnames = names_alloca
-			      = alloca_account (size, alloca_used);
-			  else if ((newnames = malloc (size))
-				   == NULL)
-			    goto memory_error;
-			  newnames->count = count;
-			  newnames->next = names;
-			  names = newnames;
-			  cur = 0;
-			}
-		      names->name[cur] = strdup (d.name);
-		      if (names->name[cur] == NULL)
+		      struct globnames *newnames;
+		      size_t count = names->count * 2;
+		      size_t nameoff = offsetof (struct globnames, name);
+		      size_t size = FLEXSIZEOF (struct globnames, name,
+						count * sizeof (char *));
+		      if ((SIZE_MAX - nameoff) / 2 / sizeof (char *)
+			  < names->count)
 			goto memory_error;
-		      ++cur;
-		      ++nfound;
-		      if (SIZE_MAX - pglob->gl_offs <= nfound)
+		      if (glob_use_alloca (alloca_used, size))
+			newnames = names_alloca
+			  = alloca_account (size, alloca_used);
+		      else if ((newnames = malloc (size))
+			       == NULL)
 			goto memory_error;
+		      newnames->count = count;
+		      newnames->next = names;
+		      names = newnames;
+		      cur = 0;
 		    }
+		  names->name[cur] = strdup (d.name);
+		  if (names->name[cur] == NULL)
+		    goto memory_error;
+		  ++cur;
+		  ++nfound;
+		  if (SIZE_MAX - pglob->gl_offs <= nfound)
+		    goto memory_error;
 		}
 	    }
 	}

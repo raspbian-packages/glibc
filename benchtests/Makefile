@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2017 Free Software Foundation, Inc.
+# Copyright (C) 2013-2018 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -23,13 +23,18 @@ subdir := benchtests
 include ../Makeconfig
 bench-math := acos acosh asin asinh atan atanh cos cosh exp exp2 log log2 \
 	      modf pow rint sin sincos sinh sqrt tan tanh fmin fmax fminf \
-	      fmaxf powf
+	      fmaxf powf trunc truncf expf exp2f logf log2f sincosf sinf \
+	      cosf
 
 bench-pthread := pthread_once thread_create
 
 bench-string := ffs ffsll
 
+ifeq (${BENCHSET},)
 bench := $(bench-math) $(bench-pthread) $(bench-string)
+else
+bench := $(foreach B,$(filter bench-%,${BENCHSET}), ${${B}})
+endif
 
 # String function benchmarks.
 string-benchset := bcopy bzero memccpy memchr memcmp memcpy memmem memmove \
@@ -37,7 +42,8 @@ string-benchset := bcopy bzero memccpy memchr memcmp memcpy memmem memmove \
 		   strcat strchr strchrnul strcmp strcpy strcspn strlen \
 		   strncasecmp strncat strncmp strncpy strnlen strpbrk strrchr \
 		   strspn strstr strcpy_chk stpcpy_chk memrchr strsep strtok \
-		   strcoll memcpy-large memcpy-random memmove-large memset-large
+		   strcoll memcpy-large memcpy-random memmove-large memset-large \
+		   memcpy-walk memset-walk memmove-walk
 
 # Build and run locale-dependent benchmarks only if we're building natively.
 ifeq (no,$(cross-compiling))
@@ -66,8 +72,12 @@ stdio-common-benchset := sprintf
 
 math-benchset := math-inlines
 
+ifeq (${BENCHSET},)
 benchset := $(string-benchset-all) $(stdlib-benchset) $(stdio-common-benchset) \
 	    $(math-benchset)
+else
+benchset := $(foreach B,$(filter %-benchset,${BENCHSET}), ${${B}})
+endif
 
 CFLAGS-bench-ffs.c += -fno-builtin
 CFLAGS-bench-ffsll.c += -fno-builtin
@@ -76,8 +86,14 @@ CFLAGS-bench-fmin.c += -fno-builtin
 CFLAGS-bench-fminf.c += -fno-builtin
 CFLAGS-bench-fmax.c += -fno-builtin
 CFLAGS-bench-fmaxf.c += -fno-builtin
+CFLAGS-bench-trunc.c += -fno-builtin
+CFLAGS-bench-truncf.c += -fno-builtin
 
+ifeq (${BENCHSET},)
 bench-malloc := malloc-thread
+else
+bench-malloc := $(filter malloc-%,${BENCHSET})
+endif
 
 $(addprefix $(objpfx)bench-,$(bench-math)): $(libm)
 $(addprefix $(objpfx)bench-,$(math-benchset)): $(libm)
@@ -92,6 +108,11 @@ $(objpfx)bench-malloc-thread: $(shared-thread-library)
 # We don't want the benchmark programs to run in parallel since that could
 # affect their performance.
 .NOTPARALLEL:
+
+bench-extra-objs = json-lib.o
+
+extra-objs += $(bench-extra-objs)
+others-extras = $(bench-extra-objs)
 
 include ../Rules
 
@@ -125,10 +146,6 @@ cpp-srcs-left := $(binaries-benchset:=.c) $(binaries-bench:=.c) \
 lib := nonlib
 include $(patsubst %,$(..)libof-iterator.mk,$(cpp-srcs-left))
 
-bench-extra-objs = json-lib.o
-
-extra-objs += $(bench-extra-objs)
-
 bench-deps := bench-skeleton.c bench-timing.h Makefile
 
 run-bench = $(test-wrapper-env) \
@@ -143,6 +160,19 @@ bench-clean:
 	rm -f $(binaries-bench-malloc) $(addsuffix .o,$(binaries-bench-malloc))
 	rm -f $(timing-type) $(addsuffix .o,$(timing-type))
 	rm -f $(addprefix $(objpfx),$(bench-extra-objs))
+
+# Validate the passed in BENCHSET
+ifneq ($(strip ${BENCHSET}),)
+VALIDBENCHSETNAMES := bench-pthread bench-math bench-string string-benchset \
+   wcsmbs-benchset stdlib-benchset stdio-common-benchset math-benchset \
+   malloc-thread
+INVALIDBENCHSETNAMES := $(filter-out ${VALIDBENCHSETNAMES},${BENCHSET})
+ifneq (${INVALIDBENCHSETNAMES},)
+$(info The following values in BENCHSET are invalid: ${INVALIDBENCHSETNAMES})
+$(info The valid ones are: ${VALIDBENCHSETNAMES})
+$(error Invalid BENCHSET value)
+endif
+endif
 
 # Define the bench target only if the target has a usable python installation.
 ifdef PYTHON
@@ -170,10 +200,11 @@ bench-set: $(binaries-benchset)
 	done
 
 bench-malloc: $(binaries-bench-malloc)
-	run=$(objpfx)bench-malloc-thread; \
-	for thr in 1 8 16 32; do \
-	  echo "Running $${run} $${thr}"; \
+	for run in $^; do \
+		for thr in 1 8 16 32; do \
+			echo "Running $${run} $${thr}"; \
 	  $(run-bench) $${thr} > $${run}-$${thr}.out; \
+	  done;\
 	done
 
 # Build and execute the benchmark functions.  This target generates JSON
@@ -181,25 +212,28 @@ bench-malloc: $(binaries-bench-malloc)
 # so one could even execute them individually and process it using any JSON
 # capable language or tool.
 bench-func: $(binaries-bench)
+	if [ -n '$^' ] ; then \
 	{ timing_type=$$($(timing-type)); \
-	echo "{\"timing_type\": \"$${timing_type}\","; \
-	echo " \"functions\": {"; \
-	for run in $^; do \
-	  if ! [ "x$${run}" = "x$<" ]; then \
-	    echo ","; \
+	  echo "{\"timing_type\": \"$${timing_type}\","; \
+	  echo " \"functions\": {"; \
+	  for run in $^; do \
+	    if ! [ "x$${run}" = "x$<" ]; then \
+	      echo ","; \
+	    fi; \
+	    echo "Running $${run}" >&2; \
+	    $(run-bench) $(DETAILED_OPT); \
+	  done; \
+	  echo; \
+	  echo " }"; \
+	  echo "}"; \
+	  } > $(objpfx)bench.out-tmp; \
+	  if [ -f $(objpfx)bench.out ]; then \
+	    mv -f $(objpfx)bench.out $(objpfx)bench.out.old; \
 	  fi; \
-	  echo "Running $${run}" >&2; \
-	  $(run-bench) $(DETAILED_OPT); \
-	done; \
-	echo; \
-	echo " }"; \
-	echo "}"; } > $(objpfx)bench.out-tmp; \
-	if [ -f $(objpfx)bench.out ]; then \
-	  mv -f $(objpfx)bench.out $(objpfx)bench.out.old; \
-	fi; \
-	mv -f $(objpfx)bench.out-tmp $(objpfx)bench.out
-	$(PYTHON) scripts/validate_benchout.py $(objpfx)bench.out \
-		scripts/benchout.schema.json
+	  mv -f $(objpfx)bench.out-tmp $(objpfx)bench.out; \
+	  $(PYTHON) scripts/validate_benchout.py $(objpfx)bench.out \
+	  scripts/benchout.schema.json; \
+	fi
 
 $(timing-type) $(binaries-bench) $(binaries-benchset) \
 	$(binaries-bench-malloc): %: %.o $(objpfx)json-lib.o \

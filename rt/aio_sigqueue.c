@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -22,7 +22,7 @@
 #include <aio_misc.h>
 
 int
-attribute_hidden internal_function
+attribute_hidden
 __aio_sigqueue (int sig, const union sigval val, pid_t caller_pid)
 {
   __set_errno (ENOSYS);

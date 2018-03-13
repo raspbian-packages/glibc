@@ -1,4 +1,4 @@
-/* Copyright (C) 2016-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2016-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -31,7 +31,7 @@ pwritev64 (int fd, const struct iovec *vector, int count, off64_t offset)
 }
 #else
 static ssize_t __atomic_pwritev64_replacement (int, const struct iovec *,
-					       int, off64_t) internal_function;
+					       int, off64_t);
 ssize_t
 pwritev64 (int fd, const struct iovec *vector, int count, off64_t offset)
 {
@@ -43,7 +43,7 @@ pwritev64 (int fd, const struct iovec *vector, int count, off64_t offset)
 #endif
   return __atomic_pwritev64_replacement (fd, vector, count, offset);
 }
-# define PWRITEV static internal_function __atomic_pwritev64_replacement
+# define PWRITEV static __atomic_pwritev64_replacement
 # define PWRITE __pwrite64
 # define OFF_T off64_t
 # include <sysdeps/posix/pwritev_common.c>

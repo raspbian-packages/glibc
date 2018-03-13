@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Chris Metcalf <cmetcalf@tilera.com>, 2011.
 
@@ -27,6 +27,6 @@ ENTRY (syscall)
 	{ move r3, r4; move r4, r5 }
 	{ move r5, r6; move r6, r7 }
 	swint1
-	BNEZ r1, 0f
+	bnez r1, 0f
 	jrp lr
 PSEUDO_END (syscall)

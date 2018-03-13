@@ -15,13 +15,14 @@
 
 #include <math.h>
 #include <math_private.h>
+#include <libm-alias-float.h>
 
 
 float
 __ceilf(float x)
 {
 	int32_t i0,j0;
-	u_int32_t i;
+	uint32_t i;
 
 	GET_FLOAT_WORD(i0,x);
 	j0 = ((i0>>23)&0xff)-0x7f;
@@ -44,5 +45,5 @@ __ceilf(float x)
 	return x;
 }
 #ifndef __ceilf
-weak_alias (__ceilf, ceilf)
+libm_alias_float (__ceil, ceil)
 #endif

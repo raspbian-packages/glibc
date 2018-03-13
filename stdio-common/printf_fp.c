@@ -1,5 +1,5 @@
 /* Floating point output for `printf'.
-   Copyright (C) 1995-2017 Free Software Foundation, Inc.
+   Copyright (C) 1995-2018 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
    Written by Ulrich Drepper <drepper@gnu.ai.mit.edu>, 1995.
@@ -21,6 +21,7 @@
 /* The gmp headers need some configuration frobs.  */
 #define HAVE_ALLOCA 1
 
+#include <array_length.h>
 #include <libioP.h>
 #include <alloca.h>
 #include <ctype.h>
@@ -139,14 +140,11 @@ extern mp_size_t __mpn_extract_double (mp_ptr res_ptr, mp_size_t size,
 extern mp_size_t __mpn_extract_long_double (mp_ptr res_ptr, mp_size_t size,
 					    int *expt, int *is_neg,
 					    long double value);
-extern unsigned int __guess_grouping (unsigned int intdig_max,
-				      const char *grouping);
 
 
 static wchar_t *group_number (wchar_t *buf, wchar_t *bufend,
 			      unsigned int intdig_no, const char *grouping,
-			      wchar_t thousands_sep, int ngroups)
-     internal_function;
+			      wchar_t thousands_sep, int ngroups);
 
 struct hack_digit_param
 {
@@ -217,7 +215,7 @@ __printf_fp_l (FILE *fp, locale_t loc,
   union
     {
       double dbl;
-      __long_double_t ldbl;
+      long double ldbl;
 #if __HAVE_DISTINCT_FLOAT128
       _Float128 f128;
 #endif
@@ -374,8 +372,7 @@ __printf_fp_l (FILE *fp, locale_t loc,
     else								\
       {									\
 	p.fracsize = __mpn_extract_##SUFFIX				\
-		     (fp_input,						\
-		      (sizeof (fp_input) / sizeof (fp_input[0])),	\
+		     (fp_input, array_length (fp_input),		\
 		      &p.exponent, &is_neg, VAR);			\
 	to_shift = 1 + p.fracsize * BITS_PER_MP_LIMB - MANT_DIG;	\
       }									\
@@ -1321,7 +1318,6 @@ __guess_grouping (unsigned int intdig_max, const char *grouping)
    Return the new end of buffer.  */
 
 static wchar_t *
-internal_function
 group_number (wchar_t *buf, wchar_t *bufend, unsigned int intdig_no,
 	      const char *grouping, wchar_t thousands_sep, int ngroups)
 {

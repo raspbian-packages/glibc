@@ -1,5 +1,5 @@
 /* Helper macros for float variants of type generic functions of libm.
-   Copyright (C) 2016-2017 Free Software Foundation, Inc.
+   Copyright (C) 2016-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -30,10 +30,22 @@
    the double macro constants.  */
 #define M_MLIT(c) c
 
+#include <libm-alias-float.h>
+
+#ifndef declare_mgen_alias
+# define declare_mgen_alias(from, to) libm_alias_float (from, to)
+#endif
+
+#ifndef declare_mgen_alias_r
+# define declare_mgen_alias_r(from, to) libm_alias_float_r (from, to, _r)
+#endif
+
 /* Supply the generic macros.  */
 #include <math-type-macros.h>
 
-/* Do not use the type-generic wrapper templates.  */
-#define __USE_WRAPPER_TEMPLATE 0
+/* Do not use the type-generic wrapper templates if compatibility with
+   SVID error handling is needed.  */
+#include <math-svid-compat.h>
+#define __USE_WRAPPER_TEMPLATE !LIBM_SVID_COMPAT
 
 #endif

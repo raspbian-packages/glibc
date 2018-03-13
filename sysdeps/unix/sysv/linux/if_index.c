@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -43,16 +43,22 @@ __if_nametoindex (const char *ifname)
   if (fd < 0)
     return 0;
 
+  if (strlen (ifname) >= IFNAMSIZ)
+    {
+      __set_errno (ENODEV);
+      return 0;
+    }
+
   strncpy (ifr.ifr_name, ifname, sizeof (ifr.ifr_name));
   if (__ioctl (fd, SIOCGIFINDEX, &ifr) < 0)
     {
       int saved_errno = errno;
-      close_not_cancel_no_status (fd);
+      __close_nocancel_nostatus (fd);
       if (saved_errno == EINVAL)
 	__set_errno (ENOSYS);
       return 0;
     }
-  close_not_cancel_no_status (fd);
+  __close_nocancel_nostatus (fd);
   return ifr.ifr_ifindex;
 #endif
 }
@@ -224,7 +230,7 @@ __if_indextoname (unsigned int ifindex, char *ifname)
   ifr.ifr_ifindex = ifindex;
   status = __ioctl (fd, SIOCGIFNAME, &ifr);
 
-  close_not_cancel_no_status (fd);
+  __close_nocancel_nostatus (fd);
 
   if (status  < 0)
     {

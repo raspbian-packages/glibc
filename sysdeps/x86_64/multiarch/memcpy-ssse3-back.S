@@ -1,5 +1,5 @@
 /* memcpy with SSSE3 and REP string
-   Copyright (C) 2010-2017 Free Software Foundation, Inc.
+   Copyright (C) 2010-2018 Free Software Foundation, Inc.
    Contributed by Intel Corporation.
    This file is part of the GNU C Library.
 
@@ -19,10 +19,7 @@
 
 #include <sysdep.h>
 
-#if IS_IN (libc) \
-    && (defined SHARED \
-        || defined USE_AS_MEMMOVE \
-	|| !defined USE_MULTIARCH)
+#if IS_IN (libc)
 
 #include "asm-syntax.h"
 

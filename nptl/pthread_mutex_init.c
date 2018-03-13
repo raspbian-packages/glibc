@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -58,7 +58,8 @@ __pthread_mutex_init (pthread_mutex_t *mutex,
 {
   const struct pthread_mutexattr *imutexattr;
 
-  assert (sizeof (pthread_mutex_t) <= __SIZEOF_PTHREAD_MUTEX_T);
+  ASSERT_TYPE_SIZE (pthread_mutex_t, __SIZEOF_PTHREAD_MUTEX_T);
+
   ASSERT_PTHREAD_INTERNAL_OFFSET (pthread_mutex_t, __data.__nusers,
 				  __PTHREAD_MUTEX_NUSERS_OFFSET);
   ASSERT_PTHREAD_INTERNAL_OFFSET (pthread_mutex_t, __data.__kind,

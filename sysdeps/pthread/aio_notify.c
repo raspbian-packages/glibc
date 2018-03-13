@@ -1,5 +1,5 @@
 /* Notify initiator of AIO request.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 
@@ -48,12 +48,7 @@ notify_func_wrapper (void *arg)
 
 
 int
-internal_function
-#ifdef BROKEN_THREAD_SIGNALS
-__aio_notify_only (struct sigevent *sigev, pid_t caller_pid)
-#else
 __aio_notify_only (struct sigevent *sigev)
-#endif
 {
   int result = 0;
 
@@ -99,15 +94,9 @@ __aio_notify_only (struct sigevent *sigev)
 #if _POSIX_REALTIME_SIGNALS > 0
       /* Note that the standard gives us the option of using a plain
 	 non-queuing signal here when SA_SIGINFO is not set for the signal.  */
-# ifdef BROKEN_THREAD_SIGNALS
-      if (__aio_sigqueue (sigev->sigev_signo, sigev->sigev_value, caller_pid)
-	  < 0)
-	result = -1;
-# else
       if (__aio_sigqueue (sigev->sigev_signo, sigev->sigev_value, getpid ())
 	  < 0)
 	result = -1;
-# endif
 #else
       /* There are no queued signals on this system at all.  */
       result = raise (sigev->sigev_signo);
@@ -119,17 +108,12 @@ __aio_notify_only (struct sigevent *sigev)
 
 
 void
-internal_function
 __aio_notify (struct requestlist *req)
 {
   struct waitlist *waitlist;
   struct aiocb *aiocbp = &req->aiocbp->aiocb;
 
-#ifdef BROKEN_THREAD_SIGNALS
-  if (__aio_notify_only (&aiocbp->aio_sigevent, req->caller_pid) != 0)
-#else
   if (__aio_notify_only (&aiocbp->aio_sigevent) != 0)
-#endif
     {
       /* XXX What shall we do if already an error is set by
 	 read/write/fsync?  */
@@ -162,11 +146,7 @@ __aio_notify (struct requestlist *req)
 	   this request is the last one, send the signal.  */
 	if (--*waitlist->counterp == 0)
 	  {
-#ifdef BROKEN_THREAD_SIGNALS
-	    __aio_notify_only (waitlist->sigevp, waitlist->caller_pid);
-#else
 	    __aio_notify_only (waitlist->sigevp);
-#endif
 	    /* This is tricky.  See lio_listio.c for the reason why
 	       this works.  */
 	    free ((void *) waitlist->counterp);

@@ -1,5 +1,5 @@
 /* FIPS compliance status test for GNU/Linux systems.
-   Copyright (C) 2012-2017 Free Software Foundation, Inc.
+   Copyright (C) 2012-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -42,15 +42,15 @@ fips_enabled_p (void)
 
   if (checked == FIPS_UNTESTED)
     {
-      int fd = open_not_cancel_2 ("/proc/sys/crypto/fips_enabled", O_RDONLY);
+      int fd = __open_nocancel ("/proc/sys/crypto/fips_enabled", O_RDONLY);
 
       if (fd != -1)
 	{
 	  /* This is more than enough, the file contains a single integer.  */
 	  char buf[32];
 	  ssize_t n;
-	  n = TEMP_FAILURE_RETRY (read_not_cancel (fd, buf, sizeof (buf) - 1));
-	  close_not_cancel_no_status (fd);
+	  n = TEMP_FAILURE_RETRY (__read_nocancel (fd, buf, sizeof (buf) - 1));
+	  __close_nocancel_nostatus (fd);
 
 	  if (n > 0)
 	    {

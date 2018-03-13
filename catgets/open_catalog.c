@@ -1,4 +1,4 @@
-/* Copyright (C) 1996-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1996-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper, <drepper@gnu.org>.
 
@@ -50,7 +50,7 @@ __open_catalog (const char *cat_name, const char *nlspath, const char *env_var,
   char *buf = NULL;
 
   if (strchr (cat_name, '/') != NULL || nlspath == NULL)
-    fd = open_not_cancel_2 (cat_name, O_RDONLY);
+    fd = __open_nocancel (cat_name, O_RDONLY);
   else
     {
       const char *run_nlspath = nlspath;
@@ -178,7 +178,7 @@ __open_catalog (const char *cat_name, const char *nlspath, const char *env_var,
 
 	  if (bufact != 0)
 	    {
-	      fd = open_not_cancel_2 (buf, O_RDONLY);
+	      fd = __open_nocancel (buf, O_RDONLY);
 	      if (fd >= 0)
 		break;
 	    }
@@ -237,7 +237,7 @@ __open_catalog (const char *cat_name, const char *nlspath, const char *env_var,
       /* Save read, handle partial reads.  */
       do
 	{
-	  size_t now = read_not_cancel (fd, (((char *) catalog->file_ptr)
+	  size_t now = __read_nocancel (fd, (((char *) catalog->file_ptr)
 					     + (st.st_size - todo)), todo);
 	  if (now == 0 || now == (size_t) -1)
 	    {
@@ -328,7 +328,7 @@ __open_catalog (const char *cat_name, const char *nlspath, const char *env_var,
 
   /* Release the lock again.  */
  close_unlock_return:
-  close_not_cancel_no_status (fd);
+  __close_nocancel_nostatus (fd);
   free (buf);
 
   return result;

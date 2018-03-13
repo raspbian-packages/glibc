@@ -1,5 +1,5 @@
 /* Define POSIX options for GNU/Hurd.
-   Copyright (C) 1998-2017 Free Software Foundation, Inc.
+   Copyright (C) 1998-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -53,13 +53,13 @@
 
 /* Elements of the `c_cc' member of `struct termios' structure
    can be disabled by using the value _POSIX_VDISABLE.  */
-#define _POSIX_VDISABLE			((unsigned char) -1)
+#define _POSIX_VDISABLE			'\0'
 
 
 /* Different Hurd filesystems might do these differently.
    You must query the particular file with `pathconf' or `fpathconf'.  */
-#undef _POSIX_CHOWN_RESTRICTED	/* Only root can change owner of file?  */
-#undef _POSIX_NO_TRUNC		/* Overlong file names get error?  */
+#define _POSIX_CHOWN_RESTRICTED	0	/* Only root can change owner of file?  */
+#define _POSIX_NO_TRUNC		0	/* Overlong file names get error?  */
 #undef _POSIX_SYNC_IO		/* File supports O_SYNC et al?  */
 
 /* X/Open realtime support is not supported.  */

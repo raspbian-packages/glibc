@@ -1,4 +1,4 @@
-/* Copyright (C) 2004-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2004-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -138,9 +138,13 @@ weak_alias (__makecontext, makecontext)
 
 	.align	4
 	.ent	__startcontext
+	cfi_startproc
 __startcontext:
 	.frame $31, 0, $31, 0
 	.prologue 0
+
+	/* Mark ra as undefined in order to stop unwinding here.  */
+	cfi_undefined(ra)
 
 	jsr	$26, ($27), 0
 	ldgp	$29, 0($26)
@@ -160,4 +164,5 @@ __startcontext:
 
 	halt
 
+	cfi_endproc
 	.end __startcontext

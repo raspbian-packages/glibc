@@ -1,5 +1,5 @@
 /* msync -- Synchronize mapped memory to external storage.  Mach version.
-   Copyright (C) 2002-2017 Free Software Foundation, Inc.
+   Copyright (C) 2002-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -33,7 +33,7 @@
    unpredictable before this is done.  */
 
 int
-msync (__ptr_t addr, size_t len, int flags)
+msync (void *addr, size_t len, int flags)
 {
   vm_sync_t sync_flags = 0;
   kern_return_t err;

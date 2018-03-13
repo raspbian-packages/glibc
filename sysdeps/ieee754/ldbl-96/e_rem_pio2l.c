@@ -1,5 +1,5 @@
 /* Extended-precision floating point argument reduction.
-   Copyright (C) 1999-2017 Free Software Foundation, Inc.
+   Copyright (C) 1999-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Based on quad-precision code by Jakub Jelinek <jj@ultra.linux.cz>
 
@@ -186,7 +186,7 @@ __ieee754_rem_pio2l (long double x, long double *y)
 {
   double tx[3], ty[3];
   int32_t se, j0;
-  u_int32_t i0, i1;
+  uint32_t i0, i1;
   int sx;
   int n, exp;
 

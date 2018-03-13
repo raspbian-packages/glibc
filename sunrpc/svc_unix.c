@@ -1,7 +1,7 @@
 /*
  * svc_unix.c, Server side for TCP/IP based RPC.
  *
- * Copyright (C) 2012-2017 Free Software Foundation, Inc.
+ * Copyright (C) 2012-2018 Free Software Foundation, Inc.
  * This file is part of the GNU C Library.
  *
  * The GNU C Library is free software; you can redistribute it and/or
@@ -113,7 +113,7 @@ static const struct xp_ops svcunix_rendezvous_op =
 
 static int readunix (char*, char *, int);
 static int writeunix (char *, char *, int);
-static SVCXPRT *makefd_xprt (int, u_int, u_int) internal_function;
+static SVCXPRT *makefd_xprt (int, u_int, u_int);
 
 struct unix_rendezvous {        /* kept in xprt->xp_p1 */
   u_int sendsize;
@@ -216,7 +216,6 @@ svcunixfd_create (int fd, u_int sendsize, u_int recvsize)
 libc_hidden_nolink_sunrpc (svcunixfd_create, GLIBC_2_1)
 
 static SVCXPRT *
-internal_function
 makefd_xprt (int fd, u_int sendsize, u_int recvsize)
 {
   SVCXPRT *xprt;

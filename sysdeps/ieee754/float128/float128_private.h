@@ -1,5 +1,5 @@
 /* _Float128 overrides for building ldbl-128 as _Float128.
-   Copyright (C) 2017 Free Software Foundation, Inc.
+   Copyright (C) 2017-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -116,6 +116,12 @@
 #define M_SQRT1_2l M_SQRT1_2f128
 
 
+#include <libm-alias-ldouble.h>
+#include <libm-alias-float128.h>
+#undef libm_alias_ldouble_r
+#define libm_alias_ldouble_r(from, to, r) libm_alias_float128_r (from, to, r)
+
+
 /* IEEE function renames.  */
 #define __ieee754_acoshl __ieee754_acoshf128
 #define __ieee754_acosl __ieee754_acosf128
@@ -199,6 +205,7 @@
 #define __fpclassifyl __fpclassifyf128
 #define __frexpl __frexpf128
 #define __gammal_r_finite __gammaf128_r_finite
+#define __getpayloadl __getpayloadf128
 #define __isinfl __isinff128
 #define __isnanl __isnanf128
 #define __issignalingl __issignalingf128
@@ -217,6 +224,7 @@
 #define __nextupl __nextupf128
 #define __remquol __remquof128
 #define __rintl __rintf128
+#define __roundevenl __roundevenf128
 #define __roundl __roundf128
 #define __scalblnl __scalblnf128
 #define __scalbnl __scalbnf128
@@ -226,6 +234,8 @@
 #define __sqrtl __sqrtf128
 #define __tanhl __tanhf128
 #define __tanl __tanf128
+#define __totalorderl __totalorderf128
+#define __totalordermagl __totalordermagf128
 #define __truncl __truncf128
 #define __x2y2m1l __x2y2m1f128
 

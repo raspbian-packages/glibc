@@ -1,5 +1,5 @@
 /* Deallocation functions for the resolver state.
-   Copyright (C) 1995-2017 Free Software Foundation, Inc.
+   Copyright (C) 1995-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -86,6 +86,7 @@
 #include <resolv_context.h>
 #include <resolv_conf.h>
 #include <not-cancel.h>
+#include <stdlib.h>
 
 /* Close all open sockets.  If FREE_ADDR is true, deallocate any
    separately allocated name server addresses.  */
@@ -94,7 +95,7 @@ __res_iclose (res_state statp, bool free_addr)
 {
   if (statp->_vcsock >= 0)
     {
-      close_not_cancel_no_status (statp->_vcsock);
+      __close_nocancel_nostatus (statp->_vcsock);
       statp->_vcsock = -1;
       statp->_flags &= ~(RES_F_VC | RES_F_CONN);
     }
@@ -103,7 +104,7 @@ __res_iclose (res_state statp, bool free_addr)
       {
         if (statp->_u._ext.nssocks[ns] != -1)
           {
-            close_not_cancel_no_status (statp->_u._ext.nssocks[ns]);
+            __close_nocancel_nostatus (statp->_u._ext.nssocks[ns]);
             statp->_u._ext.nssocks[ns] = -1;
           }
         if (free_addr)

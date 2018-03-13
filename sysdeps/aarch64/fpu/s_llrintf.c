@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -16,8 +16,21 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-#define FUNC llrintf
-#define ITYPE float
-#define IREGS "s"
-#define OTYPE long long int
-#include <s_lrint.c>
+#include <math.h>
+#include <math_private.h>
+#include <libm-alias-float.h>
+
+long long int
+__llrintf (float x)
+{
+  float r = __builtin_rintf (x);
+
+  /* Prevent gcc from calling llrintf directly when compiled with
+     -fno-math-errno by inserting a barrier.  */
+
+
+  math_opt_barrier (r);
+  return r;
+}
+
+libm_alias_float (__llrint, llrint)

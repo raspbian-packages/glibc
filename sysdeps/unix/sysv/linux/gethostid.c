@@ -1,4 +1,4 @@
-/* Copyright (C) 1995-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1995-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -47,13 +47,13 @@ sethostid (long int id)
     }
 
   /* Open file for writing.  Everybody is allowed to read this file.  */
-  fd = open_not_cancel (HOSTIDFILE, O_CREAT|O_WRONLY|O_TRUNC, 0644);
+  fd = __open_nocancel (HOSTIDFILE, O_CREAT|O_WRONLY|O_TRUNC, 0644);
   if (fd < 0)
     return -1;
 
-  written = write_not_cancel (fd, &id32, sizeof (id32));
+  written = __write_nocancel (fd, &id32, sizeof (id32));
 
-  close_not_cancel_no_status (fd);
+  __close_nocancel_nostatus (fd);
 
   return written != sizeof (id32) ? -1 : 0;
 }
@@ -77,12 +77,12 @@ gethostid (void)
   int fd;
 
   /* First try to get the ID from a former invocation of sethostid.  */
-  fd = open_not_cancel (HOSTIDFILE, O_RDONLY|O_LARGEFILE, 0);
+  fd = __open_nocancel (HOSTIDFILE, O_RDONLY|O_LARGEFILE, 0);
   if (fd >= 0)
     {
-      ssize_t n = read_not_cancel (fd, &id, sizeof (id));
+      ssize_t n = __read_nocancel (fd, &id, sizeof (id));
 
-      close_not_cancel_no_status (fd);
+      __close_nocancel_nostatus (fd);
 
       if (n == sizeof (id))
 	return id;

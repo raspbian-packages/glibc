@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2017 Free Software Foundation, Inc.
+# Copyright (C) 1991-2018 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -39,7 +39,7 @@ routines	:=							      \
 	flockfile ftrylockfile funlockfile				      \
 	isoc99_scanf isoc99_vscanf isoc99_fscanf isoc99_vfscanf isoc99_sscanf \
 	isoc99_vsscanf							      \
-	psiginfo
+	psiginfo gentempfd
 
 aux	:= errlist siglist printf-parsemb printf-parsewc fxprintf
 
@@ -95,11 +95,11 @@ tst-vfprintf-width-prec-ENV = \
   MALLOC_TRACE=$(objpfx)tst-vfprintf-width-prec.mtrace
 
 $(objpfx)tst-unbputc.out: tst-unbputc.sh $(objpfx)tst-unbputc
-	$(SHELL) $< $(common-objpfx) '$(test-program-prefix)'; \
+	$(SHELL) $< $(common-objpfx) '$(test-program-prefix)' > $@; \
 	$(evaluate-test)
 
 $(objpfx)tst-printf.out: tst-printf.sh $(objpfx)tst-printf
-	$(SHELL) $< $(common-objpfx) '$(test-program-prefix)'; \
+	$(SHELL) $< $(common-objpfx) '$(test-program-prefix)' > $@; \
 	$(evaluate-test)
 
 # We generate this source because it requires a printf invocation with
@@ -111,15 +111,15 @@ $(objpfx)tst-%-mem.out: $(objpfx)tst-%.out
 	$(common-objpfx)malloc/mtrace $(objpfx)tst-$*.mtrace > $@; \
 	$(evaluate-test)
 
-CFLAGS-vfprintf.c = -Wno-uninitialized
-CFLAGS-vfwprintf.c = -Wno-uninitialized
+CFLAGS-vfprintf.c += -Wno-uninitialized
+CFLAGS-vfwprintf.c += -Wno-uninitialized
 
-CFLAGS-tmpfile.c = -fexceptions
-CFLAGS-tmpfile64.c = -fexceptions
-CFLAGS-tempname.c = -fexceptions
-CFLAGS-psignal.c = -fexceptions
-CFLAGS-vprintf.c = -fexceptions
-CFLAGS-cuserid.c = -fexceptions
+CFLAGS-tmpfile.c += -fexceptions
+CFLAGS-tmpfile64.c += -fexceptions
+CFLAGS-tempname.c += -fexceptions
+CFLAGS-psignal.c += -fexceptions
+CFLAGS-vprintf.c += -fexceptions
+CFLAGS-cuserid.c += -fexceptions
 
 CFLAGS-vfprintf.c += -fexceptions
 CFLAGS-fprintf.c += -fexceptions
@@ -133,15 +133,15 @@ CFLAGS-isoc99_vfscanf.c += -fexceptions
 CFLAGS-isoc99_vscanf.c += -fexceptions
 CFLAGS-isoc99_fscanf.c += -fexceptions
 CFLAGS-isoc99_scanf.c += -fexceptions
-CFLAGS-errlist.c = $(fno-unit-at-a-time)
-CFLAGS-siglist.c = $(fno-unit-at-a-time)
+CFLAGS-errlist.c += $(fno-unit-at-a-time)
+CFLAGS-siglist.c += $(fno-unit-at-a-time)
 
 # The following is a hack since we must compile scanf1{5,7}.c without any
 # GNU extension.  The latter are needed, though, when internal headers
 # are used.  So made sure we see the installed headers first.
-CFLAGS-scanf15.c = -I../libio -I../stdlib -I../wcsmbs -I../time -I../string \
+CFLAGS-scanf15.c += -I../libio -I../stdlib -I../wcsmbs -I../time -I../string \
 		   -I../wctype
-CFLAGS-scanf17.c = -I../libio -I../stdlib -I../wcsmbs -I../time -I../string \
+CFLAGS-scanf17.c += -I../libio -I../stdlib -I../wcsmbs -I../time -I../string \
 		   -I../wctype
 
 # tst-gets.c tests a deprecated function.

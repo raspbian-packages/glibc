@@ -1,4 +1,4 @@
-/* Copyright (C) 1998-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1998-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -26,8 +26,6 @@
 #include <elf/dl-tunables.h>
 
 extern void __libc_init_first (int argc, char **argv, char **envp);
-
-extern int __libc_multiple_libcs;
 
 #include <tls.h>
 #ifndef SHARED
@@ -143,6 +141,8 @@ LIBC_START_MAIN (int (*main) (int, char **, char ** MAIN_AUXVEC_DECL),
   __libc_multiple_libcs = &_dl_starting_up && !_dl_starting_up;
 
 #ifndef SHARED
+  _dl_relocate_static_pie ();
+
   char **ev = &argv[argc + 1];
 
   __environ = ev;

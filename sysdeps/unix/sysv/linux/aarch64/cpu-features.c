@@ -1,6 +1,6 @@
 /* Initialize CPU feature data.  AArch64 version.
    This file is part of the GNU C Library.
-   Copyright (C) 2017 Free Software Foundation, Inc.
+   Copyright (C) 2017-2018 Free Software Foundation, Inc.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,9 @@
 #include <sys/auxv.h>
 #include <elf/dl-hwcaps.h>
 
+#define DCZID_DZP_MASK (1 << 4)
+#define DCZID_BS_MASK (0xf)
+
 #if HAVE_TUNABLES
 struct cpu_list
 {
@@ -28,9 +31,11 @@ struct cpu_list
 };
 
 static struct cpu_list cpu_list[] = {
-      {"falkor",	0x510FC000},
-      {"thunderxt88",	0x430F0A10},
-      {"generic", 	0x0}
+      {"falkor",	 0x510FC000},
+      {"thunderxt88",	 0x430F0A10},
+      {"thunderx2t99",   0x431F0AF0},
+      {"thunderx2t99p1", 0x420F5160},
+      {"generic", 	 0x0}
 };
 
 static uint64_t
@@ -70,4 +75,11 @@ init_cpu_features (struct cpu_features *cpu_features)
     }
 
   cpu_features->midr_el1 = midr;
+
+  /* Check if ZVA is enabled.  */
+  unsigned dczid;
+  asm volatile ("mrs %0, dczid_el0" : "=r"(dczid));
+
+  if ((dczid & DCZID_DZP_MASK) == 0)
+    cpu_features->zva_size = 4 << (dczid & DCZID_BS_MASK);
 }

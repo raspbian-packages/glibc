@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@gmail.com>, 2011.
 
@@ -18,8 +18,11 @@
 
 #include <math.h>
 #include <math_private.h>
+#include <math-svid-compat.h>
+#include <libm-alias-double.h>
 
 
+#if LIBM_SVID_COMPAT
 /* wrapper remainder */
 double
 __remainder (double x, double y)
@@ -31,10 +34,9 @@ __remainder (double x, double y)
 
   return __ieee754_remainder (x, y);
 }
-weak_alias (__remainder, remainder)
+libm_alias_double (__remainder, remainder)
 weak_alias (__remainder, drem)
-#ifdef NO_LONG_DOUBLE
-strong_alias (__remainder, __remainderl)
-weak_alias (__remainder, remainderl)
+# ifdef NO_LONG_DOUBLE
 weak_alias (__remainder, dreml)
+# endif
 #endif

@@ -1,5 +1,5 @@
 /* Return classification value corresponding to argument.  m68k version.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
    Fixed for m68k by Andreas Schwab <schwab@suse.de>.
@@ -26,7 +26,7 @@
 int
 __fpclassifyl (long double x)
 {
-  u_int32_t ex, hx, lx;
+  uint32_t ex, hx, lx;
   int retval = FP_NORMAL;
 
   GET_LDOUBLE_WORDS (ex, hx, lx, x);

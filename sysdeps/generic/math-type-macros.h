@@ -1,5 +1,5 @@
 /* Helper macros for type generic function implementations within libm.
-   Copyright (C) 2016-2017 Free Software Foundation, Inc.
+   Copyright (C) 2016-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -34,26 +34,13 @@
 		converts a string into the appropriate FLOAT nan
 		value.
 
-  Optionally, these headers may inject a non-standard
-  definition for the following:
-
   declare_mgen_alias(from,to)
       This exposes the appropriate symbol(s) for a
       function f of type FLOAT.
 
-  declare_mgen_alias_2(from,to,to2)
+  declare_mgen_alias_r(from,to)
       This exposes the appropriate symbol(s) for a
-      function f of type FLOAT when it is aliased
-      to two symbols.
-
-  M_LIBM_NEED_COMPAT(func)
-      This is utilized in macro context to indicate
-      whether func should declare compat symbols.
-
-  declare_mgen_libm_compat(from,to)
-      This is used in conjunction with the above macro
-      outside of macro context to paste whatever is
-      required to generate a compat symbol. */
+      function f_r of type FLOAT.  */
 
 #ifndef M_PFX
 # error "M_PFX must be defined."
@@ -72,6 +59,12 @@
 #endif
 #ifndef CFLOAT
 # error "CFLOAT must be defined."
+#endif
+#ifndef declare_mgen_alias
+# error "declare_mgen_alias must be defined."
+#endif
+#ifndef declare_mgen_alias_r
+# error "declare_mgen_alias_r must be defined."
 #endif
 
 #define __M_CONCAT(a,b) a ## b
@@ -114,24 +107,6 @@
 /* Enable overloading of function name to assist reuse.  */
 #ifndef M_DECL_FUNC
 # define M_DECL_FUNC(f) M_SUF (f)
-#endif
-
-/* If the type does not declare special aliasing, use the default.  */
-#ifndef declare_mgen_alias
-# define declare_mgen_alias(from, to) weak_alias (M_SUF (from), M_SUF (to))
-#endif
-
-/* Likewise, if two aliases are derived from the same symbol.  */
-#ifndef declare_mgen_alias_2
-# define declare_mgen_alias_2(from, to, to2)  \
- declare_mgen_alias (from, to)		      \
- declare_mgen_alias (from, to2)
-#endif
-
-/* Do not generate anything for compat symbols by default.  */
-#ifndef M_LIBM_NEED_COMPAT
-# define M_LIBM_NEED_COMPAT(func) 0
-# define declare_mgen_libm_compat(from, to)
 #endif
 
 #endif /* _MATH_TYPE_MACROS */

@@ -1,5 +1,5 @@
 /* ABI compatibility for lgamma functions.
-   Copyright (C) 2015-2017 Free Software Foundation, Inc.
+   Copyright (C) 2015-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -19,6 +19,7 @@
 #ifndef LGAMMA_COMPAT_H
 #define LGAMMA_COMPAT_H 1
 
+#include <math-svid-compat.h>
 #include <shlib-compat.h>
 
 /* XSI POSIX requires lgamma to set signgam, but ISO C does not permit
@@ -40,7 +41,8 @@
 #define HAVE_LGAMMA_COMPAT SHLIB_COMPAT (libm, LGAMMA_OLD_VER, LGAMMA_NEW_VER)
 
 /* Whether to build this version at all.  */
-#define BUILD_LGAMMA (HAVE_LGAMMA_COMPAT || !USE_AS_COMPAT)
+#define BUILD_LGAMMA \
+  (LIBM_SVID_COMPAT && (HAVE_LGAMMA_COMPAT || !USE_AS_COMPAT))
 
 /* The name to use for this version.  */
 #if USE_AS_COMPAT

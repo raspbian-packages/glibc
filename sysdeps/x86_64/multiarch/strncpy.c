@@ -1,6 +1,6 @@
 /* Multiple versions of strncpy.
    All versions must be listed in ifunc-impl-list.c.
-   Copyright (C) 2017 Free Software Foundation, Inc.
+   Copyright (C) 2017-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -19,7 +19,6 @@
 
 /* Define multiple versions only for the definition in libc.  */
 #if IS_IN (libc)
-# define _HAVE_STRING_ARCH_strncpy 1
 # define strncpy __redirect_strncpy
 # include <string.h>
 # undef strncpy

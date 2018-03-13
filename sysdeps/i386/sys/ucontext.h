@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -23,7 +23,6 @@
 #include <features.h>
 
 #include <bits/types/sigset_t.h>
-#include <bits/sigcontext.h>
 #include <bits/types/stack_t.h>
 
 
@@ -122,18 +121,18 @@ typedef struct
     fpregset_t __ctx(fpregs);
   } mcontext_t;
 
-#undef __ctx
-#undef __ctxt
-
 /* Userlevel context.  */
 typedef struct ucontext_t
   {
-    unsigned long int uc_flags;
+    unsigned long int __ctx(uc_flags);
     struct ucontext_t *uc_link;
     sigset_t uc_sigmask;
     stack_t uc_stack;
     mcontext_t uc_mcontext;
-    long int uc_filler[5];
+    long int __glibc_reserved1[5];
   } ucontext_t;
+
+#undef __ctx
+#undef __ctxt
 
 #endif /* sys/ucontext.h */

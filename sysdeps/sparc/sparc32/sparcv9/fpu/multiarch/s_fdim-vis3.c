@@ -1,5 +1,5 @@
 /* Compute positive difference, sparc 32-bit+v9+vis3.
-   Copyright (C) 2016-2017 Free Software Foundation, Inc.
+   Copyright (C) 2016-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -20,6 +20,5 @@
 
 #define __fdim __fdim_vis3
 #define declare_mgen_alias(t, f)
-#define M_LIBM_NEED_COMPAT(f) 0
 
 #include <math/s_fdim.c>

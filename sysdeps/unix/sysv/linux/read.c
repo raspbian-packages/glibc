@@ -1,5 +1,5 @@
 /* Linux read syscall implementation.
-   Copyright (C) 2017 Free Software Foundation, Inc.
+   Copyright (C) 2017-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -18,6 +18,7 @@
 
 #include <unistd.h>
 #include <sysdep-cancel.h>
+#include <not-cancel.h>
 
 /* Read NBYTES into BUF from FD.  Return the number read or -1.  */
 ssize_t
@@ -31,3 +32,14 @@ libc_hidden_def (__read)
 weak_alias (__libc_read, __read)
 libc_hidden_def (read)
 weak_alias (__libc_read, read)
+
+#if !IS_IN (rtld)
+ssize_t
+__read_nocancel (int fd, void *buf, size_t nbytes)
+{
+  return INLINE_SYSCALL_CALL (read, fd, buf, nbytes);
+}
+#else
+strong_alias (__libc_read, __read_nocancel)
+#endif
+libc_hidden_def (__read_nocancel)

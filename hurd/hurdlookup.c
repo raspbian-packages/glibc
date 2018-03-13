@@ -1,4 +1,4 @@
-/* Copyright (C) 1992-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1992-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -42,7 +42,7 @@ __hurd_file_name_lookup (error_t (*use_init_port)
 			   (int which, error_t (*operate) (file_t)),
 			 file_t (*get_dtable_port) (int fd),
 			 error_t (*lookup)
-			   (file_t dir, char *name, int flags, mode_t mode,
+			   (file_t dir, const char *name, int flags, mode_t mode,
 			    retry_type *do_retry, string_t retry_name,
 			    mach_port_t *result),
 			 const char *file_name, int flags, mode_t mode,
@@ -105,7 +105,7 @@ __hurd_file_name_split (error_t (*use_init_port)
 			  (int which, error_t (*operate) (file_t)),
 			file_t (*get_dtable_port) (int fd),
 			error_t (*lookup)
-			  (file_t dir, char *name, int flags, mode_t mode,
+			  (file_t dir, const char *name, int flags, mode_t mode,
 			   retry_type *do_retry, string_t retry_name,
 			   mach_port_t *result),
 			const char *file_name,
@@ -158,7 +158,7 @@ __hurd_directory_name_split (error_t (*use_init_port)
 			     (int which, error_t (*operate) (file_t)),
 			     file_t (*get_dtable_port) (int fd),
 			     error_t (*lookup)
-			     (file_t dir, char *name, int flags, mode_t mode,
+			     (file_t dir, const char *name, int flags, mode_t mode,
 			      retry_type *do_retry, string_t retry_name,
 			      mach_port_t *result),
 			     const char *file_name,

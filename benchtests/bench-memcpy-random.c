@@ -1,5 +1,5 @@
 /* Measure memcpy performance.
-   Copyright (C) 2016-2017 Free Software Foundation, Inc.
+   Copyright (C) 2016-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -156,7 +156,7 @@ test_main (void)
   json_attr_string (&json_ctx, "timing_type", TIMING_TYPE);
 
   json_attr_object_begin (&json_ctx, "functions");
-  json_attr_object_begin (&json_ctx, "memcpy");
+  json_attr_object_begin (&json_ctx, TEST_NAME);
   json_attr_string (&json_ctx, "bench-variant", "random");
 
   json_array_begin (&json_ctx, "ifuncs");

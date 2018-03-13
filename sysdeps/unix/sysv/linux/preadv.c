@@ -1,4 +1,4 @@
-/* Copyright (C) 2009-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2009-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -33,7 +33,7 @@ preadv (int fd, const struct iovec *vector, int count, off_t offset)
 }
 # else
 static ssize_t __atomic_preadv_replacement (int, const struct iovec *,
-					    int, off_t) internal_function;
+					    int, off_t);
 ssize_t
 preadv (int fd, const struct iovec *vector, int count, off_t offset)
 {
@@ -45,7 +45,7 @@ preadv (int fd, const struct iovec *vector, int count, off_t offset)
 #  endif
   return __atomic_preadv_replacement (fd, vector, count, offset);
 }
-#  define PREADV static internal_function __atomic_preadv_replacement
+#  define PREADV static __atomic_preadv_replacement
 #  define PREAD __pread
 #  define OFF_T off_t
 #  include <sysdeps/posix/preadv_common.c>

@@ -1,4 +1,4 @@
-/* Copyright (C) 2010-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2010-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -34,16 +34,16 @@ int
 attribute_hidden
 __getlogin_r_loginuid (char *name, size_t namesize)
 {
-  int fd = open_not_cancel_2 ("/proc/self/loginuid", O_RDONLY);
+  int fd = __open_nocancel ("/proc/self/loginuid", O_RDONLY);
   if (fd == -1)
     return -1;
 
   /* We are reading a 32-bit number.  12 bytes are enough for the text
      representation.  If not, something is wrong.  */
   char uidbuf[12];
-  ssize_t n = TEMP_FAILURE_RETRY (read_not_cancel (fd, uidbuf,
+  ssize_t n = TEMP_FAILURE_RETRY (__read_nocancel (fd, uidbuf,
 						   sizeof (uidbuf)));
-  close_not_cancel_no_status (fd);
+  __close_nocancel_nostatus (fd);
 
   uid_t uid;
   char *endp;

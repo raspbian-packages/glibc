@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -61,7 +61,7 @@ __pthread_enable_asynccancel (void)
 
 
 void
-internal_function attribute_hidden
+attribute_hidden
 __pthread_disable_asynccancel (int oldtype)
 {
   /* If asynchronous cancellation was enabled before we do not have

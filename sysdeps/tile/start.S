@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Chris Metcalf <cmetcalf@tilera.com>, 2011.
 
@@ -109,11 +109,11 @@ _start:
 
 	 /* Zero out callee space for return address. Unnecessary but free.
 	    This is just paranoia to help backtracing not go awry. */
-	 ST sp, zero
+	 st sp, zero
 	}
 	{
 	 /* Zero out our frame pointer for __libc_start_main. */
-	 ST r12, zero
+	 st r12, zero
 
 	 /* Zero out lr to make __libc_start_main the end of backtrace.  */
 	 move lr, zero
@@ -129,7 +129,6 @@ _start:
 
 	 /* Pass address of main() in r0, and of our own entry
 	    points to .fini and .init in r3 and r4.  */
-#ifdef __tilegx__
 	 moveli r0, hw2_last(main - .Lmy_pc)
 	}
 	{
@@ -162,30 +161,12 @@ _start:
 	}
 	{
 	 ADD_PTR r4, r4, r13
-# ifdef NO_PLT_PCREL
+#ifdef NO_PLT_PCREL
 	 j plt(__libc_start_main)
-# else
-	 jr r12
-# endif
-	}
 #else
-	 addli r0, r13, lo16(main - .Lmy_pc)
-	}
-	{
-	 auli r0, r0, ha16(main - .Lmy_pc)
-	 addli r3, r13, lo16(__libc_csu_init - .Lmy_pc)
-	}
-	{
-	 auli r3, r3, ha16(__libc_csu_init - .Lmy_pc)
-	 addli r4, r13, lo16(__libc_csu_fini - .Lmy_pc)
-	}
-	{
-	 auli r4, r4, ha16(__libc_csu_fini - .Lmy_pc)
-	 /* Call the user's main function, and exit with its value.
-	    But let the libc call main. */
-	 j plt(__libc_start_main)
-	}
+	 jr r12
 #endif
+	}
 
 	{
 	 /* Tell backtracer to give up (_start has no caller). */

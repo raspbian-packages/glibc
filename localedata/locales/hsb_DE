@@ -39,144 +39,109 @@ category "i18n:2012";LC_TELEPHONE
 category "i18n:2012";LC_MEASUREMENT
 END LC_IDENTIFICATION
 
-LC_CTYPE
-copy "i18n"
-END LC_CTYPE
-
 LC_COLLATE
-% Copy the template from ISO/IEC 14651
 copy "iso14651_t1"
 
-collating-element <D-Z'> from "<U0044><U0179>"
-collating-element <D-z'> from "<U0044><U017A>"
-collating-element <d-Z'> from "<U0064><U0179>"
+% CLDR collation rules for Upper Sorbian:
+% (see:https://unicode.org/cldr/trac/browser/trunk/common/collation/hsb.xml)
+%
+% &C<č<<<Č<ć<<<Ć
+% &E<ě<<<Ě
+% &H<ch<<<cH<<<Ch<<<CH
+% &[before 1] L<ł<<<Ł
+% &R<ř<<<Ř
+% &S<š<<<Š
+% &Z<ž<<<Ž<ź<<<Ź
+%
+% And CLDR also lists the following
+% index characters:
+% (see: https://unicode.org/cldr/trac/browser/trunk/common/main/hsb.xml)
+%
+% <exemplarCharacters type="index">[A B C Č Ć D {DŹ} E F G H {CH} I J K Ł L M N O P Q R S Š T U V W X Y Z Ž]</exemplarCharacters>
+%
+% There is some inconsistency here, in the index DŹ is a separate character but
+% in the sorting rules it is not. Also, the sorting rules treat Ě, Ř and Ź as a separate
+% characters but the index does not.
+%
+% The following treats all of the above as separate characters:
+
 collating-element <d-z'> from "<U0064><U017A>"
-collating-element <C-H> from "<U0043><U0048>"
-collating-element <C-h> from "<U0043><U0068>"
-collating-element <c-H> from "<U0063><U0048>"
+collating-element <d-Z'> from "<U0064><U0179>"
+collating-element <D-z'> from "<U0044><U017A>"
+collating-element <D-Z'> from "<U0044><U0179>"
 collating-element <c-h> from "<U0063><U0068>"
+collating-element <c-H> from "<U0063><U0048>"
+collating-element <C-h> from "<U0043><U0068>"
+collating-element <C-H> from "<U0043><U0048>"
 
-collating-symbol <ccaron>
-collating-symbol <d-z-sh>
-collating-symbol <ecaron>
-collating-symbol <ch>
-collating-symbol <lstroke>
-collating-symbol <nacute>
-collating-symbol <oacute>
-collating-symbol <rcaron>
-collating-symbol <scaron>
-collating-symbol <cacute>
-collating-symbol <zcaron>
-
-collating-symbol <CAP-MIN>
-collating-symbol <MIN-CAP>
-
-reorder-after <MIN>
-<MIN-CAP>
-<CAP-MIN>
+collating-symbol <c-caron>
+collating-symbol <c-acute>
+collating-symbol <d-z-acute-digraph>
+collating-symbol <e-caron>
+collating-symbol <c-h-digraph>
+collating-symbol <l-stroke>
+collating-symbol <r-caron>
+collating-symbol <s-caron>
+collating-symbol <z-caron>
+collating-symbol <z-acute>
 
 reorder-after <c>
-<ccaron>
-
+<c-caron>
+<c-acute>
 reorder-after <d>
-<d-z-sh>
-
+<d-z-acute-digraph>
 reorder-after <e>
-<ecaron>
-
+<e-caron>
 reorder-after <h>
-<ch>
-
+<c-h-digraph>
 reorder-after <k>
-<lstroke>
-
-reorder-after <n>
-<nacute>
-
-%  Is oacute really used?
-reorder-after <o>
-<oacute>
-
+<l-stroke>
 reorder-after <r>
-<rcaron>
-
+<r-caron>
 reorder-after <s>
-<scaron>
-
-reorder-after <t>
-<cacute>
-
+<s-caron>
 reorder-after <z>
-<zcaron>
+<z-caron>
+<z-acute>
 
-reorder-after <U010B>
-<U010D> <ccaron>;<PCT>;<MIN>;IGNORE
-reorder-after <U010A>
-<U010C> <ccaron>;<PCT>;<CAP>;IGNORE
-
-reorder-after <U0111>
-<d-z'> <d-z-sh>;<BAS>;<MIN>;IGNORE
-<d-Z'> <d-z-sh>;<BAS>;<MIN-CAP>;IGNORE
-reorder-after <U0110>
-<D-z'> <d-z-sh>;<BAS>;<CAP-MIN>;IGNORE
-<D-Z'> <d-z-sh>;<BAS>;<CAP>;IGNORE
-
-reorder-after <U0113>
-<U011B> <ecaron>;<BAS>;<MIN>;IGNORE
-reorder-after <U0112>
-<U011A> <ecaron>;<BAS>;<CAP>;IGNORE
-
-reorder-after <U0127>
-<c-h>  <ch>;<BAS>;<MIN>;IGNORE
-<c-H>  <ch>;<BAS>;<MIN-CAP>;IGNORE
-reorder-after <U0126>
-<C-h>  <ch>;<BAS>;<CAP-MIN>;IGNORE
-<C-H>  <ch>;<BAS>;<CAP>;IGNORE
-
-reorder-after <U0137>
-<U0142> <lstroke>;<BAS>;<MIN>;IGNORE
-reorder-after <U0136>
-<U0141> <lstroke>;<BAS>;<CAP>;IGNORE
-
-reorder-after <U0146>
-<U0144> <nacute>;<BAS>;<MIN>;IGNORE
-reorder-after <U0145>
-<U0143> <nacute>;<BAS>;<CAP>;IGNORE
-
-reorder-after <U006F>
-<U00F3> <oacute>;<BAS>;<MIN>;IGNORE
-reorder-after <U004F>
-<U00D3> <oacute>;<BAS>;<CAP>;IGNORE
-
-reorder-after <U0157>
-<U0159> <rcaron>;<BAS>;<MIN>;IGNORE
-reorder-after <U0156>
-<U0158> <rcaron>;<BAS>;<CAP>;IGNORE
-
-reorder-after <U015F>
-<U0161> <scaron>;<BAS>;<MIN>;IGNORE
-reorder-after <U015E>
-<U0160> <scaron>;<BAS>;<CAP>;IGNORE
-
-reorder-after <U0163>
-<U0107> <cacute>;<BAS>;<MIN>;IGNORE
-reorder-after <U0162>
-<U0106> <cacute>;<BAS>;<CAP>;IGNORE
-
-reorder-after <U017C>
-<U017E> <zcaron>;<BAS>;<MIN>;IGNORE
-reorder-after <U017B>
-<U017D> <zcaron>;<BAS>;<CAP>;IGNORE
+<U010D> <c-caron>;<BAS>;<MIN>;IGNORE % č
+<U010C> <c-caron>;<BAS>;<CAP>;IGNORE % Č
+<U0107> <c-acute>;<BAS>;<MIN>;IGNORE % ć
+<U0106> <c-acute>;<BAS>;<CAP>;IGNORE % Ć
+<d-z'> <d-z-acute-digraph>;<BAS>;"<MIN><MIN>";IGNORE % dź
+<d-Z'> <d-z-acute-digraph>;<BAS>;"<MIN><CAP>";IGNORE % dŹ
+<D-z'> <d-z-acute-digraph>;<BAS>;"<CAP><MIN>";IGNORE % Dź
+<D-Z'> <d-z-acute-digraph>;<BAS>;"<CAP><CAP>";IGNORE % DŹ
+<U011B> <e-caron>;<BAS>;<MIN>;IGNORE % ě
+<U011A> <e-caron>;<BAS>;<CAP>;IGNORE % Ě
+<c-h> <c-h-digraph>;<BAS>;"<MIN><MIN>";IGNORE % ch
+<c-H> <c-h-digraph>;<BAS>;"<MIN><CAP>";IGNORE % cH
+<C-h> <c-h-digraph>;<BAS>;"<CAP><MIN>";IGNORE % Ch
+<C-H> <c-h-digraph>;<BAS>;"<CAP><CAP>";IGNORE % CH
+<U0142> <l-stroke>;<BAS>;<MIN>;IGNORE % ł
+<U0141> <l-stroke>;<BAS>;<CAP>;IGNORE % Ł
+<U0159> <r-caron>;<BAS>;<MIN>;IGNORE % ř
+<U0158> <r-caron>;<BAS>;<CAP>;IGNORE % Ř
+<U0161> <s-caron>;<BAS>;<MIN>;IGNORE % š
+<U0160> <s-caron>;<BAS>;<CAP>;IGNORE % Š
+<U017E> <z-caron>;<BAS>;<MIN>;IGNORE % ž
+<U017D> <z-caron>;<BAS>;<CAP>;IGNORE % Ž
+<U017A> <z-acute>;<BAS>;<MIN>;IGNORE % ź
+<U0179> <z-acute>;<BAS>;<CAP>;IGNORE % Ź
 
 reorder-end
 
 END LC_COLLATE
 
+LC_CTYPE
+copy "i18n"
+END LC_CTYPE
+
 LC_MESSAGES
-yesexpr "<U005E><U005B><U002B><U0031><U0068><U0048><U0079><U0059><U005D>"
-noexpr  "<U005E><U005B><U002D><U0030><U006E><U004E><U005D>"
-yesstr  "<U0068><U0061><U006A>"
-nostr   "<U006E><U011B>"
+yesexpr "^[+1hHyY]"
+noexpr  "^[-0nN]"
+yesstr  "haj"
+nostr   "n<U011B>"
 END LC_MESSAGES
 
 LC_MONETARY
@@ -188,38 +153,38 @@ copy "de_DE"
 END LC_NUMERIC
 
 LC_TIME
-abday   "<U004E><U006A>";"<U0050><U00F3>";/
-	"<U0057><U0075>";"<U0053><U0072>";/
-	"<U0160><U0074>";"<U0050><U006A>";/
-	"<U0053><U006F>"
-day     "<U004E><U006A><U0065><U0064><U017A><U0065><U006C><U0061>";/
-	"<U0050><U00F3><U006E><U0064><U017A><U0065><U006C><U0061>";/
-	"<U0057><U0075><U0074><U006F><U0072><U0061>";/
-	"<U0053><U0072><U006A><U0065><U0064><U0061>";/
-	"<U0160><U0074><U0076><U00F3><U0072><U0074><U006B>";/
-	"<U0050><U006A><U0061><U0074><U006B>";/
-	"<U0053><U006F><U0062><U006F><U0074><U0061>"
-abmon	"<U004A><U0061><U006E>";"<U0046><U0065><U0062>";/
-	"<U004D><U011B><U0072>";"<U0041><U0070><U0072>";/
-	"<U004D><U0065><U006A>";"<U004A><U0075><U006E>";/
-	"<U004A><U0075><U006C>";"<U0041><U0077><U0067>";/
-	"<U0053><U0065><U0070>";"<U004F><U006B><U0074>";/
-	"<U004E><U006F><U0077>";"<U0044><U0065><U0063>"
-mon	"<U004A><U0061><U006E><U0075><U0061><U0072>";/
-	"<U0046><U0065><U0062><U0072><U0075><U0061><U0072>";/
-	"<U004D><U011B><U0072><U0063>";/
-	"<U0041><U0070><U0072><U0079><U006C>";/
-	"<U004D><U0065><U006A><U0061>";/
-	"<U004A><U0075><U006E><U0069><U006A>";/
-	"<U004A><U0075><U006C><U0069><U006A>";/
-	"<U0041><U0077><U0067><U0075><U0073><U0074>";/
-	"<U0053><U0065><U0070><U0074><U0065><U006D><U0062><U0065><U0072>";/
-	"<U004F><U006B><U0074><U006F><U0062><U0065><U0072>";/
-	"<U004E><U006F><U0077><U0065><U006D><U0062><U0065><U0072>";/
-	"<U0044><U0065><U0063><U0065><U006D><U0062><U0065><U0072>"
-d_t_fmt "<U0025><U0061><U0020><U0025><U0064><U0020><U0025><U0062><U0020><U0025><U0059><U0020><U0025><U0054><U0020><U0025><U005A>"
-d_fmt   "<U0025><U0064><U002E><U0025><U006D><U002E><U0025><U0059>"
-t_fmt   "<U0025><U0054>"
+abday   "Nj";"P<U00F3>";/
+	"Wu";"Sr";/
+	"<U0160>t";"Pj";/
+	"So"
+day     "Njed<U017A>ela";/
+	"P<U00F3>nd<U017A>ela";/
+	"Wutora";/
+	"Srjeda";/
+	"<U0160>tv<U00F3>rtk";/
+	"Pjatk";/
+	"Sobota"
+abmon	"Jan";"Feb";/
+	"M<U011B>r";"Apr";/
+	"Mej";"Jun";/
+	"Jul";"Awg";/
+	"Sep";"Okt";/
+	"Now";"Dec"
+mon	"Januar";/
+	"Februar";/
+	"M<U011B>rc";/
+	"Apryl";/
+	"Meja";/
+	"Junij";/
+	"Julij";/
+	"Awgust";/
+	"September";/
+	"Oktober";/
+	"Nowember";/
+	"December"
+d_t_fmt "%a %d %b %Y %T %Z"
+d_fmt   "%d.%m.%Y"
+t_fmt   "%T"
 am_pm   "";""
 t_fmt_ampm ""
 
@@ -240,31 +205,24 @@ copy "de_DE"
 END LC_MEASUREMENT
 
 LC_NAME
-name_fmt    "<U0025><U0064><U0025><U0074><U0025><U0067><U0025><U0074>/
-<U0025><U006D><U0025><U0074><U0025><U0066>"
-name_miss   "<U006B><U006E><U006A><U0065><U017E><U006E><U0061>"
-name_mr     "<U006B><U006E><U006A><U0065><U007A>"
-name_mrs    "<U006B><U006E><U006A><U0065><U006E><U0069>"
+name_fmt    "%d%t%g%t%m%t%f"
+name_miss   "knje<U017E>na"
+name_mr     "knjez"
+name_mrs    "knjeni"
 %name_ms     ""
 END LC_NAME
 
 LC_ADDRESS
-postal_fmt    "<U0025><U0066><U0025><U004E><U0025><U0061><U0025><U004E>/
-<U0025><U0064><U0025><U004E><U0025><U0062><U0025><U004E><U0025><U0073>/
-<U0020><U0025><U0068><U0020><U0025><U0065><U0020><U0025><U0072><U0025>/
-<U004E><U0025><U007A><U0020><U0025><U0054><U0025>/
-<U004E><U0025><U0063><U0025><U004E>"
-country_name  "<U004E><U011B><U006D><U0073><U006B><U0061>"
-country_post  "<U0044>"
-country_ab2   "<U0044><U0045>"
-country_ab3   "<U0044><U0045><U0055>"
+postal_fmt    "%f%N%a%N%d%N%b%N%s %h %e %r%N%z %T%N%c%N"
+country_name  "N<U011B>mska"
+country_post  "D"
+country_ab2   "DE"
+country_ab3   "DEU"
 country_num   276
-country_car   "<U0044>"
+country_car   "D"
 country_isbn  3
-lang_name     "<U0068><U006F><U0072><U006E><U006A><U006F><U0073><U0065><U0072><U0062><U0161><U0107><U0069><U006E><U0061>"
+lang_name     "hornjoserb<U0161><U0107>ina"
 lang_ab      ""
-% hsb
-lang_term    "<U0068><U0073><U0062>"
-% hsb
-lang_lib     "<U0068><U0073><U0062>"
+lang_term    "hsb"
+lang_lib     "hsb"
 END LC_ADDRESS

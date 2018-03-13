@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -72,7 +72,6 @@
 
 #include <locale/localeinfo.h>
 #include <libioP.h>
-#include <libio.h>
 
 #undef va_list
 #define va_list	_IO_va_list

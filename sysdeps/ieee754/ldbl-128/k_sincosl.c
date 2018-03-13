@@ -1,5 +1,5 @@
 /* Quad-precision floating point sine and cosine on <-pi/4,pi/4>.
-   Copyright (C) 1999-2017 Free Software Foundation, Inc.
+   Copyright (C) 1999-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Jakub Jelinek <jj@ultra.linux.cz>
 
@@ -101,9 +101,9 @@ __kernel_sincosl(_Float128 x, _Float128 y, _Float128 *sinx, _Float128 *cosx, int
 {
   _Float128 h, l, z, sin_l, cos_l_m1;
   int64_t ix;
-  u_int32_t tix, hix, index;
+  uint32_t tix, hix, index;
   GET_LDOUBLE_MSW64 (ix, x);
-  tix = ((u_int64_t)ix) >> 32;
+  tix = ((uint64_t)ix) >> 32;
   tix &= ~0x80000000;			/* tix = |x|'s high 32 bits */
   if (tix < 0x3ffc3000)			/* |x| < 0.1484375 */
     {
@@ -149,7 +149,7 @@ __kernel_sincosl(_Float128 x, _Float128 y, _Float128 *sinx, _Float128 *cosx, int
 	case 2: index = (hix - 0x3ffc3000) >> 10; break;
 	}
 
-      SET_LDOUBLE_WORDS64(h, ((u_int64_t)hix) << 32, 0);
+      SET_LDOUBLE_WORDS64(h, ((uint64_t)hix) << 32, 0);
       if (iy)
 	l = y - (h - x);
       else

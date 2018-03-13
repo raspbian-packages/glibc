@@ -1,5 +1,5 @@
 /* Stack executability handling for GNU dynamic linker.  Stub version.
-   Copyright (C) 2003-2017 Free Software Foundation, Inc.
+   Copyright (C) 2003-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -23,7 +23,6 @@
    so as to mprotect it.  */
 
 int
-internal_function
 _dl_make_stack_executable (void **stack_endp)
 {
   return ENOSYS;

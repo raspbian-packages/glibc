@@ -1,4 +1,4 @@
-/* Copyright (C) 2000-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2000-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Bruno Haible <haible@clisp.cons.org>, 2000.
 
@@ -20,7 +20,6 @@
 
 /* Lookup in a table of int32_t, with default value 0.  */
 int32_t
-internal_function
 __collidx_table_lookup (const char *table, uint32_t wc)
 {
   uint32_t shift1 = ((const uint32_t *) table)[0];
@@ -51,7 +50,6 @@ __collidx_table_lookup (const char *table, uint32_t wc)
 
 /* Lookup in a table of uint32_t, with default value 0xffffffff.  */
 uint32_t
-internal_function
 __collseq_table_lookup (const char *table, uint32_t wc)
 {
   uint32_t shift1 = ((const uint32_t *) table)[0];

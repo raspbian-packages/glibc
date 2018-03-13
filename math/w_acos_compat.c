@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@gmail.com>, 2011.
 
@@ -19,8 +19,11 @@
 #include <fenv.h>
 #include <math.h>
 #include <math_private.h>
+#include <math-svid-compat.h>
+#include <libm-alias-double.h>
 
 
+#if LIBM_SVID_COMPAT
 /* wrapper acos */
 double
 __acos (double x)
@@ -35,8 +38,5 @@ __acos (double x)
 
   return __ieee754_acos (x);
 }
-weak_alias (__acos, acos)
-#ifdef NO_LONG_DOUBLE
-strong_alias (__acos, __acosl)
-weak_alias (__acos, acosl)
+libm_alias_double (__acos, acos)
 #endif

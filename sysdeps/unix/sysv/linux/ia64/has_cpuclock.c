@@ -1,4 +1,4 @@
-/* Copyright (C) 2000-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2000-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -30,18 +30,18 @@ has_cpuclock (void)
   if (__builtin_expect (itc_usable == 0, 0))
     {
       int newval = 1;
-      int fd = open_not_cancel_2 ("/proc/sal/itc_drift", O_RDONLY);
+      int fd = __open_nocancel ("/proc/sal/itc_drift", O_RDONLY);
       if (__builtin_expect (fd != -1, 1))
 	{
 	  char buf[16];
 	  /* We expect the file to contain a single digit followed by
 	     a newline.  If the format changes we better not rely on
 	     the file content.  */
-	  if (read_not_cancel (fd, buf, sizeof buf) != 2
+	  if (__read_nocancel (fd, buf, sizeof buf) != 2
 	      || buf[0] != '0' || buf[1] != '\n')
 	    newval = -1;
 
-	  close_not_cancel_no_status (fd);
+	  __close_nocancel_nostatus (fd);
 	}
 
       itc_usable = newval;

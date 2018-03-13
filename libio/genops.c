@@ -1,4 +1,4 @@
-/* Copyright (C) 1993-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1993-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -30,17 +30,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#ifdef _LIBC
 #include <sched.h>
-#endif
 
 #ifdef _IO_MTSAFE_IO
 static _IO_lock_t list_all_lock = _IO_lock_initializer;
 #endif
-
-/* Used to signal modifications to the list of FILE decriptors.  */
-static int _IO_list_all_stamp;
-
 
 static _IO_FILE *run_fp;
 
@@ -69,16 +63,12 @@ _IO_un_link (struct _IO_FILE_plus *fp)
       if (_IO_list_all == NULL)
 	;
       else if (fp == _IO_list_all)
-	{
-	  _IO_list_all = (struct _IO_FILE_plus *) _IO_list_all->file._chain;
-	  ++_IO_list_all_stamp;
-	}
+	_IO_list_all = (struct _IO_FILE_plus *) _IO_list_all->file._chain;
       else
 	for (f = &_IO_list_all->file._chain; *f; f = &(*f)->_chain)
 	  if (*f == (_IO_FILE *) fp)
 	    {
 	      *f = fp->file._chain;
-	      ++_IO_list_all_stamp;
 	      break;
 	    }
       fp->file._flags &= ~_IO_LINKED;
@@ -106,7 +96,6 @@ _IO_link_in (struct _IO_FILE_plus *fp)
 #endif
       fp->file._chain = (_IO_FILE *) _IO_list_all;
       _IO_list_all = fp;
-      ++_IO_list_all_stamp;
 #ifdef _IO_MTSAFE_IO
       _IO_funlockfile ((_IO_FILE *) fp);
       run_fp = NULL;
@@ -233,16 +222,7 @@ __overflow (_IO_FILE *f, int ch)
 }
 libc_hidden_def (__overflow)
 
-static int save_for_backup (_IO_FILE *fp, char *end_p)
-#ifdef _LIBC
-     internal_function
-#endif
-     ;
-
 static int
-#ifdef _LIBC
-internal_function
-#endif
 save_for_backup (_IO_FILE *fp, char *end_p)
 {
   /* Append [_IO_read_base..end_p] to backup area. */
@@ -263,20 +243,11 @@ save_for_backup (_IO_FILE *fp, char *end_p)
 	return EOF;		/* FIXME */
       if (least_mark < 0)
 	{
-#ifdef _LIBC
 	  __mempcpy (__mempcpy (new_buffer + avail,
 				fp->_IO_save_end + least_mark,
 				-least_mark),
 		     fp->_IO_read_base,
 		     end_p - fp->_IO_read_base);
-#else
-	  memcpy (new_buffer + avail,
-		  fp->_IO_save_end + least_mark,
-		  -least_mark);
-	  memcpy (new_buffer + avail - least_mark,
-		  fp->_IO_read_base,
-		  end_p - fp->_IO_read_base);
-#endif
 	}
       else
 	memcpy (new_buffer + avail,
@@ -314,10 +285,8 @@ save_for_backup (_IO_FILE *fp, char *end_p)
 int
 __underflow (_IO_FILE *fp)
 {
-#if defined _LIBC || defined _GLIBCPP_USE_WCHAR_T
   if (_IO_vtable_offset (fp) == 0 && _IO_fwide (fp, -1) != -1)
     return EOF;
-#endif
 
   if (fp->_mode == 0)
     _IO_fwide (fp, -1);
@@ -346,10 +315,8 @@ libc_hidden_def (__underflow)
 int
 __uflow (_IO_FILE *fp)
 {
-#if defined _LIBC || defined _GLIBCPP_USE_WCHAR_T
   if (_IO_vtable_offset (fp) == 0 && _IO_fwide (fp, -1) != -1)
     return EOF;
-#endif
 
   if (fp->_mode == 0)
     _IO_fwide (fp, -1);
@@ -434,12 +401,7 @@ _IO_default_xsputn (_IO_FILE *f, const void *data, _IO_size_t n)
 	    count = more;
 	  if (count > 20)
 	    {
-#ifdef _LIBC
 	      f->_IO_write_ptr = __mempcpy (f->_IO_write_ptr, s, count);
-#else
-	      memcpy (f->_IO_write_ptr, s, count);
-	      f->_IO_write_ptr += count;
-#endif
 	      s += count;
 	    }
 	  else if (count)
@@ -483,12 +445,7 @@ _IO_default_xsgetn (_IO_FILE *fp, void *data, _IO_size_t n)
 	    count = more;
 	  if (count > 20)
 	    {
-#ifdef _LIBC
 	      s = __mempcpy (s, fp->_IO_read_ptr, count);
-#else
-	      memcpy (s, fp->_IO_read_ptr, count);
-	      s += count;
-#endif
 	      fp->_IO_read_ptr += count;
 	    }
 	  else if (count)
@@ -633,7 +590,6 @@ _IO_no_init (_IO_FILE *fp, int flags, int orientation,
 {
   _IO_old_init (fp, flags);
   fp->_mode = orientation;
-#if defined _LIBC || defined _GLIBCPP_USE_WCHAR_T
   if (orientation >= 0)
     {
       fp->_wide_data = wd;
@@ -655,7 +611,6 @@ _IO_no_init (_IO_FILE *fp, int flags, int orientation,
     /* Cause predictable crash when a wide function is called on a byte
        stream.  */
     fp->_wide_data = (struct _IO_wide_data *) -1L;
-#endif
   fp->_freeres_list = NULL;
 }
 
@@ -794,28 +749,22 @@ _IO_flush_all_lockp (int do_lock)
 {
   int result = 0;
   struct _IO_FILE *fp;
-  int last_stamp;
 
 #ifdef _IO_MTSAFE_IO
-  __libc_cleanup_region_start (do_lock, flush_cleanup, NULL);
-  if (do_lock)
-    _IO_lock_lock (list_all_lock);
+  _IO_cleanup_region_start_noarg (flush_cleanup);
+  _IO_lock_lock (list_all_lock);
 #endif
 
-  last_stamp = _IO_list_all_stamp;
-  fp = (_IO_FILE *) _IO_list_all;
-  while (fp != NULL)
+  for (fp = (_IO_FILE *) _IO_list_all; fp != NULL; fp = fp->_chain)
     {
       run_fp = fp;
       if (do_lock)
 	_IO_flockfile (fp);
 
       if (((fp->_mode <= 0 && fp->_IO_write_ptr > fp->_IO_write_base)
-#if defined _LIBC || defined _GLIBCPP_USE_WCHAR_T
 	   || (_IO_vtable_offset (fp) == 0
 	       && fp->_mode > 0 && (fp->_wide_data->_IO_write_ptr
 				    > fp->_wide_data->_IO_write_base))
-#endif
 	   )
 	  && _IO_OVERFLOW (fp, EOF) == EOF)
 	result = EOF;
@@ -823,21 +772,11 @@ _IO_flush_all_lockp (int do_lock)
       if (do_lock)
 	_IO_funlockfile (fp);
       run_fp = NULL;
-
-      if (last_stamp != _IO_list_all_stamp)
-	{
-	  /* Something was added to the list.  Start all over again.  */
-	  fp = (_IO_FILE *) _IO_list_all;
-	  last_stamp = _IO_list_all_stamp;
-	}
-      else
-	fp = fp->_chain;
     }
 
 #ifdef _IO_MTSAFE_IO
-  if (do_lock)
-    _IO_lock_unlock (list_all_lock);
-  __libc_cleanup_region_end (0);
+  _IO_lock_unlock (list_all_lock);
+  _IO_cleanup_region_end (0);
 #endif
 
   return result;
@@ -856,16 +795,13 @@ void
 _IO_flush_all_linebuffered (void)
 {
   struct _IO_FILE *fp;
-  int last_stamp;
 
 #ifdef _IO_MTSAFE_IO
   _IO_cleanup_region_start_noarg (flush_cleanup);
   _IO_lock_lock (list_all_lock);
 #endif
 
-  last_stamp = _IO_list_all_stamp;
-  fp = (_IO_FILE *) _IO_list_all;
-  while (fp != NULL)
+  for (fp = (_IO_FILE *) _IO_list_all; fp != NULL; fp = fp->_chain)
     {
       run_fp = fp;
       _IO_flockfile (fp);
@@ -875,15 +811,6 @@ _IO_flush_all_linebuffered (void)
 
       _IO_funlockfile (fp);
       run_fp = NULL;
-
-      if (last_stamp != _IO_list_all_stamp)
-	{
-	  /* Something was added to the list.  Start all over again.  */
-	  fp = (_IO_FILE *) _IO_list_all;
-	  last_stamp = _IO_list_all_stamp;
-	}
-      else
-	fp = fp->_chain;
     }
 
 #ifdef _IO_MTSAFE_IO
@@ -892,9 +819,7 @@ _IO_flush_all_linebuffered (void)
 #endif
 }
 libc_hidden_def (_IO_flush_all_linebuffered)
-#ifdef _LIBC
 weak_alias (_IO_flush_all_linebuffered, _flushlbf)
-#endif
 
 
 /* The following is a bit tricky.  In general, we want to unbuffer the
@@ -919,6 +844,12 @@ static void
 _IO_unbuffer_all (void)
 {
   struct _IO_FILE *fp;
+
+#ifdef _IO_MTSAFE_IO
+  _IO_cleanup_region_start_noarg (flush_cleanup);
+  _IO_lock_lock (list_all_lock);
+#endif
+
   for (fp = (_IO_FILE *) _IO_list_all; fp; fp = fp->_chain)
     {
       if (! (fp->_flags & _IO_UNBUFFERED)
@@ -961,6 +892,11 @@ _IO_unbuffer_all (void)
 	 used.  */
       fp->_mode = -1;
     }
+
+#ifdef _IO_MTSAFE_IO
+  _IO_lock_unlock (list_all_lock);
+  _IO_cleanup_region_end (0);
+#endif
 }
 
 

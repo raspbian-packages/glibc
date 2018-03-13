@@ -1,5 +1,5 @@
 /* Return arc tangent of complex float type.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 
@@ -139,7 +139,3 @@ M_DECL_FUNC (__catan) (CFLOAT x)
 }
 
 declare_mgen_alias (__catan, catan)
-
-#if M_LIBM_NEED_COMPAT (catan)
-declare_mgen_libm_compat (__catan, catan)
-#endif

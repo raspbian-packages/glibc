@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Chris Metcalf <cmetcalf@tilera.com>, 2011.
 
@@ -42,7 +42,7 @@
 
 #define ret  jrp lr
 
-#ifndef PIC
+#ifndef SHARED
 /* For static code, on error jump to __syscall_error directly. */
 # define SYSCALL_ERROR_NAME __syscall_error
 #elif IS_IN (libc) || IS_IN (libpthread)

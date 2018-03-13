@@ -35,16 +35,17 @@ extern char **__libc_argv attribute_hidden;
   __libc_dlopen_mode (name, RTLD_LAZY | __RTLD_DLOPEN)
 extern void *__libc_dlopen_mode  (const char *__name, int __mode);
 extern void *__libc_dlsym   (void *__map, const char *__name);
+extern void *__libc_dlvsym (void *map, const char *name, const char *version);
 extern int   __libc_dlclose (void *__map);
 libc_hidden_proto (__libc_dlopen_mode)
 libc_hidden_proto (__libc_dlsym)
+libc_hidden_proto (__libc_dlvsym)
 libc_hidden_proto (__libc_dlclose)
 
 /* Locate shared object containing the given address.  */
 #ifdef ElfW
 extern int _dl_addr (const void *address, Dl_info *info,
-		     struct link_map **mapp, const ElfW(Sym) **symbolp)
-     internal_function;
+		     struct link_map **mapp, const ElfW(Sym) **symbolp);
 libc_hidden_proto (_dl_addr)
 #endif
 
@@ -60,23 +61,21 @@ extern void _dl_close_worker (struct link_map *map, bool force)
 /* Look up NAME in shared object HANDLE (which may be RTLD_DEFAULT or
    RTLD_NEXT).  WHO is the calling function, for RTLD_NEXT.  Returns
    the symbol value, which may be NULL.  */
-extern void *_dl_sym (void *handle, const char *name, void *who)
-    internal_function;
+extern void *_dl_sym (void *handle, const char *name, void *who);
 
 /* Look up version VERSION of symbol NAME in shared object HANDLE
    (which may be RTLD_DEFAULT or RTLD_NEXT).  WHO is the calling
    function, for RTLD_NEXT.  Returns the symbol value, which may be
    NULL.  */
 extern void *_dl_vsym (void *handle, const char *name, const char *version,
-		       void *who)
-    internal_function;
+		       void *who);
 
 /* Helper function for <dlfcn.h> functions.  Runs the OPERATE function via
    _dl_catch_error.  Returns zero for success, nonzero for failure; and
    arranges for `dlerror' to return the error details.
    ARGS is passed as argument to OPERATE.  */
 extern int _dlerror_run (void (*operate) (void *), void *args)
-     internal_function;
+    attribute_hidden;
 
 #ifdef SHARED
 # define DL_CALLER_DECL /* Nothing */

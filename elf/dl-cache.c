@@ -1,5 +1,5 @@
 /* Support for reading /etc/ld.so.cache files written by Linux ldconfig.
-   Copyright (C) 1996-2017 Free Software Foundation, Inc.
+   Copyright (C) 1996-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -137,7 +137,6 @@ while (0)
 
 
 int
-internal_function
 _dl_cache_libcmp (const char *p1, const char *p2)
 {
   while (*p1 != '\0')
@@ -184,7 +183,6 @@ _dl_cache_libcmp (const char *p1, const char *p2)
    this function must take care that it does not return references to
    any data in the mapping.  */
 char *
-internal_function
 _dl_load_cache_lookup (const char *name)
 {
   int left, right, middle;

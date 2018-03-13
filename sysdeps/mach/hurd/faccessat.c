@@ -1,5 +1,5 @@
 /* Test for access to file, relative to open directory.  Hurd version.
-   Copyright (C) 2006-2017 Free Software Foundation, Inc.
+   Copyright (C) 2006-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -27,8 +27,21 @@
 #include <hurd/id.h>
 #include <hurd/lookup.h>
 
-int
-__faccessat (int fd, const char *file, int type, int at_flags)
+static int
+hurd_fail_seterrno (error_t err)
+{
+  return __hurd_fail (err);
+}
+
+static int
+hurd_fail_noerrno (error_t err)
+{
+  return -1;
+}
+
+static int
+__faccessat_common (int fd, const char *file, int type, int at_flags,
+                    int (*errfunc) (error_t))
 {
   error_t err;
   file_t rcrdir, rcwdir, io;
@@ -163,14 +176,14 @@ __faccessat (int fd, const char *file, int type, int at_flags)
       if (rcwdir != MACH_PORT_NULL)
 	__mach_port_deallocate (__mach_task_self (), rcwdir);
       if (err)
-	return __hurd_fail (err);
+	return errfunc (err);
     }
 
   /* Find out what types of access we are allowed to this file.  */
   err = __file_check_access (io, &allowed);
   __mach_port_deallocate (__mach_task_self (), io);
   if (err)
-    return __hurd_fail (err);
+    return errfunc (err);
 
   flags = 0;
   if (type & R_OK)
@@ -182,8 +195,20 @@ __faccessat (int fd, const char *file, int type, int at_flags)
 
   if (flags & ~allowed)
     /* We are not allowed all the requested types of access.  */
-    return __hurd_fail (EACCES);
+    return errfunc (EACCES);
 
   return 0;
+}
+
+int
+__faccessat_noerrno (int fd, const char *file, int type, int at_flags)
+{
+  return __faccessat_common (fd, file, type, at_flags, hurd_fail_noerrno);
+}
+
+int
+__faccessat (int fd, const char *file, int type, int at_flags)
+{
+  return __faccessat_common (fd, file, type, at_flags, hurd_fail_seterrno);
 }
 weak_alias (__faccessat, faccessat)

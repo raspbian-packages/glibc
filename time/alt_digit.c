@@ -1,5 +1,5 @@
 /* Helper functions used by strftime/strptime to handle alternate digits.
-   Copyright (C) 1995-2017 Free Software Foundation, Inc.
+   Copyright (C) 1995-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -69,7 +69,6 @@ _nl_init_alt_digit (struct __locale_data *current)
 }
 
 const char *
-internal_function
 _nl_get_alt_digit (unsigned int number, struct __locale_data *current)
 {
   const char *result;
@@ -95,7 +94,6 @@ _nl_get_alt_digit (unsigned int number, struct __locale_data *current)
 
 
 const wchar_t *
-internal_function
 _nl_get_walt_digit (unsigned int number, struct __locale_data *current)
 {
   const wchar_t *result = NULL;
@@ -148,7 +146,6 @@ _nl_get_walt_digit (unsigned int number, struct __locale_data *current)
 
 
 int
-internal_function
 _nl_parse_alt_digit (const char **strp, struct __locale_data *current)
 {
   const char *str = *strp;

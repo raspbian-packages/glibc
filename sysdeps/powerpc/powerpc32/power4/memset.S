@@ -1,5 +1,5 @@
 /* Optimized memset implementation for PowerPC64.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -18,7 +18,7 @@
 
 #include <sysdep.h>
 
-/* __ptr_t [r3] memset (__ptr_t s [r3], int c [r4], size_t n [r5]));
+/* void * [r3] memset (void *s [r3], int c [r4], size_t n [r5]));
    Returns 's'.
 
    The memset is done in three sizes: byte (8 bits), word (32 bits),

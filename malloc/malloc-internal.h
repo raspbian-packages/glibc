@@ -1,5 +1,5 @@
 /* Internal declarations for malloc, for use within libc.
-   Copyright (C) 2016-2017 Free Software Foundation, Inc.
+   Copyright (C) 2016-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -63,13 +63,13 @@
 
 
 /* Called in the parent process before a fork.  */
-void __malloc_fork_lock_parent (void) internal_function attribute_hidden;
+void __malloc_fork_lock_parent (void) attribute_hidden;
 
 /* Called in the parent process after a fork.  */
-void __malloc_fork_unlock_parent (void) internal_function attribute_hidden;
+void __malloc_fork_unlock_parent (void) attribute_hidden;
 
 /* Called in the child process after a fork.  */
-void __malloc_fork_unlock_child (void) internal_function attribute_hidden;
+void __malloc_fork_unlock_child (void) attribute_hidden;
 
 /* Set *RESULT to LEFT * RIGHT.  Return true if the multiplication
    overflowed.  */

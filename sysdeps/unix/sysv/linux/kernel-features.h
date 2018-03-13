@@ -1,6 +1,6 @@
 /* Set flags signalling availability of kernel features based on given
    kernel version number.
-   Copyright (C) 1999-2017 Free Software Foundation, Inc.
+   Copyright (C) 1999-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -102,3 +102,16 @@
    implementation does not assume the __ASSUME_* and instead use a fallback
    implementation based on p{read,write}v and returning an error for
    non supported flags.  */
+
+/* Support for the execveat syscall was added in 3.19.  */
+#if __LINUX_KERNEL_VERSION >= 0x031300
+# define __ASSUME_EXECVEAT	1
+#endif
+
+#if __LINUX_KERNEL_VERSION >= 0x040400
+# define __ASSUME_MLOCK2 1
+#endif
+
+#if __LINUX_KERNEL_VERSION >= 0x040500
+# define __ASSUME_COPY_FILE_RANGE 1
+#endif

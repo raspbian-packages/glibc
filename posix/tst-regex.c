@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2001-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -67,7 +67,7 @@ do_test (void)
   mtrace ();
 
   /* Make the content of the file available in memory.  */
-  file = "../ChangeLog.8";
+  file = "../ChangeLog.old/ChangeLog.8";
   fd = open (file, O_RDONLY);
   if (fd == -1)
     error (EXIT_FAILURE, errno, "cannot open %s", basename (file));

@@ -1,4 +1,4 @@
-/* Copyright (C) 2007-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2007-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -23,7 +23,7 @@
 extern char **__libc_argv attribute_hidden;
 
 void
-__attribute__ ((noreturn)) internal_function
+__attribute__ ((noreturn))
 __fortify_fail_abort (_Bool need_backtrace, const char *msg)
 {
   /* The loop is added only to keep gcc happy.  Don't pass down
@@ -38,7 +38,7 @@ __fortify_fail_abort (_Bool need_backtrace, const char *msg)
 }
 
 void
-__attribute__ ((noreturn)) internal_function
+__attribute__ ((noreturn))
 __fortify_fail (const char *msg)
 {
   __fortify_fail_abort (true, msg);

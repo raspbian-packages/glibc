@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -184,12 +184,6 @@ __wcschrnul (const wchar_t *s, wint_t c)
     result = wcschr (s, '\0');
   return result;
 }
-# endif
-
-# ifndef internal_function
-/* Inside GNU libc we mark some function in a special way.  In other
-   environments simply ignore the marking.  */
-#  define internal_function
 # endif
 
 /* Note that this evaluates C many times.  */

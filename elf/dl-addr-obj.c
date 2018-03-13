@@ -1,5 +1,5 @@
 /* Determine if address is inside object load segments.
-   Copyright (C) 1996-2017 Free Software Foundation, Inc.
+   Copyright (C) 1996-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -61,7 +61,6 @@
 
 */
 int
-internal_function
 _dl_addr_inside_object (struct link_map *l, const ElfW(Addr) addr)
 {
   int n = l->l_phnum;

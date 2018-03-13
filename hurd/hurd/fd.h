@@ -1,5 +1,5 @@
 /* File descriptors.
-   Copyright (C) 1993-2017 Free Software Foundation, Inc.
+   Copyright (C) 1993-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -59,10 +59,10 @@ extern struct mutex _hurd_dtable_lock; /* Locks those two variables.  */
    NULL.  The cell is unlocked; when ready to use it, lock it and check for
    it being unused.  */
 
-struct hurd_fd *_hurd_fd_get (int fd);
+extern struct hurd_fd *_hurd_fd_get (int fd);
 
 #if defined __USE_EXTERN_INLINES && defined _LIBC
-#  if IS_IN (libc)
+# if IS_IN (libc)
 _HURD_FD_H_EXTERN_INLINE struct hurd_fd *
 _hurd_fd_get (int fd)
 {
@@ -95,7 +95,7 @@ _hurd_fd_get (int fd)
 
   return descriptor;
 }
-#  endif
+# endif
 #endif
 
 
@@ -144,7 +144,7 @@ _hurd_fd_get (int fd)
 /* Check if ERR should generate a signal.
    Returns the signal to take, or zero if none.  */
 
-int _hurd_fd_error_signal (error_t err);
+extern int _hurd_fd_error_signal (error_t err);
 
 #ifdef __USE_EXTERN_INLINES
 _HURD_FD_H_EXTERN_INLINE int
@@ -169,7 +169,7 @@ _hurd_fd_error_signal (error_t err)
    always use this function to handle errors from RPCs made on file
    descriptor ports.  Some errors are translated into signals.  */
 
-error_t _hurd_fd_error (int fd, error_t err);
+extern error_t _hurd_fd_error (int fd, error_t err);
 
 #ifdef __USE_EXTERN_INLINES
 _HURD_FD_H_EXTERN_INLINE error_t
@@ -189,7 +189,7 @@ _hurd_fd_error (int fd, error_t err)
 /* Handle error code ERR from an RPC on file descriptor FD's port.
    Set `errno' to the appropriate error code, and always return -1.  */
 
-int __hurd_dfail (int fd, error_t err);
+extern int __hurd_dfail (int fd, error_t err);
 
 #ifdef __USE_EXTERN_INLINES
 _HURD_FD_H_EXTERN_INLINE int
@@ -203,7 +203,7 @@ __hurd_dfail (int fd, error_t err)
 /* Likewise, but do not raise SIGPIPE on EPIPE if flags contain
    MSG_NOSIGNAL.  */
 
-int __hurd_sockfail (int fd, int flags, error_t err);
+extern int __hurd_sockfail (int fd, int flags, error_t err);
 
 #ifdef __USE_EXTERN_INLINES
 _HURD_FD_H_EXTERN_INLINE int
@@ -281,7 +281,7 @@ extern int _hurd_select (int nfds, struct pollfd *pollfds,
    __hurd_file_name_lookup.  */
 
 #if defined __USE_EXTERN_INLINES && defined _LIBC
-#  if IS_IN (libc)
+# if IS_IN (libc)
 _HURD_FD_H_EXTERN_INLINE error_t
 __hurd_at_flags (int *at_flags, int *flags)
 {
@@ -298,7 +298,7 @@ __hurd_at_flags (int *at_flags, int *flags)
 
   return 0;
 }
-#  endif
+# endif
 #endif
 
 /* Variant of file_name_lookup used in *at function implementations.

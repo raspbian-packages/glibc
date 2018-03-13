@@ -1,5 +1,5 @@
 /* Support for chains recording users of a resource; `struct hurd_userlink'.
-   Copyright (C) 1994-2017 Free Software Foundation, Inc.
+   Copyright (C) 1994-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -76,12 +76,12 @@ struct hurd_userlink
 
 /* Attach LINK to the chain of users at *CHAINP.  */
 
-void
+extern void
 _hurd_userlink_link (struct hurd_userlink **chainp,
 		     struct hurd_userlink *link);
 
 #if defined __USE_EXTERN_INLINES && defined _LIBC
-#  if IS_IN (libc)
+# if IS_IN (libc)
 _HURD_USERLINK_H_EXTERN_INLINE void
 _hurd_userlink_link (struct hurd_userlink **chainp,
 		     struct hurd_userlink *link)
@@ -102,17 +102,17 @@ _hurd_userlink_link (struct hurd_userlink **chainp,
   link->thread.prevp = thread_chainp;
   *thread_chainp = link;
 }
-#  endif
+# endif
 #endif
 
 
 /* Detach LINK from its chain.  Returns nonzero iff this was the
    last user of the resource and it should be deallocated.  */
 
-int _hurd_userlink_unlink (struct hurd_userlink *link);
+extern int _hurd_userlink_unlink (struct hurd_userlink *link);
 
 #if defined __USE_EXTERN_INLINES && defined _LIBC
-#  if IS_IN (libc)
+# if IS_IN (libc)
 _HURD_USERLINK_H_EXTERN_INLINE int
 _hurd_userlink_unlink (struct hurd_userlink *link)
 {
@@ -135,7 +135,7 @@ _hurd_userlink_unlink (struct hurd_userlink *link)
 
   return dealloc;
 }
-#  endif
+# endif
 #endif
 
 
@@ -145,10 +145,10 @@ _hurd_userlink_unlink (struct hurd_userlink *link)
    value is zero, someone is still using the resource and they will
    deallocate it when they are finished.  */
 
-int _hurd_userlink_clear (struct hurd_userlink **chainp);
+extern int _hurd_userlink_clear (struct hurd_userlink **chainp);
 
 #if defined __USE_EXTERN_INLINES && defined _LIBC
-#  if IS_IN (libc)
+# if IS_IN (libc)
 _HURD_USERLINK_H_EXTERN_INLINE int
 _hurd_userlink_clear (struct hurd_userlink **chainp)
 {
@@ -161,7 +161,7 @@ _hurd_userlink_clear (struct hurd_userlink **chainp)
   *chainp = NULL;
   return 0;
 }
-#  endif
+# endif
 #endif
 
 #endif	/* hurd/userlink.h */

@@ -18,7 +18,7 @@ sysdep_routines += clone umount umount2 readahead \
 		   setfsuid setfsgid epoll_pwait signalfd \
 		   eventfd eventfd_read eventfd_write prlimit \
 		   personality epoll_wait tee vmsplice splice \
-		   open_by_handle_at
+		   open_by_handle_at mlock2 pkey_mprotect pkey_set pkey_get
 
 CFLAGS-gethostid.c = -fexceptions
 CFLAGS-tee.c = -fexceptions -fasynchronous-unwind-tables
@@ -28,13 +28,6 @@ CFLAGS-open_by_handle_at.c = -fexceptions -fasynchronous-unwind-tables
 CFLAGS-sync_file_range.c = -fexceptions -fasynchronous-unwind-tables
 CFLAGS-tst-writev.c += "-DARTIFICIAL_LIMIT=(0x80000000-sysconf(_SC_PAGESIZE))"
 
-# Note that bits/mman-linux.h is listed here though the file lives in the
-# top-level bits/ subdirectory instead of here in sysdeps/.../linux/bits/.
-# That is just so that other (non-Linux) configurations for whom the
-# bits/mman-linux.h definitions work well do not have to duplicate the
-# contents of the file.  The file must still be listed in sysdep_headers
-# here and in any non-Linux configuration that uses it; other
-# configurations will not install the file.
 sysdep_headers += sys/mount.h sys/acct.h sys/sysctl.h \
 		  sys/klog.h \
 		  sys/user.h sys/prctl.h \
@@ -46,84 +39,61 @@ sysdep_headers += sys/mount.h sys/acct.h sys/sysctl.h \
 		  sys/timerfd.h sys/fanotify.h bits/eventfd.h bits/inotify.h \
 		  bits/signalfd.h bits/timerfd.h bits/epoll.h \
 		  bits/socket_type.h bits/syscall.h bits/sysctl.h \
-		  bits/mman-linux.h \
+		  bits/mman-linux.h bits/mman-shared.h bits/ptrace-shared.h \
 		  bits/siginfo-arch.h bits/siginfo-consts-arch.h
 
 tests += tst-clone tst-clone2 tst-clone3 tst-fanotify tst-personality \
 	 tst-quota tst-sync_file_range tst-sysconf-iov_max tst-ttyname \
-	 test-errno-linux
+	 test-errno-linux tst-memfd_create tst-mlock2 tst-pkey \
+	 tst-rlimit-infinity
 
-# Generate the list of SYS_* macros for the system calls (__NR_* macros).
+# Generate the list of SYS_* macros for the system calls (__NR_*
+# macros).  The file syscall-names.list contains all possible system
+# call names, and the generated header file produces SYS_* macros for
+# the __NR_* macros which are actually defined.
 
-# If there is more than one syscall list for different architecture
-# variants, the CPU/Makefile defines abi-variants to be a list of names
-# for those variants (e.g. 32 64), and, for each variant, defines
-# abi-$(variant)-options to be compiler options to cause <asm/unistd.h>
-# to define the desired list of syscalls and abi-$(variant)-condition to
-# be the condition for those options to use in a C #if condition.
-# abi-includes may be defined to a list of headers to include
-# in the generated header, if the default does not suffice.
-#
-# The generated header is compiled with `-ffreestanding' to avoid any
-# circular dependencies against the installed implementation headers.
-# Such a dependency would require the implementation header to be
-# installed before the generated header could be built (See bug 15711).
-# In current practice the generated header dependencies do not include
-# any of the implementation headers removed by the use of `-ffreestanding'.
-
-$(objpfx)bits/syscall%h $(objpfx)bits/syscall%d: ../sysdeps/unix/sysv/linux/sys/syscall.h
+generated += bits/syscall.h
+$(objpfx)bits/syscall.h: \
+  ../sysdeps/unix/sysv/linux/gen-syscall-h.awk \
+  ../sysdeps/unix/sysv/linux/syscall-names.list
 	$(make-target-directory)
-	{ \
-	 echo '/* Generated at libc build time from kernel syscall list.  */';\
-	 echo ''; \
-	 echo '#ifndef _SYSCALL_H'; \
-	 echo '# error "Never use <bits/syscall.h> directly; include <sys/syscall.h> instead."'; \
-	 echo '#endif'; \
-	 echo ''; \
-	 $(foreach h,$(abi-includes), echo '#include <$(h)>';) \
-	 echo ''; \
-	 $(if $(abi-variants), \
-	 $(foreach v,$(abi-variants),\
-	 $(CC) -ffreestanding -E -MD -MP -MF $(@:.h=.d)-t$(v) -MT '$(@:.d=.h) $(@:.h=.d)' \
-	       -x c $(sysincludes) $< $(abi-$(v)-options) \
-	       -D_LIBC -dM | \
-	 sed -n 's@^#define __NR_\([^ ]*\) .*$$@#define SYS_\1 __NR_\1@p' | \
-	 LC_ALL=C sort > $(@:.d=.h).new$(v); \
-	 $(if $(abi-$(v)-condition),\
-	 echo '#if $(abi-$(v)-condition)';) \
-	 cat $(@:.d=.h).new$(v); \
-	 $(if $(abi-$(v)-condition),echo '#endif';) \
-	 rm -f $(@:.d=.h).new$(v); \
-	 ), \
-	 $(CC) -ffreestanding -E -MD -MP -MF $(@:.h=.d)-t$(v) -MT '$(@:.d=.h) $(@:.h=.d)' \
-	       -x c $(sysincludes) $< \
-	       -D_LIBC -dM | \
-	 sed -n 's@^#define __NR_\([^ ]*\) .*$$@#define SYS_\1 __NR_\1@p' | \
-	 LC_ALL=C sort;) \
-	} > $(@:.d=.h).new
-	mv -f $(@:.d=.h).new $(@:.d=.h)
-ifdef abi-variants
-ifneq (,$(objpfx))
-	sed $(sed-remove-objpfx) \
-	 $(foreach v,$(abi-variants),$(@:.h=.d)-t$(v)) > $(@:.h=.d)-t3
-else
-	cat $(foreach v,$(abi-variants),$(@:.h=.d)-t$(v)) \
-	 > $(@:.h=.d)-t3
-endif
-	rm -f $(foreach v,$(abi-variants),$(@:.h=.d)-t$(v))
-	mv -f $(@:.h=.d)-t3 $(@:.h=.d)
-else
-	mv -f $(@:.h=.d)-t $(@:.h=.d)
-endif
+	LC_ALL=C $(AWK) -f $^ > $@-tmp
+	$(move-if-change) $@-tmp $@
+before-compile += $(objpfx)bits/syscall.h
 
-ifndef no_deps
-# Get the generated list of dependencies (probably /usr/include/asm/unistd.h).
--include $(objpfx)bits/syscall.d
-endif
-generated += bits/syscall.h bits/syscall.d
+# All macros defined by <sys/syscall.h>.  Include <bits/syscall.h>
+# explicitly because <sys/sycall.h> skips it if _LIBC is defined.
+$(objpfx)tst-syscall-list-macros.list: \
+  $(objpfx)bits/syscall.h ../sysdeps/unix/sysv/linux/sys/syscall.h
+	printf '#include <linux/version.h>\n\
+#include <sys/syscall.h>\n#include <bits/syscall.h>\n' | \
+	  $(CC) -E -o $@-tmp $(CFLAGS) $(CPPFLAGS) -x c - -dM
+	$(move-if-change) $@-tmp $@
+
+# __NR_* system call names.  Used by the test below.
+$(objpfx)tst-syscall-list-nr.list: \
+  ../sysdeps/unix/sysv/linux/filter-nr-syscalls.awk \
+  $(objpfx)tst-syscall-list-macros.list
+	LC_ALL=C $(AWK) -f $^ > $@-tmp
+	$(move-if-change) $@-tmp $@
+
+# SYS_* system call names.  Used by the test below.
+$(objpfx)tst-syscall-list-sys.list: $(objpfx)tst-syscall-list-macros.list
+	LC_ALL=C $(AWK) '/^#define SYS_/ { print substr($$2, 5) }' $< > $@-tmp
+	$(move-if-change) $@-tmp $@
+
+tests-special += $(objpfx)tst-syscall-list.out
+$(objpfx)tst-syscall-list.out: \
+  ../sysdeps/unix/sysv/linux/tst-syscall-list.sh \
+  $(objpfx)tst-syscall-list-macros.list \
+  $(objpfx)tst-syscall-list-nr.list \
+  $(objpfx)tst-syscall-list-sys.list
+	$(BASH) $^ $(AWK) > $@; $(evaluate-test)
 
 # Separate object file for access to the constant from the UAPI header.
 $(objpfx)tst-sysconf-iov_max: $(objpfx)tst-sysconf-iov_max-uapi.o
+
+$(objpfx)tst-pkey: $(shared-thread-library)
 
 endif # $(subdir) == misc
 

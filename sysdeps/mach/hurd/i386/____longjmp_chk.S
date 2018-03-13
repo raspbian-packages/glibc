@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2001-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -36,9 +36,11 @@ longjmp_msg:
 			cfi_register(%ebx,%ecx);			      \
 			LOAD_PIC_REG (bx);				      \
 			leal	longjmp_msg@GOTOFF(%ebx), %eax;		      \
+			movl	%eax, (%esp);				      \
 			call	HIDDEN_JUMPTARGET(__fortify_fail)
 #else
 # define CALL_FAIL	movl	$longjmp_msg, %eax;			      \
+			movl	%eax, (%esp);				      \
 			call	HIDDEN_JUMPTARGET(__fortify_fail)
 #endif
 

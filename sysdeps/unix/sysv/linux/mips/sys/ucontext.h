@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2017 Free Software Foundation, Inc.  This file is part of the GNU C Library.
+/* Copyright (C) 1997-2018 Free Software Foundation, Inc.  This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,6 @@
 #include <features.h>
 
 #include <bits/types/sigset_t.h>
-#include <bits/sigcontext.h>
 #include <bits/types/stack_t.h>
 
 #include <sgidefs.h>
@@ -110,16 +109,16 @@ typedef struct
   } mcontext_t;
 #endif
 
-#undef __ctx
-
 /* Userlevel context.  */
 typedef struct ucontext_t
   {
-    unsigned long int uc_flags;
+    unsigned long int __ctx(uc_flags);
     struct ucontext_t *uc_link;
     stack_t uc_stack;
     mcontext_t uc_mcontext;
     sigset_t uc_sigmask;
   } ucontext_t;
+
+#undef __ctx
 
 #endif /* sys/ucontext.h */

@@ -26,6 +26,7 @@
 
 #include <math.h>
 #include <math_private.h>
+#include <libm-alias-ldouble.h>
 
 static const long double one = 1.0;
 
@@ -33,7 +34,7 @@ long double
 __modfl(long double x, long double *iptr)
 {
 	int32_t i0,i1,j0;
-	u_int32_t i,se;
+	uint32_t i,se;
 	GET_LDOUBLE_WORDS(se,i0,i1,x);
 	j0 = (se&0x7fff)-0x3fff;	/* exponent of x */
 	if(j0<32) {			/* integer part in high x */
@@ -59,7 +60,7 @@ __modfl(long double x, long double *iptr)
 	    SET_LDOUBLE_WORDS(x,se&0x8000,0,0);	/* return +-0 */
 	    return x;
 	} else {			/* fraction part in low x */
-	    i = ((u_int32_t)(0x7fffffff))>>(j0-32);
+	    i = ((uint32_t)(0x7fffffff))>>(j0-32);
 	    if((i1&i)==0) { 		/* x is integral */
 		*iptr = x;
 		SET_LDOUBLE_WORDS(x,se&0x8000,0,0);	/* return +-0 */
@@ -70,4 +71,4 @@ __modfl(long double x, long double *iptr)
 	    }
 	}
 }
-weak_alias (__modfl, modfl)
+libm_alias_ldouble (__modf, modf)

@@ -1,4 +1,4 @@
-/* Copyright (C) 2004-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2004-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2004.
 
@@ -157,7 +157,7 @@ __nscd_getgrouplist (const char *user, gid_t group, long int *size,
 
  out_close:
   if (sock != -1)
-    close_not_cancel_no_status (sock);
+    __close_nocancel_nostatus (sock);
  out:
   if (__nscd_drop_map_ref (mapped, &gc_cycle) != 0)
     {

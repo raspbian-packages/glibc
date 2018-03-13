@@ -1,6 +1,6 @@
 /* memset/bzero -- set memory area to CH/0
    Optimized version for x86-64.
-   Copyright (C) 2002-2017 Free Software Foundation, Inc.
+   Copyright (C) 2002-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -58,10 +58,4 @@ libc_hidden_builtin_def (memset)
 libc_hidden_def (__wmemset)
 weak_alias (__wmemset, wmemset)
 libc_hidden_weak (wmemset)
-#endif
-
-#if defined SHARED && IS_IN (libc) && !defined USE_MULTIARCH
-strong_alias (__memset_chk, __memset_zero_constant_len_parameter)
-	.section .gnu.warning.__memset_zero_constant_len_parameter
-	.string "memset used with constant zero length parameter; this could be due to transposed parameters"
 #endif

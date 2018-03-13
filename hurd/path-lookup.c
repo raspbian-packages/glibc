@@ -1,5 +1,5 @@
 /* Filename lookup using a search path
-   Copyright (C) 1995-2017 Free Software Foundation, Inc.
+   Copyright (C) 1995-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Written by Miles Bader <miles@gnu.ai.mit.edu>
 
@@ -91,7 +91,7 @@ hurd_file_name_path_lookup (error_t (*use_init_port)
 			      (int which, error_t (*operate) (mach_port_t)),
 			    file_t (*get_dtable_port) (int fd),
 			    error_t (*lookup)
-			      (file_t dir, char *name, int flags, mode_t mode,
+			      (file_t dir, const char *name, int flags, mode_t mode,
 			       retry_type *do_retry, string_t retry_name,
 			       mach_port_t *result),
 			    const char *file_name, const char *path,

@@ -1,4 +1,4 @@
-/* Copyright (C) 1993-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1993-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -29,11 +29,13 @@
    complain about the mismatch when we do the alias below.  */
 #define _IO_new_fgetpos64 __renamed__IO_new_fgetpos64
 #define _IO_fgetpos64 __renamed__IO_fgetpos64
+#define fgetpos64 __renamed_fgetpos64
 
 #include "libioP.h"
 
 #undef _IO_new_fgetpos64
 #undef _IO_fgetpos64
+#undef fgetpos64
 
 #include <errno.h>
 #include <stdlib.h>
@@ -56,17 +58,13 @@ _IO_new_fgetpos (_IO_FILE *fp, _IO_fpos_t *posp)
     {
       /* ANSI explicitly requires setting errno to a positive value on
 	 failure.  */
-#ifdef EIO
       if (errno == 0)
 	__set_errno (EIO);
-#endif
       result = EOF;
     }
   else if ((_IO_off64_t) (__typeof (posp->__pos)) pos != pos)
     {
-#ifdef EOVERFLOW
       __set_errno (EOVERFLOW);
-#endif
       result = EOF;
     }
   else

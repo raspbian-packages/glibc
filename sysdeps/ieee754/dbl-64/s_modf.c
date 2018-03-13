@@ -21,6 +21,7 @@
 
 #include <math.h>
 #include <math_private.h>
+#include <libm-alias-double.h>
 
 static const double one = 1.0;
 
@@ -28,7 +29,7 @@ double
 __modf (double x, double *iptr)
 {
   int32_t i0, i1, j0;
-  u_int32_t i;
+  uint32_t i;
   EXTRACT_WORDS (i0, i1, x);
   j0 = ((i0 >> 20) & 0x7ff) - 0x3ff;    /* exponent of x */
   if (j0 < 20)                          /* integer part in high x */
@@ -65,7 +66,7 @@ __modf (double x, double *iptr)
     }
   else                                  /* fraction part in low x */
     {
-      i = ((u_int32_t) (0xffffffff)) >> (j0 - 20);
+      i = ((uint32_t) (0xffffffff)) >> (j0 - 20);
       if ((i1 & i) == 0)                /* x is integral */
 	{
 	  *iptr = x;
@@ -79,8 +80,6 @@ __modf (double x, double *iptr)
 	}
     }
 }
-weak_alias (__modf, modf)
-#ifdef NO_LONG_DOUBLE
-strong_alias (__modf, __modfl)
-weak_alias (__modf, modfl)
+#ifndef __modf
+libm_alias_double (__modf, modf)
 #endif

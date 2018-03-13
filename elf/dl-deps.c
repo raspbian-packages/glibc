@@ -1,5 +1,5 @@
 /* Load the dependencies of a mapped object.
-   Copyright (C) 1996-2017 Free Software Foundation, Inc.
+   Copyright (C) 1996-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -68,7 +68,6 @@ openaux (void *a)
 }
 
 static ptrdiff_t
-internal_function
 _dl_build_local_scope (struct link_map **list, struct link_map *map)
 {
   struct link_map **p = list;
@@ -101,7 +100,7 @@ struct list
   ({									      \
     const char *__str = (str);						      \
     const char *__result = __str;					      \
-    size_t __dst_cnt = DL_DST_COUNT (__str, 0);				      \
+    size_t __dst_cnt = DL_DST_COUNT (__str);				      \
 									      \
     if (__dst_cnt != 0)							      \
       {									      \
@@ -115,7 +114,7 @@ DST not allowed in SUID/SGID programs"));				      \
 	__newp = (char *) alloca (DL_DST_REQUIRED (l, __str, strlen (__str),  \
 						   __dst_cnt));		      \
 									      \
-	__result = _dl_dst_substitute (l, __str, __newp, 0);		      \
+	__result = _dl_dst_substitute (l, __str, __newp);		      \
 									      \
 	if (*__result == '\0')						      \
 	  {								      \
@@ -153,7 +152,6 @@ preload (struct list *known, unsigned int *nlist, struct link_map *map)
 }
 
 void
-internal_function
 _dl_map_object_deps (struct link_map *map,
 		     struct link_map **preloads, unsigned int npreloads,
 		     int trace_mode, int open_mode)
@@ -165,8 +163,7 @@ _dl_map_object_deps (struct link_map *map,
   const char *name;
   int errno_saved;
   int errno_reason;
-  const char *errstring;
-  const char *objname;
+  struct dl_exception exception;
 
   /* No loaded object so far.  */
   nlist = 0;
@@ -200,7 +197,6 @@ _dl_map_object_deps (struct link_map *map,
      alloca means we cannot use recursive function calls.  */
   errno_saved = errno;
   errno_reason = 0;
-  errstring = NULL;
   errno = 0;
   name = NULL;
   for (runp = known; runp; )
@@ -250,17 +246,9 @@ _dl_map_object_deps (struct link_map *map,
 		/* Store the tag in the argument structure.  */
 		args.name = name;
 
-		bool malloced;
-		int err = _dl_catch_error (&objname, &errstring, &malloced,
-					   openaux, &args);
-		if (__glibc_unlikely (errstring != NULL))
+		int err = _dl_catch_exception (&exception, openaux, &args);
+		if (__glibc_unlikely (exception.errstring != NULL))
 		  {
-		    char *new_errstring = strdupa (errstring);
-		    objname = strdupa (objname);
-		    if (malloced)
-		      free ((char *) errstring);
-		    errstring = new_errstring;
-
 		    if (err)
 		      errno_reason = err;
 		    else
@@ -313,31 +301,18 @@ _dl_map_object_deps (struct link_map *map,
 		/* We must be prepared that the addressed shared
 		   object is not available.  For filter objects the dependency
 		   must be available.  */
-		bool malloced;
-		int err = _dl_catch_error (&objname, &errstring, &malloced,
-					openaux, &args);
-
-		if (__glibc_unlikely (errstring != NULL))
+		int err = _dl_catch_exception (&exception, openaux, &args);
+		if (__glibc_unlikely (exception.errstring != NULL))
 		  {
 		    if (d->d_tag == DT_AUXILIARY)
 		      {
 			/* We are not interested in the error message.  */
-			assert (errstring != NULL);
-			if (malloced)
-			  free ((char *) errstring);
-
+			_dl_exception_free (&exception);
 			/* Simply ignore this error and continue the work.  */
 			continue;
 		      }
 		    else
 		      {
-
-			char *new_errstring = strdupa (errstring);
-			objname = strdupa (objname);
-			if (malloced)
-			  free ((char *) errstring);
-			errstring = new_errstring;
-
 			if (err)
 			  errno_reason = err;
 			else
@@ -610,62 +585,9 @@ Filters not supported with LD_TRACE_PRELINKING"));
      itself will always be initialize last.  */
   memcpy (l_initfini, map->l_searchlist.r_list,
 	  nlist * sizeof (struct link_map *));
-  if (__glibc_likely (nlist > 1))
-    {
-      /* We can skip looking for the binary itself which is at the front
-	 of the search list.  */
-      i = 1;
-      uint16_t seen[nlist];
-      memset (seen, 0, nlist * sizeof (seen[0]));
-      while (1)
-	{
-	  /* Keep track of which object we looked at this round.  */
-	  ++seen[i];
-	  struct link_map *thisp = l_initfini[i];
-
-	  /* Find the last object in the list for which the current one is
-	     a dependency and move the current object behind the object
-	     with the dependency.  */
-	  unsigned int k = nlist - 1;
-	  while (k > i)
-	    {
-	      struct link_map **runp = l_initfini[k]->l_initfini;
-	      if (runp != NULL)
-		/* Look through the dependencies of the object.  */
-		while (*runp != NULL)
-		  if (__glibc_unlikely (*runp++ == thisp))
-		    {
-		      /* Move the current object to the back past the last
-			 object with it as the dependency.  */
-		      memmove (&l_initfini[i], &l_initfini[i + 1],
-			       (k - i) * sizeof (l_initfini[0]));
-		      l_initfini[k] = thisp;
-
-		      if (seen[i + 1] > nlist - i)
-			{
-			  ++i;
-			  goto next_clear;
-			}
-
-		      uint16_t this_seen = seen[i];
-		      memmove (&seen[i], &seen[i + 1],
-			       (k - i) * sizeof (seen[0]));
-		      seen[k] = this_seen;
-
-		      goto next;
-		    }
-
-	      --k;
-	    }
-
-	  if (++i == nlist)
-	    break;
-	next_clear:
-	  memset (&seen[i], 0, (nlist - i) * sizeof (seen[0]));
-
-	next:;
-	}
-    }
+  /* We can skip looking for the binary itself which is at the front of
+     the search list.  */
+  _dl_sort_maps (&l_initfini[1], nlist - 1, NULL, false);
 
   /* Terminate the list of dependencies.  */
   l_initfini[nlist] = NULL;
@@ -683,6 +605,6 @@ Filters not supported with LD_TRACE_PRELINKING"));
     _dl_scope_free (old_l_initfini);
 
   if (errno_reason)
-    _dl_signal_error (errno_reason == -1 ? 0 : errno_reason, objname,
-		      NULL, errstring);
+    _dl_signal_exception (errno_reason == -1 ? 0 : errno_reason,
+			  &exception, NULL);
 }

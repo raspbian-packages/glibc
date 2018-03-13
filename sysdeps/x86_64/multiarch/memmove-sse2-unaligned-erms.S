@@ -1,5 +1,5 @@
 /* memmove with SSE2.
-   Copyright (C) 2017 Free Software Foundation, Inc.
+   Copyright (C) 2017-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -18,9 +18,7 @@
 
 #if IS_IN (libc)
 # define MEMMOVE_SYMBOL(p,s)	p##_sse2_##s
-#endif
-
-#if !defined SHARED || !IS_IN (libc)
+#else
 weak_alias (__mempcpy, mempcpy)
 #endif
 

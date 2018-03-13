@@ -1,5 +1,5 @@
 /* File tree walker functions.
-   Copyright (C) 1996-2017 Free Software Foundation, Inc.
+   Copyright (C) 1996-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1996.
 
@@ -109,8 +109,6 @@ extern char *xgetcwd (void);
 # define __tfind tfind
 # undef __tsearch
 # define __tsearch tsearch
-# undef internal_function
-# define internal_function /* empty */
 # undef dirent64
 # define dirent64 dirent
 # undef MAX
@@ -222,7 +220,7 @@ static const int ftw_arr[] =
 
 /* Forward declarations of local functions.  */
 static int ftw_dir (struct ftw_data *data, struct STAT *st,
-		    struct dir_data *old_dir) internal_function;
+		    struct dir_data *old_dir);
 
 
 static int
@@ -337,11 +335,11 @@ open_dir_stream (int *dfdp, struct ftw_data *data, struct dir_data *dirp)
 
       if (dfdp != NULL && *dfdp != -1)
 	{
-	  int fd = openat64_not_cancel_3 (*dfdp, data->dirbuf + data->ftw.base,
-					  O_RDONLY | O_DIRECTORY | O_NDELAY);
+	  int fd = __openat64_nocancel (*dfdp, data->dirbuf + data->ftw.base,
+					O_RDONLY | O_DIRECTORY | O_NDELAY);
 	  dirp->stream = NULL;
 	  if (fd != -1 && (dirp->stream = __fdopendir (fd)) == NULL)
-	    close_not_cancel_no_status (fd);
+	    __close_nocancel_nostatus (fd);
 	}
       else
 	{
@@ -377,7 +375,6 @@ open_dir_stream (int *dfdp, struct ftw_data *data, struct dir_data *dirp)
 
 
 static int
-internal_function
 process_entry (struct ftw_data *data, struct dir_data *dir, const char *name,
 	       size_t namlen, int d_type)
 {
@@ -477,7 +474,6 @@ process_entry (struct ftw_data *data, struct dir_data *dir, const char *name,
 
 static int
 __attribute ((noinline))
-internal_function
 ftw_dir (struct ftw_data *data, struct STAT *st, struct dir_data *old_dir)
 {
   struct dir_data dir;
@@ -628,7 +624,6 @@ fail:
 
 static int
 __attribute ((noinline))
-internal_function
 ftw_startup (const char *dir, int is_nftw, void *func, int descriptors,
 	     int flags)
 {
@@ -791,7 +786,7 @@ ftw_startup (const char *dir, int is_nftw, void *func, int descriptors,
     {
       int save_err = errno;
       __fchdir (cwdfd);
-      close_not_cancel_no_status (cwdfd);
+      __close_nocancel_nostatus (cwdfd);
       __set_errno (save_err);
     }
   else if (cwd != NULL)

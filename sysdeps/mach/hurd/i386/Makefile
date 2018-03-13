@@ -7,15 +7,15 @@ ifeq ($(subdir),debug)
 gen-as-const-headers += signal-defines.sym
 endif
 
-ifeq ($(subdir),stdlib)
-gen-as-const-headers += ucontext_i.sym
-sysdep_routines += makecontext-helper
-endif
-
 ifeq ($(subdir),csu)
 ifeq (yes,$(build-shared))
 sysdep_routines += divdi3
 shared-only-routines += divdi3
 CPPFLAGS-divdi3.c = -Din_divdi3_c
 endif
+endif
+
+ifeq ($(subdir),stdlib)
+gen-as-const-headers += ucontext_i.sym
+sysdep_routines += makecontext-helper
 endif

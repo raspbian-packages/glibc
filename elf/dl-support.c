@@ -1,5 +1,5 @@
 /* Support for dynamic linking code in static libc.
-   Copyright (C) 1996-2017 Free Software Foundation, Inc.
+   Copyright (C) 1996-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -126,6 +126,7 @@ int _dl_starting_up = 1;
 void *_dl_random;
 
 /* Get architecture specific initializer.  */
+#include <dl-procruntime.c>
 #include <dl-procinfo.c>
 
 /* Initial value of the CPU clock.  */
@@ -181,8 +182,7 @@ ElfW(Word) _dl_stack_flags = DEFAULT_STACK_PERMS;
 /* If loading a shared object requires that we make the stack executable
    when it was not, we do it by calling this function.
    It returns an errno code or zero on success.  */
-int (*_dl_make_stack_executable_hook) (void **) internal_function
-  = _dl_make_stack_executable;
+int (*_dl_make_stack_executable_hook) (void **) = _dl_make_stack_executable;
 
 
 /* Function in libpthread to wait for termination of lookups.  */
@@ -222,7 +222,6 @@ __rtld_lock_define_initialized_recursive (, _dl_load_write_lock)
 int _dl_clktck;
 
 void
-internal_function
 _dl_aux_init (ElfW(auxv_t) *av)
 {
   int seen = 0;
@@ -306,7 +305,6 @@ _dl_aux_init (ElfW(auxv_t) *av)
 
 
 void
-internal_function
 _dl_non_dynamic_init (void)
 {
   _dl_main_map.l_origin = _dl_get_origin ();
@@ -386,4 +384,15 @@ _dl_non_dynamic_init (void)
 
 #ifdef DL_SYSINFO_IMPLEMENTATION
 DL_SYSINFO_IMPLEMENTATION
+#endif
+
+#if ENABLE_STATIC_PIE
+/* Since relocation to hidden _dl_main_map causes relocation overflow on
+   aarch64, a function is used to get the address of _dl_main_map.  */
+
+struct link_map *
+_dl_get_dl_main_map (void)
+{
+  return &_dl_main_map;
+}
 #endif

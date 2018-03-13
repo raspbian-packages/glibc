@@ -4,9 +4,11 @@
 
 #include <math.h>
 #include <math_private.h>
+#include <math-svid-compat.h>
 
+#if LIBM_SVID_COMPAT && SHLIB_COMPAT (libm, GLIBC_2_1, GLIBC_2_27)
 float
-__exp2f (float x)
+__exp2f_compat (float x)
 {
   float z = __ieee754_exp2f (x);
   if (__builtin_expect (!isfinite (z) || z == 0, 0)
@@ -16,4 +18,5 @@ __exp2f (float x)
 
   return z;
 }
-weak_alias (__exp2f, exp2f)
+compat_symbol (libm, __exp2f_compat, exp2f, GLIBC_2_1);
+#endif

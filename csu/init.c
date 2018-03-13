@@ -1,5 +1,5 @@
 /* Special startup support.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -18,7 +18,7 @@
 
 #if defined __GNUC__ && __GNUC__ >= 2
 
-#include <_G_config.h>
+#include <stdio.h>
 
 /* This records which stdio is linked against in the application. */
 const int _IO_stdin_used = _G_IO_IO_FILE_VERSION;

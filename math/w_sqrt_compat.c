@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@gmail.com>, 2011.
 
@@ -18,8 +18,11 @@
 
 #include <math.h>
 #include <math_private.h>
+#include <math-svid-compat.h>
+#include <libm-alias-double.h>
 
 
+#if LIBM_SVID_COMPAT
 /* wrapper sqrt */
 double
 __sqrt (double x)
@@ -29,8 +32,5 @@ __sqrt (double x)
 
   return __ieee754_sqrt (x);
 }
-weak_alias (__sqrt, sqrt)
-#ifdef NO_LONG_DOUBLE
-strong_alias (__sqrt, __sqrtl)
-weak_alias (__sqrt, sqrtl)
+libm_alias_double (__sqrt, sqrt)
 #endif

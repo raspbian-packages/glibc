@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -18,13 +18,11 @@
 #include <errno.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <libc-internal.h>
 
 /* Defined in brk.c.  */
 extern void *__curbrk;
 extern int __brk (void *addr);
-
-/* Defined in init-first.c.  */
-extern int __libc_multiple_libcs attribute_hidden;
 
 /* Extend the process's data space by INCREMENT.
    If INCREMENT is negative, shrink data space by - INCREMENT.

@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -432,7 +432,7 @@ __pthread_mutex_timedlock (pthread_mutex_t *mutex,
 			--reltime.tv_sec;
 		      }
 		    if (reltime.tv_sec >= 0)
-		      while (nanosleep_not_cancel (&reltime, &reltime) != 0)
+		      while (__nanosleep_nocancel (&reltime, &reltime) != 0)
 			continue;
 
 		    return ETIMEDOUT;

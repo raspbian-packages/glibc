@@ -1,5 +1,5 @@
 /* Thread-local storage handling in the ELF dynamic linker.  Generic version.
-   Copyright (C) 2002-2017 Free Software Foundation, Inc.
+   Copyright (C) 2002-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -44,7 +44,6 @@ oom (void)
 
 
 size_t
-internal_function
 _dl_next_tls_modid (void)
 {
   size_t result;
@@ -105,7 +104,6 @@ _dl_next_tls_modid (void)
 
 
 size_t
-internal_function
 _dl_count_modids (void)
 {
   /* It is rare that we have gaps; see elf/dl-open.c (_dl_open) where
@@ -133,7 +131,6 @@ _dl_count_modids (void)
 
 #ifdef SHARED
 void
-internal_function
 _dl_determine_tlsoffset (void)
 {
   size_t max_align = TLS_TCB_ALIGN;
@@ -277,7 +274,6 @@ _dl_determine_tlsoffset (void)
 #endif /* SHARED */
 
 static void *
-internal_function
 allocate_dtv (void *result)
 {
   dtv_t *dtv;
@@ -308,7 +304,6 @@ allocate_dtv (void *result)
 
 /* Get size and alignment requirements of the static TLS block.  */
 void
-internal_function
 _dl_get_tls_static_info (size_t *sizep, size_t *alignp)
 {
   *sizep = GL(dl_tls_static_size);
@@ -333,7 +328,6 @@ tcb_to_pointer_to_free_location (void *tcb)
 }
 
 void *
-internal_function
 _dl_allocate_tls_storage (void)
 {
   void *result;
@@ -439,7 +433,6 @@ _dl_resize_dtv (dtv_t *dtv)
 
 
 void *
-internal_function
 _dl_allocate_tls_init (void *result)
 {
   if (result == NULL)
@@ -532,7 +525,6 @@ _dl_allocate_tls_init (void *result)
 rtld_hidden_def (_dl_allocate_tls_init)
 
 void *
-internal_function
 _dl_allocate_tls (void *mem)
 {
   return _dl_allocate_tls_init (mem == NULL
@@ -543,7 +535,6 @@ rtld_hidden_def (_dl_allocate_tls)
 
 
 void
-internal_function
 _dl_deallocate_tls (void *tcb, bool dealloc_tcb)
 {
   dtv_t *dtv = GET_DTV (tcb);

@@ -1,5 +1,5 @@
 /* memcmp with SSE4.2, wmemcmp with SSE4.2
-   Copyright (C) 2010-2017 Free Software Foundation, Inc.
+   Copyright (C) 2010-2018 Free Software Foundation, Inc.
    Contributed by Intel Corporation.
    This file is part of the GNU C Library.
 
@@ -43,7 +43,7 @@
 # define RETURN	POP (%ebx); ret; CFI_PUSH (%ebx)
 
 
-# ifdef SHARED
+# ifdef PIC
 #  define JMPTBL(I, B)	I - B
 
 /* Load an entry in a jump table into EBX and branch to it.  TABLE is a

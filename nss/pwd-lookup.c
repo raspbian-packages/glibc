@@ -1,4 +1,4 @@
-/* Copyright (C) 1996-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1996-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1996.
 
@@ -16,7 +16,13 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#include <config.h>
+
 #define DATABASE_NAME passwd
-#define DEFAULT_CONFIG "compat [NOTFOUND=return] files"
+#ifdef LINK_OBSOLETE_NSL
+# define DEFAULT_CONFIG "compat [NOTFOUND=return] files"
+#else
+# define DEFAULT_CONFIG "files"
+#endif
 
 #include "XXX-lookup.c"

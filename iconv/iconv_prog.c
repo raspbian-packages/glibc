@@ -1,5 +1,5 @@
 /* Convert text in given files from the specified from-set to the to-set.
-   Copyright (C) 1998-2017 Free Software Foundation, Inc.
+   Copyright (C) 1998-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1998.
 
@@ -97,9 +97,6 @@ static const char *to_code = "";
 /* File to write output to.  If NULL write to stdout.  */
 static const char *output_file;
 
-/* Nonzero if verbose ouput is wanted.  */
-int verbose;
-
 /* Nonzero if list of all coded character sets is wanted.  */
 static int list;
 
@@ -113,7 +110,7 @@ static int process_fd (iconv_t cd, int fd, FILE **output,
 		       const char *output_file);
 static int process_file (iconv_t cd, FILE *input, FILE **output,
 			 const char *output_file);
-static void print_known_names (void) internal_function;
+static void print_known_names (void);
 
 
 int
@@ -426,7 +423,7 @@ print_version (FILE *stream, struct argp_state *state)
 Copyright (C) %s Free Software Foundation, Inc.\n\
 This is free software; see the source for copying conditions.  There is NO\n\
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\
-"), "2017");
+"), "2018");
   fprintf (stream, gettext ("Written by %s.\n"), "Ulrich Drepper");
 }
 
@@ -712,7 +709,6 @@ do_print  (const void *nodep, VISIT value, int level)
 }
 
 static void
-internal_function
 add_known_names (struct gconv_module *node)
 {
   if (node->left != NULL)
@@ -756,7 +752,6 @@ insert_cache (void)
 
 
 static void
-internal_function
 print_known_names (void)
 {
   iconv_t h;

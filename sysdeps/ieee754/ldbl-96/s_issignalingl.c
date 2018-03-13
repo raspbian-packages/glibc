@@ -1,5 +1,5 @@
 /* Test for signaling NaN.
-   Copyright (C) 2013-2017 Free Software Foundation, Inc.
+   Copyright (C) 2013-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -23,7 +23,7 @@
 int
 __issignalingl (long double x)
 {
-  u_int32_t exi, hxi, lxi;
+  uint32_t exi, hxi, lxi;
   GET_LDOUBLE_WORDS (exi, hxi, lxi, x);
 #if HIGH_ORDER_BIT_IS_SET_FOR_SNAN
 # error not implemented

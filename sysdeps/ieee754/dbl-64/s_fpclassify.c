@@ -1,5 +1,5 @@
 /* Return classification value corresponding to argument.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 
@@ -25,7 +25,7 @@
 int
 __fpclassify (double x)
 {
-  u_int32_t hx, lx;
+  uint32_t hx, lx;
   int retval = FP_NORMAL;
 
   EXTRACT_WORDS (hx, lx, x);

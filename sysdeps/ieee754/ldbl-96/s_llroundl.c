@@ -1,5 +1,5 @@
 /* Round long double value to long long int.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 
@@ -22,13 +22,14 @@
 #include <math.h>
 
 #include <math_private.h>
+#include <libm-alias-ldouble.h>
 
 
 long long int
 __llroundl (long double x)
 {
   int32_t j0;
-  u_int32_t se, i1, i0;
+  uint32_t se, i1, i0;
   long long int result;
   int sign;
 
@@ -42,7 +43,7 @@ __llroundl (long double x)
 	return j0 < -1 ? 0 : sign;
       else
 	{
-	  u_int32_t j = i0 + (0x40000000 >> j0);
+	  uint32_t j = i0 + (0x40000000 >> j0);
 	  if (j < i0)
 	    {
 	      j >>= 1;
@@ -59,7 +60,7 @@ __llroundl (long double x)
 	result = (((long long int) i0 << 32) | i1) << (j0 - 63);
       else
 	{
-	  u_int32_t j = i1 + (0x80000000 >> (j0 - 31));
+	  uint32_t j = i1 + (0x80000000 >> (j0 - 31));
 
 	  result = (long long int) i0;
 	  if (j < i1)
@@ -86,4 +87,4 @@ __llroundl (long double x)
   return sign * result;
 }
 
-weak_alias (__llroundl, llroundl)
+libm_alias_ldouble (__llround, llround)

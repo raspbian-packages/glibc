@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2017 Free Software Foundation, Inc.
+# Copyright (C) 1991-2018 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -35,6 +35,8 @@ tests := mallocbug tst-malloc tst-valloc tst-calloc tst-obstack \
 	 tst-interpose-thread \
 	 tst-alloc_buffer \
 	 tst-malloc-tcache-leak \
+	 tst-malloc_info \
+	 tst-malloc-too-large \
 
 tests-static := \
 	 tst-interpose-static-nothread \
@@ -100,6 +102,7 @@ LDFLAGS-tst-mallocstate = -rdynamic
 
 # These should be removed by `make clean'.
 extra-objs = mcheck-init.o libmcheck.a
+others-extras = mcheck-init.o
 
 # Include the cleanup handler.
 aux := set-freeres thread-freeres
@@ -163,8 +166,8 @@ endif
 
 include ../Rules
 
-CFLAGS-mcheck-init.c = $(PIC-ccflag)
-CFLAGS-obstack.c = $(uses-callbacks)
+CFLAGS-mcheck-init.c += $(PIC-ccflag)
+CFLAGS-obstack.c += $(uses-callbacks)
 
 $(objpfx)libmcheck.a: $(objpfx)mcheck-init.o
 	-rm -f $@
@@ -178,7 +181,7 @@ ifeq (yes,$(build-shared))
 ifneq ($(PERL),no)
 $(objpfx)tst-mtrace.out: tst-mtrace.sh $(objpfx)tst-mtrace
 	$(SHELL) $< $(common-objpfx) '$(test-program-prefix-before-env)' \
-		 '$(run-program-env)' '$(test-program-prefix-after-env)' ; \
+		 '$(run-program-env)' '$(test-program-prefix-after-env)' > $@; \
 	$(evaluate-test)
 endif
 endif
@@ -245,3 +248,4 @@ $(objpfx)tst-dynarray-fail-mem.out: $(objpfx)tst-dynarray-fail.out
 	$(evaluate-test)
 
 $(objpfx)tst-malloc-tcache-leak: $(shared-thread-library)
+$(objpfx)tst-malloc_info: $(shared-thread-library)

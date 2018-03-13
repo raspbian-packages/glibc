@@ -1,5 +1,5 @@
 /* Load a shared object at runtime, relocate it, and run its initializer.
-   Copyright (C) 1996-2017 Free Software Foundation, Inc.
+   Copyright (C) 1996-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -33,11 +33,10 @@
 #include <tls.h>
 #include <stap-probe.h>
 #include <atomic.h>
+#include <libc-internal.h>
 
 #include <dl-dst.h>
 
-
-extern int __libc_multiple_libcs;	/* Defined in init-first.c.  */
 
 /* We must be careful not to leave us in an inconsistent state.  Thus we
    catch any error and re-raise it after cleaning up.  */
@@ -173,7 +172,6 @@ add_to_global (struct link_map *new)
    address ADDR.  Returns the pointer to the link map of the matching DSO, or
    NULL if a match is not found.  */
 struct link_map *
-internal_function
 _dl_find_dso_for_object (const ElfW(Addr) addr)
 {
   struct link_map *l;
@@ -324,7 +322,7 @@ dl_open_worker (void *a)
   /* Sort the objects by dependency for the relocation process.  This
      allows IFUNC relocations to work and it also means copy
      relocation of dependencies are if necessary overwritten.  */
-  size_t nmaps = 0;
+  unsigned int nmaps = 0;
   struct link_map *l = new;
   do
     {
@@ -343,62 +341,11 @@ dl_open_worker (void *a)
       l = l->l_next;
     }
   while (l != NULL);
-  if (nmaps > 1)
-    {
-      uint16_t seen[nmaps];
-      memset (seen, '\0', sizeof (seen));
-      size_t i = 0;
-      while (1)
-	{
-	  ++seen[i];
-	  struct link_map *thisp = maps[i];
-
-	  /* Find the last object in the list for which the current one is
-	     a dependency and move the current object behind the object
-	     with the dependency.  */
-	  size_t k = nmaps - 1;
-	  while (k > i)
-	    {
-	      struct link_map **runp = maps[k]->l_initfini;
-	      if (runp != NULL)
-		/* Look through the dependencies of the object.  */
-		while (*runp != NULL)
-		  if (__glibc_unlikely (*runp++ == thisp))
-		    {
-		      /* Move the current object to the back past the last
-			 object with it as the dependency.  */
-		      memmove (&maps[i], &maps[i + 1],
-			       (k - i) * sizeof (maps[0]));
-		      maps[k] = thisp;
-
-		      if (seen[i + 1] > nmaps - i)
-			{
-			  ++i;
-			  goto next_clear;
-			}
-
-		      uint16_t this_seen = seen[i];
-		      memmove (&seen[i], &seen[i + 1],
-			       (k - i) * sizeof (seen[0]));
-		      seen[k] = this_seen;
-
-		      goto next;
-		    }
-
-	      --k;
-	    }
-
-	  if (++i == nmaps)
-	    break;
-	next_clear:
-	  memset (&seen[i], 0, (nmaps - i) * sizeof (seen[0]));
-	next:;
-	}
-    }
+  _dl_sort_maps (maps, nmaps, NULL, false);
 
   int relocation_in_progress = 0;
 
-  for (size_t i = nmaps; i-- > 0; )
+  for (unsigned int i = nmaps; i-- > 0; )
     {
       l = maps[i];
 
@@ -654,11 +601,8 @@ no more namespaces available for dlmopen()"));
   args.argv = argv;
   args.env = env;
 
-  const char *objname;
-  const char *errstring;
-  bool malloced;
-  int errcode = _dl_catch_error (&objname, &errstring, &malloced,
-				 dl_open_worker, &args);
+  struct dl_exception exception;
+  int errcode = _dl_catch_exception (&exception, dl_open_worker, &args);
 
 #if defined USE_LDCONFIG && !defined MAP_COPY
   /* We must unmap the cache file.  */
@@ -666,7 +610,7 @@ no more namespaces available for dlmopen()"));
 #endif
 
   /* See if an error occurred during loading.  */
-  if (__glibc_unlikely (errstring != NULL))
+  if (__glibc_unlikely (exception.errstring != NULL))
     {
       /* Remove the object from memory.  It may be in an inconsistent
 	 state if relocation failed, for example.  */
@@ -690,28 +634,8 @@ no more namespaces available for dlmopen()"));
       /* Release the lock.  */
       __rtld_lock_unlock_recursive (GL(dl_load_lock));
 
-      /* Make a local copy of the error string so that we can release the
-	 memory allocated for it.  */
-      size_t len_errstring = strlen (errstring) + 1;
-      char *local_errstring;
-      if (objname == errstring + len_errstring)
-	{
-	  size_t total_len = len_errstring + strlen (objname) + 1;
-	  local_errstring = alloca (total_len);
-	  memcpy (local_errstring, errstring, total_len);
-	  objname = local_errstring + len_errstring;
-	}
-      else
-	{
-	  local_errstring = alloca (len_errstring);
-	  memcpy (local_errstring, errstring, len_errstring);
-	}
-
-      if (malloced)
-	free ((char *) errstring);
-
       /* Reraise the error.  */
-      _dl_signal_error (errcode, objname, NULL, local_errstring);
+      _dl_signal_exception (errcode, &exception, NULL);
     }
 
   assert (_dl_debug_initialize (0, args.nsid)->r_state == RT_CONSISTENT);

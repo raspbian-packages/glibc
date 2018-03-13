@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2001-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2001.
 
@@ -152,7 +152,6 @@ get_elem (void)
 
 
 struct requestlist *
-internal_function
 __gai_find_request (const struct gaicb *gaicbp)
 {
   struct requestlist *runp;
@@ -169,7 +168,6 @@ __gai_find_request (const struct gaicb *gaicbp)
 
 
 int
-internal_function
 __gai_remove_request (struct gaicb *gaicbp)
 {
   struct requestlist *runp;
@@ -212,7 +210,6 @@ static void *handle_requests (void *arg);
 /* The main function of the async I/O handling.  It enqueues requests
    and if necessary starts and handles threads.  */
 struct requestlist *
-internal_function
 __gai_enqueue_request (struct gaicb *gaicbp)
 {
   struct requestlist *newp;

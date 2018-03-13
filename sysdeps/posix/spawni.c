@@ -1,5 +1,5 @@
 /* Guts of POSIX spawn interface.  Generic POSIX.1 version.
-   Copyright (C) 2000-2017 Free Software Foundation, Inc.
+   Copyright (C) 2000-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -157,7 +157,7 @@ __spawni_child (void *arguments)
 	  switch (action->tag)
 	    {
 	    case spawn_do_close:
-	      if (close_not_cancel (action->action.close_action.fd) != 0)
+	      if (__close_nocancel (action->action.close_action.fd) != 0)
 		{
 		  if (have_fdlimit == 0)
 		    {
@@ -180,9 +180,9 @@ __spawni_child (void *arguments)
 		   with the process already at maximum number of file descriptor
 		   opened and also for multiple actions on single-open special
 		   paths (like /dev/watchdog).  */
-		close_not_cancel (action->action.open_action.fd);
+		__close_nocancel (action->action.open_action.fd);
 
-		int new_fd = open_not_cancel (action->action.open_action.path,
+		int new_fd = __open_nocancel (action->action.open_action.path,
 					      action->action.open_action.oflag
 					      | O_LARGEFILE,
 					      action->action.open_action.mode);
@@ -197,7 +197,7 @@ __spawni_child (void *arguments)
 			!= action->action.open_action.fd)
 		      goto fail;
 
-		    if (close_not_cancel (new_fd) != 0)
+		    if (__close_nocancel (new_fd) != 0)
 		      goto fail;
 		  }
 	      }
@@ -234,7 +234,7 @@ fail:
   ret = errno ? : ECHILD;
   if (ret)
     /* Since sizeof errno < PIPE_BUF, the write is atomic. */
-    while (write_not_cancel (args->pipe[1], &ret, sizeof (ret)) < 0);
+    while (__write_nocancel (args->pipe[1], &ret, sizeof (ret)) < 0);
 
   _exit (SPAWN_ERROR);
 }

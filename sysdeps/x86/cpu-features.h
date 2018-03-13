@@ -1,5 +1,5 @@
 /* This file is part of the GNU C Library.
-   Copyright (C) 2008-2017 Free Software Foundation, Inc.
+   Copyright (C) 2008-2018 Free Software Foundation, Inc.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -38,7 +38,8 @@
 #define bit_arch_Fast_Unaligned_Copy		(1 << 18)
 #define bit_arch_Prefer_ERMS			(1 << 19)
 #define bit_arch_Prefer_No_AVX512		(1 << 20)
-#define bit_arch_XSAVEC_Usable			(1 << 21)
+#define bit_arch_MathVec_Prefer_No_AVX512	(1 << 21)
+#define bit_arch_XSAVEC_Usable			(1 << 22)
 
 /* CPUID Feature flags.  */
 
@@ -73,6 +74,8 @@
 #define bit_cpu_AVX512CD	(1 << 28)
 #define bit_cpu_AVX512BW	(1 << 30)
 #define bit_cpu_AVX512VL	(1u << 31)
+#define bit_cpu_IBT		(1u << 20)
+#define bit_cpu_SHSTK		(1u << 7)
 
 /* XCR0 Feature flags.  */
 #define bit_XMM_state		(1 << 1)
@@ -97,101 +100,8 @@
   ((1 << 1) | (1 << 2) | (1 << 3) | (1 << 5) | (1 << 6) | (1 << 7))
 
 #ifdef	__ASSEMBLER__
-
 # include <cpu-features-offsets.h>
-
-# define index_cpu_CX8	COMMON_CPUID_INDEX_1*CPUID_SIZE+CPUID_EDX_OFFSET
-# define index_cpu_CMOV	COMMON_CPUID_INDEX_1*CPUID_SIZE+CPUID_EDX_OFFSET
-# define index_cpu_SSE	COMMON_CPUID_INDEX_1*CPUID_SIZE+CPUID_EDX_OFFSET
-# define index_cpu_SSE2	COMMON_CPUID_INDEX_1*CPUID_SIZE+CPUID_EDX_OFFSET
-# define index_cpu_SSSE3 COMMON_CPUID_INDEX_1*CPUID_SIZE+CPUID_ECX_OFFSET
-# define index_cpu_SSE4_1 COMMON_CPUID_INDEX_1*CPUID_SIZE+CPUID_ECX_OFFSET
-# define index_cpu_SSE4_2 COMMON_CPUID_INDEX_1*CPUID_SIZE+CPUID_ECX_OFFSET
-# define index_cpu_AVX	COMMON_CPUID_INDEX_1*CPUID_SIZE+CPUID_ECX_OFFSET
-# define index_cpu_AVX2	COMMON_CPUID_INDEX_7*CPUID_SIZE+CPUID_EBX_OFFSET
-# define index_cpu_ERMS	COMMON_CPUID_INDEX_7*CPUID_SIZE+CPUID_EBX_OFFSET
-# define index_cpu_MOVBE COMMON_CPUID_INDEX_1*CPUID_SIZE+CPUID_ECX_OFFSET
-
-# define index_arch_Fast_Rep_String	FEATURE_INDEX_1*FEATURE_SIZE
-# define index_arch_Fast_Copy_Backward	FEATURE_INDEX_1*FEATURE_SIZE
-# define index_arch_Slow_BSF		FEATURE_INDEX_1*FEATURE_SIZE
-# define index_arch_Fast_Unaligned_Load	FEATURE_INDEX_1*FEATURE_SIZE
-# define index_arch_Prefer_PMINUB_for_stringop FEATURE_INDEX_1*FEATURE_SIZE
-# define index_arch_AVX_Usable		FEATURE_INDEX_1*FEATURE_SIZE
-# define index_arch_FMA_Usable		FEATURE_INDEX_1*FEATURE_SIZE
-# define index_arch_FMA4_Usable		FEATURE_INDEX_1*FEATURE_SIZE
-# define index_arch_Slow_SSE4_2		FEATURE_INDEX_1*FEATURE_SIZE
-# define index_arch_AVX2_Usable		FEATURE_INDEX_1*FEATURE_SIZE
-# define index_arch_AVX_Fast_Unaligned_Load FEATURE_INDEX_1*FEATURE_SIZE
-# define index_arch_AVX512F_Usable	FEATURE_INDEX_1*FEATURE_SIZE
-# define index_arch_AVX512DQ_Usable	FEATURE_INDEX_1*FEATURE_SIZE
-# define index_arch_I586		FEATURE_INDEX_1*FEATURE_SIZE
-# define index_arch_I686		FEATURE_INDEX_1*FEATURE_SIZE
-# define index_arch_Prefer_MAP_32BIT_EXEC FEATURE_INDEX_1*FEATURE_SIZE
-# define index_arch_Prefer_No_VZEROUPPER FEATURE_INDEX_1*FEATURE_SIZE
-# define index_arch_Fast_Unaligned_Copy	FEATURE_INDEX_1*FEATURE_SIZE
-# define index_arch_Prefer_ERMS		FEATURE_INDEX_1*FEATURE_SIZE
-# define index_arch_Prefer_No_AVX512	FEATURE_INDEX_1*FEATURE_SIZE
-
-
-# if defined (_LIBC) && !IS_IN (nonlib)
-#  ifdef __x86_64__
-#   ifdef SHARED
-#    if IS_IN (rtld)
-#     define LOAD_RTLD_GLOBAL_RO_RDX
-#     define HAS_FEATURE(offset, field, name) \
-  testl $(bit_##field##_##name), \
-	_rtld_local_ro+offset+(index_##field##_##name)(%rip)
-#    else
-#      define LOAD_RTLD_GLOBAL_RO_RDX \
-  mov _rtld_global_ro@GOTPCREL(%rip), %RDX_LP
-#     define HAS_FEATURE(offset, field, name) \
-  testl $(bit_##field##_##name), \
-	RTLD_GLOBAL_RO_DL_X86_CPU_FEATURES_OFFSET+offset+(index_##field##_##name)(%rdx)
-#    endif
-#   else /* SHARED */
-#    define LOAD_RTLD_GLOBAL_RO_RDX
-#    define HAS_FEATURE(offset, field, name) \
-  testl $(bit_##field##_##name), \
-	_dl_x86_cpu_features+offset+(index_##field##_##name)(%rip)
-#   endif /* !SHARED */
-#  else  /* __x86_64__ */
-#   ifdef SHARED
-#    define LOAD_FUNC_GOT_EAX(func) \
-  leal func@GOTOFF(%edx), %eax
-#    if IS_IN (rtld)
-#    define LOAD_GOT_AND_RTLD_GLOBAL_RO \
-  LOAD_PIC_REG(dx)
-#     define HAS_FEATURE(offset, field, name) \
-  testl $(bit_##field##_##name), \
-	offset+(index_##field##_##name)+_rtld_local_ro@GOTOFF(%edx)
-#    else
-#     define LOAD_GOT_AND_RTLD_GLOBAL_RO \
-  LOAD_PIC_REG(dx); \
-  mov _rtld_global_ro@GOT(%edx), %ecx
-#     define HAS_FEATURE(offset, field, name) \
-  testl $(bit_##field##_##name), \
-	RTLD_GLOBAL_RO_DL_X86_CPU_FEATURES_OFFSET+offset+(index_##field##_##name)(%ecx)
-#    endif
-#   else  /* SHARED */
-#    define LOAD_FUNC_GOT_EAX(func) \
-  leal func, %eax
-#    define LOAD_GOT_AND_RTLD_GLOBAL_RO
-#    define HAS_FEATURE(offset, field, name) \
-  testl $(bit_##field##_##name), \
-	_dl_x86_cpu_features+offset+(index_##field##_##name)
-#   endif /* !SHARED */
-#  endif /* !__x86_64__ */
-# else /* _LIBC && !nonlib */
-#  error "Sorry, <cpu-features.h> is unimplemented for assembler"
-# endif /* !_LIBC || nonlib */
-
-/* HAS_* evaluates to true if we may use the feature at runtime.  */
-# define HAS_CPU_FEATURE(name)	HAS_FEATURE (CPUID_OFFSET, cpu, name)
-# define HAS_ARCH_FEATURE(name) HAS_FEATURE (FEATURE_OFFSET, arch, name)
-
 #else	/* __ASSEMBLER__ */
-
 enum
   {
     COMMON_CPUID_INDEX_1 = 0,
@@ -295,6 +205,8 @@ extern const struct cpu_features *__get_cpu_features (void)
 # define index_cpu_LZCNT	COMMON_CPUID_INDEX_1
 # define index_cpu_MOVBE	COMMON_CPUID_INDEX_1
 # define index_cpu_POPCNT	COMMON_CPUID_INDEX_1
+# define index_cpu_IBT		COMMON_CPUID_INDEX_7
+# define index_cpu_SHSTK	COMMON_CPUID_INDEX_7
 
 # define reg_CX8		edx
 # define reg_CMOV		edx
@@ -324,6 +236,8 @@ extern const struct cpu_features *__get_cpu_features (void)
 # define reg_LZCNT		ecx
 # define reg_MOVBE		ecx
 # define reg_POPCNT		ecx
+# define reg_IBT		edx
+# define reg_SHSTK		ecx
 
 # define index_arch_Fast_Rep_String	FEATURE_INDEX_1
 # define index_arch_Fast_Copy_Backward	FEATURE_INDEX_1
@@ -345,6 +259,7 @@ extern const struct cpu_features *__get_cpu_features (void)
 # define index_arch_Fast_Unaligned_Copy	FEATURE_INDEX_1
 # define index_arch_Prefer_ERMS		FEATURE_INDEX_1
 # define index_arch_Prefer_No_AVX512	FEATURE_INDEX_1
+# define index_arch_MathVec_Prefer_No_AVX512 FEATURE_INDEX_1
 # define index_arch_XSAVEC_Usable	FEATURE_INDEX_1
 
 #endif	/* !__ASSEMBLER__ */

@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Chris Metcalf <cmetcalf@tilera.com>, 2011.
 
@@ -20,14 +20,9 @@
 
 	/* Get address of "sym" in "reg" assuming r51 holds ".Llink". */
 	.macro pic_addr reg, sym
-#ifdef __tilegx__
 	moveli \reg, hw1_last(\sym - .Llink)
 	shl16insli \reg, \reg, hw0(\sym - .Llink)
 	ADD_PTR \reg, r51, \reg
-#else
-	ADDLI_PTR \reg, r51, lo16(\sym - .Llink)
-	auli \reg, \reg, ha16(\sym - .Llink)
-#endif
 	.endm
 
 	.text
@@ -48,7 +43,7 @@ ENTRY (_start)
 	 /* Save zero for caller sp in our 'caller' save area, and make
 	    sure lr has a zero value, to limit backtraces.  */
 	 move lr, zero
-	 ST r4, zero
+	 st r4, zero
 	}
 	{
 	 move r0, r52
@@ -61,8 +56,8 @@ ENTRY (_start)
 	   in which case we have to adjust the argument vector.  */
 	lnk r51; .Llink:
 	pic_addr r4, _dl_skip_args
-	LD4U r4, r4
-	BEQZT r4, .Lno_skip
+	ld4u r4, r4
+	beqzt r4, .Lno_skip
 
 	/* Load the argc word at the initial sp and adjust it.
 	   We basically jump "sp" up over the first few argv entries

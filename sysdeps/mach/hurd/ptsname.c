@@ -1,5 +1,5 @@
 /* ptsname -- return the name of a pty slave given an FD to the pty master
-   Copyright (C) 1999-2017 Free Software Foundation, Inc.
+   Copyright (C) 1999-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -39,8 +39,7 @@ ptsname (int fd)
 }
 
 
-/* We can't make use of STP, but do it that way for conformity with the Linux
-   version...  */
+/* We don't need STP, but fill it for conformity with the Linux version...  */
 int
 __ptsname_internal (int fd, char *buf, size_t buflen, struct stat64 *stp)
 {
@@ -56,6 +55,12 @@ __ptsname_internal (int fd, char *buf, size_t buflen, struct stat64 *stp)
     {
       errno = ERANGE;
       return ERANGE;
+    }
+
+  if (stp)
+    {
+      if (__xstat64 (_STAT_VER, peername, stp) < 0)
+	return errno;
     }
 
   memcpy (buf, peername, len);

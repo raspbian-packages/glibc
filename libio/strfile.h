@@ -1,4 +1,4 @@
-/* Copyright (C) 1993-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1993-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,10 +24,7 @@
    This exception applies to code released by its copyright holders
    in files containing the exception.  */
 
-#include <libio.h>
-#ifdef TODO
-Merge into  libio.h ?
-#endif
+#include <stdio.h>
 
 typedef void *(*_IO_alloc_type) (_IO_size_t);
 typedef void (*_IO_free_type) (void*);

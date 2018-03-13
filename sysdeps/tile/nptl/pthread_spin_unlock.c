@@ -1,5 +1,5 @@
 /* pthread_spin_unlock -- unlock a spin lock.  Tile version.
-   Copyright (C) 2012-2017 Free Software Foundation, Inc.
+   Copyright (C) 2012-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -22,12 +22,7 @@
 int
 pthread_spin_unlock (pthread_spinlock_t *lock)
 {
-#ifdef __tilegx__
   /* Use exchange() to bypass the write buffer. */
   atomic_exchange_rel (lock, 0);
-#else
-  atomic_full_barrier ();
-  *lock = 0;
-#endif
   return 0;
 }

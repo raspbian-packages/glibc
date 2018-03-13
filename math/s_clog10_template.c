@@ -1,5 +1,5 @@
 /* Compute complex base 10 logarithm.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 
@@ -120,9 +120,3 @@ M_DECL_FUNC (__clog10) (CFLOAT x)
 }
 
 declare_mgen_alias (__clog10, clog10)
-
-#if M_LIBM_NEED_COMPAT (clog10)
-/* __clog10 is also a public symbol.  */
-declare_mgen_libm_compat (__clog10, __clog10)
-declare_mgen_libm_compat (clog10, clog10)
-#endif

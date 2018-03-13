@@ -1,5 +1,5 @@
 /* Machine-dependent ELF dynamic relocation inline functions.  m68k version.
-   Copyright (C) 1996-2017 Free Software Foundation, Inc.
+   Copyright (C) 1996-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -51,9 +51,15 @@ static inline Elf32_Addr
 elf_machine_load_address (void)
 {
   Elf32_Addr addr;
+#ifdef SHARED
   asm (PCREL_OP ("lea", "_dl_start", "%0", "%0", "%%pc") "\n\t"
        "sub.l _dl_start@GOT.w(%%a5), %0"
        : "=a" (addr));
+#else
+  asm (PCREL_OP ("lea", "_dl_relocate_static_pie", "%0", "%0", "%%pc") "\n\t"
+       "sub.l _dl_relocate_static_pie@GOT.w(%%a5), %0"
+       : "=a" (addr));
+#endif
   return addr;
 }
 

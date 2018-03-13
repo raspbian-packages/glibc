@@ -1,5 +1,5 @@
 /* Functions to read locale data files.
-   Copyright (C) 1996-2017 Free Software Foundation, Inc.
+   Copyright (C) 1996-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1996.
 
@@ -44,8 +44,12 @@ static const size_t _nl_category_num_items[] =
 
 #define NO_PAREN(arg, rest...) arg, ##rest
 
+/* The size of the array must be specified explicitly because some of
+   the 'items' may be subarrays, which will cause the compiler to deduce
+   an incorrect size from the initializer.  */
 #define DEFINE_CATEGORY(category, category_name, items, a) \
-static const enum value_type _nl_value_type_##category[] = { NO_PAREN items };
+static const enum value_type _nl_value_type_##category     \
+  [_NL_ITEM_INDEX (_NL_NUM_##category)] = { NO_PAREN items };
 #define DEFINE_ELEMENT(element, element_name, optstd, type, rest...) \
   [_NL_ITEM_INDEX (element)] = type,
 #include "categories.def"
@@ -61,7 +65,6 @@ static const enum value_type *const _nl_value_types[] =
 
 
 struct __locale_data *
-internal_function
 _nl_intern_locale_data (int category, const void *data, size_t datasize)
 {
   const struct
@@ -152,7 +155,7 @@ _nl_intern_locale_data (int category, const void *data, size_t datasize)
 	  if (!LOCFILE_ALIGNED_P (idx))
 	    goto puntdata;
 	  newdata->values[cnt].word =
-	    *((const u_int32_t *) (newdata->filedata + idx));
+	    *((const uint32_t *) (newdata->filedata + idx));
 	}
     }
 
@@ -160,7 +163,6 @@ _nl_intern_locale_data (int category, const void *data, size_t datasize)
 }
 
 void
-internal_function
 _nl_load_locale (struct loaded_l10nfile *file, int category)
 {
   int fd;
@@ -173,7 +175,7 @@ _nl_load_locale (struct loaded_l10nfile *file, int category)
   file->decided = 1;
   file->data = NULL;
 
-  fd = open_not_cancel_2 (file->filename, O_RDONLY | O_CLOEXEC);
+  fd = __open_nocancel (file->filename, O_RDONLY | O_CLOEXEC);
   if (__builtin_expect (fd, 0) < 0)
     /* Cannot open the file.  */
     return;
@@ -181,7 +183,7 @@ _nl_load_locale (struct loaded_l10nfile *file, int category)
   if (__builtin_expect (__fxstat64 (_STAT_VER, fd, &st), 0) < 0)
     {
     puntfd:
-      close_not_cancel_no_status (fd);
+      __close_nocancel_nostatus (fd);
       return;
     }
   if (__glibc_unlikely (S_ISDIR (st.st_mode)))
@@ -191,7 +193,7 @@ _nl_load_locale (struct loaded_l10nfile *file, int category)
       char *newp;
       size_t filenamelen;
 
-      close_not_cancel_no_status (fd);
+      __close_nocancel_nostatus (fd);
 
       filenamelen = strlen (file->filename);
       newp = (char *) alloca (filenamelen
@@ -201,7 +203,7 @@ _nl_load_locale (struct loaded_l10nfile *file, int category)
 		 _nl_category_names.str + _nl_category_name_idxs[category],
 		 _nl_category_name_sizes[category] + 1);
 
-      fd = open_not_cancel_2 (newp, O_RDONLY | O_CLOEXEC);
+      fd = __open_nocancel (newp, O_RDONLY | O_CLOEXEC);
       if (__builtin_expect (fd, 0) < 0)
 	return;
 
@@ -238,7 +240,7 @@ _nl_load_locale (struct loaded_l10nfile *file, int category)
 	      char *p = (char *) filedata;
 	      while (to_read > 0)
 		{
-		  nread = read_not_cancel (fd, p, to_read);
+		  nread = __read_nocancel (fd, p, to_read);
 		  if (__builtin_expect (nread, 1) <= 0)
 		    {
 		      free (filedata);
@@ -257,7 +259,7 @@ _nl_load_locale (struct loaded_l10nfile *file, int category)
 #endif	/* _POSIX_MAPPED_FILES */
 
   /* We have mapped the data, so we no longer need the descriptor.  */
-  close_not_cancel_no_status (fd);
+  __close_nocancel_nostatus (fd);
 
   if (__glibc_unlikely (filedata == NULL))
     /* We failed to map or read the data.  */
@@ -282,7 +284,6 @@ _nl_load_locale (struct loaded_l10nfile *file, int category)
 }
 
 void
-internal_function
 _nl_unload_locale (struct __locale_data *locale)
 {
   if (locale->private.cleanup)

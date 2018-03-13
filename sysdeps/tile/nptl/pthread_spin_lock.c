@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Chris Metcalf <cmetcalf@tilera.com>, 2011.
 
@@ -26,16 +26,10 @@
 /* Initial cycle delay for exponential backoff */
 #define BACKOFF_START 32
 
-#ifdef __tilegx__
 /* Use cmpexch() after the initial fast-path exch to avoid
    invalidating the cache line of the lock holder.  */
-# define TNS(p) atomic_exchange_acq((p), 1)
-# define CMPTNS(p) atomic_compare_and_exchange_val_acq((p), 1, 0)
-#else
-# define TNS(p) __insn_tns(p)
-# define CMPTNS(p) __insn_tns(p)
-# define SPR_CYCLE SPR_CYCLE_LOW   /* The low 32 bits are sufficient. */
-#endif
+#define TNS(p) atomic_exchange_acq((p), 1)
+#define CMPTNS(p) atomic_compare_and_exchange_val_acq((p), 1, 0)
 
 int
 pthread_spin_lock (pthread_spinlock_t *lock)

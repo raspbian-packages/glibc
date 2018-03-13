@@ -1,5 +1,5 @@
 /* Get system load averages.  Linux (/proc/loadavg) version.
-   Copyright (C) 1999-2017 Free Software Foundation, Inc.
+   Copyright (C) 1999-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -33,7 +33,7 @@ getloadavg (double loadavg[], int nelem)
 {
   int fd;
 
-  fd = open_not_cancel_2 ("/proc/loadavg", O_RDONLY);
+  fd = __open_nocancel ("/proc/loadavg", O_RDONLY);
   if (fd < 0)
     return -1;
   else
@@ -42,8 +42,8 @@ getloadavg (double loadavg[], int nelem)
       ssize_t nread;
       int i;
 
-      nread = read_not_cancel (fd, buf, sizeof buf - 1);
-      close_not_cancel_no_status (fd);
+      nread = __read_nocancel (fd, buf, sizeof buf - 1);
+      __close_nocancel_nostatus (fd);
       if (nread <= 0)
 	return -1;
       buf[nread - 1] = '\0';

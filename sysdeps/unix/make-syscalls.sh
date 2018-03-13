@@ -12,7 +12,6 @@
 #
 # Syscall Signature Prefixes:
 #
-# C: cancellable (i.e., this syscall is a cancellation point)
 # E: errno and return value are not set by the call
 # V: errno is not set, but errno or zero (success) is returned from the call
 #
@@ -171,11 +170,9 @@ while read file srcfile caller syscall args strong weak; do
   ;;
   esac
 
-  cancellable=0
   noerrno=0
   errval=0
   case $args in
-  C*) cancellable=1; args=`echo $args | sed 's/C:\?//'`;;
   E*) noerrno=1; args=`echo $args | sed 's/E:\?//'`;;
   V*) errval=1; args=`echo $args | sed 's/V:\?//'`;;
   esac
@@ -258,7 +255,6 @@ while read file srcfile caller syscall args strong weak; do
 	(echo '#define SYSCALL_NAME $syscall'; \\
 	 echo '#define SYSCALL_NARGS $nargs'; \\
 	 echo '#define SYSCALL_SYMBOL $strong'; \\
-	 echo '#define SYSCALL_CANCELLABLE $cancellable'; \\
 	 echo '#define SYSCALL_NOERRNO $noerrno'; \\
 	 echo '#define SYSCALL_ERRVAL $errval'; \\
 	 echo '#include <syscall-template.S>'; \\"
@@ -284,16 +280,14 @@ while read file srcfile caller syscall args strong weak; do
 \$(foreach p,\$(sysd-rules-targets),\$(objpfx)\$(patsubst %,\$p,$file).os): \\
 		\$(..)sysdeps/unix/make-syscalls.sh
 	\$(make-target-directory)
-	(echo '#include <dl-vdso.h>'; \\
-	 echo 'extern void *${strong}_ifunc (void) __asm ("${strong}");'; \\
-	 echo 'void *'; \\
-	 echo 'inhibit_stack_protector'; \\
-	 echo '${strong}_ifunc (void)'; \\
-	 echo '{'; \\
-	 echo '  PREPARE_VERSION_KNOWN (symver, ${vdso_symver});'; \\
-	 echo '  return _dl_vdso_vsym ("${vdso_symbol}", &symver);'; \\
-	 echo '}'; \\
-	 echo 'asm (".type ${strong}, %gnu_indirect_function");'; \\
+	(echo '#define ${strong} __redirect_${strong}'; \\
+	 echo '#include <dl-vdso.h>'; \\
+	 echo '#undef ${strong}'; \\
+	 echo '#define vdso_ifunc_init() \\'; \\
+	 echo '  PREPARE_VERSION_KNOWN (symver, ${vdso_symver})'; \\
+	 echo '__ifunc (__redirect_${strong}, ${strong},'; \\
+	 echo '         _dl_vdso_vsym ("${vdso_symbol}", &symver), void,'; \\
+	 echo '         vdso_ifunc_init)'; \\
 EOF
     # This is doing "hidden_def (${strong})", but the compiler
     # doesn't know that we've defined ${strong} in the same file, so

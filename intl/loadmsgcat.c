@@ -1,5 +1,5 @@
 /* Load needed message catalogs.
-   Copyright (C) 1995-2017 Free Software Foundation, Inc.
+   Copyright (C) 1995-2018 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published by
@@ -445,9 +445,9 @@
 /* Rename the non ISO C functions.  This is required by the standard
    because some ISO C functions will require linking with this object
    file and the name space must not be polluted.  */
-# define open(name, flags)	open_not_cancel_2 (name, flags)
-# define close(fd)		close_not_cancel_no_status (fd)
-# define read(fd, buf, n)	read_not_cancel (fd, buf, n)
+# define open(name, flags)	__open_nocancel (name, flags)
+# define close(fd)		__close_nocancel_nostatus (fd)
+# define read(fd, buf, n)	__read_nocancel (fd, buf, n)
 # define mmap(addr, len, prot, flags, fd, offset) \
   __mmap (addr, len, prot, flags, fd, offset)
 # define munmap(addr, len)	__munmap (addr, len)
@@ -749,7 +749,6 @@ get_sysdep_segment_value (const char *name)
 /* Load the message catalogs specified by FILENAME.  If it is no valid
    message catalog do nothing.  */
 void
-internal_function
 _nl_load_domain (struct loaded_l10nfile *domain_file,
 		 struct binding *domainbinding)
 {
@@ -1285,7 +1284,7 @@ _nl_load_domain (struct loaded_l10nfile *domain_file,
 
 #ifdef _LIBC
 void
-internal_function __libc_freeres_fn_section
+__libc_freeres_fn_section
 _nl_unload_domain (struct loaded_domain *domain)
 {
   size_t i;

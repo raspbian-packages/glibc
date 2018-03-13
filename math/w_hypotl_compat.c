@@ -20,8 +20,11 @@
 
 #include <math.h>
 #include <math_private.h>
+#include <math-svid-compat.h>
+#include <libm-alias-ldouble.h>
 
 
+#if LIBM_SVID_COMPAT
 long double
 __hypotl(long double x, long double y)
 {
@@ -33,4 +36,5 @@ __hypotl(long double x, long double y)
 
 	return z;
 }
-weak_alias (__hypotl, hypotl)
+libm_alias_ldouble (__hypot, hypot)
+#endif

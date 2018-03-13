@@ -1,4 +1,4 @@
-/* Copyright (C) 2014-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2014-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -25,8 +25,8 @@ static long int linux_sysconf (int name);
 long int
 __sysconf (int name)
 {
-  /* Currently we support only tilepro and tilegx, which have
-     statically-known cache sizes.  */
+  /* Currently we support only tilegx, which have statically-known cache
+     sizes.  */
   switch (name)
     {
     /* Level 1 cache.  */

@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -62,8 +62,6 @@ static int __pthread_mutex_lock_full (pthread_mutex_t *mutex)
 int
 __pthread_mutex_lock (pthread_mutex_t *mutex)
 {
-  assert (sizeof (mutex->__size) >= sizeof (mutex->__data));
-
   unsigned int type = PTHREAD_MUTEX_TYPE_ELISION (mutex);
 
   LIBC_PROBE (mutex_entry, 1, mutex);
@@ -428,7 +426,7 @@ __pthread_mutex_lock_full (pthread_mutex_t *mutex)
 
 		/* Delay the thread indefinitely.  */
 		while (1)
-		  pause_not_cancel ();
+		  __pause_nocancel ();
 	      }
 
 	    oldval = mutex->__data.__lock;
@@ -607,7 +605,6 @@ hidden_def (__pthread_mutex_lock)
 
 #ifdef NO_INCR
 void
-internal_function
 __pthread_mutex_cond_lock_adjust (pthread_mutex_t *mutex)
 {
   assert ((mutex->__data.__kind & PTHREAD_MUTEX_PRIO_INHERIT_NP) != 0);

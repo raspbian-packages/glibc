@@ -1,5 +1,5 @@
 /* Complex sine hyperbole function for float types.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 
@@ -154,7 +154,3 @@ M_DECL_FUNC (__csinh) (CFLOAT x)
 }
 
 declare_mgen_alias (__csinh, csinh)
-
-#if M_LIBM_NEED_COMPAT (csinh)
-declare_mgen_libm_compat (__csinh, csinh)
-#endif

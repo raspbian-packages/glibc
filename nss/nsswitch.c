@@ -1,4 +1,4 @@
-/* Copyright (C) 1996-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1996-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1996.
 
@@ -40,15 +40,23 @@
 #include "nsswitch.h"
 #include "../nscd/nscd_proto.h"
 #include <sysdep.h>
+#include <config.h>
+
+#ifdef LINK_OBSOLETE_NSL
+# define DEFAULT_CONFIG    "compat [NOTFOUND=return] files"
+# define DEFAULT_DEFCONFIG "nis [NOTFOUND=return] files"
+#else
+# define DEFAULT_CONFIG    "files"
+# define DEFAULT_DEFCONFIG "files"
+#endif
 
 /* Prototypes for the local functions.  */
-static name_database *nss_parse_file (const char *fname) internal_function;
-static name_database_entry *nss_getline (char *line) internal_function;
-static service_user *nss_parse_service_list (const char *line)
-     internal_function;
+static name_database *nss_parse_file (const char *fname);
+static name_database_entry *nss_getline (char *line);
+static service_user *nss_parse_service_list (const char *line);
 #if !defined DO_STATIC_NSS || defined SHARED
 static service_library *nss_new_service (name_database *database,
-					 const char *name) internal_function;
+					 const char *name);
 #endif
 
 
@@ -73,8 +81,10 @@ static const struct
 };
 #define ndatabases (sizeof (databases) / sizeof (databases[0]))
 
+#ifdef USE_NSCD
 /* Flags whether custom rules for database is set.  */
 bool __nss_database_custom[NSS_DBSIDX_max];
+#endif
 
 
 __libc_lock_define_initialized (static, lock)
@@ -151,8 +161,7 @@ __nss_database_lookup (const char *database, const char *alternate_name,
      or null to use the most common default.  */
   if (*ni == NULL)
     {
-      *ni = nss_parse_service_list (defconfig
-				    ?: "nis [NOTFOUND=return] files");
+      *ni = nss_parse_service_list (defconfig ?: DEFAULT_DEFCONFIG);
       if (*ni != NULL)
 	{
 	  /* Record the memory we've just allocated in defconfig_entries list,
@@ -304,7 +313,9 @@ __nss_configure_lookup (const char *dbname, const char *service_line)
 
   /* Install new rules.  */
   *databases[cnt].dbp = new_db;
+#ifdef USE_NSCD
   __nss_database_custom[cnt] = true;
+#endif
 
   __libc_lock_unlock (lock);
 
@@ -539,7 +550,6 @@ libc_hidden_def (__nss_lookup_function)
 
 
 static name_database *
-internal_function
 nss_parse_file (const char *fname)
 {
   FILE *fp;
@@ -615,7 +625,6 @@ nss_parse_file (const char *fname)
 	`( <source> ( "[" "!"? (<status> "=" <action> )+ "]" )? )*'
    */
 static service_user *
-internal_function
 nss_parse_service_list (const char *line)
 {
   service_user *result = NULL, **nextp = &result;
@@ -764,7 +773,6 @@ nss_parse_service_list (const char *line)
 }
 
 static name_database_entry *
-internal_function
 nss_getline (char *line)
 {
   const char *name;
@@ -806,7 +814,6 @@ nss_getline (char *line)
 
 #if !defined DO_STATIC_NSS || defined SHARED
 static service_library *
-internal_function
 nss_new_service (name_database *database, const char *name)
 {
   service_library **currentp = &database->library;
@@ -859,8 +866,8 @@ __nss_disable_nscd (void (*cb) (size_t, struct traced_file *))
   is_nscd = true;
 
   /* Find all the relevant modules so that the init functions are called.  */
-  nss_load_all_libraries ("passwd", "compat [NOTFOUND=return] files");
-  nss_load_all_libraries ("group", "compat [NOTFOUND=return] files");
+  nss_load_all_libraries ("passwd", DEFAULT_CONFIG);
+  nss_load_all_libraries ("group", DEFAULT_CONFIG);
   nss_load_all_libraries ("hosts", "dns [!UNAVAIL=return] files");
   nss_load_all_libraries ("services", NULL);
 

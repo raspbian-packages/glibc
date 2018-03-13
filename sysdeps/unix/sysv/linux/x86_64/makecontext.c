@@ -1,5 +1,5 @@
 /* Create new context.
-   Copyright (C) 2002-2017 Free Software Foundation, Inc.
+   Copyright (C) 2002-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Andreas Jaeger <aj@suse.de>, 2002.
 
@@ -51,7 +51,7 @@
 void
 __makecontext (ucontext_t *ucp, void (*func) (void), int argc, ...)
 {
-  extern void __start_context (void);
+  extern void __start_context (void) attribute_hidden;
   greg_t *sp;
   unsigned int idx_uc_link;
   va_list ap;

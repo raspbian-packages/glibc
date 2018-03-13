@@ -1,5 +1,5 @@
 /* Manage TLS descriptors.  i386 version.
-   Copyright (C) 2005-2017 Free Software Foundation, Inc.
+   Copyright (C) 2005-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -256,7 +256,6 @@ _dl_tlsdesc_resolve_hold_fixup (struct tlsdesc volatile *td,
    if there is one.  */
 
 void
-internal_function
 _dl_unmap (struct link_map *map)
 {
   _dl_unmap_segments (map);

@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Chris Metcalf <cmetcalf@tilera.com>, 2011.
 
@@ -40,7 +40,7 @@ ENTRY (__vfork)
 	moveli TREG_SYSCALL_NR_NAME, __NR_clone
 	swint1
 
-	BNEZ r1, 0f
+	bnez r1, 0f
 	jrp lr
 PSEUDO_END (__vfork)
 libc_hidden_def (__vfork)

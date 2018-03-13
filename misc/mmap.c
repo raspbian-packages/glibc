@@ -1,4 +1,4 @@
-/* Copyright (C) 1994-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1994-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -28,8 +28,8 @@
    for errors (in which case `errno' is set).  A successful `mmap' call
    deallocates any previous mapping for the affected region.  */
 
-__ptr_t
-__mmap (__ptr_t addr, size_t len, int prot, int flags, int fd, off_t offset)
+void *
+__mmap (void *addr, size_t len, int prot, int flags, int fd, off_t offset)
 {
   __set_errno (ENOSYS);
   return MAP_FAILED;

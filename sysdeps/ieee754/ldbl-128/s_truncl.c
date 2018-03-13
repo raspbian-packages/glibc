@@ -1,5 +1,5 @@
 /* Truncate argument to nearest integral value not larger than the argument.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997 and
 		  Jakub Jelinek <jj@ultra.linux.cz>, 1999.
@@ -21,13 +21,14 @@
 #include <math.h>
 
 #include <math_private.h>
+#include <libm-alias-ldouble.h>
 
 
 _Float128
 __truncl (_Float128 x)
 {
   int32_t j0;
-  u_int64_t i0, i1, sx;
+  uint64_t i0, i1, sx;
 
   GET_LDOUBLE_WORDS64 (i0, i1, x);
   sx = i0 & 0x8000000000000000ULL;
@@ -53,4 +54,4 @@ __truncl (_Float128 x)
 
   return x;
 }
-weak_alias (__truncl, truncl)
+libm_alias_ldouble (__trunc, trunc)

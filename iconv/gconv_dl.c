@@ -1,5 +1,5 @@
 /* Handle loading/unloading of shared object for transformation.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 
@@ -64,7 +64,6 @@ known_compare (const void *p1, const void *p2)
 /* Open the gconv database if necessary.  A non-negative return value
    means success.  */
 struct __gconv_loaded_object *
-internal_function
 __gconv_find_shlib (const char *name)
 {
   struct __gconv_loaded_object *found;
@@ -131,10 +130,8 @@ __gconv_find_shlib (const char *name)
 
 #ifdef PTR_MANGLE
 		  PTR_MANGLE (found->fct);
-		  if (found->init_fct != NULL)
-		    PTR_MANGLE (found->init_fct);
-		  if (found->end_fct !=  NULL)
-		    PTR_MANGLE (found->end_fct);
+		  PTR_MANGLE (found->init_fct);
+		  PTR_MANGLE (found->end_fct);
 #endif
 
 		  /* We have succeeded in loading the shared object.  */
@@ -185,7 +182,6 @@ do_release_shlib (void *nodep, VISIT value, int level)
 
 /* Notify system that a shared object is not longer needed.  */
 void
-internal_function
 __gconv_release_shlib (struct __gconv_loaded_object *handle)
 {
   /* Urgh, this is ugly but we have no other possibility.  */

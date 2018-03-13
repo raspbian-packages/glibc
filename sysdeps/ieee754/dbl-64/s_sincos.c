@@ -1,5 +1,5 @@
 /* Compute sine and cosine of argument.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 
@@ -21,6 +21,7 @@
 #include <math.h>
 
 #include <math_private.h>
+#include <libm-alias-double.h>
 
 #define __sin __sin_local
 #define __cos __cos_local
@@ -106,8 +107,4 @@ __sincos (double x, double *sinx, double *cosx)
 
   *sinx = *cosx = x / x;
 }
-weak_alias (__sincos, sincos)
-#ifdef NO_LONG_DOUBLE
-strong_alias (__sincos, __sincosl)
-weak_alias (__sincos, sincosl)
-#endif
+libm_alias_double (__sincos, sincos)

@@ -107,6 +107,7 @@
 #include <string.h>
 #include <time.h>
 #include <shlib-compat.h>
+#include <libc-diag.h>
 
 #ifdef SPRINTF_CHAR
 # define SPRINTF(x) strlen(sprintf/**/x)
@@ -625,7 +626,7 @@ libresolv_hidden_def (p_option)
  * Return a mnemonic for a time to live.
  */
 const char *
-p_time(u_int32_t value) {
+p_time(uint32_t value) {
 	static char nbuf[40];		/* XXX nonreentrant */
 
 	if (ns_format_ttl(value, nbuf, sizeof nbuf) < 0)
@@ -654,7 +655,7 @@ static const unsigned int poweroften[10]=
 
 /* takes an XeY precision/size value, returns a string representation. */
 static const char *
-precsize_ntoa (u_int8_t prec)
+precsize_ntoa (uint8_t prec)
 {
 	static char retbuf[sizeof "90000000.00"];	/* XXX nonreentrant */
 	unsigned long val;
@@ -670,11 +671,11 @@ precsize_ntoa (u_int8_t prec)
 }
 
 /* converts ascii size/precision X * 10**Y(cm) to 0xXY.  moves pointer. */
-static u_int8_t
+static uint8_t
 precsize_aton (const char **strptr)
 {
 	unsigned int mval = 0, cmval = 0;
-	u_int8_t retval = 0;
+	uint8_t retval = 0;
 	const char *cp;
 	int exponent;
 	int mantissa;
@@ -711,11 +712,11 @@ precsize_aton (const char **strptr)
 }
 
 /* converts ascii lat/lon to unsigned encoded 32-bit number.  moves pointer. */
-static u_int32_t
+static uint32_t
 latlon2ul (const char **latlonstrptr, int *which)
 {
 	const char *cp;
-	u_int32_t retval;
+	uint32_t retval;
 	int deg = 0, min = 0, secs = 0, secsfrac = 0;
 
 	cp = *latlonstrptr;
@@ -814,12 +815,12 @@ loc_aton (const char *ascii, u_char *binary)
 	const char *cp, *maxcp;
 	u_char *bcp;
 
-	u_int32_t latit = 0, longit = 0, alt = 0;
-	u_int32_t lltemp1 = 0, lltemp2 = 0;
+	uint32_t latit = 0, longit = 0, alt = 0;
+	uint32_t lltemp1 = 0, lltemp2 = 0;
 	int altmeters = 0, altfrac = 0, altsign = 1;
-	u_int8_t hp = 0x16;	/* default = 1e6 cm = 10000.00m = 10km */
-	u_int8_t vp = 0x13;	/* default = 1e3 cm = 10.00m */
-	u_int8_t siz = 0x12;	/* default = 1e2 cm = 1.00m */
+	uint8_t hp = 0x16;	/* default = 1e6 cm = 10000.00m = 10km */
+	uint8_t vp = 0x13;	/* default = 1e3 cm = 10.00m */
+	uint8_t siz = 0x12;	/* default = 1e2 cm = 1.00m */
 	int which1 = 0, which2 = 0;
 
 	cp = ascii;
@@ -905,7 +906,7 @@ loc_aton (const char *ascii, u_char *binary)
  defaults:
 
 	bcp = binary;
-	*bcp++ = (u_int8_t) 0;	/* version byte */
+	*bcp++ = (uint8_t) 0;	/* version byte */
 	*bcp++ = siz;
 	*bcp++ = hp;
 	*bcp++ = vp;
@@ -930,11 +931,11 @@ loc_ntoa (const u_char *binary, char *ascii)
 	char northsouth, eastwest;
 	int altmeters, altfrac, altsign;
 
-	const u_int32_t referencealt = 100000 * 100;
+	const uint32_t referencealt = 100000 * 100;
 
 	int32_t latval, longval, altval;
-	u_int32_t templ;
-	u_int8_t sizeval, hpval, vpval, versionval;
+	uint32_t templ;
+	uint8_t sizeval, hpval, vpval, versionval;
 
 	char *sizestr, *hpstr, *vpstr;
 
@@ -1051,24 +1052,47 @@ dn_count_labels(const char *name) {
 libresolv_hidden_def (__dn_count_labels)
 
 
+#if SHLIB_COMPAT (libresolv, GLIBC_2_0, GLIBC_2_27)
 /*
  * Make dates expressed in seconds-since-Jan-1-1970 easy to read.
  * SIG records are required to be printed like this, by the Secure DNS RFC.
+ * This is an obsolescent function and does not handle dates outside the
+ * signed 32-bit range.
  */
 char *
-p_secstodate (u_long secs) {
+__p_secstodate (u_long secs) {
 	/* XXX nonreentrant */
 	static char output[15];		/* YYYYMMDDHHMMSS and null */
 	time_t clock = secs;
 	struct tm *time;
 
 	struct tm timebuf;
-	time = __gmtime_r(&clock, &timebuf);
+	/* The call to __gmtime_r can never produce a year overflowing
+	   the range of int, given the check on SECS, but check for a
+	   NULL return anyway to avoid a null pointer dereference in
+	   case there are any other unspecified errors.  */
+	if (secs > 0x7fffffff
+	    || (time = __gmtime_r (&clock, &timebuf)) == NULL) {
+		strcpy (output, "<overflow>");
+		__set_errno (EOVERFLOW);
+		return output;
+	}
 	time->tm_year += 1900;
 	time->tm_mon += 1;
+	/* The struct tm fields, given the above range check,
+	   must have values that mean this sprintf exactly fills the
+	   buffer.  But as of GCC 8 of 2017-11-21, GCC cannot tell
+	   that, even given range checks on all fields with
+	   __builtin_unreachable called for out-of-range values.  */
+	DIAG_PUSH_NEEDS_COMMENT;
+# if __GNUC_PREREQ (7, 0)
+	DIAG_IGNORE_NEEDS_COMMENT (8, "-Wformat-overflow=");
+# endif
 	sprintf(output, "%04d%02d%02d%02d%02d%02d",
 		time->tm_year, time->tm_mon, time->tm_mday,
 		time->tm_hour, time->tm_min, time->tm_sec);
+	DIAG_POP_NEEDS_COMMENT;
 	return (output);
 }
-libresolv_hidden_def (__p_secstodate)
+compat_symbol (libresolv, __p_secstodate, __p_secstodate, GLIBC_2_0);
+#endif

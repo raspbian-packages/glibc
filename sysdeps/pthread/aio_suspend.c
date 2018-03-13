@@ -1,5 +1,5 @@
 /* Suspend until termination of a requests.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 
@@ -145,9 +145,6 @@ aio_suspend (const struct aiocb *const list[], int nent,
 		waitlist[cnt].next = requestlist[cnt]->waiting;
 		waitlist[cnt].counterp = &cntr;
 		waitlist[cnt].sigevp = NULL;
-#ifdef BROKEN_THREAD_SIGNALS
-		waitlist[cnt].caller_pid = 0;	/* Not needed.  */
-#endif
 		requestlist[cnt]->waiting = &waitlist[cnt];
 		any = true;
 	      }

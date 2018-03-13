@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -19,25 +19,20 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+/* Test for access to FILE by our real user and group IDs without setting
+   errno.  This may be unsafe to run during initialization of tunables
+   since access_common calls __hurd_file_name_lookup, which calls
+   __hurd_file_name_lookup_retry, which can set errno.  */
+int
+__access_noerrno (const char *file, int type)
+{
+  return __faccessat_noerrno (AT_FDCWD, file, type, 0);
+}
+
 /* Test for access to FILE by our real user and group IDs.  */
 int
 __access (const char *file, int type)
 {
   return __faccessat (AT_FDCWD, file, type, 0);
 }
-
-/* Test for access to FILE by our real user and group IDs without setting
-   errno.  */
-int
-__access_noerrno (const char *file, int type)
-{
-  int ret;
-  int saved_errno = errno;
-
-  ret = __faccessat (AT_FDCWD, file, type, 0);
-
-  __set_errno(saved_errno);
-  return ret;
-}
-
 weak_alias (__access, access)

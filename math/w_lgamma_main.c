@@ -18,6 +18,8 @@
 
 #include <math.h>
 #include <math_private.h>
+#include <math-svid-compat.h>
+#include <libm-alias-double.h>
 
 #include <lgamma-compat.h>
 
@@ -47,6 +49,7 @@ versioned_symbol (libm, __lgamma, lgamma, LGAMMA_NEW_VER);
 strong_alias (__lgamma, __lgammal)
 versioned_symbol (libm, __lgammal, lgammal, LGAMMA_NEW_VER);
 #  endif
+libm_alias_double_other (__lgamma, lgamma)
 # endif
 # if GAMMA_ALIAS
 strong_alias (LGFUNC (__lgamma), __gamma)

@@ -1,5 +1,5 @@
 /* strcspn with SSE4.2 intrinsics
-   Copyright (C) 2009-2017 Free Software Foundation, Inc.
+   Copyright (C) 2009-2018 Free Software Foundation, Inc.
    Contributed by Intel Corporation.
    This file is part of the GNU C Library.
 
@@ -70,7 +70,7 @@ char *
 #else
 size_t
 #endif
-STRCSPN_SSE2 (const char *, const char *);
+STRCSPN_SSE2 (const char *, const char *) attribute_hidden;
 
 
 #ifdef USE_AS_STRPBRK

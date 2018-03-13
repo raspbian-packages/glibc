@@ -22,18 +22,15 @@ static char rcsid[] = "$NetBSD: s_copysign.c,v 1.8 1995/05/10 20:46:57 jtc Exp $
 
 #include <math.h>
 #include <math_private.h>
+#include <libm-alias-double.h>
 
 double
 __copysign (double x, double y)
 {
-  u_int32_t hx, hy;
+  uint32_t hx, hy;
   GET_HIGH_WORD (hx, x);
   GET_HIGH_WORD (hy, y);
   SET_HIGH_WORD (x, (hx & 0x7fffffff) | (hy & 0x80000000));
   return x;
 }
-weak_alias (__copysign, copysign)
-#ifdef NO_LONG_DOUBLE
-strong_alias (__copysign, __copysignl)
-weak_alias (__copysign, copysignl)
-#endif
+libm_alias_double (__copysign, copysign)

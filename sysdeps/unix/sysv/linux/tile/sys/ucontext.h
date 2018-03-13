@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Chris Metcalf <cmetcalf@tilera.com>, 2011.
 
@@ -22,8 +22,13 @@
 #include <features.h>
 
 #include <bits/types/sigset_t.h>
-#include <bits/sigcontext.h>
 #include <bits/types/stack_t.h>
+
+#ifdef __USE_MISC
+# define __ctx(fld) fld
+#else
+# define __ctx(fld) __ ## fld
+#endif
 
 #ifdef __USE_MISC
 /* Get register type and register names. */
@@ -56,17 +61,39 @@ enum
 };
 #endif
 
+#define __need_int_reg_t
+#include <arch/abi.h>
+
 /* A machine context is exactly a sigcontext.  */
-typedef struct sigcontext mcontext_t;
+typedef struct
+  {
+    __extension__ union
+      {
+	__uint_reg_t __ctx(gregs)[56];
+	__extension__ struct
+	  {
+	    __uint_reg_t __ctx(__gregs)[53];
+	    __uint_reg_t __ctx(tp);
+	    __uint_reg_t __ctx(sp);
+	    __uint_reg_t __ctx(lr);
+	  };
+      };
+    __uint_reg_t __ctx(pc);
+    __uint_reg_t __ctx(ics);
+    __uint_reg_t __ctx(faultnum);
+    __uint_reg_t __glibc_reserved1[5];
+  } mcontext_t;
 
 /* Userlevel context.  */
 typedef struct ucontext_t
   {
-    unsigned long int uc_flags;
+    unsigned long int __ctx(uc_flags);
     struct ucontext_t *uc_link;
     stack_t uc_stack;
     mcontext_t uc_mcontext;
     sigset_t uc_sigmask;
   } ucontext_t;
+
+#undef __ctx
 
 #endif /* sys/ucontext.h */

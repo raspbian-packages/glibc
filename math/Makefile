@@ -1,4 +1,4 @@
-# Copyright (C) 1996-2017 Free Software Foundation, Inc.
+# Copyright (C) 1996-2018 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -22,15 +22,14 @@ subdir		:= math
 include ../Makeconfig
 
 # Installed header files.
-headers		:= math.h bits/mathcalls.h bits/mathinline.h bits/huge_val.h \
-		   bits/huge_valf.h bits/huge_vall.h bits/inf.h bits/nan.h \
+headers		:= math.h bits/mathcalls.h bits/mathinline.h \
 		   fpu_control.h complex.h bits/cmathcalls.h fenv.h \
 		   bits/fenv.h bits/fenvinline.h bits/mathdef.h tgmath.h \
 		   bits/math-finite.h bits/math-vector.h \
 		   bits/libm-simd-decl-stubs.h bits/iscanonical.h \
 		   bits/flt-eval-method.h bits/fp-fast.h bits/fp-logb.h \
 		   bits/long-double.h bits/mathcalls-helper-functions.h \
-		   bits/floatn.h bits/huge_val_flt128.h
+		   bits/floatn.h bits/floatn-common.h
 
 # FPU support code.
 aux		:= setfpucw fpu_control
@@ -103,6 +102,10 @@ libm-compat-calls =							\
 # after the Rules makefile has been parsed.
 types-basic = $(type-ldouble-$(long-double-fcts)) double float
 
+# Like types, but includes types whose functions alias those for
+# another type.
+test-types-basic = ldouble double float
+
 # long double support
 type-ldouble-suffix := l
 type-ldouble-routines := t_sincosl k_sincosl s_iscanonicall
@@ -116,13 +119,21 @@ type-double-routines := branred doasin dosincos halfulp mpa mpatan2	\
 
 # float support
 type-float-suffix := f
-type-float-routines := k_rem_pio2f
+type-float-routines := k_rem_pio2f math_errf e_exp2f_data e_logf_data	\
+		       e_log2f_data e_powf_log2_data
 
 # _Float128 support
 type-float128-suffix := f128
 type-float128-routines := t_sincosf128 k_sincosf128
 type-float128-yes := float128
+
+# _Float64x may be supported, only as an alias type.
+type-float64x-yes := float64x
+
 types = $(types-basic) $(type-float128-$(float128-fcts))
+test-types = $(test-types-basic) $(type-float128-$(float128-fcts)) \
+	     float32 float64 $(type-float128-$(float128-alias-fcts)) \
+	     float32x $(type-float64x-$(float64x-alias-fcts))
 
 # For each of the basic types (float, double, long double), replace the
 # occurrences of 'F' in arg 1 with the appropriate suffix for the type.
@@ -181,7 +192,7 @@ $(inst_libdir)/libm.a: $(common-objpfx)format.lds \
 endif
 
 # Rules for the test suite.
-tests = test-matherr test-fenv atest-exp atest-sincos atest-exp2 basic-test \
+tests = test-matherr-3 test-fenv basic-test \
 	test-misc test-fpucw test-fpucw-ieee tst-definitions test-tgmath \
 	test-tgmath-ret bug-nextafter bug-nexttoward bug-tgmath1 \
 	test-tgmath-int test-tgmath2 test-powl tst-CMPLX tst-CMPLX2 test-snan \
@@ -196,20 +207,25 @@ tests = test-matherr test-fenv atest-exp atest-sincos atest-exp2 basic-test \
 	test-femode-traps test-iszero-excess-precision \
 	test-iseqsig-excess-precision test-flt-eval-method \
 	test-fp-ilogb-constants test-fp-llogb-constants \
-	test-fe-snans-always-signal $(tests-static)
+	test-fe-snans-always-signal test-finite-macros $(tests-static)
 tests-static = test-fpucw-static test-fpucw-ieee-static \
 	       test-signgam-uchar-static test-signgam-uchar-init-static \
 	       test-signgam-uint-static test-signgam-uint-init-static \
 	       test-signgam-ullong-static test-signgam-ullong-init-static
+tests-internal = test-matherr test-matherr-2
+
+# These tests use internal (unexported) GMP functions and are linked
+# statically to obtain access to these functions.
+tests-static += atest-exp atest-sincos atest-exp2
 
 ifneq (,$(CXX))
 tests += test-math-isinff test-math-iszero test-math-issignaling \
-	 test-math-iscanonical
+	 test-math-iscanonical test-math-cxx11 test-math-iseqsig
 endif
 
 ifneq (no,$(PERL))
 libm-vec-tests = $(addprefix test-,$(libmvec-tests))
-libm-test-support = $(foreach t,$(types),libm-test-support-$(t))
+libm-test-support = $(foreach t,$(test-types),libm-test-support-$(t))
 test-extras += $(libm-test-support)
 extra-test-objs += $(addsuffix .o, $(libm-test-support))
 libm-vec-test-wrappers = $(addsuffix -wrappers, $(libm-vec-tests))
@@ -245,9 +261,9 @@ libm-test-c-auto = $(foreach f,$(libm-test-funcs-auto),libm-test-$(f).c)
 libm-test-c-noauto = $(foreach f,$(libm-test-funcs-noauto),libm-test-$(f).c)
 generated += libm-test-ulps.h $(libm-test-c-auto) $(libm-test-c-noauto)
 
-libm-tests-base-normal = $(foreach t,$(types),test-$(t))
-libm-tests-base-finite = $(foreach t,$(types),test-$(t)-finite)
-libm-tests-base-inline = $(foreach t,$(types),test-i$(t))
+libm-tests-base-normal = $(foreach t,$(test-types),test-$(t))
+libm-tests-base-finite = $(foreach t,$(test-types),test-$(t)-finite)
+libm-tests-base-inline = $(foreach t,$(test-types),test-i$(t))
 libm-tests-base = $(libm-tests-base-normal) $(libm-tests-base-finite) \
 		  $(libm-tests-base-inline) $(libm-vec-tests)
 libm-tests-normal = $(foreach t,$(libm-tests-base-normal),\
@@ -272,7 +288,7 @@ libm-tests.o = $(addsuffix .o,$(libm-tests))
 
 tests += $(libm-tests)
 generated += $(addsuffix .c,$(libm-tests)) \
-	     $(foreach t,$(types),libm-test-support-$(t).c)
+	     $(foreach t,$(test-types),libm-test-support-$(t).c)
 
 libm-test-c-auto-obj = $(addprefix $(objpfx),$(libm-test-c-auto))
 libm-test-c-noauto-obj = $(addprefix $(objpfx),$(libm-test-c-noauto))
@@ -294,7 +310,7 @@ endif
 ifdef PYTHON
 tests += test-tgmath3
 generated += test-tgmath3.c
-CFLAGS-test-tgmath3.c = -fno-builtin
+CFLAGS-test-tgmath3.c += -fno-builtin
 
 $(objpfx)test-tgmath3.c: gen-tgmath-tests.py
 	$(PYTHON) $< > $@
@@ -304,13 +320,13 @@ libm-test-fast-math-cflags = -fno-builtin -D__FAST_MATH__ -DTEST_FAST_MATH
 libm-test-vec-cflags = $(libm-test-fast-math-cflags) -fno-inline \
 		       -ffloat-store -D_OPENMP=201307 -Wno-unknown-pragmas
 
-CFLAGS-test-double-vlen4-wrappers.c = $(double-vlen4-arch-ext-cflags)
+CFLAGS-test-double-vlen4-wrappers.c += $(double-vlen4-arch-ext-cflags)
 
-CFLAGS-test-double-vlen8-wrappers.c = $(double-vlen8-arch-ext-cflags)
+CFLAGS-test-double-vlen8-wrappers.c += $(double-vlen8-arch-ext-cflags)
 
-CFLAGS-test-float-vlen8-wrappers.c = $(float-vlen8-arch-ext-cflags)
+CFLAGS-test-float-vlen8-wrappers.c += $(float-vlen8-arch-ext-cflags)
 
-CFLAGS-test-float-vlen16-wrappers.c = $(float-vlen16-arch-ext-cflags)
+CFLAGS-test-float-vlen16-wrappers.c += $(float-vlen16-arch-ext-cflags)
 
 # The no-inline tests use -fsignaling-nans, and thereby use the
 # versions of classification macros that support sNaNs.  The inline
@@ -323,48 +339,46 @@ libm-test-no-inline-cflags = -fno-inline -ffloat-store -fno-builtin \
 libm-test-finite-cflags = $(libm-test-no-inline-cflags) \
 			  -U__FINITE_MATH_ONLY__ -D__FINITE_MATH_ONLY__=1
 libm-test-inline-cflags = $(libm-test-fast-math-cflags)
-CFLAGS-test-tgmath.c = -fno-builtin
+CFLAGS-test-tgmath.c += -fno-builtin
 # The following testcase uses very long lines (>3 million), so it may take a
 # while to compile it. See: http://llvm.org/bugs/show_bug.cgi?id=14106 and
 # http://gcc.gnu.org/bugzilla/show_bug.cgi?id=54402
-CFLAGS-test-tgmath2.c = -fno-builtin
-CFLAGS-test-tgmath-ret.c = -fno-builtin
-CFLAGS-test-powl.c = -fno-builtin
+CFLAGS-test-tgmath2.c += -fno-builtin
+CFLAGS-test-tgmath-ret.c += -fno-builtin
+CFLAGS-test-powl.c += -fno-builtin
 
-CFLAGS-test-snan.c = -fsignaling-nans
+CFLAGS-test-snan.c += -fsignaling-nans
 
-CFLAGS-test-signgam-finite.c = -ffinite-math-only
-CFLAGS-test-signgam-finite-c99.c = -ffinite-math-only -std=c99
-CFLAGS-test-signgam-finite-c11.c = -ffinite-math-only -std=c11
-CFLAGS-test-signgam-uchar.c = -std=c99
-CFLAGS-test-signgam-uchar-init.c = -std=c99
-CFLAGS-test-signgam-uchar-static.c = -std=c99
-CFLAGS-test-signgam-uchar-init-static.c = -std=c99
-CFLAGS-test-signgam-uint.c = -std=c99
-CFLAGS-test-signgam-uint-init.c = -std=c99
-CFLAGS-test-signgam-uint-static.c = -std=c99
-CFLAGS-test-signgam-uint-init-static.c = -std=c99
-CFLAGS-test-signgam-ullong.c = -std=c99
-CFLAGS-test-signgam-ullong-init.c = -std=c99
-CFLAGS-test-signgam-ullong-static.c = -std=c99
-CFLAGS-test-signgam-ullong-init-static.c = -std=c99
+CFLAGS-test-signgam-finite.c += -ffinite-math-only
+CFLAGS-test-signgam-finite-c99.c += -ffinite-math-only -std=c99
+CFLAGS-test-signgam-finite-c11.c += -ffinite-math-only -std=c11
+CFLAGS-test-signgam-uchar.c += -std=c99
+CFLAGS-test-signgam-uchar-init.c += -std=c99
+CFLAGS-test-signgam-uchar-static.c += -std=c99
+CFLAGS-test-signgam-uchar-init-static.c += -std=c99
+CFLAGS-test-signgam-uint.c += -std=c99
+CFLAGS-test-signgam-uint-init.c += -std=c99
+CFLAGS-test-signgam-uint-static.c += -std=c99
+CFLAGS-test-signgam-uint-init-static.c += -std=c99
+CFLAGS-test-signgam-ullong.c += -std=c99
+CFLAGS-test-signgam-ullong-init.c += -std=c99
+CFLAGS-test-signgam-ullong-static.c += -std=c99
+CFLAGS-test-signgam-ullong-init-static.c += -std=c99
 
-CFLAGS-test-math-isinff.cc = -std=gnu++11
-CFLAGS-test-math-iszero.cc = -std=gnu++11
-CFLAGS-test-math-issignaling.cc = -std=gnu++11
-CFLAGS-test-math-iscanonical.cc = -std=gnu++11
+CFLAGS-test-math-cxx11.cc += -std=c++11
 
-CFLAGS-test-iszero-excess-precision.c = -fexcess-precision=standard
-CFLAGS-test-iseqsig-excess-precision.c = -fexcess-precision=standard
-CFLAGS-test-flt-eval-method.c = -fexcess-precision=standard
+CFLAGS-test-math-isinff.cc += -std=gnu++11
+CFLAGS-test-math-iszero.cc += -std=gnu++11
+CFLAGS-test-math-issignaling.cc += -std=gnu++11
+CFLAGS-test-math-iscanonical.cc += -std=gnu++11
 
-CFLAGS-test-fe-snans-always-signal.c = -fsignaling-nans
+CFLAGS-test-iszero-excess-precision.c += -fexcess-precision=standard
+CFLAGS-test-iseqsig-excess-precision.c += -fexcess-precision=standard
+CFLAGS-test-flt-eval-method.c += -fexcess-precision=standard
 
-# The -lieee module sets the _LIB_VERSION_ switch to IEEE mode
-# for error handling in the -lm functions.
-install-lib += libieee.a
-non-lib.a += libieee.a
-extra-objs += libieee.a ieee-math.o
+CFLAGS-test-fe-snans-always-signal.c += -fsignaling-nans
+
+CFLAGS-test-finite-macros.c += -ffinite-math-only
 
 include ../Rules
 
@@ -445,7 +459,7 @@ $(foreach t,$(libm-tests-vector),$(objpfx)$(t).c): $(objpfx)test-%.c:
 	  echo "#include <libm-test-$$func.c>"; \
 	) > $@
 
-$(foreach t,$(types),\
+$(foreach t,$(test-types),\
 	    $(objpfx)libm-test-support-$(t).c): $(objpfx)libm-test-support-%.c:
 	( \
 	  echo "#include <test-$*.h>"; \
@@ -493,13 +507,13 @@ define o-iterator-doit
 $(addprefix $(objpfx),\
 	    $(call libm-tests-for-type,$(o))): $(objpfx)libm-test-support-$(o).o
 endef
-object-suffixes-left := $(types)
+object-suffixes-left := $(test-types)
 include $(o-iterator)
 
 define o-iterator-doit
 $(objpfx)libm-test-support-$(o).o: CFLAGS += $(libm-test-no-inline-cflags)
 endef
-object-suffixes-left := $(types)
+object-suffixes-left := $(test-types)
 include $(o-iterator)
 
 # Run the math programs to automatically generate ULPs files.
@@ -507,12 +521,12 @@ include $(o-iterator)
 
 run-regen-ulps = $(test-wrapper-env) \
 	    $(run-program-env) \
-	    $($*-ENV) $(rtld-prefix) $${run}
+	    $($*-ENV) $(rtld-prefix) $(objpfx)$${run}
 
 regen-ulps: $(addprefix $(objpfx),$(libm-tests))
 	rm -f $(objpfx)ULPs; rm -f $(objpfx)NewUlps; \
 	cp $(ulps-file) $(objpfx)libm-test-ulps; \
-	for run in $^; do \
+	for run in $(libm-tests); do \
 	  echo "Regenerating ULPs for $${run}"; \
 	  $(run-regen-ulps) -u -o $(objpfx); \
 	  cat $(objpfx)ULPs >> $(objpfx)libm-test-ulps; \
@@ -545,10 +559,6 @@ endef
 object-suffixes-left := $(all-object-suffixes)
 include $(o-iterator)
 
-# This file defines the default _LIB_VERSION variable that controls
-# the error return conventions for the math functions.
-CPPFLAGS-s_lib_version.c := -D_POSIX_MODE
-
 # We don't want the fdlibm code to use the inline math functions,
 # only the fdlibm code.
 math-CPPFLAGS += -D__NO_MATH_INLINES -D__LIBC_INTERNAL_MATH_INLINES
@@ -556,10 +566,8 @@ math-CPPFLAGS += -D__NO_MATH_INLINES -D__LIBC_INTERNAL_MATH_INLINES
 ifneq ($(long-double-fcts),yes)
 # The `double' and `long double' types are the same on this machine.
 # We won't compile the `long double' code at all.  Tell the `double' code
-# to define aliases for the `FUNCl' names.  To avoid type conflicts in
-# defining those aliases, tell <math.h> to declare the `FUNCl' names with
-# `double' instead of `long double'.
-math-CPPFLAGS += -DNO_LONG_DOUBLE -D_Mlong_double_=double
+# to define aliases for the `FUNCl' names.
+math-CPPFLAGS += -DNO_LONG_DOUBLE
 endif
 
 # These files quiet sNaNs in a way that is optimized away without
@@ -569,17 +577,9 @@ CFLAGS-s_modff.c += -fsignaling-nans
 CFLAGS-s_modfl.c += -fsignaling-nans
 CFLAGS-s_modff128.c += -fsignaling-nans
 
-# The -lieee library is actually an object file.
-# The module just defines the _LIB_VERSION_ variable.
-# It's not a library to make sure it is linked in instead of s_lib_version.o.
-$(objpfx)libieee.a: $(objpfx)ieee-math.o
-	rm -f $@
-	$(patsubst %/,cd % &&,$(objpfx)) \
-	$(LN_S) $(<F) $(@F)
-
 $(addprefix $(objpfx),\
 	    $(filter-out $(tests-static) $(libm-tests-vector),\
-			 $(tests))): $(libm)
+			 $(tests) $(tests-internal))): $(libm)
 $(addprefix $(objpfx),$(tests-static)): $(objpfx)libm.a
 define o-iterator-doit
 $(foreach f,$($(o)-funcs),\
@@ -589,11 +589,4 @@ endef
 object-suffixes-left := $(libmvec-tests)
 include $(o-iterator)
 
-gmp-objs = $(patsubst %,$(common-objpfx)stdlib/%.o,\
-		      add_n sub_n cmp addmul_1 mul_1 mul_n divmod_1 \
-		      lshift rshift mp_clz_tab udiv_qrnnd inlines \
-		      $(gmp-sysdep_routines))
-$(objpfx)atest-exp: $(gmp-objs)
-$(objpfx)atest-sincos: $(gmp-objs)
-$(objpfx)atest-exp2: $(gmp-objs)
 $(objpfx)test-fenv-tls: $(shared-thread-library)

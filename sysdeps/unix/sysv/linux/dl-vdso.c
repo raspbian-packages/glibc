@@ -1,5 +1,5 @@
 /* ELF symbol resolve functions for VDSO objects.
-   Copyright (C) 2005-2017 Free Software Foundation, Inc.
+   Copyright (C) 2005-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -21,7 +21,6 @@
 
 
 void *
-internal_function
 _dl_vdso_vsym (const char *name, const struct r_found_version *vers)
 {
   struct link_map *map = GLRO (dl_sysinfo_map);

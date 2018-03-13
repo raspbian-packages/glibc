@@ -20,7 +20,10 @@
 
 #include <math.h>
 #include <math_private.h>
+#include <math-svid-compat.h>
+#include <libm-alias-ldouble.h>
 
+#if LIBM_SVID_COMPAT
 long double
 __sinhl (long double x)
 {
@@ -31,4 +34,5 @@ __sinhl (long double x)
 
 	return z;
 }
-weak_alias (__sinhl, sinhl)
+libm_alias_ldouble (__sinh, sinh)
+#endif

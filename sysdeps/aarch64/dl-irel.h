@@ -1,6 +1,6 @@
 /* Machine-dependent ELF indirect relocation inline functions.
    AArch64 version.
-   Copyright (C) 2012-2017 Free Software Foundation, Inc.
+   Copyright (C) 2012-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -31,7 +31,7 @@ static inline ElfW(Addr)
 __attribute ((always_inline))
 elf_ifunc_invoke (ElfW(Addr) addr)
 {
-  return ((ElfW(Addr) (*) (unsigned long int)) (addr)) (GLRO(dl_hwcap));
+  return ((ElfW(Addr) (*) (uint64_t)) (addr)) (GLRO(dl_hwcap));
 }
 
 static inline void

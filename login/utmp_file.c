@@ -1,4 +1,4 @@
-/* Copyright (C) 1996-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1996-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>
    and Paul Janzen <pcj@primenet.com>, 1996.
@@ -29,6 +29,7 @@
 #include <not-cancel.h>
 #include <kernel-features.h>
 #include <sigsetops.h>
+#include <not-cancel.h>
 
 #include "utmp-private.h"
 #include "utmp-equal.h"
@@ -81,7 +82,7 @@ static void timeout_handler (int signum) {};
   memset (&fl, '\0', sizeof (struct flock));				      \
   fl.l_type = (type);							      \
   fl.l_whence = SEEK_SET;						      \
-  if (fcntl_not_cancel ((fd), F_SETLKW, &fl) < 0)
+  if (__fcntl_nocancel ((fd), F_SETLKW, &fl) < 0)
 
 #define LOCKING_FAILED() \
   goto unalarm_return
@@ -89,7 +90,7 @@ static void timeout_handler (int signum) {};
 #define UNLOCK_FILE(fd) \
   /* Unlock the file.  */						      \
   fl.l_type = F_UNLCK;							      \
-  fcntl_not_cancel ((fd), F_SETLKW, &fl);				      \
+  __fcntl_nocancel ((fd), F_SETLKW, &fl);				      \
 									      \
  unalarm_return:							      \
   /* Reset the signal handler and alarm.  We must reset the alarm	      \
@@ -143,7 +144,7 @@ setutent_file (void)
       file_name = TRANSFORM_UTMP_FILE_NAME (__libc_utmp_file_name);
 
       file_writable = false;
-      file_fd = open_not_cancel_2
+      file_fd = __open_nocancel
 	(file_name, O_RDONLY | O_LARGEFILE | O_CLOEXEC);
       if (file_fd == -1)
 	return 0;
@@ -187,7 +188,7 @@ getutent_r_file (struct utmp *buffer, struct utmp **result)
     }
 
   /* Read the next entry.  */
-  nbytes = read_not_cancel (file_fd, &last_entry, sizeof (struct utmp));
+  nbytes = __read_nocancel (file_fd, &last_entry, sizeof (struct utmp));
 
   UNLOCK_FILE (file_fd);
 
@@ -231,7 +232,7 @@ internal_getut_r (const struct utmp *id, struct utmp *buffer,
       while (1)
 	{
 	  /* Read the next entry.  */
-	  if (read_not_cancel (file_fd, buffer, sizeof (struct utmp))
+	  if (__read_nocancel (file_fd, buffer, sizeof (struct utmp))
 	      != sizeof (struct utmp))
 	    {
 	      __set_errno (ESRCH);
@@ -253,7 +254,7 @@ internal_getut_r (const struct utmp *id, struct utmp *buffer,
       while (1)
 	{
 	  /* Read the next entry.  */
-	  if (read_not_cancel (file_fd, buffer, sizeof (struct utmp))
+	  if (__read_nocancel (file_fd, buffer, sizeof (struct utmp))
 	      != sizeof (struct utmp))
 	    {
 	      __set_errno (ESRCH);
@@ -329,7 +330,7 @@ getutline_r_file (const struct utmp *line, struct utmp *buffer,
   while (1)
     {
       /* Read the next entry.  */
-      if (read_not_cancel (file_fd, &last_entry, sizeof (struct utmp))
+      if (__read_nocancel (file_fd, &last_entry, sizeof (struct utmp))
 	  != sizeof (struct utmp))
 	{
 	  __set_errno (ESRCH);
@@ -374,7 +375,7 @@ pututline_file (const struct utmp *data)
       /* We must make the file descriptor writable before going on.  */
       const char *file_name = TRANSFORM_UTMP_FILE_NAME (__libc_utmp_file_name);
 
-      int new_fd = open_not_cancel_2
+      int new_fd = __open_nocancel
 	(file_name, O_RDWR | O_LARGEFILE | O_CLOEXEC);
       if (new_fd == -1)
 	return NULL;
@@ -382,10 +383,10 @@ pututline_file (const struct utmp *data)
       if (__lseek64 (new_fd, __lseek64 (file_fd, 0, SEEK_CUR), SEEK_SET) == -1
 	  || __dup2 (new_fd, file_fd) < 0)
 	{
-	  close_not_cancel_no_status (new_fd);
+	  __close_nocancel_nostatus (new_fd);
 	  return NULL;
 	}
-      close_not_cancel_no_status (new_fd);
+      __close_nocancel_nostatus (new_fd);
       file_writable = true;
     }
 
@@ -444,7 +445,7 @@ pututline_file (const struct utmp *data)
     }
 
   /* Write the new data.  */
-  if (write_not_cancel (file_fd, data, sizeof (struct utmp))
+  if (__write_nocancel (file_fd, data, sizeof (struct utmp))
       != sizeof (struct utmp))
     {
       /* If we appended a new record this is only partially written.
@@ -471,7 +472,7 @@ endutent_file (void)
 {
   assert (file_fd >= 0);
 
-  close_not_cancel_no_status (file_fd);
+  __close_nocancel_nostatus (file_fd);
   file_fd = -1;
 }
 
@@ -484,7 +485,7 @@ updwtmp_file (const char *file, const struct utmp *utmp)
   int fd;
 
   /* Open WTMP file.  */
-  fd = open_not_cancel_2 (file, O_WRONLY | O_LARGEFILE);
+  fd = __open_nocancel (file, O_WRONLY | O_LARGEFILE);
   if (fd < 0)
     return -1;
 
@@ -505,7 +506,7 @@ updwtmp_file (const char *file, const struct utmp *utmp)
   /* Write the entry.  If we can't write all the bytes, reset the file
      size back to the original size.  That way, no partial entries
      will remain.  */
-  if (write_not_cancel (fd, utmp, sizeof (struct utmp))
+  if (__write_nocancel (fd, utmp, sizeof (struct utmp))
       != sizeof (struct utmp))
     {
       __ftruncate64 (fd, offset);
@@ -518,7 +519,7 @@ unlock_return:
   UNLOCK_FILE (fd);
 
   /* Close WTMP file.  */
-  close_not_cancel_no_status (fd);
+  __close_nocancel_nostatus (fd);
 
   return result;
 }

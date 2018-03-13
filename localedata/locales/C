@@ -20,6 +20,7 @@ category  "i18n:2012";LC_IDENTIFICATION
 category  "i18n:2012";LC_CTYPE
 category  "i18n:2012";LC_COLLATE
 category  "i18n:2012";LC_NUMERIC
+category  "i18n:2012";LC_MONETARY
 category  "i18n:2012";LC_TIME
 category  "i18n:2012";LC_MESSAGES
 category  "i18n:2012";LC_PAPER
@@ -3120,6 +3121,10 @@ order_start forward
 UNDEFINED
 order_end
 END LC_COLLATE
+
+LC_MONETARY
+copy "POSIX"
+END LC_MONETARY
 
 LC_NUMERIC
 copy "POSIX"

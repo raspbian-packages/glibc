@@ -1,5 +1,5 @@
 /* pthread_setname_np -- Set  thread name.  Linux version
-   Copyright (C) 2010-2017 Free Software Foundation, Inc.
+   Copyright (C) 2010-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -46,18 +46,18 @@ pthread_setname_np (pthread_t th, const char *name)
   char fname[sizeof (FMT) + 8];
   sprintf (fname, FMT, (unsigned int) pd->tid);
 
-  int fd = open_not_cancel_2 (fname, O_RDWR);
+  int fd = __open_nocancel (fname, O_RDWR);
   if (fd == -1)
     return errno;
 
   int res = 0;
-  ssize_t n = TEMP_FAILURE_RETRY (write_not_cancel (fd, name, name_len));
+  ssize_t n = TEMP_FAILURE_RETRY (__write_nocancel (fd, name, name_len));
   if (n < 0)
     res = errno;
   else if (n != name_len)
     res = EIO;
 
-  close_not_cancel_no_status (fd);
+  __close_nocancel_nostatus (fd);
 
   return res;
 }

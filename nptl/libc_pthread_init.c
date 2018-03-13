@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -38,7 +38,6 @@ extern int __libc_multiple_threads attribute_hidden;
 
 int *
 #endif
-internal_function
 __libc_pthread_init (unsigned long int *ptr, void (*reclaim) (void),
 		     const struct pthread_functions *functions)
 {

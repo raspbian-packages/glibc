@@ -1,4 +1,4 @@
-/* Copyright (C) 1996-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1996-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper, <drepper@gnu.org>.
 
@@ -102,8 +102,8 @@ catgets (nl_catd catalog_desc, int set, int message, const char *string)
   cnt = 0;
   do
     {
-      if (catalog->name_ptr[idx + 0] == (u_int32_t) set
-	  && catalog->name_ptr[idx + 1] == (u_int32_t) message)
+      if (catalog->name_ptr[idx + 0] == (uint32_t) set
+	  && catalog->name_ptr[idx + 1] == (uint32_t) message)
 	return (char *) &catalog->strings[catalog->name_ptr[idx + 2]];
 
       idx += catalog->plane_size * 3;

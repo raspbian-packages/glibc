@@ -1,6 +1,6 @@
 %{
 /* Expression parsing for plural form selection.
-   Copyright (C) 2000-2017 Free Software Foundation, Inc.
+   Copyright (C) 2000-2018 Free Software Foundation, Inc.
    Written by Ulrich Drepper <drepper@cygnus.com>, 2000.
 
    This program is free software: you can redistribute it and/or modify
@@ -207,7 +207,6 @@ exp:	  exp '?' exp ':' exp
 %%
 
 void
-internal_function
 FREE_EXPRESSION (struct expression *exp)
 {
   if (exp == NULL)

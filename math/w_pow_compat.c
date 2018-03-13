@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2017 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@gmail.com>, 2011.
 
@@ -18,8 +18,11 @@
 
 #include <math.h>
 #include <math_private.h>
+#include <math-svid-compat.h>
+#include <libm-alias-double.h>
 
 
+#if LIBM_SVID_COMPAT
 /* wrapper pow */
 double
 __pow (double x, double y)
@@ -57,8 +60,5 @@ __pow (double x, double y)
 
   return z;
 }
-weak_alias (__pow, pow)
-#ifdef NO_LONG_DOUBLE
-strong_alias (__pow, __powl)
-weak_alias (__pow, powl)
+libm_alias_double (__pow, pow)
 #endif

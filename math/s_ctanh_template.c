@@ -1,5 +1,5 @@
 /* Complex hyperbolic tangent for float types.
-   Copyright (C) 1997-2017 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 
@@ -48,7 +48,10 @@ M_DECL_FUNC (__ctanh) (CFLOAT x)
 	}
       else
 	{
-	  __real__ res = M_NAN;
+	  if (__real__ x == 0)
+	    __real__ res = __real__ x;
+	  else
+	    __real__ res = M_NAN;
 	  __imag__ res = M_NAN;
 
 	  if (isinf (__imag__ x))
@@ -124,7 +127,3 @@ M_DECL_FUNC (__ctanh) (CFLOAT x)
 }
 
 declare_mgen_alias (__ctanh, ctanh)
-
-#if M_LIBM_NEED_COMPAT (ctanh)
-declare_mgen_libm_compat (__ctanh, ctanh)
-#endif
