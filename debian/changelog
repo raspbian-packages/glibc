@@ -1,9 +1,31 @@
-glibc (2.27-1+rpi1) buster-staging; urgency=medium
+glibc (2.27-2+rpi1) buster-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Tue, 13 Mar 2018 02:02:12 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 15 Mar 2018 23:34:54 +0000
+
+glibc (2.27-2) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/git-UTIME.diff: New patch.
+  * debian/control: Bump hurd build dep accordingly.
+  * debian/libc0.3.symbols.hurd-i386: Update accordingly.
+
+  [ Aurelien Jarno ]
+  * debian/control.in/main: drop the branch from Vcs-Git.
+  * debian/patches/any/local-bootstrap-headers.diff: update to install
+    gnu/lib-names-$abi.h.  Closes: #892126.
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix FTBFS on powerpcspe.
+    - debian/patches/sparc/submitted-sparc32-makecontext.diff: upstreamed.
+
+  [ Helmut Grohne ]
+  * debian/rules: drop DEB_STAGE and DEB_BUILD_PROFILE support.
+  * debian/rules: disable tests for stage1.
+  * debian/control.in/*: drop libc*-dev -> libc* dependencies in stage1.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Fri, 09 Mar 2018 21:48:04 +0100
 
 glibc (2.27-1) unstable; urgency=medium
 
