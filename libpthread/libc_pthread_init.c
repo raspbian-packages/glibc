@@ -21,7 +21,6 @@
 #include <pthread-functions.h>
 
 void
-internal_function
 __libc_pthread_init (const struct pthread_functions *functions)
 {
 #ifdef SHARED
