@@ -22,6 +22,7 @@
 #include <signal.h>
 #include <hurd/signal.h>
 #include <hurd/msg.h>
+#include <sigsetops.h>
 
 #include <pt-internal.h>
 
