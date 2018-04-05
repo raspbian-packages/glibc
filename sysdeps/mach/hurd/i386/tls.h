@@ -116,7 +116,7 @@ _hurd_tls_init (tcbhead_t *tcb)
 
   /* Get the first available selector.  */
   int sel = -1;
-  kern_return_t err = __i386_set_gdt (self, &sel, desc);
+  error_t err = __i386_set_gdt (self, &sel, desc);
   if (err == MIG_BAD_ID)
     {
       /* Old kernel, use a per-thread LDT.  */
@@ -195,7 +195,7 @@ _hurd_tls_fork (thread_t child, thread_t orig, struct i386_thread_state *state)
     return 0;
 
   struct descriptor desc, *_desc = &desc;
-  int err;
+  error_t err;
   unsigned int count = 1;
 
   if (__builtin_expect (sel, 0x48) & 4) /* LDT selector */
@@ -226,7 +226,7 @@ _hurd_tls_new (thread_t child, struct i386_thread_state *state, tcbhead_t *tcb)
     return 0;
 
   HURD_TLS_DESC_DECL (desc, tcb);
-  kern_return_t err;
+  error_t err;
 
   tcb->tcb = tcb;
   tcb->self = child;

@@ -1,9 +1,52 @@
-glibc (2.27-2+rpi1) buster-staging; urgency=medium
+glibc (2.27-3+rpi1) buster-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Thu, 15 Mar 2018 23:34:54 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 05 Apr 2018 15:43:35 +0000
+
+glibc (2.27-3) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * hurd-i386/tg-NOFOLLOW.diff: Rename to hurd-i386/git-NOFOLLOW.diff.
+  * hurd-i386/tg-NOFOLLOW-DIRECTORY.diff: Rename to
+    hurd-i386/git-NOFOLLOW-DIRECTORY.diff.
+  * hurd-i386/tg-_dl_random.diff: Rename to hurd-i386/git-_dl_random.diff.
+  * hurd-i386/tg-exec-static.diff: Rename to hurd-i386/git-exec-static.diff.
+  * hurd-i386/tg-futimens.diff: Rename to hurd-i386/git-futimens.diff.
+  * hurd-i386/tg-gai_misc.diff: Rename to hurd-i386/git-gai_misc.diff.
+  * hurd-i386/tg-grantpt.diff: Rename to hurd-i386/git-grantpt.diff.
+  * hurd-i386/tg-gscope.diff: Rename to hurd-i386/git-gscope.diff.
+  * hurd-i386/tg-libpthread-gsync-mutex.diff: Rename to
+    hurd-i386/git-libpthread-gsync-mutex.diff.
+  * hurd-i386/tg-libpthread-gsync-spin.diff: Rename to
+    hurd-i386/git-libpthread-gsync-spin.diff.
+  * hurd-i386/tg-mlockall.diff: Rename to hurd-i386/git-mlockall.diff.
+  * hurd-i386/tg-pagesize.diff: Rename to hurd-i386/git-pagesize.diff.
+  * hurd-i386/tg-reboot-startup.diff: Rename to
+    hurd-i386/git-reboot-startup.diff.
+  * hurd-i386/tg-thread-linkspace.diff: Rename to
+    hurd-i386/git-thread-linkspace.diff.
+  * hurd-i386/tg-timer_routines.diff: Rename to
+    hurd-i386/git-timer_routines.diff.
+  * hurd-i386/tg-tls-threadvar.diff: Rename to
+    hurd-i386/git-tls-threadvar.diff.
+  * hurd-i386/tg-tls.diff: Rename to hurd-i386/git-tls.diff.
+  * hurd-i386/tg-tls_thread_leak.diff: Rename to
+    hurd-i386/git-tls_thread_leak.diff.
+  * hurd-i386/tg2.25-tls.diff: Rename to hurd-i386/git2.25-tls.diff.
+  * hurd-i386/submitted-hurd-abilist.diff: Rename to
+    hurd-i386/git-hurd-abilist.diff.
+  * hurd-i386/local-libpthread-stacksize.diff: Rename to
+    hurd-i386/git-libpthread-stacksize.diff.
+
+  [ Aurelien Jarno ]
+  * debian/patches/localedata/locales-fr.diff: fix conversion from <Uxxxx>
+    format to ascii during the latest rebase.  Closes: bug#894078.
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix a missing reorder-end keyword in et_EE locale.  Closes: #894395.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Thu, 29 Mar 2018 21:47:29 +0200
 
 glibc (2.27-2) unstable; urgency=medium
 

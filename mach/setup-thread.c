@@ -88,14 +88,14 @@ __mach_setup_tls (thread_t thread)
   mach_msg_type_number_t tssize = MACHINE_THREAD_STATE_COUNT;
   tcbhead_t *tcb;
 
+  tcb = _dl_allocate_tls(NULL);
+  if (tcb == NULL)
+    return KERN_RESOURCE_SHORTAGE;
+
   if (error = __thread_get_state (thread, MACHINE_THREAD_STATE_FLAVOR,
 			     (natural_t *) &ts, &tssize))
     return error;
   assert (tssize == MACHINE_THREAD_STATE_COUNT);
-
-  tcb = _dl_allocate_tls(NULL);
-  if (!tcb)
-    return KERN_RESOURCE_SHORTAGE;
 
   _hurd_tls_new(thread, &ts, tcb);
 
