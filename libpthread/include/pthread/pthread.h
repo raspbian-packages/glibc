@@ -271,6 +271,11 @@ extern pthread_t pthread_self (void) __THROW;
 #define PTHREAD_MUTEX_FAST_NP PTHREAD_MUTEX_TIMED_NP
 #endif
 
+#ifdef __USE_XOPEN2K
+#define PTHREAD_MUTEX_STALLED __PTHREAD_MUTEX_STALLED
+#define PTHREAD_MUTEX_ROBUST __PTHREAD_MUTEX_ROBUST
+#endif
+
 #include <bits/mutex-attr.h>
 
 /* Initialize the mutex attribute object in *ATTR to the default
@@ -397,6 +402,18 @@ extern int pthread_mutex_getprioceiling (const pthread_mutex_t *__restrict __mut
 extern int pthread_mutex_setprioceiling (pthread_mutex_t *__restrict __mutex,
 					 int __prio, int *__restrict __oldprio)
 	__THROW __nonnull ((1, 3));
+#endif
+
+#ifdef __USE_XOPEN2K8
+
+/* Declare the state protected by robust mutex MTXP as consistent. */
+extern int pthread_mutex_consistent (pthread_mutex_t *__mtxp)
+  __THROW __nonnull ((1));
+
+#  ifdef __USE_GNU
+extern int pthread_mutex_consistent_np (pthread_mutex_t *__mtxp)
+  __THROW __nonnull ((1));
+#  endif
 #endif
 
 
