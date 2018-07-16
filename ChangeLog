@@ -1,3 +1,503 @@
+2018-07-10  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #23036]
+	* posix/regexec.c (check_node_accept_bytes): When comparing
+	weights, do not compare an extra byte after the end of the
+	weights.
+
+2018-06-29  Sylvain Lesage  <severo@rednegra.net>
+
+	[BZ #22996]
+	* localedata/locales/es_BO (LC_PAPER): Change to “copy "en_US"”.
+
+2018-07-06  Florian Weimer  <fweimer@redhat.com>
+
+	* conform/conformtest.pl (checknamespace): Escape literal braces
+	in regular expressions.
+
+2018-06-21  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #23253]
+	* sysdeps/generic/math_private.h (default_libc_feholdsetround_ctx):
+	Renamed from libc_feholdsetround_ctx.
+	(default_libc_feresetround_ctx): Renamed from
+	libc_feresetround_ctx.
+	(default_libc_feholdsetround_noex_ctx): Renamed from
+	libc_feholdsetround_noex_ctx.
+	(default_libc_feresetround_noex_ctx): Renamed from
+	libc_feresetround_noex_ctx.
+	[!HAVE_RM_CTX] (libc_feholdsetround_ctx, libc_feresetround_ctx)
+	(libc_feholdsetround_noex_ctx, libc_feresetround_noex_ctx): Macros
+	forwardning to the old implementations under the new names.
+	* sysdeps/i386/fpu/fenv_private.h [__SSE_MATH__]
+	(libc_feholdexcept_setround_ctx, libc_fesetenv_ctx)
+	(libc_feupdateenv_ctx, libc_feholdsetround_ctx)
+	(libc_feresetround_ctx): Forward to default implements for i386
+	and MATH_SET_BOTH_ROUNDING_MODES.
+	* sysdeps/i386/Makefile [$(subdir) == math] (CFLAGS-e_gamma_r.c):
+	Add -DMATH_SET_BOTH_ROUNDING_MODES.
+
+2018-07-03  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #23363]
+	* stdio-common/tst-printf.c (DEC, INT, UNS, fp_test): Remove.
+	* stdio-common/tst-printf.sh: Adjust expected output.
+	* LICENSES: Update.
+
+2018-06-26  Florian Weimer  <fweimer@redhat.com>
+
+	* libio/Makefile (tests-internal): Add tst-vtables,
+	tst-vtables-interposed.
+	* libio/tst-vtables.c: New file.
+	* libio/tst-vtables-common.c: Likewise.
+	* libio/tst-vtables-interposed.c: Likewise.
+
+2018-06-26  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #23313]
+	* libio/vtables.c (check_stdfiles_vtables): New ELF constructor.
+
+2018-06-29  Daniel Alvarez  <dalvarez@redhat.com>
+	    Jakub Sitnicki  <jkbs@redhat.com>
+
+	[BZ #21812]
+	* sysdeps/unix/sysv/linux/ifaddrs.c (getifaddrs_internal): Retry
+	on NLM_F_DUMP_INTR.
+
+2018-06-28  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #23349]
+	* time/bits/types/struct_timespec.h: Change header inclusion guard to
+	_STRUCT_TIMESPEC.
+
+2018-05-24  Gabriel F. T. Gomes  <gabriel@inconstante.eti.br>
+
+	[BZ #23171]
+	* math/math.h [C++] (iseqsig): Fix parameter type for the long
+	double version.
+
+2018-06-12  Carlos O'Donell  <carlos@redhat.com>
+	    Andreas Schwab  <schwab@suse.de>
+	    Dmitry V. Levin  <ldv@altlinux.org>
+	    Florian Weimer <fweimer@redhat.com>
+
+	[BZ #23102]
+	[BZ #21942]
+	[BZ #18018]
+	[BZ #23259]
+	CVE-2011-0536
+	* elf/dl-dst.h: Remove DL_DST_COUNT.
+	* elf/dl-deps.c (expand_dst): Call _dl_dst_count.
+	* elf/dl-load.c (is_trusted_path_normalize): Don't handle colons.
+	(is_dst): Comment.  Support ELF gABI.
+	(_dl_dst_count): Comment.  Simplify and count DSTs.
+	(_dl_dst_substitute): Comment.  Support __libc_enable_secure handling.
+	(expand_dybamic_string_token): Comment. Call _dl_dst_count. Rename
+	locals.
+
+2018-06-12  Florian Weimer  <fweimer@redhat.com>
+
+	x86: Make strncmp usable from rtld.
+	* sysdeps/i386/i686/multiarch/strncmp-c.c: Only rename strncmp to
+	__strncmp_ia32 if in libc (and not in rtld).
+	* sysdeps/x86_64/multiarch/strncmp-sse2.S: Rename strcmp to
+	strncmp if not in libc (and not to __strncmp_sse2).
+
+2018-06-01  Florian Weimer  <fweimer@redhat.com>
+
+	* sysdeps/i386/i686/fpu/multiarch/libm-test-ulps: Update from master
+	branch, commit e02c026f38505cd474ff1bdaa88fc671804f5805.
+	* sysdeps/i386/fpu/libm-test-ulps: Likewise.
+
+2018-06-08  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	[BZ #23264]
+	* include/unistd.h (__execvpex): New prototype.
+	* posix/Makefile (tests): Add tst-spawn4.
+	(tests-internal): Add tst-spawn4-compat.
+	* posix/execvpe.c (__execvpe_common, __execvpex): New functions.
+	* posix/tst-spawn4-compat.c: New file.
+	* posix/tst-spawn4.c: Likewise.
+	* sysdeps/unix/sysv/linux/spawni.c (__spawni): Do not interpret invalid
+	binaries as shell scripts.
+	* sysdeps/posix/spawni.c (__spawni): Likewise.
+	* NEWS: Add BZ#22264.
+
+2018-06-01  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #23236]
+	* libio/strfile.h (struct _IO_str_fields): Rename members to
+	discourage their use and add comment.
+	(_IO_STR_DYNAMIC): Remove unused macro.
+	* libio/strops.c (_IO_str_init_static_internal): Do not use
+	callback pointers.  Call malloc and free.
+	(_IO_str_overflow): Do not use callback pointers.  Call malloc
+	and free.
+	(enlarge_userbuf): Likewise.
+	(_IO_str_finish): Call free.
+	* libio/wstrops.c (_IO_wstr_init_static): Initialize
+	_allocate_buffer_unused.
+	(_IO_wstr_overflow): Do not use callback pointers.  Call malloc
+	and free.
+	(enlarge_userbuf): Likewise.
+	(_IO_wstr_finish): Call free.
+	* debug/vasprintf_chk.c (__vasprintf_chk): Initialize
+	_allocate_buffer_unused, _free_buffer_unused.
+	* libio/memstream.c (__open_memstream): Likewise.
+	* libio/vasprintf.c (_IO_vasprintf): Likewise.
+	* libio/wmemstream.c (open_wmemstream): Likewise.
+
+2018-05-23  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #23196]
+	* string/test-memcpy.c (do_test1): New function.
+	(test_main): Call it.
+
+2018-05-23  Andreas Schwab  <schwab@suse.de>
+
+	[BZ #23196]
+	CVE-2018-11237
+	* sysdeps/x86_64/multiarch/memmove-avx512-no-vzeroupper.S
+	(L(preloop_large)): Save initial destination pointer in %r11 and
+	use it instead of %rax after the loop.
+	* string/test-mempcpy.c (MIN_PAGE_SIZE): Define.
+
+2018-05-11  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #23166]
+	* include/rpc/clnt.h (rpc_createerr): Declare hidden alias.
+	* include/rpc/svc.h (svc_pollfd, svc_max_pollfd, svc_fdset):
+	Likewise.
+	* sunrpc/rpc_common.c (svc_fdset, rpc_createerr, svc_pollfd)
+	(svc_max_pollfd): Add nocommon attribute and hidden alias.  Do not
+	export without --enable-obsolete-rpc.
+	* sunrpc/svcauth_des.c (svcauthdes_stats): Turn into compatibility
+	symbol.  This should not have been exported, ever.
+
+2018-05-11  Rafal Luzynski  <digitalfreak@lingonborough.com>
+
+	[BZ #23152]
+	* localedata/locales/gd_GB (abmon): Fix typo in May:
+	"Mhàrt" -> "Cèit".  Adjust the comment according to the change.
+
+2018-05-09  Paul Pluzhnikov  <ppluzhnikov@google.com>
+
+	[BZ #22786]
+	CVE-2018-11236
+	* stdlib/canonicalize.c (__realpath): Fix overflow in path length
+	computation.
+	* stdlib/Makefile (test-bz22786): New test.
+	* stdlib/test-bz22786.c: New test.
+
+2018-05-05  Paul Pluzhnikov  <ppluzhnikov@google.com>
+
+	[BZ #20419]
+	* elf/dl-load.c (open_verify): Fix stack overflow.
+	* elf/Makefile (tst-big-note): New test.
+	* elf/tst-big-note-lib.S: New.
+	* elf/tst-big-note.c: New.
+
+2018-05-04  Stefan Liebler  <stli@linux.vnet.ibm.com>
+
+	[BZ #23137]
+	* sysdeps/nptl/lowlevellock.h (lll_wait_tid):
+	Use atomic_load_acquire to load __tid.
+
+2018-04-24  Joseph Myers  <joseph@codesourcery.com>
+
+	* sysdeps/unix/sysv/linux/sys/ptrace.h
+	(PTRACE_SECCOMP_GET_METADATA): New enum value and macro.
+	* sysdeps/unix/sysv/linux/bits/ptrace-shared.h
+	(struct __ptrace_seccomp_metadata): New type.
+	* sysdeps/unix/sysv/linux/aarch64/sys/ptrace.h
+	(PTRACE_SECCOMP_GET_METADATA): Likewise.
+	* sysdeps/unix/sysv/linux/arm/sys/ptrace.h
+	(PTRACE_SECCOMP_GET_METADATA): Likewise.
+	* sysdeps/unix/sysv/linux/ia64/sys/ptrace.h
+	(PTRACE_SECCOMP_GET_METADATA): Likewise.
+	* sysdeps/unix/sysv/linux/powerpc/sys/ptrace.h
+	(PTRACE_SECCOMP_GET_METADATA): Likewise.
+	* sysdeps/unix/sysv/linux/s390/sys/ptrace.h
+	(PTRACE_SECCOMP_GET_METADATA): Likewise.
+	* sysdeps/unix/sysv/linux/sparc/sys/ptrace.h
+	(PTRACE_SECCOMP_GET_METADATA): Likewise.
+	* sysdeps/unix/sysv/linux/tile/sys/ptrace.h
+	(PTRACE_SECCOMP_GET_METADATA): Likewise.
+	* sysdeps/unix/sysv/linux/x86/sys/ptrace.h
+	(PTRACE_SECCOMP_GET_METADATA): Likewise.
+
+2018-04-09  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #23037]
+	* resolv/res_send.c (send_dg): Use designated initializers instead
+	of assignment to zero-initialize other fields of struct mmsghdr.
+
+2018-04-06  Andreas Schwab  <schwab@linux-m68k.org>
+
+	* manual/charset.texi (Converting a Character): Fix typo.
+
+2018-04-05  Florian Weimer  <fweimer@redhat.com>
+
+	* manual/examples/mbstouwcs.c (mbstouwcs): Fix loop termination,
+	integer overflow, memory leak on error, and indeterminate errno
+	value.  Add a null wide character to terminate the result string.
+	* manual/charset.texi (Converting a Character): Mention embedded
+	null bytes in the mbrtowc input string.  Explain what happens in
+	the -2 result case.  Do not claim that mbrtowc is simple or
+	obvious to use.  Adjust the description of the code example.  Use
+	@code, not @var, for concrete variables.
+
+2018-04-05  Florian Weimer  <fweimer@redhat.com>
+
+	* manual/examples/mbstouwcs.c: New file.
+	* manual/charset.texi (Converting a Character): Include it.
+
+2018-04-03  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #22947]
+	* bits/uio-ext.h (RWF_APPEND): New.
+	* sysdeps/unix/sysv/linux/bits/uio-ext.h (RWF_APPEND): Likewise.
+	* manual/llio.texi: Document RWF_APPEND.
+	* misc/tst-preadvwritev2-common.c (RWF_APPEND): New.
+	(RWF_SUPPORTED): Add RWF_APPEND.
+
+2018-03-27  Jesse Hathaway  <jesse@mbuki-mvuki.org>
+
+	* sysdeps/unix/sysv/linux/getlogin_r.c (__getlogin_r_loginuid): Return
+	early when linux sentinel value is set.
+
+2018-03-27  Andreas Schwab  <schwab@suse.de>
+
+	[BZ #23005]
+	* resolv/res_send.c (__res_context_send): Return ENOMEM if
+	allocation of private copy of nsaddr_list fails.
+
+2018-03-20  Joseph Myers  <joseph@codesourcery.com>
+
+	[BZ #17343]
+	* stdlib/random_r.c (__random_r): Use unsigned arithmetic for
+	possibly overflowing computations.
+
+2018-04-26  Aurelien Jarno  <aurelien@aurel32.net>
+
+	* signal/tst-sigaction.c: New file to test BZ #23069.
+	* signal/Makefile (tests): Fix indentation. Add tst-sigaction.
+
+2018-04-28  Aurelien Jarno  <aurelien@aurel32.net>
+
+	[BZ #23069]
+	* sysdeps/unix/sysv/linux/riscv/kernel_sigaction.h: New file.
+
+2018-03-29  Florian Weimer  <fweimer@redhat.com>
+
+	* sysdeps/unix/sysv/linux/i386/tst-bz21269.c (do_test): Also
+	capture SIGBUS.
+
+2018-03-23  Andrew Senkevich  <andrew.senkevich@intel.com>
+	    Max Horn  <max@quendi.de>
+
+	[BZ #22644]
+	CVE-2017-18269
+	* sysdeps/i386/i686/multiarch/memcpy-sse2-unaligned.S: Fixed
+	branch conditions.
+	* string/test-memmove.c (do_test2): New testcase.
+
+2018-02-22  Andrew Waterman <andrew@sifive.com>
+
+	[BZ # 22884]
+	* sysdeps/riscv/rvd/s_fmax.c (__fmax): Handle sNaNs correctly.
+	* sysdeps/riscv/rvd/s_fmin.c (__fmin): Likewise.
+	* sysdeps/riscv/rvf/s_fmaxf.c (__fmaxf): Likewise.
+	* sysdeps/riscv/rvf/s_fminf.c (__fminf): Likewise.
+
+2018-02-22  DJ Delorie  <dj@delorie.com>
+
+	* sysdeps/riscv/tls-macros.h: Do not initialize $gp.
+
+2018-03-16  Rafal Luzynski  <digitalfreak@lingonborough.com>
+
+	[BZ #22963]
+	* localedata/locales/cs_CZ (mon): Rename to...
+	(alt_mon): This.
+	(mon): Import from CLDR (genitive case).
+
+2018-03-16  Rafal Luzynski  <digitalfreak@lingonborough.com>
+
+	[BZ #22937]
+	* localedata/locales/el_CY (abmon): Rename to...
+	(ab_alt_mon): This.
+	(abmon): Import from CLDR (abbreviated genitive case).
+	* localedata/locales/el_GR (abmon): Rename to...
+	(ab_alt_mon): This.
+	(abmon): Import from CLDR (abbreviated genitive case).
+
+2018-03-16  Rafal Luzynski  <digitalfreak@lingonborough.com>
+
+	[BZ #22932]
+	* localedata/locales/lt_LT (abmon): Synchronize with CLDR.
+
+2018-03-16  Robert Buj  <robert.buj@gmail.com>
+
+	[BZ #22848]
+	* localedata/locales/ca_ES (abmon): Rename to...
+	(ab_alt_mon): This, then synchronize with CLDR (nominative case).
+	(mon): Rename to...
+	(alt_mon): This.
+	(abmon): Import from CLDR (genitive case, month names preceded by
+	"de" or "d’").
+	(mon): Likewise.
+	(abday): Synchronize with CLDR.
+	(d_t_fmt): Likewise.
+	(d_fmt): Likewise.
+	(am_pm): Likewise.
+
+	(LC_TIME): Improve indentation.
+	(LC_TELEPHONE): Likewise.
+	(LC_NAME): Likewise.
+	(LC_ADDRESS): Likewise.
+
+2018-03-12  Dmitry V. Levin  <ldv@altlinux.org>
+
+	* po/pt_BR.po: Update translations.
+
+2018-03-03  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	[BZ #21269]
+	* sysdeps/unix/sysv/linux/i386/Makefile (tests): Add tst-bz21269.
+	* sysdeps/unix/sysv/linux/i386/sigaction.c (SET_SA_RESTORER): Clear
+	sa_restorer for vDSO case.
+	* sysdeps/unix/sysv/linux/i386/tst-bz21269.c: New file.
+
+2018-03-03  Andreas Schwab  <schwab@linux-m68k.org>
+
+	[BZ #22918]
+	* nss/nsswitch.h (DEFINE_DATABASE): Don't define __nss_*_database.
+	* nss/nsswitch.c (DEFINE_DATABASE): Define __nss_*_database here.
+	* nscd/gai.c (__nss_hosts_database): Readd definition.
+	* posix/tst-rfc3484.c (__nss_hosts_database): Likewise.
+	* posix/tst-rfc3484-3.c (__nss_hosts_database): Likewise.
+	* posix/tst-rfc3484-2.c (__nss_hosts_database): Likewise.
+
+2018-03-01  DJ Delorie  <dj@delorie.com>
+
+	[BZ #22342]
+	* nscd/netgroupcache.c (addinnetgrX): Include trailing NUL in
+	key value.
+
+2018-02-26  Dmitry V. Levin  <ldv@altlinux.org>
+
+	[BZ #22433]
+	[BZ #22807]
+	* sysdeps/unix/sysv/linux/powerpc/sys/ptrace.h (__ptrace_request): Add
+	PTRACE_GETREGS, PTRACE_SETREGS, PTRACE_GETFPREGS, PTRACE_SETFPREGS,
+	PTRACE_GETVRREGS, PTRACE_SETVRREGS, PTRACE_GETEVRREGS,
+	PTRACE_SETEVRREGS, PTRACE_GETREGS64, PTRACE_SETREGS64,
+	PTRACE_GET_DEBUGREG, PTRACE_SET_DEBUGREG, PTRACE_GETVSRREGS,
+	PTRACE_SETVSRREGS, and PTRACE_SINGLEBLOCK.
+
+2018-02-26  Tulio Magno Quites Machado Filho  <tuliom@linux.vnet.ibm.com>
+
+	* sysdeps/unix/sysv/linux/powerpc/sys/ptrace.h: Undefine Linux
+	macros used in __ptrace_request.
+
+2018-02-21  Mike FABIAN  <mfabian@redhat.com>
+
+	[BZ #22517]
+	* localedata/locales/et_EE (LC_COLLATE): add missing “reorder-end”
+
+2018-02-21  Rical Jasan  <ricaljasan@pacific.net>
+
+	* io/fcntl.h: Fix a typo in a comment.
+
+2018-02-20  Rical Jasan  <ricaljasan@pacific.net>
+
+	* manual/creature.texi (_ISOC99_SOURCE): Update the dated
+	description.
+
+	[BZ #16335]
+	* manual/creature.texi (_POSIX_C_SOURCE): Document special values
+	of 199606L, 200112L, and 200809L.
+	(_XOPEN_SOURCE): Document special values of 600 and 700.
+	(_ISOC11_SOURCE): Document macro.
+	(_ATFILE_SOURCE): Likewise.
+	(_FORTIFY_SOURCE): Likewise.
+
+2018-03-09  Aurelien Jarno  <aurelien@aurel32.net>
+
+	[BZ #22919]
+	* sysdeps/unix/sysv/linux/sparc/sparc32/setcontext.S (__startcontext):
+	Add nop before __startcontext, add explaining comments.
+
+2018-03-07  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	[BZ #22926]
+	* sysdeps/powerpc/powerpc32/sysdep.h (ABORT_TRANSACTION_IMPL): Define
+	empty for __SPE__.
+	* sysdeps/powerpc/sysdep.h (ABORT_TRANSACTION): Likewise.
+	* sysdeps/unix/sysv/linux/powerpc/elision-lock.c (__lll_lock_elision):
+	Do not build hardware transactional code for __SPE__.
+	* sysdeps/unix/sysv/linux/powerpc/elision-trylock.c
+	(__lll_trylock_elision): Likewise.
+	* sysdeps/unix/sysv/linux/powerpc/elision-unlock.c
+	(__lll_unlock_elision): Likewise.
+
+2018-02-19  Rical Jasan  <ricaljasan@pacific.net>
+
+	[BZ #6889]
+	* manual/filesys.texi (get_current_dir_name): Clarify behaviour.
+
+2018-02-16  Rical Jasan  <ricaljasan@pacific.net>
+
+	* manual/platform.texi (__riscv_flush_icache): Fix @deftypefun
+	syntax.
+
+2018-02-09  Rical Jasan  <ricaljasan@pacific.net>
+
+	* manual/creature.texi: Convert references to gcc.info to gcc.
+	* manual/stdio.texi: Likewise.
+	* manual/string.texi: Likewise.
+
+2018-02-18  Aurelien Jarno  <aurelien@aurel32.net>
+
+	[BZ #22818]
+	* posix/tst-glob_lstat_compat.c [__alpha__] (glob): Access
+	the GLIBC_2.1 version.
+
+2018-02-02  Sean McKean  <smckean83@gmail.com>
+
+	[BZ #22735]
+	* time/time.h (clock): Reference CLOCKS_PER_SEC in comment.
+
+2018-02-10  Dmitry V. Levin  <ldv@altlinux.org>
+
+	[BZ #22433]
+	* sysdeps/unix/sysv/linux/aarch64/sys/ptrace.h (__ptrace_request):
+	Remove arm-specific PTRACE_GET_THREAD_AREA, PTRACE_GETHBPREGS,
+	and PTRACE_SETHBPREGS.
+
+2018-02-14  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	* sysdeps/sh/libm-test-ulps: Update.
+
+2018-02-09  DJ Delorie  <dj@redhat.com>
+
+	[BZ #22827]
+	* sysdeps/unix/sysv/linux/riscv/readelflib.c (process_elf_file): Use
+	64-bit ELF type for 64-bit ELF objects.
+
+2018-02-07  Igor Gnatenko  <ignatenko@redhat.com>
+
+	[BZ #22797]
+	* sysdeps/unix/sysv/linux/bits/mman-shared.h (pkey_get): Add
+	missing second underscore to parameter name.
+
+2018-02-05  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #22638]
+	* sysdeps/sparc/sparc32/start.S (_start): Check PIC instead of
+	SHARED.
+	* sysdeps/sparc/sparc64/start.S (_start): Likewise.
+
 2018-02-01  Dmitry V. Levin  <ldv@altlinux.org>
 
 	* version.h (RELEASE): Set to "stable".
@@ -710,7 +1210,9 @@
 2018-01-18  Arjun Shankar  <arjun@redhat.com>
 
 	[BZ #22343]
+	[BZ #22774]
 	CVE-2018-6485
+	CVE-2018-6551
 	* malloc/malloc.c (checked_request2size): call REQUEST_OUT_OF_RANGE
 	after padding.
 	(_int_memalign): check for integer overflow before calling
