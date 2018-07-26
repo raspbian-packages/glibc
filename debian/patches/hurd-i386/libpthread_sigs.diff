@@ -7,20 +7,20 @@ Date:   Thu Jan 25 01:47:51 2018 +0100
 
     Until posix thread signal distribution is commited
 
-diff --git b/htl/sysdeps/mach/hurd/pt-sigstate-destroy.c a/htl/sysdeps/mach/hurd/pt-sigstate-destroy.c
+diff --git b/sysdeps/mach/hurd/htl/pt-sigstate-destroy.c a/sysdeps/mach/hurd/htl/pt-sigstate-destroy.c
 index fce56c5d0d..d5e28d22d8 100644
---- b/htl/sysdeps/mach/hurd/pt-sigstate-destroy.c
-+++ a/htl/sysdeps/mach/hurd/pt-sigstate-destroy.c
+--- b/sysdeps/mach/hurd/htl/pt-sigstate-destroy.c
++++ a/sysdeps/mach/hurd/htl/pt-sigstate-destroy.c
 @@ -24,4 +24,5 @@
  void
  __pthread_sigstate_destroy (struct __pthread *thread)
  {
 +  _hurd_sigstate_delete (thread->kernel_thread);
  }
-diff --git b/htl/sysdeps/mach/hurd/pt-sigstate-init.c a/htl/sysdeps/mach/hurd/pt-sigstate-init.c
+diff --git b/sysdeps/mach/hurd/htl/pt-sigstate-init.c a/sysdeps/mach/hurd/htl/pt-sigstate-init.c
 index 660d5a02a6..4848f2ea91 100644
---- b/htl/sysdeps/mach/hurd/pt-sigstate-init.c
-+++ a/htl/sysdeps/mach/hurd/pt-sigstate-init.c
+--- b/sysdeps/mach/hurd/htl/pt-sigstate-init.c
++++ a/sysdeps/mach/hurd/htl/pt-sigstate-init.c
 @@ -36,7 +36,7 @@ __pthread_sigstate_init (struct __pthread *thread)
    if (do_init_global)
      {
@@ -39,10 +39,10 @@ Date:   Thu Jan 25 01:49:49 2018 +0100
 
     Revert signal disposition, not in glibc's cvs yet
 
-diff --git b/htl/sysdeps/mach/hurd/pt-sigstate.c a/htl/sysdeps/mach/hurd/pt-sigstate.c
+diff --git b/sysdeps/mach/hurd/htl/pt-sigstate.c a/sysdeps/mach/hurd/htl/pt-sigstate.c
 index bae6ae7c45..74fd72a2c0 100644
---- b/htl/sysdeps/mach/hurd/pt-sigstate.c
-+++ a/htl/sysdeps/mach/hurd/pt-sigstate.c
+--- b/sysdeps/mach/hurd/htl/pt-sigstate.c
++++ a/sysdeps/mach/hurd/htl/pt-sigstate.c
 @@ -21,6 +21,7 @@
  #include <assert.h>
  #include <signal.h>
@@ -63,17 +63,17 @@ index bae6ae7c45..74fd72a2c0 100644
 -  __spin_lock (&ss->lock);
 +  _hurd_sigstate_lock (ss);
  
-   if (oset)
+   if (oset != NULL)
      *oset = ss->blocked;
 @@ -66,7 +68,13 @@ __pthread_sigstate (struct __pthread *thread, int how,
-   if (! err && clear_pending)
+   if (!err && clear_pending)
      __sigemptyset (&ss->pending);
  
 -  __spin_unlock (&ss->lock);
 +  pending = _hurd_sigstate_pending (ss) & ~ss->blocked;
 +  _hurd_sigstate_unlock (ss);
 +
-+  if (! err && pending)
++  if (!err && pending)
 +    /* Send a message to the signal thread so it
 +       will wake up and check for pending signals.  */
 +    __msg_sig_post (_hurd_msgport, 0, 0, __mach_task_self ());

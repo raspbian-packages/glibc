@@ -1,9 +1,63 @@
-glibc (2.27-3+rpi1) buster-staging; urgency=medium
+glibc (2.27-5+rpi1) buster-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Thu, 05 Apr 2018 15:43:35 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 26 Jul 2018 15:06:30 +0000
+
+glibc (2.27-5) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/patches/any/git-abilist-ignore-absolute.diff: backport support
+    for binutils 2.31 from upstream.
+  * debian/rules.d/control.mk: Add support for riscv64.  Closes: #888793.
+  * debian/testsuite-xfail-debian.mk: add reference testsuite results for
+    riscv64.
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+
+  [ Samuel Thibault ]
+  * debian/testsuite-xfail-debian.mk: Update hurd-i386 result to new upstream
+    stable branch.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Mon, 16 Jul 2018 22:23:13 +0200
+
+glibc (2.27-4) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * hurd-i386/tg-gsync-libc.diff: Rename to hurd-i386/git-gsync-libc.diff.
+  * hurd-i386/git-timer_create_sigmask.diff: New patch to fix interaction
+    between SIGCHLD and timer_create.  Closes: Bug#894379.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix stack buffer overflow in realpath() (CVE-2018-11236).  Closes:
+      #899071.
+    - Fix buffer overflow in AVX-512-optimized implementation of mempcpy()
+      (CVE-2018-11237).  Closes: #899070.
+    - Fix crashes with binaries using vtable interposition.  Closes:
+      #861116.
+    - Fix LC_PAPER for es_BO locale.  Closes: #880675.
+    - debian/patches/arm/unsubmitted-ldso-abi-check.diff: refresh, sigh.
+  * debian/debhelper.in/libc.docs: do not try to install BUGS in the
+    documentation, it has been removed upstream in version 2.27 as
+    obsolete.  Closes: #902800.
+  * debian/debhelper.in/libc-dev.docs: drop, as both CONFORMANCE and
+    NAMESPACE have been removed upstream in version 2.27.
+  * debian/debhelper.in/libc-dev-bin.docs: drop as NAMESPACE has been
+    removed upstream in version 2.27.
+  * debian/patches/riscv64/submitted-start-cfi.diff: fix endless loop
+    when throwing an exception from a constructor.
+  * debian/control.in/main: bump Standards-Version to 4.1.4 (no changes).
+
+  [ Laurent Bigonville ]
+  * debian/local/etc/nsswitch.conf: Switch from the compat to the files
+    module.  Closes: #880846.
+
+  [ Bjarni Ingi Gislason ]
+  * debian/local/manpages/catchsegv.1: apply some corrections to the
+    manpage.  Closes: #902236.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sat, 07 Jul 2018 18:34:34 +0200
 
 glibc (2.27-3) unstable; urgency=medium
 
