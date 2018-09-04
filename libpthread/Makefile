@@ -87,12 +87,14 @@ libpthread-routines := pt-attr pt-attr-destroy pt-attr-getdetachstate	    \
 	pt-mutexattr-getpshared pt-mutexattr-gettype			    \
 	pt-mutexattr-setprioceiling pt-mutexattr-setprotocol		    \
 	pt-mutexattr-setpshared pt-mutexattr-settype			    \
+	pt-mutexattr-getrobust pt-mutexattr-setrobust			    \
 									    \
 	pt-mutex-init pt-mutex-destroy					    \
 	pt-mutex-lock pt-mutex-trylock pt-mutex-timedlock		    \
 	pt-mutex-unlock							    \
 	pt-mutex-transfer-np						    \
 	pt-mutex-getprioceiling pt-mutex-setprioceiling			    \
+	pt-mutex-consistent 						    \
 									    \
 	pt-rwlock-attr							    \
 	pt-rwlockattr-init pt-rwlockattr-destroy			    \
