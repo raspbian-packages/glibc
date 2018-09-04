@@ -32,6 +32,8 @@ int __pthread_mutex_trylock (pthread_mutex_t *mtxp)
     {
       case PT_MTX_NORMAL:
         ret = lll_trylock (&mtxp->__lock);
+        if (ret)
+          ret = EBUSY;
         break;
 
       case PT_MTX_RECURSIVE:
@@ -49,6 +51,8 @@ int __pthread_mutex_trylock (pthread_mutex_t *mtxp)
             mtx_set_owner (mtxp, self, mtxp->__flags);
             mtxp->__cnt = 1;
           }
+        else
+          ret = EBUSY;
 
         break;
 
@@ -56,6 +60,8 @@ int __pthread_mutex_trylock (pthread_mutex_t *mtxp)
         self = _pthread_self ();
         if ((ret = lll_trylock (&mtxp->__lock)) == 0)
           mtx_set_owner (mtxp, self, mtxp->__flags);
+        else
+          ret = EBUSY;
         break;
 
       case PT_MTX_NORMAL     | PTHREAD_MUTEX_ROBUST:
