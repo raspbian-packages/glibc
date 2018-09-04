@@ -1,5 +1,5 @@
-/* futimes -- change access and modification times of open file.  Hurd version.
-   Copyright (C) 2002-2018 Free Software Foundation, Inc.
+/* Change access and modification times of open file.  Hurd version.
+   Copyright (C) 1991-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,27 +24,23 @@
 
 #include "utime-helper.c"
 
-/* Change the access time of FD to TVP[0] and
-   the modification time of FD to TVP[1].  */
+/* Change the access time of FILE to TSP[0] and
+   the modification time of FILE to TSP[1].  */
 int
-__futimes (int fd, const struct timeval tvp[2])
+utimensat (int fd, const char *file, const struct timespec tsp[2],
+	   int flags)
 {
-  struct timespec atime, mtime;
   error_t err;
+  file_t port;
 
-  utime_ts_from_tval (tvp, &atime, &mtime);
+  port = __file_name_lookup_at (fd, flags, file, 0, 0);
+  if (port == MACH_PORT_NULL)
+    return -1;
 
-  err = HURD_DPORT_USE (fd, __file_utimens (port, atime, mtime));
+  err = hurd_futimens (port, tsp);
 
-  if (err == EMIG_BAD_ID || err == EOPNOTSUPP)
-    {
-      time_value_t atim, mtim;
-
-      utime_tvalue_from_tval (tvp, &atim, &mtim);
-
-      err = HURD_DPORT_USE (fd, __file_utimes (port, atim, mtim));
-    }
-
-  return err ? __hurd_dfail (fd, err) : 0;
+  __mach_port_deallocate (__mach_task_self (), port);
+  if (err)
+    return __hurd_fail (err);
+  return 0;
 }
-weak_alias (__futimes, futimes)
