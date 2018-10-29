@@ -43,6 +43,8 @@
    __libc_start_main wants this in a5.  */
 
 ENTRY (ENTRY_POINT)
+	/* Mark ra as undefined in order to stop unwinding here!  */
+	cfi_undefined (ra)
 	call  .Lload_gp
 	mv    a5, a0  /* rtld_fini.  */
 	/* main may be in a shared library.  */
