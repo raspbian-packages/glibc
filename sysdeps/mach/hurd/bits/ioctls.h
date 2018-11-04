@@ -398,7 +398,6 @@ enum __ioctl_datum { IOC_8, IOC_16, IOC_32, IOC_64 };
 #define	TIOCLBIC	_IOW('t', 126, int)	/* bic local mode bits */
 #define	TIOCLSET	_IOW('t', 125, int)	/* set entire local mode word */
 #define	TIOCLGET	_IOR('t', 124, int)	/* get local modes */
-#endif
 #define		LCRTBS		(CRTBS>>16)
 #define		LPRTERA		(PRTERA>>16)
 #define		LCRTERA		(CRTERA>>16)
@@ -414,7 +413,6 @@ enum __ioctl_datum { IOC_8, IOC_16, IOC_32, IOC_64 };
 #define		LPENDIN		(PENDIN>>16)
 #define		LDECCTQ		(DECCTQ>>16)
 #define		LNOFLSH		(NOFLSH>>16)
-#if 0
 #define	TIOCSLTC	_IOW('t',117,struct ltchars)/* set local special chars*/
 #define	TIOCGLTC	_IOR('t',116,struct ltchars)/* get local special chars*/
 #define OTIOCCONS	_IO('t', 98)	/* for hp300 -- sans int arg */

@@ -114,23 +114,10 @@ _hurd_intr_rpc_mach_msg (mach_msg_header_t *msg,
 
  message:
 
-  /* XXX
-     At all points here (once SS->intr_port is set), the signal thread
-     thinks we are "about to enter the syscall", and might mutate our
-     return-value register.  This is bogus.
-   */
-
-  if (ss->cancel)
-    {
-      /* We have been cancelled.  Don't do an RPC at all.  */
-      ss->intr_port = MACH_PORT_NULL;
-      ss->cancel = 0;
-      return EINTR;
-    }
-
   /* Note that the signal trampoline code might modify our OPTION!  */
   err = INTR_MSG_TRAP (msg, option, send_size,
-		       rcv_size, rcv_name, timeout, notify);
+		       rcv_size, rcv_name, timeout, notify,
+		       &ss->cancel, &ss->intr_port);
 
   switch (err)
     {
@@ -141,7 +128,7 @@ _hurd_intr_rpc_mach_msg (mach_msg_header_t *msg,
       else
 	/* The operation was supposedly interrupted, but still has
 	   not returned.  Declare it interrupted.  */
-	goto interrupted;
+	goto dead;
 
     case MACH_SEND_INTERRUPTED: /* RPC didn't get out.  */
       if (!(option & MACH_SEND_MSG))
@@ -324,17 +311,21 @@ _hurd_intr_rpc_mach_msg (mach_msg_header_t *msg,
 	  timeout = user_timeout;
 	  goto message;
 	}
-      /* FALLTHROUGH */
+      err = EINTR;
+
+      /* The EINTR return indicates cancellation, so clear the flag.  */
+      ss->cancel = 0;
+      break;
 
     case MACH_RCV_PORT_DIED:
       /* Server didn't respond to interrupt_operation,
 	 so the signal thread destroyed the reply port.  */
       /* FALLTHROUGH */
 
-    interrupted:
-      err = EINTR;
+    dead:
+      err = EIEIO;
 
-      /* The EINTR return indicates cancellation, so clear the flag.  */
+      /* The EIEIO return indicates cancellation, so clear the flag.  */
       ss->cancel = 0;
       break;
 
