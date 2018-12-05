@@ -1,6 +1,6 @@
-/* Copyright (C) 2005-2018 Free Software Foundation, Inc.
+/* Test that malloc tcache catches double free.
+   Copyright (C) 2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
-   Contributed by Ulrich Drepper <drepper@redhat.com>, 2005.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -17,22 +17,32 @@
    <http://www.gnu.org/licenses/>.  */
 
 #include <errno.h>
-#include <pthreadP.h>
+#include <error.h>
+#include <limits.h>
+#include <malloc.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/signal.h>
 
-
-int
-pthread_mutex_consistent (pthread_mutex_t *mutex)
+static int
+do_test (void)
 {
-  /* Test whether this is a robust mutex with a dead owner.
-     See concurrency notes regarding __kind in struct __pthread_mutex_s
-     in sysdeps/nptl/bits/thread-shared-types.h.  */
-  if ((atomic_load_relaxed (&(mutex->__data.__kind))
-       & PTHREAD_MUTEX_ROBUST_NORMAL_NP) == 0
-      || mutex->__data.__owner != PTHREAD_MUTEX_INCONSISTENT)
-    return EINVAL;
+  char * volatile ptrs[20];
+  int i;
 
-  mutex->__data.__owner = THREAD_GETMEM (THREAD_SELF, tid);
+  /* Allocate enough small chunks so that when we free them all, the tcache
+     is full, and the first one we freed is at the end of its linked list.  */
+#define COUNT 20
+  for (i=0; i<COUNT; i++)
+    ptrs[i] = malloc (20);
+  for (i=0; i<COUNT; i++)
+    free (ptrs[i]);
+  free (ptrs[0]);
 
-  return 0;
+  printf("FAIL: tcache double free\n");
+  return 1;
 }
-weak_alias (pthread_mutex_consistent, pthread_mutex_consistent_np)
+
+#define TEST_FUNCTION do_test
+#define EXPECTED_SIGNAL SIGABRT
+#include <support/test-driver.c>
