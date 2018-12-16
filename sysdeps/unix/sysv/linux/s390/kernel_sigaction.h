@@ -30,3 +30,5 @@ struct kernel_sigaction
   (kact)->sa_restorer = (act)->sa_restorer
 #define RESET_SA_RESTORER(act, kact)           \
   (act)->sa_restorer = (kact)->sa_restorer
+
+#include <sysdeps/unix/sysv/linux/kernel_sigaction.h>
