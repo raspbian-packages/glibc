@@ -840,8 +840,8 @@ endif
 # disable any optimization that assume default rounding mode.
 +math-flags = -frounding-math
 
-# Build libc/libm using -fno-math-errno, but run testsuite with -fmath-errno.
-+extra-math-flags = $(if $(filter libnldbl nonlib testsuite,$(in-module)),-fmath-errno,-fno-math-errno)
+# Build libm using -fno-math-errno
++extra-math-flags = $(if $(filter libm,$(in-module)),-fno-math-errno,-fmath-errno)
 
 # We might want to compile with some stack-protection flag.
 ifneq ($(stack-protector),)
