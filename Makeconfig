@@ -571,7 +571,7 @@ link-libc-printers-tests = $(link-libc-rpath) \
 			   $(link-libc-tests-after-rpath-link)
 
 # This is how to find at build-time things that will be installed there.
-rpath-dirs = math elf dlfcn nss nis rt resolv crypt mathvec support
+rpath-dirs = math elf dlfcn nss nis rt resolv mathvec support
 rpath-link = \
 $(common-objdir):$(subst $(empty) ,:,$(patsubst ../$(subdir),.,$(rpath-dirs:%=$(common-objpfx)%)))
 else  # build-static
@@ -840,6 +840,11 @@ endif
 # disable any optimization that assume default rounding mode.
 +math-flags = -frounding-math
 
+# Logically only "libnldbl", "nonlib" and "testsuite" should be using
+# -fno-math-errno. However due to GCC bug #88576, only "libm" can use
+# -fno-math-errno.
++extra-math-flags = $(if $(filter libm,$(in-module)),-fno-math-errno,-fmath-errno)
+
 # We might want to compile with some stack-protection flag.
 ifneq ($(stack-protector),)
 +stack-protector=$(stack-protector)
@@ -975,6 +980,7 @@ endif
 
 override CFLAGS	= -std=gnu11 -fgnu89-inline $(config-extra-cflags) \
 		  $(filter-out %frame-pointer,$(+cflags)) $(+gccwarn-c) \
+		  $(+extra-math-flags) \
 		  $(sysdep-CFLAGS) $(CFLAGS-$(suffix $@)) $(CFLAGS-$(<F)) \
 		  $(CFLAGS-$(@F)) $(tls-model) \
 		  $(foreach lib,$(libof-$(basename $(@F))) \
@@ -1210,8 +1216,13 @@ all-subdirs = csu assert ctype locale intl catgets math setjmp signal	    \
 	      stdlib stdio-common libio malloc string wcsmbs time dirent    \
 	      grp pwd posix io termios resource misc socket sysvipc gmon    \
 	      gnulib iconv iconvdata wctype manual shadow gshadow po argp   \
-	      crypt localedata timezone rt conform debug mathvec support    \
+	      localedata timezone rt conform debug mathvec support	    \
 	      dlfcn elf
+
+ifeq ($(build-crypt),yes)
+all-subdirs += crypt
+rpath-dirs += crypt
+endif
 
 ifndef avoid-generated
 # sysd-sorted itself will contain rules making the sysd-sorted target

@@ -22,7 +22,7 @@
 
 /* Rename the file OLD relative to OLDFD to NEW relative to NEWFD.  */
 int
-renameat (int oldfd, const char *old, int newfd, const char *new)
+__renameat (int oldfd, const char *old, int newfd, const char *new)
 {
   if ((oldfd < 0 && oldfd != AT_FDCWD) || (newfd < 0 && newfd != AT_FDCWD))
     {
@@ -40,5 +40,6 @@ renameat (int oldfd, const char *old, int newfd, const char *new)
   return -1;
 }
 
-
+libc_hidden_def (__renameat)
+weak_alias (__renameat, renameat)
 stub_warning (renameat)

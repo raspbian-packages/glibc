@@ -18,7 +18,10 @@
 #include <libc-lock.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <cthreads.h>
 
+/* This serves as stub "self" pointer for libc locks when TLS is not initialized
+   yet.  */
 char __libc_lock_self0[0];
 
 /* Placeholder for key creation routine from Hurd cthreads library.  */
@@ -48,15 +51,4 @@ __cthread_setspecific (cthread_key_t key, void *val)
 {
   __set_errno (ENOSYS);
   return -1;
-}
-
-/* Call __cthread_getspecific which gets a pointer to the return value instead
-   of just returning it.  */
-void *
-weak_function
-__libc_getspecific (cthread_key_t key)
-{
-  void *val;
-  __cthread_getspecific (key, &val);
-  return val;
 }

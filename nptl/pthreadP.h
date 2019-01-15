@@ -32,7 +32,7 @@
 #include <atomic.h>
 #include <kernel-features.h>
 #include <errno.h>
-#include <nptl-signals.h>
+#include <internal-signals.h>
 
 
 /* Atomic operations on TLS memory.  */
@@ -110,19 +110,23 @@ enum
 };
 #define PTHREAD_MUTEX_PSHARED_BIT 128
 
+/* See concurrency notes regarding __kind in struct __pthread_mutex_s
+   in sysdeps/nptl/bits/thread-shared-types.h.  */
 #define PTHREAD_MUTEX_TYPE(m) \
-  ((m)->__data.__kind & 127)
+  (atomic_load_relaxed (&((m)->__data.__kind)) & 127)
 /* Don't include NO_ELISION, as that type is always the same
    as the underlying lock type.  */
 #define PTHREAD_MUTEX_TYPE_ELISION(m) \
-  ((m)->__data.__kind & (127|PTHREAD_MUTEX_ELISION_NP))
+  (atomic_load_relaxed (&((m)->__data.__kind))	\
+   & (127 | PTHREAD_MUTEX_ELISION_NP))
 
 #if LLL_PRIVATE == 0 && LLL_SHARED == 128
 # define PTHREAD_MUTEX_PSHARED(m) \
-  ((m)->__data.__kind & 128)
+  (atomic_load_relaxed (&((m)->__data.__kind)) & 128)
 #else
 # define PTHREAD_MUTEX_PSHARED(m) \
-  (((m)->__data.__kind & 128) ? LLL_SHARED : LLL_PRIVATE)
+  ((atomic_load_relaxed (&((m)->__data.__kind)) & 128)	\
+   ? LLL_SHARED : LLL_PRIVATE)
 #endif
 
 /* The kernel when waking robust mutexes on exit never uses
@@ -172,6 +176,9 @@ enum
 #define __PTHREAD_ONCE_INPROGRESS	1
 #define __PTHREAD_ONCE_DONE		2
 #define __PTHREAD_ONCE_FORK_GEN_INCR	4
+
+/* Attribute to indicate thread creation was issued from C11 thrd_create.  */
+#define ATTR_C11_THREAD ((void*)(uintptr_t)-1)
 
 
 /* Condition variable definitions.  See __pthread_cond_wait_common.
@@ -279,8 +286,8 @@ hidden_proto (__pthread_register_cancel)
 hidden_proto (__pthread_unregister_cancel)
 # ifdef SHARED
 extern void attribute_hidden pthread_cancel_init (void);
-extern void __unwind_freeres (void);
 # endif
+extern void __nptl_unwind_freeres (void) attribute_hidden;
 #endif
 
 
@@ -597,7 +604,8 @@ extern int __nptl_setxid (struct xid_command *cmdp) attribute_hidden;
 extern void __nptl_set_robust (struct pthread *self);
 #endif
 
-extern void __free_stacks (size_t limit) attribute_hidden;
+extern void __nptl_stacks_freeres (void) attribute_hidden;
+extern void __shm_directory_freeres (void) attribute_hidden;
 
 extern void __wait_lookup_done (void) attribute_hidden;
 

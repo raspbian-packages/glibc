@@ -37,7 +37,7 @@
    a slash to indicate that it is relative to some unknown root directory.  */
 
 char *
-_hurd_canonicalize_directory_name_internal (file_t thisdir,
+__hurd_canonicalize_directory_name_internal (file_t thisdir,
 					    char *buf,
 					    size_t size)
 {
@@ -277,6 +277,7 @@ _hurd_canonicalize_directory_name_internal (file_t thisdir,
   cleanup ();
   return NULL;
 }
+strong_alias (__hurd_canonicalize_directory_name_internal, _hurd_canonicalize_directory_name_internal)
 
 char *
 __canonicalize_directory_name_internal (const char *thisdir, char *buf,
@@ -286,7 +287,7 @@ __canonicalize_directory_name_internal (const char *thisdir, char *buf,
   file_t port = __file_name_lookup (thisdir, 0, 0);
   if (port == MACH_PORT_NULL)
     return NULL;
-  result = _hurd_canonicalize_directory_name_internal (port, buf, size);
+  result = __hurd_canonicalize_directory_name_internal (port, buf, size);
   __mach_port_deallocate (__mach_task_self (), port);
   return result;
 }
@@ -301,8 +302,8 @@ __getcwd (char *buf, size_t size)
 {
   char *cwd =
     __USEPORT (CWDIR,
-	       _hurd_canonicalize_directory_name_internal (port,
-							   buf, size));
+	       __hurd_canonicalize_directory_name_internal (port,
+							    buf, size));
   return cwd;
 }
 weak_alias (__getcwd, getcwd)

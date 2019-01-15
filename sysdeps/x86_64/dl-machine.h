@@ -306,14 +306,12 @@ elf_machine_rela (struct link_map *map, const ElfW(Rela) *reloc,
       const ElfW(Sym) *const refsym = sym;
 # endif
       struct link_map *sym_map = RESOLVE_MAP (&sym, version, r_type);
-      ElfW(Addr) value = (sym == NULL ? 0
-			  : (ElfW(Addr)) sym_map->l_addr + sym->st_value);
+      ElfW(Addr) value = SYMBOL_ADDRESS (sym_map, sym, true);
 
       if (sym != NULL
-	  && __builtin_expect (ELFW(ST_TYPE) (sym->st_info) == STT_GNU_IFUNC,
-			       0)
-	  && __builtin_expect (sym->st_shndx != SHN_UNDEF, 1)
-	  && __builtin_expect (!skip_ifunc, 1))
+	  && __glibc_unlikely (ELFW(ST_TYPE) (sym->st_info) == STT_GNU_IFUNC)
+	  && __glibc_likely (sym->st_shndx != SHN_UNDEF)
+	  && __glibc_likely (!skip_ifunc))
 	{
 # ifndef RTLD_BOOTSTRAP
 	  if (sym_map != map
@@ -500,8 +498,8 @@ elf_machine_rela (struct link_map *map, const ElfW(Rela) *reloc,
 	    break;
 	  memcpy (reloc_addr_arg, (void *) value,
 		  MIN (sym->st_size, refsym->st_size));
-	  if (__builtin_expect (sym->st_size > refsym->st_size, 0)
-	      || (__builtin_expect (sym->st_size < refsym->st_size, 0)
+	  if (__glibc_unlikely (sym->st_size > refsym->st_size)
+	      || (__glibc_unlikely (sym->st_size < refsym->st_size)
 		  && GLRO(dl_verbose)))
 	    {
 	      fmt = "\
@@ -554,7 +552,8 @@ elf_machine_lazy_rel (struct link_map *map,
   /* Check for unexpected PLT reloc type.  */
   if (__glibc_likely (r_type == R_X86_64_JUMP_SLOT))
     {
-      if (__builtin_expect (map->l_mach.plt, 0) == 0)
+      /* Prelink has been deprecated.  */
+      if (__glibc_likely (map->l_mach.plt == 0))
 	*reloc_addr += l_addr;
       else
 	*reloc_addr =

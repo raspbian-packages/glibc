@@ -10,8 +10,6 @@ libBrokenLocale.so.1 #PACKAGE# #MINVER#
 #include "symbols.wildcards"
 libSegFault.so #PACKAGE# #MINVER#
 #include "symbols.wildcards"
-libcidn.so.1 #PACKAGE# #MINVER#
-#include "symbols.wildcards"
 libcrypt.so.1 #PACKAGE# #MINVER#
 #include "symbols.wildcards"
 libdl.so.2 #PACKAGE# #MINVER#
@@ -257,6 +255,11 @@ libhurduser.so.0.3 #PACKAGE# #MINVER#
  __msg_sig_post_untraced_request@Base 2.11
  __password_check_group@Base 2.11
  __password_check_user@Base 2.11
+ __pci_conf_read@Base 2.27-8+hurd.1
+ __pci_conf_write@Base 2.27-8+hurd.1
+ __pci_get_dev_regions@Base 2.27-8+hurd.1
+ __pci_get_dev_rom@Base 2.27-8+hurd.1
+ __pci_get_ndevs@Base 2.27-8+hurd.1
  __pfinet_siocgifconf@Base 2.11
  __proc_child@Base 2.11
  __proc_child_request@Base 2.11
@@ -629,6 +632,11 @@ libhurduser.so.0.3 #PACKAGE# #MINVER#
  msg_sig_post_untraced_request@Base 2.11
  password_check_group@Base 2.11
  password_check_user@Base 2.11
+ pci_conf_read@Base 2.27-8+hurd.1
+ pci_conf_write@Base 2.27-8+hurd.1
+ pci_get_dev_regions@Base 2.27-8+hurd.1
+ pci_get_dev_rom@Base 2.27-8+hurd.1
+ pci_get_ndevs@Base 2.27-8+hurd.1
  pfinet_siocgifconf@Base 2.11
  proc_child@Base 2.11
  proc_child_request@Base 2.11
@@ -959,6 +967,8 @@ libmachuser.so.1 #PACKAGE# #MINVER#
  __vm_inherit@Base 2.11
  __vm_machine_attribute@Base 2.11
  __vm_map_rpc@Base 2.11
+ __vm_msync@Base 2.27-9
+ __vm_object_sync@Base 2.27-9
  __vm_protect@Base 2.11
  __vm_read@Base 2.11
  __vm_region@Base 2.11
@@ -1116,6 +1126,8 @@ libmachuser.so.1 #PACKAGE# #MINVER#
  vm_inherit@Base 2.11
  vm_machine_attribute@Base 2.11
  vm_map_rpc@Base 2.11
+ vm_msync@Base 2.27-9
+ vm_object_sync@Base 2.27-9
  vm_protect@Base 2.11
  vm_read@Base 2.11
  vm_region@Base 2.11

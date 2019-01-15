@@ -37,6 +37,12 @@ __if_nametoindex (const char *ifname)
   if (fd < 0)
     return 0;
 
+  if (strlen (ifname) >= IFNAMSIZ)
+    {
+      __set_errno (ENODEV);
+      return 0;
+    }
+
   strncpy (ifr.ifr_name, ifname, IFNAMSIZ);
   if (__ioctl (fd, SIOCGIFINDEX, &ifr) < 0)
     {

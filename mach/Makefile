@@ -21,7 +21,7 @@ include ../Makeconfig
 
 headers = mach_init.h mach.h mach_error.h mach-shortcuts.h mach/mach_traps.h \
 	  $(interface-headers) mach/mach.h mach/mig_support.h mach/error.h \
-	  $(lock-headers) machine-sp.h
+	  $(lock-headers) machine-sp.h bits/mach/param.h
 lock = spin-solid spin-lock mutex-init mutex-solid
 lock-headers = lock-intern.h spin-lock.h
 routines = $(mach-syscalls) $(mach-shortcuts) \
@@ -97,7 +97,8 @@ else
 $(mach-syscalls:%=$(objpfx)%.S): $(objpfx)%.S: $(objpfx)mach-syscalls.mk
 	(echo '#include <sysdep.h>'; \
 	 echo 'kernel_trap (__$*,$(sysno-$*),$(nargs-$*))'; \
-	 echo 'weak_alias (__$*, $*)') > $@-new
+	 echo 'weak_alias (__$*, $*)'; \
+	 echo 'libc_hidden_def (__$*)') > $@-new
 	 mv -f $@-new $@
 generated += $(mach-syscalls:=.S)
 endif	# mach-syscalls
@@ -146,9 +147,12 @@ $(objpfx)mach-shortcuts.h: $(mach-interface-list:%=$(objpfx)mach/%.h) \
 # The first line gets us one paragraph per line, with @s separating real lines.
 # The second line selects paragraphs for the shortcutted functions.
 # The third line removes `_rpc' from the names and reconstitutes the lines.
-	cat $^ | tr \\012 @ | sed s/@@/@%/g | tr % \\012 \
-	| grep '^/\* Routine [a-z0-9_]*_rpc \*/' \
-	| sed 's/_rpc//g' | tr @ \\012 > $@-new
+	( echo "#include <mach/mach_types.h>" ; \
+	  echo "#include <mach/message.h>" ; \
+	  echo ; \
+	  cat $^ | tr \\012 @ | sed s/@@/@%/g | tr % \\012 \
+	  | grep '^/\* Routine [a-z0-9_]*_rpc \*/' \
+	  | sed 's/_rpc//g' | tr @ \\012 ) > $@-new
 	mv -f $@-new $@
 generated += mach-shortcuts.h
 

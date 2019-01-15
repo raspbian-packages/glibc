@@ -35,6 +35,7 @@ static struct cpu_list cpu_list[] = {
       {"thunderxt88",	 0x430F0A10},
       {"thunderx2t99",   0x431F0AF0},
       {"thunderx2t99p1", 0x420F5160},
+      {"phecda",	 0x680F0000},
       {"generic", 	 0x0}
 };
 
@@ -52,9 +53,6 @@ get_midr_from_mcpu (const char *mcpu)
 static inline void
 init_cpu_features (struct cpu_features *cpu_features)
 {
-  uint64_t hwcap_mask = GET_HWCAP_MASK();
-  uint64_t hwcap = GLRO (dl_hwcap) & hwcap_mask;
-
   register uint64_t midr = UINT64_MAX;
 
 #if HAVE_TUNABLES
@@ -68,7 +66,7 @@ init_cpu_features (struct cpu_features *cpu_features)
      allows it.  */
   if (midr == UINT64_MAX)
     {
-      if (hwcap & HWCAP_CPUID)
+      if (GLRO (dl_hwcap) & HWCAP_CPUID)
 	asm volatile ("mrs %0, midr_el1" : "=r"(midr));
       else
 	midr = 0;

@@ -181,6 +181,7 @@ exception2signal (struct hurd_signal_detail *detail, int *signo, int posix)
       break;
     }
 }
+libc_hidden_def (_hurd_exception2signal)
 
 void
 _hurd_exception2signal (struct hurd_signal_detail *detail, int *signo)

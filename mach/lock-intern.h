@@ -20,18 +20,18 @@
 
 #include <sys/cdefs.h>
 #if defined __USE_EXTERN_INLINES && defined _LIBC
-#include <lowlevellock.h>
+# include <lowlevellock.h>
 #endif
 
 #ifndef _EXTERN_INLINE
 #define _EXTERN_INLINE __extern_inline
 #endif
 
-/* The type of a spin lock variable. */
+/* The type of a spin lock variable.  */
 typedef unsigned int __spin_lock_t;
 
-/* Static initializer for spinlocks. */
-#define __SPIN_LOCK_INITIALIZER   0
+/* Static initializer for spinlocks.  */
+#define __SPIN_LOCK_INITIALIZER   LLL_INITIALIZER
 
 /* Initialize LOCK.  */
 
@@ -41,10 +41,13 @@ extern void __spin_lock_init (__spin_lock_t *__lock);
 _EXTERN_INLINE void
 __spin_lock_init (__spin_lock_t *__lock)
 {
-  *__lock = LLL_INITIALIZER;
+  *__lock = __SPIN_LOCK_INITIALIZER;
 }
 #endif
 
+
+/* Lock LOCK, blocking if we can't get it.  */
+extern void __spin_lock_solid (__spin_lock_t *__lock);
 
 /* Lock the spin lock LOCK.  */
 
@@ -58,8 +61,8 @@ __spin_lock (__spin_lock_t *__lock)
 }
 #endif
 
-/* Unlock LOCK. */
-void __spin_unlock (__spin_lock_t *__lock);
+/* Unlock LOCK.  */
+extern void __spin_unlock (__spin_lock_t *__lock);
 
 #if defined __USE_EXTERN_INLINES && defined _LIBC
 _EXTERN_INLINE void
@@ -69,8 +72,8 @@ __spin_unlock (__spin_lock_t *__lock)
 }
 #endif
 
-/* Try to lock LOCK; return nonzero if we locked it, zero if another has. */
-int __spin_try_lock (__spin_lock_t *__lock);
+/* Try to lock LOCK; return nonzero if we locked it, zero if another has.  */
+extern int __spin_try_lock (__spin_lock_t *__lock);
 
 #if defined __USE_EXTERN_INLINES && defined _LIBC
 _EXTERN_INLINE int
@@ -80,8 +83,8 @@ __spin_try_lock (__spin_lock_t *__lock)
 }
 #endif
 
-/* Return nonzero if LOCK is locked. */
-int __spin_lock_locked (__spin_lock_t *__lock);
+/* Return nonzero if LOCK is locked.  */
+extern int __spin_lock_locked (__spin_lock_t *__lock);
 
 #if defined __USE_EXTERN_INLINES && defined _LIBC
 _EXTERN_INLINE int
@@ -91,7 +94,7 @@ __spin_lock_locked (__spin_lock_t *__lock)
 }
 #endif
 
-/* Name space-clean internal interface to mutex locks. */
+/* Name space-clean internal interface to mutex locks.  */
 
 /* Initialize the newly allocated mutex lock LOCK for further use.  */
 extern void __mutex_init (void *__lock);

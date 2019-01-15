@@ -16,7 +16,9 @@
 #include <errno.h>
 #include <float.h>
 #include <math.h>
+#include <math-barriers.h>
 #include <math_private.h>
+#include <math-underflow.h>
 #include <libm-alias-float.h>
 
 static const float huge = 1.0e+30;

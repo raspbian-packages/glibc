@@ -40,3 +40,22 @@
 
 /* sparc only supports ipc syscall.  */
 #undef __ASSUME_DIRECT_SYSVIPC_SYSCALLS
+
+/* Support for the renameat2 syscall was added in 3.16.  */
+#if __LINUX_KERNEL_VERSION < 0x031000
+# undef __ASSUME_RENAMEAT2
+#endif
+
+/* SPARC kernel Kconfig does not define CONFIG_CLONE_BACKWARDS, however it
+   has the same ABI as if it did, implemented by sparc-specific code
+   (sparc_do_fork).
+
+   It also has a unique return value convention:
+
+     Parent -->  %o0 == child's  pid, %o1 == 0
+     Child  -->  %o0 == parent's pid, %o1 == 1
+
+   Which required a special macro to correct issue the syscall
+   (INLINE_CLONE_SYSCALL).  */
+#undef __ASSUME_CLONE_DEFAULT
+#define __ASSUME_CLONE_BACKWARDS	1

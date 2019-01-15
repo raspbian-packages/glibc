@@ -19,9 +19,6 @@
 #ifndef _MATH_TYPE_MACROS_FLOAT128
 #define _MATH_TYPE_MACROS_FLOAT128
 
-#include <math.h>
-#include <complex.h>
-
 #define M_LIT(c) __f128 (c)
 #define M_PFX FLT128
 #define M_SUF(c) c ## f128
@@ -33,6 +30,7 @@
 #define M_MLIT(c) c ## f128
 
 #include <libm-alias-float128.h>
+#include <math-nan-payload-float128.h>
 
 #ifndef declare_mgen_alias
 # define declare_mgen_alias(from, to) libm_alias_float128 (from, to)

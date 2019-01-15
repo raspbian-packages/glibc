@@ -35,7 +35,6 @@ extern void __mach_init (void);
 extern void __init_misc (int, char **, char **);
 extern void __libc_global_ctors (void);
 
-unsigned int __hurd_threadvar_max;
 unsigned long int __hurd_threadvar_stack_offset;
 unsigned long int __hurd_threadvar_stack_mask;
 
@@ -105,13 +104,13 @@ init1 (int argc, char *arg0, ...)
     ++envp;
   d = (void *) ++envp;
 
-  /* If we are the bootstrap task started by the kernel,
-     then after the environment pointers there is no Hurd
-     data block; the argument strings start there.  */
+  /* Initialize libpthread if linked in.  */
+  if (__pthread_initialize_minimal != NULL)
+    __pthread_initialize_minimal ();
+
   if ((void *) d == argv[0])
-    {
-      return;
-    }
+    /* No Hurd data block to process.  */
+    return;
 
 #ifndef SHARED
   __libc_enable_secure = d->flags & EXEC_SECURE;
@@ -165,7 +164,7 @@ init (int *data)
   /* If we are the bootstrap task started by the kernel,
      then after the environment pointers there is no Hurd
      data block; the argument strings start there.  */
-  if ((void *) d == argv[0] || !d->phdr)
+  if ((void *) d == argv[0] || d->phdr == 0)
     {
       /* With a new enough linker (binutils-2.23 or better),
          the magic __ehdr_start symbol will be available and
@@ -189,13 +188,9 @@ init (int *data)
       assert (d->phdrsz % sizeof (ElfW(Phdr)) == 0);
     }
 
-  /* We need to setup TLS before starting the signal thread and set stack guard.  */
+  /* We need to setup TLS before initializing libpthread.  */
   __libc_setup_tls ();
-  extern void __pthread_initialize_minimal (void);
-  if (__pthread_initialize_minimal != NULL)
-    __pthread_initialize_minimal ();
 #endif
-
 
   /* After possibly switching stacks, call `init1' (above) with the user
      code as the return address, and the argument data immediately above

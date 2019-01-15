@@ -40,8 +40,11 @@ __libc_siglongjmp (sigjmp_buf env, int val)
 }
 
 #ifndef __libc_siglongjmp
+# ifndef __libc_longjmp
+/* __libc_longjmp is a private interface for cancellation implementation
+   in libpthread.  */
 strong_alias (__libc_siglongjmp, __libc_longjmp)
-libc_hidden_def (__libc_longjmp)
+# endif
 weak_alias (__libc_siglongjmp, _longjmp)
 weak_alias (__libc_siglongjmp, longjmp)
 weak_alias (__libc_siglongjmp, siglongjmp)

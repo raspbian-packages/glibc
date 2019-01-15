@@ -31,6 +31,7 @@
 #include <assert.h>
 #include <sysdep.h>
 #include <mach/mig_support.h>
+#include <mach/machine/vm_param.h>
 #include "hurdstartup.h"
 #include <hurd/lookup.h>
 #include <hurd/auth.h>
@@ -45,6 +46,7 @@
 #include <dl-procinfo.h>
 
 #include <dl-tunables.h>
+#include <not-errno.h>
 
 extern void __mach_init (void);
 
@@ -64,7 +66,7 @@ rtld_hidden_data_def(__libc_stack_end)
 hp_timing_t _dl_cpuclock_offset;
 #endif
 
-/* TODO: this is never properly initialized in here.  */
+/* TODO: Initialize.  */
 void *_dl_random attribute_relro = NULL;
 
 struct hurd_startup_data *_dl_hurd_data;
@@ -289,12 +291,16 @@ _dl_sysdep_start_cleanup (void)
 /* Minimal open/close/mmap implementation sufficient for initial loading of
    shared libraries.  These are weak definitions so that when the
    dynamic linker re-relocates itself to be user-visible (for -ldl),
-   it will get the user's definition (i.e. usually libc's).  */
+   it will get the user's definition (i.e. usually libc's).
+
+   They also need to be set in the ld section of sysdeps/mach/hurd/Versions, to
+   be overridable, and in libc.abilist and ld.abilist to be checked. */
 
 /* This macro checks that the function does not get renamed to be hidden: we do
    need these to be overridable by libc's.  */
-#define check_no_hidden(name) \
-static void __check_##name##_no_hidden(void) __attribute__((alias(#name)));
+#define check_no_hidden(name)				\
+  static __typeof (name) __check_##name##_no_hidden	\
+       __attribute__ ((alias (#name)));
 
 /* Open FILE_NAME and return a Hurd I/O for it in *PORT, or return an
    error.  If STAT is non-zero, stat the file into that stat buffer.  */
@@ -352,6 +358,7 @@ open_file (const char *file_name, int flags,
 }
 
 check_no_hidden(__open);
+check_no_hidden (__open64);
 int weak_function
 __open (const char *file_name, int mode, ...)
 {
@@ -362,6 +369,7 @@ __open (const char *file_name, int mode, ...)
   else
     return (int)port;
 }
+weak_alias (__open, __open64)
 
 check_no_hidden(__close);
 int weak_function
@@ -372,9 +380,9 @@ __close (int fd)
   return 0;
 }
 
-check_no_hidden(__libc_read);
+check_no_hidden(__read);
 __ssize_t weak_function
-__libc_read (int fd, void *buf, size_t nbytes)
+__read (int fd, void *buf, size_t nbytes)
 {
   error_t err;
   char *data;
@@ -394,11 +402,11 @@ __libc_read (int fd, void *buf, size_t nbytes)
 
   return nread;
 }
-libc_hidden_weak (__libc_read)
+libc_hidden_weak (__read)
 
-check_no_hidden(__libc_write);
+check_no_hidden(__write);
 __ssize_t weak_function
-__libc_write (int fd, const void *buf, size_t nbytes)
+__write (int fd, const void *buf, size_t nbytes)
 {
   error_t err;
   mach_msg_type_number_t nwrote;
@@ -411,7 +419,7 @@ __libc_write (int fd, const void *buf, size_t nbytes)
 
   return nwrote;
 }
-libc_hidden_weak (__libc_write)
+libc_hidden_weak (__write)
 
 /* This is only used for printing messages (see dl-misc.c).  */
 check_no_hidden(__writev);

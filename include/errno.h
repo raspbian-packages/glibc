@@ -20,19 +20,17 @@
 #  define errno rtld_errno
 extern int rtld_errno attribute_hidden;
 
-# elif IS_IN_LIB
+# elif IS_IN_LIB && !IS_IN (rtld)
 
 #  include <tls.h>
 
-#  if !(defined(__GNU__) && IS_IN (rtld))
-#   undef  errno
-#   if IS_IN (libc)
-#    define errno __libc_errno
-#   else
-#    define errno errno		/* For #ifndef errno tests.  */
-#   endif
-extern __thread int errno attribute_tls_model_ie;
+#  undef  errno
+#  if IS_IN (libc)
+#   define errno __libc_errno
+#  else
+#   define errno errno		/* For #ifndef errno tests.  */
 #  endif
+extern __thread int errno attribute_tls_model_ie;
 
 # endif	/* IS_IN_LIB */
 

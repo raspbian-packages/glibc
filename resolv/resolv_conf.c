@@ -23,6 +23,7 @@
 #include <libc-lock.h>
 #include <resolv-internal.h>
 #include <sys/stat.h>
+#include <libc-symbols.h>
 
 /* _res._u._ext.__glibc_extension_index is used as an index into a
    struct resolv_conf_array object.  The intent of this construction
@@ -673,8 +674,7 @@ __resolv_conf_detach (struct __res_state *resp)
 }
 
 /* Deallocate the global data.  */
-static void __attribute__ ((section ("__libc_thread_freeres_fn")))
-freeres (void)
+libc_freeres_fn (freeres)
 {
   /* No locking because this function is supposed to be called when
      the process has turned single-threaded.  */
@@ -698,4 +698,3 @@ freeres (void)
      deallocated memory.  */
   global = NULL;
 }
-text_set_element (__libc_subfreeres, freeres);

@@ -25,8 +25,8 @@ include ../Makeconfig
 headers	:= stdlib.h bits/stdlib.h bits/stdlib-ldbl.h bits/stdlib-float.h      \
 	   monetary.h bits/monetary-ldbl.h				      \
 	   inttypes.h stdint.h bits/wordsize.h				      \
-	   errno.h sys/errno.h bits/errno.h				      \
-	   ucontext.h sys/ucontext.h					      \
+	   errno.h sys/errno.h bits/errno.h bits/types/error_t.h	      \
+	   ucontext.h sys/ucontext.h bits/indirect-return.h		      \
 	   alloca.h fmtmsg.h						      \
 	   bits/stdlib-bsearch.h sys/random.h bits/stdint-intn.h	      \
 	   bits/stdint-uintn.h
@@ -84,7 +84,10 @@ tests		:= tst-strtol tst-strtod testmb testrand testsort testdiv   \
 		   tst-cxa_atexit tst-on_exit test-atexit-race 		    \
 		   test-at_quick_exit-race test-cxa_atexit-race             \
 		   test-on_exit-race test-dlclose-exit-race 		    \
-		   tst-makecontext-align test-bz22786
+		   tst-makecontext-align test-bz22786 tst-strtod-nan-sign \
+		   tst-swapcontext1 tst-setcontext4 tst-setcontext5 \
+		   tst-setcontext6 tst-setcontext7 tst-setcontext8 \
+		   tst-setcontext9
 
 tests-internal	:= tst-strtod1i tst-strtod3 tst-strtod4 tst-strtod5i \
 		   tst-tls-atexit tst-tls-atexit-nodelete
@@ -174,9 +177,11 @@ include ../gen-locales.mk
 $(objpfx)bug-strtod2.out: $(gen-locales)
 $(objpfx)testmb2.out: $(gen-locales)
 $(objpfx)tst-strtod.out: $(gen-locales)
+$(objpfx)tst-strtod1i.out: $(gen-locales)
 $(objpfx)tst-strtod3.out: $(gen-locales)
 $(objpfx)tst-strtod4.out: $(gen-locales)
 $(objpfx)tst-strtod5.out: $(gen-locales)
+$(objpfx)tst-strtod5i.out: $(gen-locales)
 $(objpfx)tst-strtol-locale.out: $(gen-locales)
 $(objpfx)tst-strtod-nan-locale.out: $(gen-locales)
 $(objpfx)tst-strfmon_l.out: $(gen-locales)
@@ -219,6 +224,7 @@ $(objpfx)tst-tininess: $(libm)
 $(objpfx)tst-strtod-underflow: $(libm)
 $(objpfx)tst-strtod6: $(libm)
 $(objpfx)tst-strtod-nan-locale: $(libm)
+$(objpfx)tst-strtod-nan-sign: $(libm)
 
 tst-tls-atexit-lib.so-no-z-defs = yes
 test-dlclose-exit-race-helper.so-no-z-defs = yes

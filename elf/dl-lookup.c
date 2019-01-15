@@ -76,6 +76,7 @@ check_match (const char *const undef_name,
   unsigned int stt = ELFW(ST_TYPE) (sym->st_info);
   assert (ELF_RTYPE_CLASS_PLT == 1);
   if (__glibc_unlikely ((sym->st_value == 0 /* No value.  */
+			 && sym->st_shndx != SHN_ABS
 			 && stt != STT_TLS)
 			|| ELF_MACHINE_SYM_NO_MATCH (sym)
 			|| (type_class & (sym->st_shndx == SHN_UNDEF))))
@@ -936,14 +937,10 @@ _dl_setup_hash (struct link_map *map)
 {
   Elf_Symndx *hash;
 
-  if (__glibc_likely (map->l_info[DT_ADDRTAGIDX (DT_GNU_HASH) + DT_NUM
-				    + DT_THISPROCNUM + DT_VERSIONTAGNUM
-				    + DT_EXTRANUM + DT_VALNUM] != NULL))
+  if (__glibc_likely (map->l_info[ADDRIDX (DT_GNU_HASH)] != NULL))
     {
       Elf32_Word *hash32
-	= (void *) D_PTR (map, l_info[DT_ADDRTAGIDX (DT_GNU_HASH) + DT_NUM
-				      + DT_THISPROCNUM + DT_VERSIONTAGNUM
-				      + DT_EXTRANUM + DT_VALNUM]);
+	= (void *) D_PTR (map, l_info[ADDRIDX (DT_GNU_HASH)]);
       map->l_nbuckets = *hash32++;
       Elf32_Word symbias = *hash32++;
       Elf32_Word bitmask_nwords = *hash32++;

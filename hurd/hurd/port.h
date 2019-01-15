@@ -24,7 +24,6 @@
 #include <mach.h>
 #include <hurd/userlink.h>
 #include <spin-lock.h>
-#include <hurd/signal.h>
 
 
 /* Structure describing a cell containing a port.  With the lock held, a
@@ -123,6 +122,31 @@ _hurd_port_get (struct hurd_port *port,
   result = _hurd_port_locked_get (port, link);
   HURD_CRITICAL_END;
   return result;
+}
+# endif
+#endif
+
+
+/* Relocate LINK to NEW_LINK.
+   To be used when e.g. reallocating a link array.  */
+
+extern void
+_hurd_port_move (struct hurd_port *port,
+		 struct hurd_userlink *new_link,
+		 struct hurd_userlink *link);
+
+#if defined __USE_EXTERN_INLINES && defined _LIBC
+# if IS_IN (libc)
+_HURD_PORT_H_EXTERN_INLINE void
+_hurd_port_move (struct hurd_port *port,
+		 struct hurd_userlink *new_link,
+		 struct hurd_userlink *link)
+{
+  HURD_CRITICAL_BEGIN;
+  __spin_lock (&port->lock);
+  _hurd_userlink_move (new_link, link);
+  __spin_unlock (&port->lock);
+  HURD_CRITICAL_END;
 }
 # endif
 #endif

@@ -508,7 +508,7 @@ __fork (void)
       MACHINE_THREAD_STATE_SET_PC (&state,
 				   (unsigned long int) _hurd_msgport_receive);
 
-      /* Do special thread setup for TLS if needed.  */
+      /* Do special signal thread setup for TLS if needed.  */
       if (err = _hurd_tls_fork (sigthread, _hurd_msgport_thread, &state))
 	LOSE;
 

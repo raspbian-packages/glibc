@@ -107,9 +107,6 @@ __BEGIN_DECLS
 /* The X/Open Unix extensions are available.  */
 #define _XOPEN_UNIX	1
 
-/* Encryption is present.  */
-#define	_XOPEN_CRYPT	1
-
 /* The enhanced internationalization capabilities according to XPG4.2
    are present.  */
 #define	_XOPEN_ENH_I18N	1
@@ -1118,20 +1115,17 @@ ssize_t copy_file_range (int __infd, __off64_t *__pinoff,
 extern int fdatasync (int __fildes);
 #endif /* Use POSIX199309 */
 
-
-/* XPG4.2 specifies that prototypes for the encryption functions must
-   be defined here.  */
-#ifdef	__USE_XOPEN
-/* Encrypt at most 8 characters from KEY using salt to perturb DES.  */
+#ifdef __USE_MISC
+/* One-way hash PHRASE, returning a string suitable for storage in the
+   user database.  SALT selects the one-way function to use, and
+   ensures that no two users' hashes are the same, even if they use
+   the same passphrase.  The return value points to static storage
+   which will be overwritten by the next call to crypt.  */
 extern char *crypt (const char *__key, const char *__salt)
      __THROW __nonnull ((1, 2));
+#endif
 
-/* Encrypt data in BLOCK in place if EDFLAG is zero; otherwise decrypt
-   block in place.  */
-extern void encrypt (char *__glibc_block, int __edflag)
-     __THROW __nonnull ((1));
-
-
+#ifdef	__USE_XOPEN
 /* Swab pairs bytes in the first N bytes of the area pointed to by
    FROM and copy the result to TO.  The value of TO must not be in the
    range [FROM - N + 1, FROM - 1].  If N is odd the first byte in FROM

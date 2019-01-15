@@ -49,7 +49,8 @@ pthread_cancel_init (void)
       return;
     }
 
-  handle = __libc_dlopen_mode (LIBGCC_S_SO, RTLD_NOW | __RTLD_DLOPEN);
+  /* See include/dlfcn.h. Use of __libc_dlopen requires RTLD_NOW.  */
+  handle = __libc_dlopen (LIBGCC_S_SO);
 
   if (handle == NULL
       || (resume = __libc_dlsym (handle, "_Unwind_Resume")) == NULL
@@ -78,9 +79,9 @@ pthread_cancel_init (void)
   libgcc_s_handle = handle;
 }
 
+/* Register for cleanup in libpthread.so.  */
 void
-__libc_freeres_fn_section
-__unwind_freeres (void)
+__nptl_unwind_freeres (void)
 {
   void *handle = libgcc_s_handle;
   if (handle != NULL)

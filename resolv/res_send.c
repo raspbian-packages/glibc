@@ -481,10 +481,7 @@ __res_context_send (struct resolv_context *ctx,
 					sizeof (struct sockaddr_in6)
 					- sizeof (struct sockaddr_in));
 			else
-			  {
-			    __set_errno (ENOMEM);
-			    return -1;
-			  }
+				return -1;
 		}
 		EXT(statp).nscount = statp->nscount;
 	}

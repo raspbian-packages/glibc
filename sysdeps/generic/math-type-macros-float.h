@@ -31,6 +31,7 @@
 #define M_MLIT(c) c
 
 #include <libm-alias-float.h>
+#include <math-nan-payload-float.h>
 
 #ifndef declare_mgen_alias
 # define declare_mgen_alias(from, to) libm_alias_float (from, to)
@@ -45,7 +46,7 @@
 
 /* Do not use the type-generic wrapper templates if compatibility with
    SVID error handling is needed.  */
-#include <math-svid-compat.h>
+#include <math/math-svid-compat.h>
 #define __USE_WRAPPER_TEMPLATE !LIBM_SVID_COMPAT
 
 #endif

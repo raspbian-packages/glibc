@@ -16,14 +16,13 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#include "tst-vtables-common.c"
+
 /* Provide an interposed definition of the standard file handles with
    our own vtable.  stdout/stdin/stderr will not work as a result, but
    a succesful test does not print anything, so this is fine.  */
-static const struct _IO_jump_t jumps;
 #define _IO_file_jumps jumps
 #include "stdfiles.c"
-
-#include "tst-vtables-common.c"
 
 static int
 do_test (void)

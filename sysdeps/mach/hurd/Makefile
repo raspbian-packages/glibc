@@ -170,10 +170,6 @@ $(objpfx)librtld.map: $(rpcuserlibs:.so=_pic.a)
 CFLAGS-dl-load.c = -DEXTERNAL_MAP_FROM_FD
 endif
 
-ifeq ($(subdir),posix)
-CFLAGS-confstr.c += -DLIBPTHREAD_VERSION='"libpthread 0.3"'
-endif
-
 # Override the generic Makeconfig values so we link against the RPC libs.
 link-libc-static := -Wl,--start-group \
 		    $(patsubst %,$(common-objpfx)%.a,\
@@ -198,13 +194,16 @@ ifeq (hurd, $(subdir))
 sysdep_routines += cthreads
 endif
 
+ifeq (io, $(subdir))
+sysdep_routines += f_setlk
+endif
+
 ifeq ($(subdir),sunrpc)
 sysdep_headers += nfs/nfs.h
 endif
 
 ifeq ($(subdir),socket)
-sysdep_headers += net/ethernet.h net/if_arp.h net/if_ether.h net/if_ppp.h \
-		  net/route.h
+sysdep_headers += net/ethernet.h net/if_arp.h net/if_ether.h net/route.h
 endif
 
 ifeq ($(subdir),nis)

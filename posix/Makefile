@@ -31,7 +31,7 @@ headers	:= sys/utsname.h sys/times.h sys/wait.h sys/types.h unistd.h	      \
 	   bits/local_lim.h tar.h bits/utsname.h bits/confname.h	      \
 	   bits/waitflags.h bits/waitstatus.h sys/unistd.h sched.h	      \
 	   bits/sched.h bits/cpu-set.h re_comp.h wait.h bits/environments.h   \
-	   cpio.h spawn.h bits/unistd.h
+	   cpio.h spawn.h bits/unistd.h bits/types/struct_sched_param.h
 
 routines :=								      \
 	uname								      \
@@ -95,7 +95,8 @@ tests		:= test-errno tstgetopt testfnm runtests runptests \
 		   tst-posix_spawn-fd tst-posix_spawn-setsid \
 		   tst-posix_fadvise tst-posix_fadvise64 \
 		   tst-sysconf-empty-chroot tst-glob_symlinks tst-fexecve \
-		   tst-glob-tilde tst-spawn4
+		   tst-glob-tilde test-ssize-max tst-spawn4 bug-regex37 \
+		   bug-regex38 tst-regcomp-truncated
 tests-internal	:= bug-regex5 bug-regex20 bug-regex33 \
 		   tst-rfc3484 tst-rfc3484-2 tst-rfc3484-3 \
 		   tst-glob_lstat_compat tst-spawn4-compat
@@ -193,6 +194,7 @@ $(objpfx)tst-regex2.out: $(gen-locales)
 $(objpfx)tst-regexloc.out: $(gen-locales)
 $(objpfx)tst-rxspencer.out: $(gen-locales)
 $(objpfx)tst-rxspencer-no-utf8.out: $(gen-locales)
+$(objpfx)tst-regcomp-truncated.out: $(gen-locales)
 endif
 
 # If we will use the generic uname implementation, we must figure out what
@@ -256,6 +258,7 @@ tst-pcre-ARGS = PCRE.tests
 tst-boost-ARGS = BOOST.tests
 bug-glob1-ARGS = "$(objpfx)"
 tst-execvp3-ARGS = --test-dir=$(objpfx)
+CFLAGS-tst-spawn3.c += -DOBJPFX=\"$(objpfx)\"
 
 testcases.h: TESTS TESTS2C.sed
 	LC_ALL=C sed -f TESTS2C.sed < $< > $@T

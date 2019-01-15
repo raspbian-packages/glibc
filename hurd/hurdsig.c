@@ -20,9 +20,10 @@
 #include <string.h>
 
 #include <cthreads.h>		/* For `struct mutex'.  */
-#include <pthread.h>
+#include <pthreadP.h>
 #include <mach.h>
 #include <mach/thread_switch.h>
+#include <mach/mig_support.h>
 
 #include <hurd.h>
 #include <hurd/id.h>
@@ -31,6 +32,8 @@
 #include "hurdfault.h"
 #include "hurdmalloc.h"		/* XXX */
 #include "../locale/localeinfo.h"
+
+#include <libc-diag.h>
 
 #include <shlib-compat.h>
 
@@ -132,6 +135,7 @@ _hurd_thread_sigstate (thread_t thread)
   __mutex_unlock (&_hurd_siglock);
   return ss;
 }
+libc_hidden_def (_hurd_thread_sigstate)
 
 /* Destroy a sigstate structure.  Called by libpthread just before the
  * corresponding thread is terminated.  */
@@ -167,6 +171,7 @@ __hurd_sigstate_delete_2_13 (thread_t thread)
 }
 compat_symbol (libc, __hurd_sigstate_delete_2_13, _hurd_sigstate_delete, GLIBC_2_13_DEBIAN_19);
 #endif
+libc_hidden_ver (__hurd_sigstate_delete, _hurd_sigstate_delete)
 
 /* Make SS a global receiver, with pthread signal semantics.  */
 void
@@ -184,6 +189,7 @@ __hurd_sigstate_set_global_rcv_2_13 (struct hurd_sigstate *ss)
 }
 compat_symbol (libc, __hurd_sigstate_set_global_rcv_2_13, _hurd_sigstate_set_global_rcv, GLIBC_2_13_DEBIAN_19);
 #endif
+libc_hidden_ver (__hurd_sigstate_set_global_rcv, _hurd_sigstate_set_global_rcv)
 
 /* Check whether SS is a global receiver.  */
 static int
@@ -210,7 +216,9 @@ __hurd_sigstate_unlock (struct hurd_sigstate *ss)
     __spin_unlock (&_hurd_global_sigstate->lock);
 }
 versioned_symbol (libc, __hurd_sigstate_lock, _hurd_sigstate_lock, GLIBC_2_21);
+libc_hidden_ver (__hurd_sigstate_lock, _hurd_sigstate_lock)
 versioned_symbol (libc, __hurd_sigstate_unlock, _hurd_sigstate_unlock, GLIBC_2_21);
+libc_hidden_ver (__hurd_sigstate_unlock, _hurd_sigstate_unlock)
 
 #if SHLIB_COMPAT (libc, GLIBC_2_13, GLIBC_2_21)
 void
@@ -246,6 +254,7 @@ __hurd_sigstate_pending_2_13 (const struct hurd_sigstate *ss)
 }
 compat_symbol (libc, __hurd_sigstate_pending_2_13, _hurd_sigstate_pending, GLIBC_2_13_DEBIAN_19);
 #endif
+libc_hidden_ver (__hurd_sigstate_pending, _hurd_sigstate_pending)
 
 /* Clear a pending signal and return the associated detailed
    signal information. SS must be locked, and must have signal SIGNO
@@ -401,8 +410,14 @@ interrupted_reply_port_location (thread_t thread,
     /* Faulted trying to read the TCB.  */
     return NULL;
 
+  DIAG_PUSH_NEEDS_COMMENT;
+  /* GCC 6 and before seem to be confused by the setjmp call inside
+     _hurdsig_catch_memory_fault and think that we may be returning a second
+     time to here with portloc uninitialized (but we never do). */
+  DIAG_IGNORE_NEEDS_COMMENT (6, "-Wmaybe-uninitialized");
   /* Fault now if this pointer is bogus.  */
   *(volatile mach_port_t *) portloc = *portloc;
+  DIAG_POP_NEEDS_COMMENT;
 
   if (sigthread)
     _hurdsig_end_catch_fault ();
@@ -1515,9 +1530,6 @@ _hurdsig_init (const int *intarray, size_t intarraysize)
   /* Start the signal thread listening on the message port.  */
 
 #pragma weak __cthread_fork
-#pragma weak __cthread_detach
-#pragma weak __pthread_getattr_np
-#pragma weak __pthread_attr_getstack
   if (!__cthread_fork)
     {
       err = __thread_create (__mach_task_self (), &_hurd_msgport_thread);
@@ -1543,7 +1555,6 @@ _hurdsig_init (const int *intarray, size_t intarraysize)
     }
   else
     {
-      __cthread_t thread;
       /* When cthreads is being used, we need to make the signal thread a
          proper cthread.  Otherwise it cannot use mutex_lock et al, which
          will be the cthreads versions.  Various of the message port RPC
@@ -1553,11 +1564,16 @@ _hurdsig_init (const int *intarray, size_t intarraysize)
          we'll let the signal thread's per-thread variables be found as for
          any normal cthread, and just leave the magic __hurd_sigthread_*
          values all zero so they'll be ignored.  */
-      __cthread_detach (thread = __cthread_fork ((__cthread_fn_t) &_hurd_msgport_receive, 0));
+#pragma weak __cthread_detach
+#pragma weak __pthread_getattr_np
+#pragma weak __pthread_attr_getstack
+      __cthread_t thread = __cthread_fork (
+			     (cthread_fn_t) &_hurd_msgport_receive, 0);
+      __cthread_detach (thread);
 
       if (__pthread_getattr_np)
 	{
-	  /* Record stack layout for fork() */
+	  /* Record signal thread stack layout for fork() */
 	  pthread_attr_t attr;
 	  void *addr;
 	  size_t size;

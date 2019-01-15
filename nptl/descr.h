@@ -145,9 +145,6 @@ struct pthread
 	 looks to cancel itself and is hence going to end anyway.  */
       int multiple_threads;
       int gscope_flag;
-# ifndef __ASSUME_PRIVATE_FUTEX
-      int private_futex;
-# endif
     } header;
 #endif
 
@@ -394,6 +391,9 @@ struct pthread
 
   /* Resolver state.  */
   struct __res_state res;
+
+  /* Indicates whether is a C11 thread created by thrd_creat.  */
+  bool c11;
 
   /* This member must be last.  */
   char end_padding[];

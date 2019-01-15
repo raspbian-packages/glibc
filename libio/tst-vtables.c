@@ -16,8 +16,6 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-#include "libioP.h"
-
 #include "tst-vtables-common.c"
 
 static int

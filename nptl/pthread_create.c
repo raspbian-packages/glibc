@@ -32,6 +32,7 @@
 #include <exit-thread.h>
 #include <default-sched.h>
 #include <futex-internal.h>
+#include <tls-setup.h>
 #include "libioP.h"
 
 #include <shlib-compat.h>
@@ -427,12 +428,23 @@ START_THREAD_DEFN
      compilers without that support we do use setjmp.  */
   struct pthread_unwind_buf unwind_buf;
 
-  /* No previous handlers.  */
+  int not_first_call;
+  not_first_call = setjmp ((struct __jmp_buf_tag *) unwind_buf.cancel_jmp_buf);
+
+  /* No previous handlers.  NB: This must be done after setjmp since the
+     private space in the unwind jump buffer may overlap space used by
+     setjmp to store extra architecture-specific information which is
+     never used by the cancellation-specific __libc_unwind_longjmp.
+
+     The private space is allowed to overlap because the unwinder never
+     has to return through any of the jumped-to call frames, and thus
+     only a minimum amount of saved data need be stored, and for example,
+     need not include the process signal mask information. This is all
+     an optimization to reduce stack usage when pushing cancellation
+     handlers.  */
   unwind_buf.priv.data.prev = NULL;
   unwind_buf.priv.data.cleanup = NULL;
 
-  int not_first_call;
-  not_first_call = setjmp ((struct __jmp_buf_tag *) unwind_buf.cancel_jmp_buf);
   if (__glibc_likely (! not_first_call))
     {
       /* Store the new cleanup handler info.  */
@@ -460,7 +472,19 @@ START_THREAD_DEFN
       LIBC_PROBE (pthread_start, 3, (pthread_t) pd, pd->start_routine, pd->arg);
 
       /* Run the code the user provided.  */
-      THREAD_SETMEM (pd, result, pd->start_routine (pd->arg));
+      void *ret;
+      if (pd->c11)
+	{
+	  /* The function pointer of the c11 thread start is cast to an incorrect
+	     type on __pthread_create_2_1 call, however it is casted back to correct
+	     one so the call behavior is well-defined (it is assumed that pointers
+	     to void are able to represent all values of int.  */
+	  int (*start)(void*) = (int (*) (void*)) pd->start_routine;
+	  ret = (void*) (uintptr_t) start (pd->arg);
+	}
+      else
+	ret = pd->start_routine (pd->arg);
+      THREAD_SETMEM (pd, result, ret);
     }
 
   /* Call destructors for the thread_local TLS variables.  */
@@ -613,7 +637,8 @@ __pthread_create_2_1 (pthread_t *newthread, const pthread_attr_t *attr,
   const struct pthread_attr *iattr = (struct pthread_attr *) attr;
   struct pthread_attr default_attr;
   bool free_cpuset = false;
-  if (iattr == NULL)
+  bool c11 = (attr == ATTR_C11_THREAD);
+  if (iattr == NULL || c11)
     {
       lll_lock (__default_pthread_attr_lock, LLL_PRIVATE);
       default_attr = __default_pthread_attr;
@@ -671,6 +696,7 @@ __pthread_create_2_1 (pthread_t *newthread, const pthread_attr_t *attr,
      get the information from its thread descriptor.  */
   pd->start_routine = start_routine;
   pd->arg = arg;
+  pd->c11 = c11;
 
   /* Copy the thread attribute flags.  */
   struct pthread *self = THREAD_SELF;
@@ -700,6 +726,9 @@ __pthread_create_2_1 (pthread_t *newthread, const pthread_attr_t *attr,
 #ifdef THREAD_COPY_POINTER_GUARD
   THREAD_COPY_POINTER_GUARD (pd);
 #endif
+
+  /* Setup tcbhead.  */
+  tls_setup_tcbhead (pd);
 
   /* Verify the sysinfo bits were copied in allocate_stack if needed.  */
 #ifdef NEED_DL_SYSINFO

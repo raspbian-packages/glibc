@@ -67,14 +67,21 @@ __BEGIN_DECLS
 /* Result of the lookup functions and how to retrieve the base address.  */
 typedef struct link_map *lookup_t;
 #define LOOKUP_VALUE(map) map
-#define LOOKUP_VALUE_ADDRESS(map) ((map) ? (map)->l_addr : 0)
+#define LOOKUP_VALUE_ADDRESS(map, set) ((set) || (map) ? (map)->l_addr : 0)
+
+/* Calculate the address of symbol REF using the base address from map MAP,
+   if non-NULL.  Don't check for NULL map if MAP_SET is TRUE.  */
+#define SYMBOL_ADDRESS(map, ref, map_set)				\
+  ((ref) == NULL ? 0							\
+   : (__glibc_unlikely ((ref)->st_shndx == SHN_ABS) ? 0			\
+      : LOOKUP_VALUE_ADDRESS (map, map_set)) + (ref)->st_value)
 
 /* On some architectures a pointer to a function is not just a pointer
    to the actual code of the function but rather an architecture
    specific descriptor. */
 #ifndef ELF_FUNCTION_PTR_IS_SPECIAL
 # define DL_SYMBOL_ADDRESS(map, ref) \
- (void *) (LOOKUP_VALUE_ADDRESS (map) + ref->st_value)
+ (void *) SYMBOL_ADDRESS (map, ref, false)
 # define DL_LOOKUP_ADDRESS(addr) ((ElfW(Addr)) (addr))
 # define DL_CALL_DT_INIT(map, start, argc, argv, env) \
  ((init_t) (start)) (argc, argv, env)
@@ -436,6 +443,9 @@ struct rtld_global
     size_t count;
     void *list[50];
   } *_dl_scope_free_list;
+#if !THREAD_GSCOPE_IN_TCB
+  EXTERN int _dl_thread_gscope_count;
+#endif
 #ifdef SHARED
 };
 # define __rtld_global_attribute__
@@ -597,7 +607,6 @@ struct rtld_global_ro
 				   const ElfW(Sym) **, struct r_scope_elem *[],
 				   const struct r_found_version *, int, int,
 				   struct link_map *);
-  int (*_dl_check_caller) (const void *, enum allowmask);
   void *(*_dl_open) (const char *file, int mode, const void *caller_dlopen,
 		     Lmid_t nsid, int argc, char *argv[], char *env[]);
   void (*_dl_close) (void *map);
@@ -1066,11 +1075,11 @@ extern struct link_map * _dl_get_dl_main_map (void)
 # else
 #  define _dl_relocate_static_pie()
 # endif
+#endif
 
 /* Initialization of libpthread for statically linked applications.
    If libpthread is not linked in, this is an empty function.  */
 void __pthread_initialize_minimal (void) weak_function;
-#endif
 
 /* Allocate memory for static TLS block (unless MEM is nonzero) and dtv.  */
 extern void *_dl_allocate_tls (void *mem);
@@ -1102,10 +1111,6 @@ extern size_t _dl_dst_count (const char *name) attribute_hidden;
 /* Substitute DST values.  */
 extern char *_dl_dst_substitute (struct link_map *l, const char *name,
 				 char *result) attribute_hidden;
-
-/* Check validity of the caller.  */
-extern int _dl_check_caller (const void *caller, enum allowmask mask)
-     attribute_hidden;
 
 /* Open the shared object NAME, relocate it, and run its initializer if it
    hasn't already been run.  MODE is as for `dlopen' (see <dlfcn.h>).  If

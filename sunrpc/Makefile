@@ -51,7 +51,7 @@ rpcsvc = bootparam_prot.x nlm_prot.x rstat.x \
 headers-sunrpc = $(addprefix rpc/,auth.h auth_unix.h clnt.h pmap_clnt.h \
 				  pmap_prot.h pmap_rmt.h rpc.h rpc_msg.h \
 				  svc.h svc_auth.h types.h xdr.h auth_des.h \
-				  des_crypt.h key_prot.h rpc_des.h) \
+				  key_prot.h) \
 		       $(rpcsvc:%=rpcsvc/%) rpcsvc/bootparam.h
 headers = rpc/netdb.h
 install-others = $(inst_sysconfdir)/rpc
@@ -155,10 +155,6 @@ CFLAGS-key_call.c += -fexceptions
 CFLAGS-pmap_rmt.c += -fexceptions
 CFLAGS-clnt_perr.c += -fexceptions
 CFLAGS-openchild.c += -fexceptions
-
-sunrpc-CPPFLAGS = -D_RPC_THREAD_SAFE_
-CPPFLAGS += $(sunrpc-CPPFLAGS)
-BUILD_CPPFLAGS += $(sunrpc-CPPFLAGS)
 
 $(objpfx)tst-getmyaddr: $(common-objpfx)linkobj/libc.so
 $(objpfx)tst-xdrmem: $(common-objpfx)linkobj/libc.so

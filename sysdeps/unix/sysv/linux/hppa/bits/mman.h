@@ -34,7 +34,9 @@
 #define MAP_SHARED	0x01		/* Share changes */
 #define MAP_PRIVATE	0x02		/* Changes are private */
 #ifdef __USE_MISC
-# define MAP_TYPE	0x03		/* Mask for type of mapping */
+# define MAP_SHARED_VALIDATE	0x03	/* Share changes and validate
+					   extension flags.  */
+# define MAP_TYPE	0x2b		/* Mask for type of mapping */
 #endif
 
 /* Other flags.  */
@@ -60,6 +62,8 @@
 # define MAP_NONBLOCK	0x20000		/* Do not block on IO */
 # define MAP_STACK	0x40000		/* Create for process/thread stacks */
 # define MAP_HUGETLB	0x80000		/* Create a huge page mapping */
+# define MAP_FIXED_NOREPLACE 0x100000	/* MAP_FIXED but do not unmap
+					   underlying mapping.  */
 #endif
 
 /* Flags to "msync"  */

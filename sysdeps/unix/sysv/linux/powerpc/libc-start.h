@@ -23,6 +23,7 @@
 /* IREL{,A} must happen after TCB initialization in order to allow IFUNC
    resolvers to read TCB fields, e.g. hwcap and at_platform.  */
 #define ARCH_SETUP_IREL()
+#define ARCH_SETUP_TLS() __libc_setup_tls ()
 #define ARCH_APPLY_IREL() apply_irel ()
 #endif /* ! SHARED  */
 

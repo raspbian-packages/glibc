@@ -36,9 +36,18 @@ normal setting to install as the standard system library is
 '--prefix=/usr' for GNU/Linux systems and '--prefix=' (an empty prefix)
 for GNU/Hurd systems.
 
-   It may also be useful to set the CC and CFLAGS variables in the
-environment when running 'configure'.  CC selects the C compiler that
-will be used, and CFLAGS sets optimization options for the compiler.
+   It may also be useful to pass 'CC=COMPILER' and 'CFLAGS=FLAGS'
+arguments to 'configure'.  'CC' selects the C compiler that will be
+used, and 'CFLAGS' sets optimization options for the compiler.  Any
+compiler options required for all compilations, such as options
+selecting an ABI or a processor for which to generate code, should be
+included in 'CC'.  Options that may be overridden by the GNU C Library
+build system for particular files, such as for optimization and
+debugging, should go in 'CFLAGS'.  The default value of 'CFLAGS' is '-g
+-O2', and the GNU C Library cannot be compiled without optimization, so
+if 'CFLAGS' is specified it must enable optimization.  For example:
+
+     $ ../glibc-VERSION/configure CC="gcc -m32" CFLAGS="-O3"
 
    The following list describes all of the available options for
 'configure':
@@ -96,6 +105,22 @@ will be used, and CFLAGS sets optimization options for the compiler.
      above, to create static PIE. This option also implies that glibc
      programs and tests are created as dynamic position independent
      executables (PIE) by default.
+
+'--enable-cet'
+     Enable Intel Control-flow Enforcement Technology (CET) support.
+     When the GNU C Library is built with '--enable-cet', the resulting
+     library is protected with indirect branch tracking (IBT) and shadow
+     stack (SHSTK).  When CET is enabled, the GNU C Library is
+     compatible with all existing executables and shared libraries.
+     This feature is currently supported on i386, x86_64 and x32 with
+     GCC 8 and binutils 2.29 or later.  Note that when CET is enabled,
+     the GNU C Library requires CPUs capable of multi-byte NOPs, like
+     x86-64 processors as well as Intel Pentium Pro or newer.
+
+     NOTE: '--enable-cet' has been tested for i686, x86_64 and x32 on
+     non-CET processors.  '--enable-cet' has been tested for x86_64 and
+     x32 on CET SDVs, but Intel CET support hasn't been validated for
+     i686.
 
 '--disable-profile'
      Don't build libraries with profiling information.  You may want to
@@ -188,6 +213,17 @@ will be used, and CFLAGS sets optimization options for the compiler.
      libnss_nisplus are not built at all.  Use this option to enable
      libnsl with all depending NSS modules and header files.
 
+'--disable-crypt'
+     Do not install the passphrase-hashing library 'libcrypt' or the
+     header file 'crypt.h'.  'unistd.h' will still declare the function
+     'crypt'.  Using this option does not change the set of programs
+     that may need to be linked with '-lcrypt'; it only means that the
+     GNU C Library will not provide that library.
+
+     This option is for hackers and distributions experimenting with
+     independently-maintained implementations of libcrypt.  It may
+     become the default in a future release.
+
 '--disable-experimental-malloc'
      By default, a per-thread cache is enabled in 'malloc'.  While this
      cache can be disabled on a per-application basis using tunables
@@ -210,7 +246,7 @@ will be used, and CFLAGS sets optimization options for the compiler.
      but you want to compile a library for 586es, give
      '--host=i586-pc-linux-gnu' or just '--host=i586-linux' and add the
      appropriate compiler flags ('-mcpu=i586' will do the trick) to
-     CFLAGS.
+     'CC'.
 
      If you specify just '--build', 'configure' will get confused.
 
@@ -265,23 +301,28 @@ for testing, which run together with the rest of the testsuite through
 'make check'.  These scripts require the following tools to run
 successfully:
 
-   * Python 2.7.6/3.4.3 or later
+   * Python 2.7/3.4 or later
 
-     Python is required for running the printers' test scripts.
+     Python is required for running the printers' test scripts.  As of
+     release time, Python 3.6 is the newest verified to work to test the
+     pretty printers.
 
    * PExpect 4.0
 
      The printer tests drive GDB through test programs and compare its
      output to the printers'.  PExpect is used to capture the output of
      GDB, and should be compatible with the Python version in your
-     system.
+     system.  As of release time PExpect 4.3 is the newest verified to
+     work to test the pretty printers.
 
-   * GDB 7.8 or later with support for Python 2.7.6/3.4.3 or later
+   * GDB 7.8 or later with support for Python 2.7/3.4 or later
 
      GDB itself needs to be configured with Python support in order to
      use the pretty printers.  Notice that your system having Python
      available doesn't imply that GDB supports it, nor that your
-     system's Python and GDB's have the same version.
+     system's Python and GDB's have the same version.  As of release
+     time GNU 'debugger' 8.0.1 is the newest verified to work to test
+     the pretty printers.
 
 If these tools are absent, the printer tests will report themselves as
 'UNSUPPORTED'.  Notice that some of the printer tests require the GNU C
@@ -304,7 +345,7 @@ makefiles.
 setting a few variables in 'configparms'.  Set 'CC' to the
 cross-compiler for the target you configured the library for; it is
 important to use this same 'CC' value when running 'configure', like
-this: 'CC=TARGET-gcc configure TARGET'.  Set 'BUILD_CC' to the compiler
+this: 'configure TARGET CC=TARGET-gcc'.  Set 'BUILD_CC' to the compiler
 to use for programs run on the build system as part of compiling the
 library.  You may need to set 'AR' to cross-compiling versions of 'ar'
 if the native tools are not configured to work with object files for the
@@ -406,20 +447,17 @@ Recommended Tools for Compilation
 We recommend installing the following GNU tools before attempting to
 build the GNU C Library:
 
-   * GNU 'make' 3.79 or newer
+   * GNU 'make' 4.0 or newer
 
-     You need the latest version of GNU 'make'.  Modifying the GNU C
-     Library to work with other 'make' programs would be so difficult
-     that we recommend you port GNU 'make' instead.  *Really.*  We
-     recommend GNU 'make' version 3.79.  All earlier versions have
-     severe bugs or lack features.
+     As of relase time, GNU 'make' 4.2.1 is the newest verified to work
+     to build the GNU C Library.
 
    * GCC 4.9 or newer
 
      GCC 4.9 or higher is required.  In general it is recommended to use
      the newest version of the compiler that is known to work for
      building the GNU C Library, as newer compilers usually produce
-     better code.  As of release time, GCC 7.3 is the newest compiler
+     better code.  As of release time, GCC 8.1.1 is the newest compiler
      verified to work to build the GNU C Library.
 
      For PowerPC 64-bits little-endian (powerpc64le), GCC 6.2 or higher
@@ -446,7 +484,7 @@ build the GNU C Library:
 
      You must use GNU 'binutils' (as and ld) to build the GNU C Library.
      No other assembler or linker has the necessary functionality at the
-     moment.  As of release time, GNU 'binutils' 2.29.1 is the newest
+     moment.  As of release time, GNU 'binutils' 2.31.1 is the newest
      verified to work to build the GNU C Library.
 
    * GNU 'texinfo' 4.7 or later
@@ -463,7 +501,7 @@ build the GNU C Library:
      'awk' is used in several places to generate files.  Some 'gawk'
      extensions are used, including the 'asorti' function, which was
      introduced in version 3.1.2 of 'gawk'.  As of release time, 'gawk'
-     version 4.2.0 is the newest verified to work to build the GNU C
+     version 4.2.1 is the newest verified to work to build the GNU C
      Library.
 
    * GNU 'bison' 2.7 or later
@@ -475,13 +513,15 @@ build the GNU C Library:
    * Perl 5
 
      Perl is not required, but it is used if present to test the
-     installation.  We may decide to use it elsewhere in the future.
+     installation.  We may decide to use it elsewhere in the future.  As
+     of release time 'perl' version 5.28.0 is the newest verified to
+     work to build the GNU C Library.
 
    * GNU 'sed' 3.02 or newer
 
      'Sed' is used in several places to generate files.  Most scripts
      work with any version of 'sed'.  As of release time, 'sed' version
-     4.4 is the newest verified to work to build the GNU C Library.
+     4.5 is the newest verified to work to build the GNU C Library.
 
 If you change any of the 'configure.ac' files you will also need
 
@@ -490,6 +530,9 @@ If you change any of the 'configure.ac' files you will also need
 and if you change any of the message translation files you will need
 
    * GNU 'gettext' 0.10.36 or later
+
+     As of release time, GNU 'gettext' version 0.19.8.1 is the newest
+     version verified to work to build the GNU C Library.
 
 You may also need these packages if you upgrade your source tree using
 patches, although we try to avoid this.

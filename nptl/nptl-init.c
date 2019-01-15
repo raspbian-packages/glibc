@@ -78,9 +78,6 @@ extern
 void __nptl_set_robust (struct pthread *);
 
 #ifdef SHARED
-static void nptl_freeres (void);
-
-
 static const struct pthread_functions pthread_functions =
   {
     .ptr_pthread_attr_destroy = __pthread_attr_destroy,
@@ -140,8 +137,6 @@ static const struct pthread_functions pthread_functions =
 # ifdef SIGSETXID
     .ptr__nptl_setxid = __nptl_setxid,
 # endif
-    /* For now only the stack cache needs to be freed.  */
-    .ptr_freeres = nptl_freeres,
     .ptr_set_robust = __nptl_set_robust
   };
 # define ptr_pthread_functions &pthread_functions
@@ -151,16 +146,6 @@ static const struct pthread_functions pthread_functions =
 
 
 #ifdef SHARED
-/* This function is called indirectly from the freeres code in libc.  */
-static void
-__libc_freeres_fn_section
-nptl_freeres (void)
-{
-  __unwind_freeres ();
-  __free_stacks (0);
-}
-
-
 static
 #endif
 void
@@ -313,24 +298,6 @@ __pthread_initialize_minimal_internal (void)
   }
 
 #ifdef __NR_futex
-# ifndef __ASSUME_PRIVATE_FUTEX
-  /* Private futexes are always used (at least internally) so that
-     doing the test once this early is beneficial.  */
-  {
-    int word = 0;
-    INTERNAL_SYSCALL_DECL (err);
-    word = INTERNAL_SYSCALL (futex, err, 3, &word,
-			    FUTEX_WAKE | FUTEX_PRIVATE_FLAG, 1);
-    if (!INTERNAL_SYSCALL_ERROR_P (word, err))
-      THREAD_SETMEM (pd, header.private_futex, FUTEX_PRIVATE_FLAG);
-  }
-
-  /* Private futexes have been introduced earlier than the
-     FUTEX_CLOCK_REALTIME flag.  We don't have to run the test if we
-     know the former are not supported.  This also means we know the
-     kernel will return ENOSYS for unknown operations.  */
-  if (THREAD_GETMEM (pd, header.private_futex) != 0)
-# endif
 # ifndef __ASSUME_FUTEX_CLOCK_REALTIME
     {
       int word = 0;

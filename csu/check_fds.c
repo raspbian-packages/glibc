@@ -39,8 +39,7 @@
 static void
 check_one_fd (int fd, int mode)
 {
-  /* Note that fcntl() with this parameter is not a cancellation point.  */
-  if (__builtin_expect (__libc_fcntl (fd, F_GETFD), 0) == -1
+  if (__builtin_expect (__fcntl64_nocancel (fd, F_GETFD), 0) == -1
       && errno == EBADF)
     {
       const char *name;
@@ -50,12 +49,12 @@ check_one_fd (int fd, int mode)
       if ((mode & O_ACCMODE) == O_WRONLY)
 	{
 	  name = _PATH_DEV "full";
-	  dev = makedev (DEV_FULL_MAJOR, DEV_FULL_MINOR);
+	  dev = __gnu_dev_makedev (DEV_FULL_MAJOR, DEV_FULL_MINOR);
 	}
       else
 	{
 	  name = _PATH_DEVNULL;
-	  dev = makedev (DEV_NULL_MAJOR, DEV_NULL_MINOR);
+	  dev = __gnu_dev_makedev (DEV_NULL_MAJOR, DEV_NULL_MINOR);
 	}
 
       /* Something is wrong with this descriptor, it's probably not

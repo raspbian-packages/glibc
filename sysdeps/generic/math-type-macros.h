@@ -40,7 +40,11 @@
 
   declare_mgen_alias_r(from,to)
       This exposes the appropriate symbol(s) for a
-      function f_r of type FLOAT.  */
+      function f_r of type FLOAT.
+
+  SET_NAN_PAYLOAD(flt, mant)
+      Set the NaN payload bits of the variable FLT of type FLOAT to
+      the mantissa MANT.  */
 
 #ifndef M_PFX
 # error "M_PFX must be defined."
@@ -65,6 +69,24 @@
 #endif
 #ifndef declare_mgen_alias_r
 # error "declare_mgen_alias_r must be defined."
+#endif
+#ifndef SET_NAN_PAYLOAD
+# error "SET_NAN_PAYLOAD must be defined."
+#endif
+
+#ifndef declare_mgen_finite_alias_x
+#define declare_mgen_finite_alias_x(from, to)	\
+  strong_alias (from, to ## _finite)
+#endif
+
+#ifndef declare_mgen_finite_alias_s
+# define declare_mgen_finite_alias_s(from,to)	\
+  declare_mgen_finite_alias_x (from, to)
+#endif
+
+#ifndef declare_mgen_finite_alias
+# define declare_mgen_finite_alias(from, to)	\
+  declare_mgen_finite_alias_s (M_SUF (from), M_SUF (to))
 #endif
 
 #define __M_CONCAT(a,b) a ## b
@@ -91,7 +113,7 @@
 #define M_HYPOT M_SUF (__ieee754_hypot)
 #define M_LOG M_SUF (__ieee754_log)
 #define M_SINH M_SUF (__ieee754_sinh)
-#define M_SQRT M_SUF (__ieee754_sqrt)
+#define M_SQRT M_SUF (sqrt)
 
 /* Needed to evaluate M_MANT_DIG below.  */
 #include <float.h>

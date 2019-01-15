@@ -22,8 +22,8 @@
 # names are only used if the installed kernel headers also provide
 # them.
 
-# The list of system calls is current as of Linux 4.14.
-kernel 4.14
+# The list of system calls is current as of Linux 4.19.
+kernel 4.19
 
 FAST_atomic_update
 FAST_cmpxchg
@@ -186,6 +186,7 @@ inotify_rm_watch
 io_cancel
 io_destroy
 io_getevents
+io_pgetevents
 io_setup
 io_submit
 ioctl
@@ -431,6 +432,7 @@ renameat2
 request_key
 restart_syscall
 rmdir
+rseq
 rt_sigaction
 rt_sigpending
 rt_sigprocmask
@@ -444,6 +446,7 @@ s390_guarded_storage
 s390_pci_mmio_read
 s390_pci_mmio_write
 s390_runtime_instr
+s390_sthyi
 sched_get_affinity
 sched_get_priority_max
 sched_get_priority_min

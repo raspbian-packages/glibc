@@ -41,6 +41,8 @@
 #include <hurd/port.h>
 
 #include <errno.h>
+#include <bits/types/error_t.h>
+#include <bits/types/sigset_t.h>
 
 #ifndef _HURD_H_EXTERN_INLINE
 #define _HURD_H_EXTERN_INLINE __extern_inline

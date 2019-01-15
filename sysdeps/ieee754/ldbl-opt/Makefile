@@ -44,7 +44,8 @@ libnldbl-calls = asprintf dprintf fprintf fscanf fwprintf fwscanf iovfscanf \
 		 isoc99_vwscanf isoc99_vfwscanf isoc99_vswscanf \
 		 nextup nextdown totalorder totalordermag getpayload \
 		 canonicalize setpayload setpayloadsig llogb fmaxmag fminmag \
-		 roundeven fromfp ufromfp fromfpx ufromfpx
+		 roundeven fromfp ufromfp fromfpx ufromfpx fadd dadd \
+		 fdiv ddiv fmul dmul fsub dsub
 libnldbl-routines = $(libnldbl-calls:%=nldbl-%)
 libnldbl-inhibit-o = $(object-suffixes)
 libnldbl-static-only-routines = $(libnldbl-routines)
@@ -86,6 +87,10 @@ CFLAGS-nldbl-csinh.c = -fno-builtin-csinhl
 CFLAGS-nldbl-csqrt.c = -fno-builtin-csqrtl
 CFLAGS-nldbl-ctan.c = -fno-builtin-ctanl
 CFLAGS-nldbl-ctanh.c = -fno-builtin-ctanhl
+CFLAGS-nldbl-dadd.c = -fno-builtin-daddl
+CFLAGS-nldbl-ddiv.c = -fno-builtin-ddivl
+CFLAGS-nldbl-dmul.c = -fno-builtin-dmull
+CFLAGS-nldbl-dsub.c = -fno-builtin-dsubl
 CFLAGS-nldbl-erf.c = -fno-builtin-erfl
 CFLAGS-nldbl-erfc.c = -fno-builtin-erfcl
 CFLAGS-nldbl-exp.c = -fno-builtin-expl
@@ -93,7 +98,9 @@ CFLAGS-nldbl-exp10.c = -fno-builtin-exp10l
 CFLAGS-nldbl-exp2.c = -fno-builtin-exp2l
 CFLAGS-nldbl-expm1.c = -fno-builtin-expm1l
 CFLAGS-nldbl-fabs.c = -fno-builtin-fabsl
+CFLAGS-nldbl-fadd.c = -fno-builtin-faddl
 CFLAGS-nldbl-fdim.c = -fno-builtin-fdiml
+CFLAGS-nldbl-fdiv.c = -fno-builtin-fdivl
 CFLAGS-nldbl-finite.c = -fno-builtin-finitel
 CFLAGS-nldbl-floor.c = -fno-builtin-floorl
 CFLAGS-nldbl-fma.c = -fno-builtin-fmal
@@ -102,9 +109,11 @@ CFLAGS-nldbl-fmaxmag.c = -fno-builtin-fmaxmagl
 CFLAGS-nldbl-fmin.c = -fno-builtin-fminl
 CFLAGS-nldbl-fminmag.c = -fno-builtin-fminmagl
 CFLAGS-nldbl-fmod.c = -fno-builtin-fmodl
+CFLAGS-nldbl-fmul.c = -fno-builtin-fmull
 CFLAGS-nldbl-frexp.c = -fno-builtin-frexpl
 CFLAGS-nldbl-fromfp.c = -fno-builtin-fromfpl
 CFLAGS-nldbl-fromfpx.c = -fno-builtin-fromfpxl
+CFLAGS-nldbl-fsub.c = -fno-builtin-fsubl
 CFLAGS-nldbl-gamma.c = -fno-builtin-gammal
 CFLAGS-nldbl-getpayload.c = -fno-builtin-getpayloadl
 CFLAGS-nldbl-hypot.c = -fno-builtin-hypotl
@@ -162,5 +171,8 @@ CFLAGS-nldbl-ufromfpx.c = -fno-builtin-ufromfpxl
 CFLAGS-nldbl-y0.c = -fno-builtin-y0l
 CFLAGS-nldbl-y1.c = -fno-builtin-y1l
 CFLAGS-nldbl-yn.c = -fno-builtin-ynl
+
+tests += test-narrow-macros-ldbl-64
+CFLAGS-test-narrow-macros-ldbl-64.c += -mlong-double-64
 
 endif

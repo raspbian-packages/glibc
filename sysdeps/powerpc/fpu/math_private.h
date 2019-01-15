@@ -24,12 +24,6 @@
 #include <dl-procinfo.h>
 #include <fenv_private.h>
 
-/* Avoid putting floating point values in memory.  */
-# define math_opt_barrier(x)					\
-  ({ __typeof (x) __x = (x); __asm ("" : "+dwa" (__x)); __x; })
-# define math_force_eval(x)						\
-  ({ __typeof (x) __x = (x); __asm __volatile__ ("" : : "dwa" (__x)); })
-
 #include_next <math_private.h>
 
 #if defined _ARCH_PWR9 && __HAVE_DISTINCT_FLOAT128
@@ -41,36 +35,6 @@ __ieee754_sqrtf128 (_Float128 __x)
   return __z;
 }
 #endif
-
-extern double __slow_ieee754_sqrt (double);
-extern __always_inline double
-__ieee754_sqrt (double __x)
-{
-  double __z;
-
-#ifdef _ARCH_PPCSQ
-   asm ("fsqrt	%0,%1" : "=f" (__z) : "f" (__x));
-#else
-   __z = __slow_ieee754_sqrt(__x);
-#endif
-
-  return __z;
-}
-
-extern float __slow_ieee754_sqrtf (float);
-extern __always_inline float
-__ieee754_sqrtf (float __x)
-{
-  float __z;
-
-#ifdef _ARCH_PPCSQ
-  asm ("fsqrts	%0,%1" : "=f" (__z) : "f" (__x));
-#else
-   __z = __slow_ieee754_sqrtf(__x);
-#endif
-
-  return __z;
-}
 
 #if defined _ARCH_PWR5X
 

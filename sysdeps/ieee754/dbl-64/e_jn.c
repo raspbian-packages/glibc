@@ -39,7 +39,9 @@
 #include <errno.h>
 #include <float.h>
 #include <math.h>
+#include <math-narrow-eval.h>
 #include <math_private.h>
+#include <math-underflow.h>
 
 static const double
   invsqrtpi = 5.64189583547756279280e-01, /* 0x3FE20DD7, 0x50429B6D */
@@ -107,7 +109,7 @@ __ieee754_jn (int n, double x)
 	      case 2: temp = -c - s; break;
 	      case 3: temp = c - s; break;
 	      }
-	    b = invsqrtpi * temp / __ieee754_sqrt (x);
+	    b = invsqrtpi * temp / sqrt (x);
 	  }
 	else
 	  {
@@ -314,7 +316,7 @@ __ieee754_yn (int n, double x)
 	  case 2: temp = -s + c; break;
 	  case 3: temp = s + c; break;
 	  }
-	b = invsqrtpi * temp / __ieee754_sqrt (x);
+	b = invsqrtpi * temp / sqrt (x);
       }
     else
       {

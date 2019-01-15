@@ -67,6 +67,11 @@ elf_machine_runtime_setup (struct link_map *l, int lazy, int profile)
   Elf32_Addr *got;
   extern void _dl_runtime_resolve (Elf32_Word) attribute_hidden;
   extern void _dl_runtime_profile (Elf32_Word) attribute_hidden;
+  extern void _dl_runtime_resolve_shstk (Elf32_Word) attribute_hidden;
+  extern void _dl_runtime_profile_shstk (Elf32_Word) attribute_hidden;
+  /* Check if SHSTK is enabled by kernel.  */
+  bool shstk_enabled
+    = (GL(dl_x86_feature_1)[0] & GNU_PROPERTY_X86_FEATURE_1_SHSTK) != 0;
 
   if (l->l_info[DT_JMPREL] && lazy)
     {
@@ -93,7 +98,9 @@ elf_machine_runtime_setup (struct link_map *l, int lazy, int profile)
 	 end in this function.  */
       if (__glibc_unlikely (profile))
 	{
-	  got[2] = (Elf32_Addr) &_dl_runtime_profile;
+	  got[2] = (shstk_enabled
+		    ? (Elf32_Addr) &_dl_runtime_profile_shstk
+		    : (Elf32_Addr) &_dl_runtime_profile);
 
 	  if (GLRO(dl_profile) != NULL
 	      && _dl_name_match_p (GLRO(dl_profile), l))
@@ -104,7 +111,9 @@ elf_machine_runtime_setup (struct link_map *l, int lazy, int profile)
       else
 	/* This function will get called to fix up the GOT entry indicated by
 	   the offset on the stack, and then jump to the resolved address.  */
-	got[2] = (Elf32_Addr) &_dl_runtime_resolve;
+	got[2] = (shstk_enabled
+		  ? (Elf32_Addr) &_dl_runtime_resolve_shstk
+		  : (Elf32_Addr) &_dl_runtime_resolve);
     }
 
   return lazy;
@@ -320,13 +329,12 @@ elf_machine_rel (struct link_map *map, const Elf32_Rel *reloc,
       const Elf32_Sym *const refsym = sym;
 # endif
       struct link_map *sym_map = RESOLVE_MAP (&sym, version, r_type);
-      Elf32_Addr value = sym_map == NULL ? 0 : sym_map->l_addr + sym->st_value;
+      Elf32_Addr value = SYMBOL_ADDRESS (sym_map, sym, true);
 
       if (sym != NULL
-	  && __builtin_expect (ELFW(ST_TYPE) (sym->st_info) == STT_GNU_IFUNC,
-			       0)
-	  && __builtin_expect (sym->st_shndx != SHN_UNDEF, 1)
-	  && __builtin_expect (!skip_ifunc, 1))
+	  && __glibc_unlikely (ELFW(ST_TYPE) (sym->st_info) == STT_GNU_IFUNC)
+	  && __glibc_likely (sym->st_shndx != SHN_UNDEF)
+	  && __glibc_likely (!skip_ifunc))
 	{
 # ifndef RTLD_BOOTSTRAP
 	  if (sym_map != map
@@ -456,8 +464,8 @@ elf_machine_rel (struct link_map *map, const Elf32_Rel *reloc,
 	    /* This can happen in trace mode if an object could not be
 	       found.  */
 	    break;
-	  if (__builtin_expect (sym->st_size > refsym->st_size, 0)
-	      || (__builtin_expect (sym->st_size < refsym->st_size, 0)
+	  if (__glibc_unlikely (sym->st_size > refsym->st_size)
+	      || (__glibc_unlikely(sym->st_size < refsym->st_size)
 		  && GLRO(dl_verbose)))
 	    {
 	      const char *strtab;
@@ -501,12 +509,12 @@ elf_machine_rela (struct link_map *map, const Elf32_Rela *reloc,
       const Elf32_Sym *const refsym = sym;
 #  endif
       struct link_map *sym_map = RESOLVE_MAP (&sym, version, r_type);
-      Elf32_Addr value = sym == NULL ? 0 : sym_map->l_addr + sym->st_value;
+      Elf32_Addr value = SYMBOL_ADDRESS (sym_map, sym, true);
 
       if (sym != NULL
-	  && __builtin_expect (sym->st_shndx != SHN_UNDEF, 1)
-	  && __builtin_expect (ELFW(ST_TYPE) (sym->st_info) == STT_GNU_IFUNC, 0)
-	  && __builtin_expect (!skip_ifunc, 1))
+	  && __glibc_likely (sym->st_shndx != SHN_UNDEF)
+	  && __glibc_unlikely (ELFW(ST_TYPE) (sym->st_info) == STT_GNU_IFUNC)
+	  && __glibc_likely (!skip_ifunc))
 	value = ((Elf32_Addr (*) (void)) value) ();
 
       switch (ELF32_R_TYPE (reloc->r_info))
@@ -601,8 +609,8 @@ elf_machine_rela (struct link_map *map, const Elf32_Rela *reloc,
 	    /* This can happen in trace mode if an object could not be
 	       found.  */
 	    break;
-	  if (__builtin_expect (sym->st_size > refsym->st_size, 0)
-	      || (__builtin_expect (sym->st_size < refsym->st_size, 0)
+	  if (__glibc_unlikely (sym->st_size > refsym->st_size)
+	      || (__glibc_unlikely (sym->st_size < refsym->st_size)
 		  && GLRO(dl_verbose)))
 	    {
 	      const char *strtab;
@@ -663,7 +671,8 @@ elf_machine_lazy_rel (struct link_map *map,
   /* Check for unexpected PLT reloc type.  */
   if (__glibc_likely (r_type == R_386_JMP_SLOT))
     {
-      if (__builtin_expect (map->l_mach.plt, 0) == 0)
+      /* Prelink has been deprecated.  */
+      if (__glibc_likely (map->l_mach.plt == 0))
 	*reloc_addr += l_addr;
       else
 	*reloc_addr = (map->l_mach.plt

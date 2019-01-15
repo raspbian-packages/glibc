@@ -129,8 +129,8 @@ enum __error_t_codes
   EPROTO                         = 0x40000074,	/* Protocol error */
   ETIME                          = 0x40000075,	/* Timer expired */
   ECANCELED                      = 0x40000077,	/* Operation canceled */
-  EOWNERDEAD                     = 0x40000078,	/* Robust mutex owner died */
-  ENOTRECOVERABLE                = 0x40000079,	/* Robust mutex irrecoverable */
+  EOWNERDEAD                     = 0x40000078,	/* Owner died */
+  ENOTRECOVERABLE                = 0x40000079,	/* State not recoverable */
 
 /* Errors from <mach/message.h>.  */
   EMACH_SEND_IN_PROGRESS         = 0x10000001,
@@ -218,14 +218,6 @@ enum __error_t_codes
      this enumeration must be a signed type.  */
   __FORCE_ERROR_T_CODES_SIGNED = -1
 };
-
-/* User-visible type of error codes.  It is ok to use 'int' or
-   'kern_return_t' for these, but with 'error_t' the debugger prints
-   symbolic values.  */
-# if !defined __error_t_defined && defined __USE_GNU
-#  define __error_t_defined 1
-typedef enum __error_t_codes error_t;
-# endif
 
 #endif /* not __ASSEMBLER__ */
 

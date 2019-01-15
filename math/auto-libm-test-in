@@ -142,6 +142,101 @@ acosh 0x1.1808eep+0
 acosh 0x1.1052c4p+0
 acosh max no-test-inline
 
+add 0 0
+add 0 -0
+add -0 0
+add -0 -0
+add max max
+add max -max
+add -max max
+add -max -max
+add min min missing-underflow:arg-ibm128
+add min -min missing-underflow:arg-ibm128
+add -min min missing-underflow:arg-ibm128
+add -min -min missing-underflow:arg-ibm128
+add min_subnorm min_subnorm missing-underflow:arg-ibm128
+add min_subnorm -min_subnorm missing-underflow:arg-ibm128
+add -min_subnorm min_subnorm missing-underflow:arg-ibm128
+add -min_subnorm -min_subnorm missing-underflow:arg-ibm128
+add 1 2
+add 1 -2
+add -1 2
+add -1 -2
+add 100.5 0.75
+add 100.5 -0.75
+add -100.5 0.75
+add -100.5 -0.75
+add 1 0x1p-23
+add 1 0x1.7fp-23
+add 1 0x1.8p-23
+add 1 0x1.81p-23
+add 1 0x1p-24
+add 1 0x1.1p-24
+add 1 0x0.fp-24
+add 1 min
+add 1 -min
+add 1 min_subnorm
+add 1 -min_subnorm
+add -1 min
+add -1 -min
+add -1 min_subnorm
+add -1 -min_subnorm
+# Cases where larger argument is half way between two values of a
+# floating-point format, so that double rounding would sometimes yield
+# the wrong result.
+add 0x1.000001p0 min
+add 0x1.000001p0 -min
+add 0x1.000001p0 min_subnorm
+add 0x1.000001p0 -min_subnorm
+add -0x1.000001p0 min
+add -0x1.000001p0 -min
+add -0x1.000001p0 min_subnorm
+add -0x1.000001p0 -min_subnorm
+add 0x1.00000000000008p0 min
+add 0x1.00000000000008p0 -min
+add 0x1.00000000000008p0 min_subnorm
+add 0x1.00000000000008p0 -min_subnorm
+add -0x1.00000000000008p0 min
+add -0x1.00000000000008p0 -min
+add -0x1.00000000000008p0 min_subnorm
+add -0x1.00000000000008p0 -min_subnorm
+add 0x1.0000000000000001p0 min
+add 0x1.0000000000000001p0 -min
+add 0x1.0000000000000001p0 min_subnorm
+add 0x1.0000000000000001p0 -min_subnorm
+add -0x1.0000000000000001p0 min
+add -0x1.0000000000000001p0 -min
+add -0x1.0000000000000001p0 min_subnorm
+add -0x1.0000000000000001p0 -min_subnorm
+# Two values representable in the same format with sum very close to
+# half way between two representable values.  In particular, verify
+# that there is no intermediate rounding to 64 bits when adding two
+# double values.
+add 1 0x1.000002p-24
+add 1 -0x1.000002p-24
+add 1 0x0.ffffffp-24
+add 1 -0x0.ffffffp-24
+add 0x1.000002p0 0x1.000002p-24
+add 0x1.000002p0 -0x1.000002p-24
+add 0x1.000002p0 0x0.ffffffp-24
+add 0x1.000002p0 -0x0.ffffffp-24
+add 1 0x1.0000000000001p-53
+add 1 -0x1.0000000000001p-53
+add 1 0x0.fffffffffffff8p-53
+add 1 -0x0.fffffffffffff8p-53
+add 0x1.0000000000001p0 0x1.0000000000001p-53
+add 0x1.0000000000001p0 -0x1.0000000000001p-53
+add 0x1.0000000000001p0 0x0.fffffffffffff8p-53
+add 0x1.0000000000001p0 -0x0.fffffffffffff8p-53
+add 1 0x1.0000000000000002p-64
+add 1 -0x1.0000000000000002p-64
+add 1 0x0.ffffffffffffffffp-64
+add 1 -0x0.ffffffffffffffffp-64
+add 0x1.0000000000000002p0 0x1.0000000000000002p-64
+add 0x1.0000000000000002p0 -0x1.0000000000000002p-64
+add 0x1.0000000000000002p0 0x0.ffffffffffffffffp-64
+add 0x1.0000000000000002p0 -0x0.ffffffffffffffffp-64
+
 asin 0
 asin -0
 asin 0.5
@@ -4663,6 +4758,80 @@ ctanh -min 0
 ctanh min_subnorm 0
 ctanh -min_subnorm 0
 
+div 0 min
+div 0 -min
+div 0 min_subnorm
+div 0 -min_subnorm
+div 0 max
+div 0 -max
+div -0 min
+div -0 -min
+div -0 min_subnorm
+div -0 -min_subnorm
+div -0 max
+div -0 -max
+div max max xfail:ibm128-libgcc
+div max -max xfail:ibm128-libgcc
+div -max max xfail:ibm128-libgcc
+div -max -max xfail:ibm128-libgcc
+div min min
+div min -min
+div -min min
+div -min -min
+div min_subnorm min_subnorm
+div min_subnorm -min_subnorm
+div -min_subnorm min_subnorm
+div -min_subnorm -min_subnorm
+div max min xfail-rounding:ibm128-libgcc
+div max -min xfail-rounding:ibm128-libgcc
+div -max min xfail-rounding:ibm128-libgcc
+div -max -min xfail-rounding:ibm128-libgcc
+div max min_subnorm xfail-rounding:ibm128-libgcc
+div max -min_subnorm xfail-rounding:ibm128-libgcc
+div -max min_subnorm xfail-rounding:ibm128-libgcc
+div -max -min_subnorm xfail-rounding:ibm128-libgcc
+div min max xfail-rounding:ibm128-libgcc
+div min -max xfail-rounding:ibm128-libgcc
+div -min max xfail-rounding:ibm128-libgcc
+div -min -max xfail-rounding:ibm128-libgcc
+div min_subnorm max xfail-rounding:ibm128-libgcc
+div min_subnorm -max xfail-rounding:ibm128-libgcc
+div -min_subnorm max xfail-rounding:ibm128-libgcc
+div -min_subnorm -max xfail-rounding:ibm128-libgcc
+div 1 2
+div 1 -2
+div -1 2
+div -1 -2
+div 100.5 0.75
+div 100.5 -0.75
+div -100.5 0.75
+div -100.5 -0.75
+
+# Cases where the ratio of two values in a wider format is very close
+# to half way between two representable values in a narrower format,
+# so that double rounding would sometimes yield the wrong result.  For
+# a narrower format of width a and a wider format of width w, take
+# b = w - a; these examples are of the form
+# (1 + 2^-a + 2^-b + 2^(1-w)) / (1 + 2^-b).  These examples have
+# ratios of the form (1 + 2^-a) to the width of the wider format, but
+# the mathematical value is slightly greater, so that rounding once
+# should round the result up but double rounding would wrongly round
+# the result down.
+# a = 24, w = 53.
+div 0x1.0000010800001p0 0x1.00000008p0
+# a = 24, w = 64.
+div 0x1.0000010001000002p0 0x1.0000000001p0
+# a = 24, w = 113.
+div 0x1.0000010000000000000000800001p0 0x1.00000000000000000000008p0
+# a = 53, w = 64.
+div 0x1.0020000000000802p0 0x1.002p0
+# a = 53, w = 113.
+div 0x1.0000000000000810000000000001p0 0x1.000000000000001p0
+# a = 64, w = 113.
+div 0x1.0000000000008001000000000001p0 0x1.0000000000008p0
+# Similar, for double rounding to 64-bit of a division of 53-bit values.
+div 0x1ffe1p0 0xfffp0
+
 erf 0
 erf -0
 erf 0.125
@@ -6350,6 +6519,54 @@ log2 min
 log2 min_subnorm
 log2 max
 
+mul 0 0
+mul 0 -0
+mul -0 0
+mul -0 -0
+mul max max
+mul max -max
+mul -max max
+mul -max -max
+mul min min
+mul min -min
+mul -min min
+mul -min -min
+mul min_subnorm min_subnorm
+mul min_subnorm -min_subnorm
+mul -min_subnorm min_subnorm
+mul -min_subnorm -min_subnorm
+mul 1 2
+mul 1 -2
+mul -1 2
+mul -1 -2
+mul 100.5 0.75
+mul 100.5 -0.75
+mul -100.5 0.75
+mul -100.5 -0.75
+# Cases where the product of two values in a wider format is very
+# close to half way between two representable values in a narrower
+# format, so that double rounding would sometimes yield the wrong
+# result.  These examples have products of the form
+# (2^a + 1)(2^b + 1)/2^(a+b), where a is the width of the narrower
+# format, b is greater than the width of the wider format and factors
+# have been rearranged between the terms so that both terms do fit
+# within the wider format.
+# a = 24, b = 54
+mul 0x5000005p-24 0xccccccccccccdp-54
+# a = 24, b = 65
+mul 0x3000003p-24 0xaaaaaaaaaaaaaaabp-65
+# a = 24, b = 114
+mul 0x5000005p-24 0xcccccccccccccccccccccccccccdp-114
+# a = 53, b = 65
+mul 0x60000000000003p-53 0xaaaaaaaaaaaaaaabp-65
+# a = 53, b = 114
+mul 0xa0000000000005p-53 0xcccccccccccccccccccccccccccdp-114
+# a = 64, b = 114
+mul 0x50000000000000005p-64 0xcccccccccccccccccccccccccccdp-114
+# Similar, for double rounding to 64 bit of a product of 53-bit values.
+# This product equals 2^64 + 2^11 + 1.
+mul 97689974585 188829449
+
 pow 0 0
 pow 0 -0
 pow -0 0
@@ -7099,6 +7316,101 @@ sinh 0x2.c5d37700c6bb03a4p+12 no-test-inline
 sinh 0x2.c5d37700c6bb03a8p+12 no-test-inline
 sinh 0x2.c5d37700c6bb03a6c24b6c9b494cp+12 no-test-inline
 sinh 0x2.c5d37700c6bb03a6c24b6c9b494ep+12 no-test-inline
+
+sub 0 0
+sub 0 -0
+sub -0 0
+sub -0 -0
+sub max max
+sub max -max
+sub -max max
+sub -max -max
+sub min min missing-underflow:arg-ibm128
+sub min -min missing-underflow:arg-ibm128
+sub -min min missing-underflow:arg-ibm128
+sub -min -min missing-underflow:arg-ibm128
+sub min_subnorm min_subnorm missing-underflow:arg-ibm128
+sub min_subnorm -min_subnorm missing-underflow:arg-ibm128
+sub -min_subnorm min_subnorm missing-underflow:arg-ibm128
+sub -min_subnorm -min_subnorm missing-underflow:arg-ibm128
+sub 1 2
+sub 1 -2
+sub -1 2
+sub -1 -2
+sub 100.5 0.75
+sub 100.5 -0.75
+sub -100.5 0.75
+sub -100.5 -0.75
+sub 1 0x1p-23
+sub 1 0x1.7fp-23
+sub 1 0x1.8p-23
+sub 1 0x1.81p-23
+sub 1 0x1p-24
+sub 1 0x1.1p-24
+sub 1 0x0.fp-24
+sub 1 min
+sub 1 -min
+sub 1 min_subnorm
+sub 1 -min_subnorm
+sub -1 min
+sub -1 -min
+sub -1 min_subnorm
+sub -1 -min_subnorm
+# Cases where larger argument is half way between two values of a
+# floating-point format, so that double rounding would sometimes yield
+# the wrong result.
+sub 0x1.000001p0 min
+sub 0x1.000001p0 -min
+sub 0x1.000001p0 min_subnorm
+sub 0x1.000001p0 -min_subnorm
+sub -0x1.000001p0 min
+sub -0x1.000001p0 -min
+sub -0x1.000001p0 min_subnorm
+sub -0x1.000001p0 -min_subnorm
+sub 0x1.00000000000008p0 min
+sub 0x1.00000000000008p0 -min
+sub 0x1.00000000000008p0 min_subnorm
+sub 0x1.00000000000008p0 -min_subnorm
+sub -0x1.00000000000008p0 min
+sub -0x1.00000000000008p0 -min
+sub -0x1.00000000000008p0 min_subnorm
+sub -0x1.00000000000008p0 -min_subnorm
+sub 0x1.0000000000000001p0 min
+sub 0x1.0000000000000001p0 -min
+sub 0x1.0000000000000001p0 min_subnorm
+sub 0x1.0000000000000001p0 -min_subnorm
+sub -0x1.0000000000000001p0 min
+sub -0x1.0000000000000001p0 -min
+sub -0x1.0000000000000001p0 min_subnorm
+sub -0x1.0000000000000001p0 -min_subnorm
+# Two values representable in the same format with difference very
+# close to half way between two representable values.  In particular,
+# verify that there is no intermediate rounding to 64 bits when
+# subtracting two double values.
+sub 1 0x1.000002p-24
+sub 1 -0x1.000002p-24
+sub 1 0x0.ffffffp-24
+sub 1 -0x0.ffffffp-24
+sub 0x1.000002p0 0x1.000002p-24
+sub 0x1.000002p0 -0x1.000002p-24
+sub 0x1.000002p0 0x0.ffffffp-24
+sub 0x1.000002p0 -0x0.ffffffp-24
+sub 1 0x1.0000000000001p-53
+sub 1 -0x1.0000000000001p-53
+sub 1 0x0.fffffffffffff8p-53
+sub 1 -0x0.fffffffffffff8p-53
+sub 0x1.0000000000001p0 0x1.0000000000001p-53
+sub 0x1.0000000000001p0 -0x1.0000000000001p-53
+sub 0x1.0000000000001p0 0x0.fffffffffffff8p-53
+sub 0x1.0000000000001p0 -0x0.fffffffffffff8p-53
+sub 1 0x1.0000000000000002p-64
+sub 1 -0x1.0000000000000002p-64
+sub 1 0x0.ffffffffffffffffp-64
+sub 1 -0x0.ffffffffffffffffp-64
+sub 0x1.0000000000000002p0 0x1.0000000000000002p-64
+sub 0x1.0000000000000002p0 -0x1.0000000000000002p-64
+sub 0x1.0000000000000002p0 0x0.ffffffffffffffffp-64
+sub 0x1.0000000000000002p0 -0x0.ffffffffffffffffp-64
 
 sqrt 0
 sqrt -0

@@ -38,9 +38,11 @@
 #include <dl-cache.h>
 #include <dl-osinfo.h>
 #include <dl-procinfo.h>
+#include <dl-prop.h>
 #include <tls.h>
 #include <stap-probe.h>
 #include <stackinfo.h>
+#include <not-cancel.h>
 
 #include <assert.h>
 
@@ -278,7 +280,6 @@ struct rtld_global_ro _rtld_global_ro attribute_relro =
     ._dl_debug_printf = _dl_debug_printf,
     ._dl_mcount = _dl_mcount,
     ._dl_lookup_symbol_x = _dl_lookup_symbol_x,
-    ._dl_check_caller = _dl_check_caller,
     ._dl_open = _dl_open,
     ._dl_close = _dl_close,
     ._dl_tls_get_addr_soft = _dl_tls_get_addr_soft,
@@ -1243,6 +1244,12 @@ of this helper program; chances are you did not intend to run this program.\n\
 	main_map->l_relro_addr = ph->p_vaddr;
 	main_map->l_relro_size = ph->p_memsz;
 	break;
+
+      case PT_NOTE:
+	if (_rtld_process_pt_note (main_map, ph))
+	  _dl_error_printf ("\
+ERROR: '%s': cannot process note segment.\n", _dl_argv[0]);
+	break;
       }
 
   /* Adjust the address of the TLS initialization image in case
@@ -1919,7 +1926,7 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 					  NULL, ELF_RTYPE_CLASS_PLT,
 					  DL_LOOKUP_ADD_DEPENDENCY, NULL);
 
-	    loadbase = LOOKUP_VALUE_ADDRESS (result);
+	    loadbase = LOOKUP_VALUE_ADDRESS (result, false);
 
 	    _dl_printf ("%s found at 0x%0*Zd in object at 0x%0*Zd\n",
 			_dl_argv[i],
@@ -2111,6 +2118,8 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
       for (struct link_map *l = main_map; l != NULL; l = l->l_next)
 	_dl_show_scope (l, 0);
     }
+
+  _rtld_main_check (main_map, _dl_argv[0]);
 
   if (prelinked)
     {
@@ -2676,7 +2685,7 @@ process_envvars (enum mode *modep)
       *--startp = '.';
       startp = memcpy (startp - name_len, debug_output, name_len);
 
-      GLRO(dl_debug_fd) = __open (startp, flags, DEFFILEMODE);
+      GLRO(dl_debug_fd) = __open64_nocancel (startp, flags, DEFFILEMODE);
       if (GLRO(dl_debug_fd) == -1)
 	/* We use standard output if opening the file failed.  */
 	GLRO(dl_debug_fd) = STDOUT_FILENO;

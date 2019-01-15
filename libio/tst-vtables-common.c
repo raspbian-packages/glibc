@@ -36,6 +36,8 @@
 #include <support/test-driver.h>
 #include <support/xunistd.h>
 
+#include "libioP.h"
+
 /* Data shared between the test subprocess and the test driver in the
    parent.  Note that *shared is reset at the start of the check_call
    function.  */

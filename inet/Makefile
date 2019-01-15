@@ -45,25 +45,33 @@ routines := htonl htons		\
 	    in6_addr getnameinfo if_index ifaddrs inet6_option \
 	    getipv4sourcefilter setipv4sourcefilter \
 	    getsourcefilter setsourcefilter inet6_opt inet6_rth \
-	    inet6_scopeid_pton deadline
+	    inet6_scopeid_pton deadline idna idna_name_classify
 
 aux := check_pf check_native ifreq
 
 tests := htontest test_ifindex tst-ntoa tst-ether_aton tst-network \
 	 tst-gethnm test-ifaddrs bug-if1 test-inet6_opt tst-ether_line \
 	 tst-getni1 tst-getni2 tst-inet6_rth tst-checks tst-checks-posix \
-	 tst-sockaddr test-hnto-types
+	 tst-sockaddr test-hnto-types tst-if_index-long
 
 # tst-deadline must be linked statically so that we can access
 # internal functions.
 tests-static += tst-deadline
-tests-static-internal := tst-deadline
+tests-internal += tst-deadline
+
+# tst-idna_name_classify must be linked statically because it tests
+# internal functionality.
+tests-static += tst-idna_name_classify
+tests-internal += tst-idna_name_classify
 
 # tst-inet6_scopeid_pton also needs internal functions but does not
 # need to be linked statically.
-tests-internal := tst-inet6_scopeid_pton
+tests-internal += tst-inet6_scopeid_pton
 
 include ../Rules
+
+LOCALES := en_US.UTF-8 en_US.ISO-8859-1
+include ../gen-locales.mk
 
 ifeq ($(have-thread-library),yes)
 
@@ -103,3 +111,5 @@ endif
 ifeq ($(build-static-nss),yes)
 CFLAGS += -DSTATIC_NSS
 endif
+
+$(objpfx)tst-idna_name_classify.out: $(gen-locales)

@@ -42,8 +42,8 @@
 /* Mapping of files to memory is supported.  */
 #define	_POSIX_MAPPED_FILES	200809L
 
-/* Locking of all memory could be supported in future.  */
-#define	_POSIX_MEMLOCK	0
+/* Locking of all memory is supported.  */
+#define	_POSIX_MEMLOCK	200809L
 
 /* Locking of ranges of memory is supported.  */
 #define	_POSIX_MEMLOCK_RANGE	200809L
@@ -72,7 +72,7 @@
 #define _XOPEN_SHM      1
 
 /* Tell we have POSIX threads.  */
-#define _POSIX_THREADS	200112L
+#define _POSIX_THREADS	200809L
 
 /* We have the reentrant functions described in POSIX.  */
 #define _POSIX_REENTRANT_FUNCTIONS      1
@@ -82,10 +82,10 @@
 #define _POSIX_THREAD_PRIORITY_SCHEDULING	-1
 
 /* We support user-defined stack sizes.  */
-#define _POSIX_THREAD_ATTR_STACKSIZE	200112L
+#define _POSIX_THREAD_ATTR_STACKSIZE	200809L
 
 /* We support user-defined stacks.  */
-#define _POSIX_THREAD_ATTR_STACKADDR	200112L
+#define _POSIX_THREAD_ATTR_STACKADDR	200809L
 
 /* We do not support priority inheritence.  */
 #define _POSIX_THREAD_PRIO_INHERIT		-1
@@ -102,7 +102,7 @@
 #endif
 
 /* We support POSIX.1b semaphores.  */
-#define _POSIX_SEMAPHORES			200112L
+#define _POSIX_SEMAPHORES			200809L
 
 /* Real-time signals are not yet supported.  */
 #define _POSIX_REALTIME_SIGNALS	-1
@@ -136,16 +136,16 @@
 #define _POSIX_REGEXP	1
 
 /* Reader/Writer locks are available.  */
-#define _POSIX_READER_WRITER_LOCKS	200112L
+#define _POSIX_READER_WRITER_LOCKS	200809L
 
 /* We have a POSIX shell.  */
 #define _POSIX_SHELL	1
 
 /* We support the Timeouts option.  */
-#define _POSIX_TIMEOUTS	200112L
+#define _POSIX_TIMEOUTS	200809L
 
 /* We support spinlocks.  */
-#define _POSIX_SPIN_LOCKS	200112L
+#define _POSIX_SPIN_LOCKS	200809L
 
 /* The `spawn' function family is supported.  */
 #define _POSIX_SPAWN	200809L
@@ -153,8 +153,8 @@
 /* We do not have POSIX timers, but could in future without ABI change.  */
 #define _POSIX_TIMERS	0
 
-/* We support barrier functions.  */
-#define _POSIX_BARRIERS	200112L
+/* The barrier functions are available.  */
+#define _POSIX_BARRIERS	200809L
 
 /* POSIX message queues could be available in future.  */
 #define	_POSIX_MESSAGE_PASSING	0

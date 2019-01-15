@@ -18,6 +18,7 @@ static char rcsid[] = "$NetBSD: k_rem_pio2f.c,v 1.4 1995/05/10 20:46:28 jtc Exp 
 #endif
 
 #include <math.h>
+#include <math-narrow-eval.h>
 #include <math_private.h>
 #include <libc-diag.h>
 
@@ -182,7 +183,17 @@ recompute:
 		float fv = 0.0;
 		for (i=jz;i>=0;i--) fv = math_narrow_eval (fv + fq[i]);
 		y[0] = (ih==0)? fv: -fv;
+		/* GCC mainline (to be GCC 9), as of 2018-05-22 on
+		   i686, warns that fq[0] may be used uninitialized.
+		   This is not possible because jz is always
+		   nonnegative when the above loop initializing fq is
+		   executed, because the result is never zero to full
+		   precision (this function is not called for zero
+		   arguments).  */
+		DIAG_PUSH_NEEDS_COMMENT;
+		DIAG_IGNORE_NEEDS_COMMENT (9, "-Wmaybe-uninitialized");
 		fv = math_narrow_eval (fq[0]-fv);
+		DIAG_POP_NEEDS_COMMENT;
 		for (i=1;i<=jz;i++) fv = math_narrow_eval (fv + fq[i]);
 		y[1] = (ih==0)? fv: -fv;
 		break;

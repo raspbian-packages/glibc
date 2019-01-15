@@ -48,6 +48,11 @@
 # undef __ASSUME_SENDMMSG_SYSCALL
 #endif
 
+/* Support for the renameat2 syscall was added in 3.17.  */
+#if __LINUX_KERNEL_VERSION < 0x031100
+# undef __ASSUME_RENAMEAT2
+#endif
+
 /* Support for the execveat syscall was added in 4.0.  */
 #if __LINUX_KERNEL_VERSION < 0x040000
 # undef __ASSUME_EXECVEAT
@@ -57,3 +62,11 @@
 #if __LINUX_KERNEL_VERSION < 0x040A00
 # undef __ASSUME_COPY_FILE_RANGE
 #endif
+
+/* Support for statx was added in kernel 4.12.  */
+#if __LINUX_KERNEL_VERSION < 0X040C00
+# undef __ASSUME_STATX
+#endif
+
+#undef __ASSUME_CLONE_DEFAULT
+#define __ASSUME_CLONE_BACKWARDS3

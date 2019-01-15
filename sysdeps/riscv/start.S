@@ -43,7 +43,9 @@
    __libc_start_main wants this in a5.  */
 
 ENTRY (ENTRY_POINT)
-	/* Mark ra as undefined in order to stop unwinding here!  */
+	/* Terminate call stack by noting ra is undefined.  Use a dummy
+	   .cfi_label to force starting the FDE.  */
+	.cfi_label .Ldummy
 	cfi_undefined (ra)
 	call  .Lload_gp
 	mv    a5, a0  /* rtld_fini.  */
@@ -56,7 +58,8 @@ ENTRY (ENTRY_POINT)
 	lla   a4, __libc_csu_fini
 	mv    a6, sp  /* stack_end.  */
 
-	tail  __libc_start_main@plt
+	call  __libc_start_main@plt
+	ebreak
 END (ENTRY_POINT)
 
 /* Dynamic links need the global pointer to be initialized prior to calling

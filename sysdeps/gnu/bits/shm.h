@@ -49,7 +49,7 @@ typedef unsigned short int shmatt_t;
 struct shmid_ds
   {
     struct ipc_perm shm_perm;		/* operation permission struct */
-    int shm_segsz;			/* size of segment in bytes */
+    size_t shm_segsz;			/* size of segment in bytes */
     __time_t shm_atime;			/* time of last shmat() */
     __time_t shm_dtime;			/* time of last shmdt() */
     __time_t shm_ctime;			/* time of last change by shmctl() */
@@ -58,7 +58,7 @@ struct shmid_ds
     shmatt_t shm_nattch;		/* number of current attaches */
     unsigned short int __shm_npages;	/* size of segment (pages) */
     unsigned long int *__shm_pages;	/* array of ptrs to frames -> SHMMAX */
-    struct vm_area_struct *__attaches;	/* descriptors for attaches */
+    struct __vm_area_struct *__attaches;	/* descriptors for attaches */
   };
 
 #ifdef __USE_MISC

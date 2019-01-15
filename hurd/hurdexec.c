@@ -458,6 +458,7 @@ _hurd_exec_paths (task_t task, file_t file,
   free (env);
   return err;
 }
+libc_hidden_def (_hurd_exec_paths)
 #if SHLIB_COMPAT (libc, GLIBC_2_26, GLIBC_2_27)
 compat_symbol (libc, _hurd_exec_paths, _hurd_exec_paths, GLIBC_2_26);
 #endif

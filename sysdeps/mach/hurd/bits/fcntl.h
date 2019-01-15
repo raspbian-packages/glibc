@@ -163,9 +163,18 @@
 # define F_GETOWN	5	/* Get owner (receiver of SIGIO).  */
 # define F_SETOWN	6	/* Set owner (receiver of SIGIO).  */
 #endif
-#define	F_GETLK		7	/* Get record locking info.  */
-#define	F_SETLK		8	/* Set record locking info (non-blocking).  */
-#define	F_SETLKW	9	/* Set record locking info (blocking).  */
+#ifdef __USE_FILE_OFFSET64
+# define	F_GETLK		F_GETLK64
+# define	F_SETLK		F_SETLK64
+# define	F_SETLKW	F_SETLKW64
+#else
+# define	F_GETLK		7	/* Get record locking info.  */
+# define	F_SETLK		8	/* Set record locking info (non-blocking).  */
+# define	F_SETLKW	9	/* Set record locking info (blocking).  */
+#endif
+#define	F_GETLK64	10	/* Get record locking info.  */
+#define	F_SETLK64	11	/* Set record locking info (non-blocking).  */
+#define	F_SETLKW64	12	/* Set record locking info (blocking).  */
 
 #ifdef __USE_XOPEN2K8
 # define F_DUPFD_CLOEXEC 1030	/* Duplicate, set FD_CLOEXEC on new one.  */
@@ -233,6 +242,10 @@ struct flock64
 #  define AT_NO_AUTOMOUNT	0x800	/* Suppress terminal automount
 					   traversal.  */
 #  define AT_EMPTY_PATH		0x1000	/* Allow empty relative pathname.  */
+#  define AT_STATX_SYNC_TYPE	0x6000
+#  define AT_STATX_SYNC_AS_STAT	0x0000
+#  define AT_STATX_FORCE_SYNC	0x2000
+#  define AT_STATX_DONT_SYNC	0x4000
 # endif
 # define AT_EACCESS		0x200	/* Test access permitted for
 					   effective IDs, not real IDs.  */

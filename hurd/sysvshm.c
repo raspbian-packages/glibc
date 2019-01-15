@@ -26,7 +26,6 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/shm.h>
-#include <hurdlock.h>
 
 
 /* Description of an shm attachment.  */

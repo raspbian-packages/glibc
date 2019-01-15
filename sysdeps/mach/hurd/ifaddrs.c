@@ -227,7 +227,7 @@ __getifaddrs (struct ifaddrs **ifap)
 	      if (!cidr_a)
 		{
 		  /* No CIDR length?! Assume 64.  */
-		  addr = strdup (addr);
+		  addr = __strdup (addr);
 		  cidr = 64;
 		}
 	      else

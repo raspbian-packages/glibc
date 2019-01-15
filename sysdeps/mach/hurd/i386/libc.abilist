@@ -313,7 +313,6 @@ GLIBC_2.2.6 __gettimeofday F
 GLIBC_2.2.6 __gmtime_r F
 GLIBC_2.2.6 __h_errno_location F
 GLIBC_2.2.6 __hurd_fail F
-GLIBC_2.2.6 __hurd_threadvar_max D 0x4
 GLIBC_2.2.6 __hurd_threadvar_stack_mask D 0x4
 GLIBC_2.2.6 __hurd_threadvar_stack_offset D 0x4
 GLIBC_2.2.6 __isalnum_l F
@@ -581,6 +580,7 @@ GLIBC_2.2.6 __wctrans_l F
 GLIBC_2.2.6 __wctype_l F
 GLIBC_2.2.6 __woverflow F
 GLIBC_2.2.6 __write F
+GLIBC_2.2.6 __writev F
 GLIBC_2.2.6 __wuflow F
 GLIBC_2.2.6 __wunderflow F
 GLIBC_2.2.6 __xmknod F
@@ -1265,6 +1265,7 @@ GLIBC_2.2.6 mach_port_deallocate F
 GLIBC_2.2.6 mach_port_insert_right F
 GLIBC_2.2.6 mach_reply_port F
 GLIBC_2.2.6 mach_setup_thread F
+GLIBC_2.2.6 mach_setup_tls F
 GLIBC_2.2.6 mach_task_self F
 GLIBC_2.2.6 mach_thread_self F
 GLIBC_2.2.6 madvise F
@@ -2078,6 +2079,9 @@ GLIBC_2.27 wcstof64 F
 GLIBC_2.27 wcstof64_l F
 GLIBC_2.27 wcstof64x F
 GLIBC_2.27 wcstof64x_l F
+GLIBC_2.28 fcntl64 F
+GLIBC_2.28 renameat2 F
+GLIBC_2.28 statx F
 GLIBC_2.3 __ctype_b_loc F
 GLIBC_2.3 __ctype_tolower_loc F
 GLIBC_2.3 __ctype_toupper_loc F
@@ -2332,7 +2336,6 @@ GLIBC_2.9 pipe2 F
 HURD_CTHREADS_0.3 __cthread_getspecific F
 HURD_CTHREADS_0.3 __cthread_keycreate F
 HURD_CTHREADS_0.3 __cthread_setspecific F
-HURD_CTHREADS_0.3 __libc_getspecific F
 HURD_CTHREADS_0.3 __mutex_init F
 HURD_CTHREADS_0.3 __mutex_lock F
 HURD_CTHREADS_0.3 __mutex_lock_solid F

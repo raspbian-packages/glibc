@@ -49,6 +49,7 @@ extern DIR *__alloc_dir (int fd, bool close_fd, int flags,
 extern __typeof (rewinddir) __rewinddir;
 extern __typeof (seekdir) __seekdir;
 extern __typeof (dirfd) __dirfd;
+libc_hidden_proto (dirfd);
 
 extern void __scandir_cancel_handler (void *arg) attribute_hidden;
 extern int __scandir_tail (DIR *dp,
@@ -57,25 +58,23 @@ extern int __scandir_tail (DIR *dp,
 			   int (*cmp) (const struct dirent **,
 				       const struct dirent **))
   attribute_hidden;
-#  ifdef _DIRENT_MATCHES_DIRENT64
-#   define __scandir64_tail (dp, namelist, select, cmp)         \
-  __scandir_tail (dp, (struct dirent ***) (namelist),           \
-		  (int (*) (const struct dirent *)) (select),   \
-		  (int (*) (const struct dirent **,             \
-			    const struct dirent **)) (cmp))
-#  else
+#  if !_DIRENT_MATCHES_DIRENT64
+extern int __scandir_tail (DIR *dp,
+			   struct dirent ***namelist,
+			   int (*select) (const struct dirent *),
+			   int (*cmp) (const struct dirent **,
+					 const struct dirent **))
+  attribute_hidden;
+#  endif
 extern int __scandir64_tail (DIR *dp,
 			     struct dirent64 ***namelist,
 			     int (*select) (const struct dirent64 *),
 			     int (*cmp) (const struct dirent64 **,
 					 const struct dirent64 **))
   attribute_hidden;
-#  endif
 
 libc_hidden_proto (__rewinddir)
 extern __typeof (scandirat) __scandirat;
-libc_hidden_proto (__scandirat)
-libc_hidden_proto (scandirat64)
 
 #  if IS_IN (rtld) && !defined NO_RTLD_HIDDEN
 extern __typeof (__rewinddir) __rewinddir attribute_hidden;

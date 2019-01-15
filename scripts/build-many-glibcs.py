@@ -324,11 +324,12 @@ class Context(object):
         self.add_config(arch='powerpc',
                         os_name='linux-gnuspe',
                         gcc_cfg=['--disable-multilib', '--enable-secureplt',
-                                 '--enable-e500-double'])
+                                 '--enable-e500-double', '--enable-obsolete'])
         self.add_config(arch='powerpc',
                         os_name='linux-gnuspe',
                         variant='e500v1',
-                        gcc_cfg=['--disable-multilib', '--enable-secureplt'])
+                        gcc_cfg=['--disable-multilib', '--enable-secureplt',
+                                 '--enable-obsolete'])
         self.add_config(arch='riscv64',
                         os_name='linux-gnu',
                         variant='rv64imac-lp64',
@@ -375,14 +376,6 @@ class Context(object):
                                        'arch': 'sparcv9',
                                        'ccopts': '-m32 -mlong-double-128',
                                        'cfg': ['--disable-multi-arch']}])
-        self.add_config(arch='tilegx',
-                        os_name='linux-gnu',
-                        glibcs=[{},
-                                {'variant': '32', 'ccopts': '-m32'}])
-        self.add_config(arch='tilegxbe',
-                        os_name='linux-gnu',
-                        glibcs=[{},
-                                {'variant': '32', 'ccopts': '-m32'}])
         self.add_config(arch='x86_64',
                         os_name='linux-gnu',
                         gcc_cfg=['--with-multilib-list=m64,m32,mx32'],
@@ -712,13 +705,13 @@ class Context(object):
 
     def checkout(self, versions):
         """Check out the desired component versions."""
-        default_versions = {'binutils': 'vcs-2.30',
-                            'gcc': 'vcs-7',
+        default_versions = {'binutils': 'vcs-2.31',
+                            'gcc': 'vcs-8',
                             'glibc': 'vcs-mainline',
                             'gmp': '6.1.2',
-                            'linux': '4.15',
+                            'linux': '4.17',
                             'mpc': '1.1.0',
-                            'mpfr': '4.0.0',
+                            'mpfr': '4.0.1',
                             'mig': 'vcs-mainline',
                             'gnumach': 'vcs-mainline',
                             'hurd': 'vcs-mainline'}
@@ -876,7 +869,7 @@ class Context(object):
         if update:
             return
         url_map = {'binutils': 'https://ftp.gnu.org/gnu/binutils/binutils-%(version)s.tar.bz2',
-                   'gcc': 'https://ftp.gnu.org/gnu/gcc/gcc-%(version)s/gcc-%(version)s.tar.bz2',
+                   'gcc': 'https://ftp.gnu.org/gnu/gcc/gcc-%(version)s/gcc-%(version)s.tar.gz',
                    'gmp': 'https://ftp.gnu.org/gnu/gmp/gmp-%(version)s.tar.xz',
                    'linux': 'https://www.kernel.org/pub/linux/kernel/v4.x/linux-%(version)s.tar.xz',
                    'mpc': 'https://ftp.gnu.org/gnu/mpc/mpc-%(version)s.tar.gz',
@@ -1270,7 +1263,6 @@ class Config(object):
                     'riscv64': 'riscv',
                     'sh': 'sh',
                     'sparc': 'sparc',
-                    'tile': 'tile',
                     'x86_64': 'x86'}
         linux_arch = None
         for k in arch_map:

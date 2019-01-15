@@ -26,7 +26,9 @@
 #include <hurd/hurd_types.h>
 #include <hurd/port.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <fcntl.h>
+#include <bits/types/sigset_t.h>
 
 
 /* Structure representing a file descriptor.  */
@@ -140,6 +142,7 @@ _hurd_fd_get (int fd)
      __result; })
 
 #include <errno.h>
+#include <bits/types/error_t.h>
 
 /* Check if ERR should generate a signal.
    Returns the signal to take, or zero if none.  */
@@ -179,7 +182,7 @@ _hurd_fd_error (int fd, error_t err)
   if (signo)
     {
       const struct hurd_signal_detail detail
-	= { code: fd, error: err, exc: 0 };
+	= { exc: 0, exc_code: 0, exc_subcode: 0, code: fd, error: err };
       _hurd_raise_signal (NULL, signo, &detail);
     }
   return err;
@@ -252,9 +255,9 @@ extern error_t _hurd_fd_close (struct hurd_fd *fd);
    If successful, stores the amount actually read or written in *NBYTES.  */
 
 extern error_t _hurd_fd_read (struct hurd_fd *fd,
-			      void *buf, size_t *nbytes, loff_t offset);
+			      void *buf, size_t *nbytes, __loff_t offset);
 extern error_t _hurd_fd_write (struct hurd_fd *fd,
-			       const void *buf, size_t *nbytes, loff_t offset);
+			       const void *buf, size_t *nbytes, __loff_t offset);
 
 
 /* Call *RPC on PORT and/or CTTY; if a call on CTTY returns EBACKGROUND,

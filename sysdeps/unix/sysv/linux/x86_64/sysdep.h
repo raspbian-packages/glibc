@@ -23,9 +23,8 @@
 #include <sysdeps/unix/x86_64/sysdep.h>
 #include <tls.h>
 
-#if IS_IN (rtld)
-# include <dl-sysdep.h>		/* Defines RTLD_PRIVATE_ERRNO.  */
-#endif
+/* Defines RTLD_PRIVATE_ERRNO.  */
+#include <dl-sysdep.h>
 
 /* For Linux we can use the system call table in the header file
 	/usr/include/asm/unistd.h
@@ -110,7 +109,7 @@
 
 # define ret_ERRVAL ret
 
-# if defined PIC && defined RTLD_PRIVATE_ERRNO
+# if defined PIC && RTLD_PRIVATE_ERRNO
 #  define SYSCALL_SET_ERRNO			\
   lea rtld_errno(%rip), %RCX_LP;		\
   neg %eax;					\
@@ -423,5 +422,10 @@
 /* How to pass the off{64}_t argument on p{readv,writev}{64}.  */
 #undef LO_HI_LONG
 #define LO_HI_LONG(val) (val), 0
+
+/* Each shadow stack slot takes 8 bytes.  Assuming that each stack
+   frame takes 256 bytes, this is used to compute shadow stack size
+   from stack size.  */
+#define STACK_SIZE_TO_SHADOW_STACK_SIZE_SHIFT 5
 
 #endif /* linux/x86_64/sysdep.h */

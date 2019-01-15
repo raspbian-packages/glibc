@@ -1,5 +1,5 @@
 /* Create new context.
-   Copyright (C) 2001,2002,2005,2007,2008,2009 Free Software Foundation, Inc.
+   Copyright (C) 2001-2015 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2001.
 
@@ -23,14 +23,6 @@
 
 
 ENTRY(__makecontext)
-	movl	4(%esp), %eax
-	subl	$4, %esp
-	cfi_adjust_cfa_offset (4)
-	movl	%eax, (%esp)
-	/* call	HIDDEN_JUMPTARGET (__makecontext_helper) */
-	addl	$4, %esp
-	cfi_adjust_cfa_offset (-4)
-
 	movl	4(%esp), %eax
 
 	/* Load the address of the function we are supposed to run.  */

@@ -35,9 +35,21 @@
 #define __ASSUME_RECV_SYSCALL	1
 #define __ASSUME_SEND_SYSCALL	1
 
+/* Support for the renameat2 syscall was added in 3.17.  */
+#if __LINUX_KERNEL_VERSION < 0x031100
+# undef __ASSUME_RENAMEAT2
+#endif
+
 /* Support for the execveat syscall was added in 4.2.  */
 #if __LINUX_KERNEL_VERSION < 0x040200
 # undef __ASSUME_EXECVEAT
+#endif
+
+/* Support for copy_file_range, statx was added in kernel 4.13.  */
+#if __LINUX_KERNEL_VERSION < 0x040D00
+# undef __ASSUME_MLOCK2
+# undef __ASSUME_COPY_FILE_RANGE
+# undef __ASSUME_STATX
 #endif
 
 #endif /* _KERNEL_FEATURES_H */

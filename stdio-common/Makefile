@@ -35,7 +35,7 @@ routines	:=							      \
 	perror psignal							      \
 	tmpfile tmpfile64 tmpnam tmpnam_r tempnam tempname		      \
 	getline getw putw						      \
-	remove rename renameat						      \
+	remove rename renameat renameat2				      \
 	flockfile ftrylockfile funlockfile				      \
 	isoc99_scanf isoc99_vscanf isoc99_fscanf isoc99_vfscanf isoc99_sscanf \
 	isoc99_vsscanf							      \
@@ -61,14 +61,17 @@ tests := tstscanf test_rdwr test-popen tstgetln test-fseek \
 	 tst-printf-bz18872 tst-vfprintf-width-prec tst-fmemopen4 \
 	 tst-vfprintf-user-type \
 	 tst-vfprintf-mbs-prec \
+	 tst-scanf-round \
+	 tst-renameat2 \
 
-test-srcs = tst-unbputc tst-printf
+test-srcs = tst-unbputc tst-printf tst-printfsz-islongdouble
 
 ifeq ($(run-built-tests),yes)
 tests-special += $(objpfx)tst-unbputc.out $(objpfx)tst-printf.out \
 		 $(objpfx)tst-printf-bz18872-mem.out \
 		 $(objpfx)tst-setvbuf1-cmp.out \
-		 $(objpfx)tst-vfprintf-width-prec-mem.out
+		 $(objpfx)tst-vfprintf-width-prec-mem.out \
+		 $(objpfx)tst-printfsz-islongdouble.out
 generated += tst-printf-bz18872.c tst-printf-bz18872.mtrace \
 	     tst-printf-bz18872-mem.out \
 	     tst-vfprintf-width-prec.mtrace tst-vfprintf-width-prec-mem.out
@@ -100,6 +103,11 @@ $(objpfx)tst-unbputc.out: tst-unbputc.sh $(objpfx)tst-unbputc
 
 $(objpfx)tst-printf.out: tst-printf.sh $(objpfx)tst-printf
 	$(SHELL) $< $(common-objpfx) '$(test-program-prefix)' > $@; \
+	$(evaluate-test)
+
+$(objpfx)tst-printfsz-islongdouble.out: \
+  tst-printfsz-islongdouble.sh $(objpfx)tst-printfsz-islongdouble
+	$(SHELL) $^ '$(test-program-prefix)' $@; \
 	$(evaluate-test)
 
 # We generate this source because it requires a printf invocation with
@@ -144,6 +152,13 @@ CFLAGS-scanf15.c += -I../libio -I../stdlib -I../wcsmbs -I../time -I../string \
 CFLAGS-scanf17.c += -I../libio -I../stdlib -I../wcsmbs -I../time -I../string \
 		   -I../wctype
 
+CFLAGS-bug3.c += -DOBJPFX=\"$(objpfx)\"
+CFLAGS-bug4.c += -DOBJPFX=\"$(objpfx)\"
+CFLAGS-bug5.c += -DOBJPFX=\"$(objpfx)\"
+CFLAGS-test-fseek.c += -DOBJPFX=\"$(objpfx)\"
+CFLAGS-test-popen.c += -DOBJPFX=\"$(objpfx)\"
+CFLAGS-test_rdwr.c += -DOBJPFX=\"$(objpfx)\"
+
 # tst-gets.c tests a deprecated function.
 CFLAGS-tst-gets.c += -Wno-deprecated-declarations
 
@@ -158,3 +173,4 @@ $(objpfx)tst-setvbuf1-cmp.out: tst-setvbuf1.expect $(objpfx)tst-setvbuf1.out
 	$(evaluate-test)
 
 $(objpfx)tst-printf-round: $(libm)
+$(objpfx)tst-scanf-round: $(libm)

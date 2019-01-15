@@ -22,10 +22,11 @@ subdir	:= libio
 
 include ../Makeconfig
 
-headers	:= stdio.h libio.h _G_config.h \
-	   bits/stdio.h bits/libio.h bits/_G_config.h \
-	   bits/sys_errlist.h bits/stdio2.h bits/stdio-ldbl.h bits/libio-ldbl.h \
-	   bits/types/FILE.h bits/types/__FILE.h
+headers	:= stdio.h \
+	   bits/stdio.h bits/stdio2.h bits/sys_errlist.h bits/stdio-ldbl.h \
+	   bits/types/FILE.h bits/types/__FILE.h bits/types/struct_FILE.h \
+	   bits/types/__fpos_t.h bits/types/__fpos64_t.h \
+	   bits/types/cookie_io_functions_t.h
 
 routines	:=							      \
 	filedoalloc iofclose iofdopen iofflush iofgetpos iofgets iofopen      \
@@ -48,7 +49,7 @@ routines	:=							      \
 	__fbufsize __freading __fwriting __freadable __fwritable __flbf	      \
 	__fpurge __fpending __fsetlocking				      \
 									      \
-	libc_fatal fmemopen oldfmemopen vtables
+	libc_fatal fmemopen oldfmemopen vtables readline
 
 tests = tst_swprintf tst_wprintf tst_swscanf tst_wscanf tst_getwc tst_putwc   \
 	tst_wprintf2 tst-widetext test-fmemopen tst-ext tst-ext2 \
@@ -63,9 +64,9 @@ tests = tst_swprintf tst_wprintf tst_swscanf tst_wscanf tst_getwc tst_putwc   \
 	bug-memstream1 bug-wmemstream1 \
 	tst-setvbuf1 tst-popen1 tst-fgetwc bug-wsetpos tst-fseek \
 	tst-fwrite-error tst-ftell-partial-wide tst-ftell-active-handler \
-	tst-ftell-append tst-fputws tst-bz22415
+	tst-ftell-append tst-fputws tst-bz22415 tst-fgetc-after-eof
 
-tests-internal = tst-vtables tst-vtables-interposed
+tests-internal = tst-vtables tst-vtables-interposed tst-readline
 
 ifeq (yes,$(build-shared))
 # Add test-fopenloc only if shared library is enabled since it depends on

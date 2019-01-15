@@ -37,6 +37,9 @@
   ((ts)->SP = (unsigned long int) (stack) + (size))
 #endif
 #endif
+
+/* This copies architecture-specific bits from the current thread to the new
+   thread state.  */
 #ifndef MACHINE_THREAD_STATE_FIX_NEW
 # define MACHINE_THREAD_STATE_FIX_NEW(ts)
 #endif

@@ -20,10 +20,6 @@
 
 #define	_HURD_SIGNAL_H	1
 #include <features.h>
-/* Make sure <signal.h> is going to define NSIG.  */
-#ifndef __USE_GNU
-#error "Must have `_GNU_SOURCE' feature test macro to use this file"
-#endif
 
 #define __need_size_t
 #define __need_NULL
@@ -35,6 +31,10 @@
 #include <hurd/hurd_types.h>
 #include <signal.h>
 #include <errno.h>
+#include <bits/types/error_t.h>
+#include <bits/types/stack_t.h>
+#include <bits/types/sigset_t.h>
+#include <bits/sigaction.h>
 #include <hurd/msg.h>
 
 #include <cthreads.h>		/* For `struct mutex'.  */
@@ -80,7 +80,7 @@ struct hurd_sigstate
        semantics: if sa_handler is SIG_IGN instead of SIG_DFL, this thread
        will receive global signals and use the process-wide action vector
        instead of this one.  */
-    struct sigaction actions[NSIG];
+    struct sigaction actions[_NSIG];
 
     stack_t sigaltstack;
 
@@ -91,7 +91,7 @@ struct hurd_sigstate
     struct hurd_signal_preemptor *preemptors;
 
     /* For each signal that may be pending, the details to deliver it with.  */
-    struct hurd_signal_detail pending_data[NSIG];
+    struct hurd_signal_detail pending_data[_NSIG];
 
     /* If `suspended' is set when this thread gets a signal,
        the signal thread sends an empty message to it.  */
@@ -208,7 +208,7 @@ _hurd_critical_section_lock (void)
   struct hurd_sigstate *ss;
 
 #ifdef __LIBC_NO_TLS
-  if (__LIBC_NO_TLS())
+  if (__LIBC_NO_TLS ())
     /* TLS is currently initializing, no need to enter critical section.  */
     return NULL;
 #endif

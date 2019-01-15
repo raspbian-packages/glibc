@@ -251,8 +251,8 @@ get_cached_stack (size_t *sizep, void **memp)
 
 
 /* Free stacks until cache size is lower than LIMIT.  */
-void
-__free_stacks (size_t limit)
+static void
+free_stacks (size_t limit)
 {
   /* We reduce the size of the cache.  Remove the last entries until
      the size is below the limit.  */
@@ -288,6 +288,12 @@ __free_stacks (size_t limit)
     }
 }
 
+/* Free all the stacks on cleanup.  */
+void
+__nptl_stacks_freeres (void)
+{
+  free_stacks (0);
+}
 
 /* Add a stack frame which is not used anymore to the stack.  Must be
    called with the cache lock held.  */
@@ -302,7 +308,7 @@ queue_stack (struct pthread *stack)
 
   stack_cache_actsize += stack->stackblock_size;
   if (__glibc_unlikely (stack_cache_actsize > stack_cache_maxsize))
-    __free_stacks (stack_cache_maxsize);
+    free_stacks (stack_cache_maxsize);
 }
 
 
@@ -486,12 +492,6 @@ allocate_stack (const struct pthread_attr *attr, struct pthread **pdp,
       __pthread_multiple_threads = *__libc_multiple_threads_ptr = 1;
 #endif
 
-#ifndef __ASSUME_PRIVATE_FUTEX
-      /* The thread must know when private futexes are supported.  */
-      pd->header.private_futex = THREAD_GETMEM (THREAD_SELF,
-						header.private_futex);
-#endif
-
 #ifdef NEED_DL_SYSINFO
       SETUP_THREAD_SYSINFO (pd);
 #endif
@@ -608,12 +608,6 @@ allocate_stack (const struct pthread_attr *attr, struct pthread **pdp,
 	  pd->header.multiple_threads = 1;
 #ifndef TLS_MULTIPLE_THREADS_IN_TCB
 	  __pthread_multiple_threads = *__libc_multiple_threads_ptr = 1;
-#endif
-
-#ifndef __ASSUME_PRIVATE_FUTEX
-	  /* The thread must know when private futexes are supported.  */
-	  pd->header.private_futex = THREAD_GETMEM (THREAD_SELF,
-						    header.private_futex);
 #endif
 
 #ifdef NEED_DL_SYSINFO
@@ -734,7 +728,7 @@ allocate_stack (const struct pthread_attr *attr, struct pthread **pdp,
          /* The guard size difference might be > 0, but once rounded
             to the nearest page the size difference might be zero.  */
          if (new_guard > old_guard
-             && mprotect (old_guard, new_guard - old_guard, prot) != 0)
+             && __mprotect (old_guard, new_guard - old_guard, prot) != 0)
 	    goto mprot_error;
 #endif
 

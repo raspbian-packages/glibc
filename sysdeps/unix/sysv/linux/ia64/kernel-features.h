@@ -26,4 +26,10 @@
 #define __ASSUME_SEND_SYSCALL		1
 #define __ASSUME_ACCEPT4_SYSCALL	1
 
+/* No statx system call on ia64 yet.  */
+#undef __ASSUME_STATX
+
+#undef __ASSUME_CLONE_DEFAULT
+#define __ASSUME_CLONE2
+
 #endif /* _KERNEL_FEATURES_H */

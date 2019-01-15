@@ -15,24 +15,52 @@ Subject: [PATCH] Implement SysV shared memory for GNU/Hurd.
         * sysdeps/mach/hurd/shmdt.c: New file.
         * sysdeps/mach/hurd/bits/posix_opt.h: Define _XOPEN_SHM to 1.
 
+TODO:
+“
+> +  char filename[sizeof (SHM_DIR) - 1 + SHM_NAMEMAX];
+> +  struct stat statbuf;
+> +
+> +  sprintf (filename, SHM_DIR SHM_NAMEPRI, id);
+> +  /* SysV requires read access for IPC_STAT.  */
+> +  fd = __open (filename, O_NORW);
+> +  if (fd < 0)
+> +    {
+> +      if (errno == ENOENT)
+> +     errno = EINVAL;
+> +      return -1;
+> +    }
+
+Since this is repeated in more than one function, put it into an
+internal subroutine.  Then we have only one place doing the
+name-generation logic.
+”
+
+“
+> +    case IPC_RMID:
+> +      res = __unlink (filename);
+> +      /* FIXME: Check error (mapping ENOENT to EINVAL).  */
+
+Fix it.
+”
+
 ---
  hurd/Makefile                      |    1 
- hurd/sysvshm.c                     |   96 ++++++++++++++
+ hurd/sysvshm.c                     |   97 ++++++++++++++
  hurd/sysvshm.h                     |   47 +++++++
  sysdeps/mach/hurd/bits/posix_opt.h |    4 
  sysdeps/mach/hurd/ftok.c           |   43 ++++++
- sysdeps/mach/hurd/shmat.c          |   78 +++++++++++
+ sysdeps/mach/hurd/shmat.c          |   79 ++++++++++++
  sysdeps/mach/hurd/shmctl.c         |  132 ++++++++++++++++++++
  sysdeps/mach/hurd/shmdt.c          |   51 +++++++
  sysdeps/mach/hurd/shmget.c         |  242 +++++++++++++++++++++++++++++++++++++
- 9 files changed, 692 insertions(+), 2 deletions(-)
+ 9 files changed, 694 insertions(+), 2 deletions(-)
 
 --- a/hurd/Makefile
 +++ b/hurd/Makefile
-@@ -58,6 +58,7 @@ routines = hurdstartup hurdinit \
- 	   vpprintf \
+@@ -55,6 +55,7 @@
  	   ports-get ports-set hurdports hurdmsg \
  	   errno-loc \
+ 	   hurdlock \
 +	   sysvshm \
  	   $(sig) $(dtable) $(inlines) port-cleanup report-wait xattr
  sig	= hurdsig hurdfault siginfo hurd-raise preempt-sig \
@@ -87,7 +115,7 @@ Subject: [PATCH] Implement SysV shared memory for GNU/Hurd.
 +static struct sysvshm_attach *attach_list;
 +
 +/* A lock to protect the linked list of shared memory attachments.  */
-+static struct mutex sysvshm_lock = MUTEX_INITIALIZER;
++static unsigned int sysvshm_lock = LLL_INITIALIZER;
 +
 +
 +/* Adds a segment attachment.  */
@@ -235,8 +263,9 @@ Subject: [PATCH] Implement SysV shared memory for GNU/Hurd.
 +}
 --- /dev/null
 +++ b/sysdeps/mach/hurd/shmat.c
-@@ -0,0 +1,79 @@
-+/* Copyright (C) 2005 Free Software Foundation, Inc.
+@@ -0,0 +1,82 @@
++/* SysV shmat for Hurd.
++   Copyright (C) 2005-2015 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
 +
 +   The GNU C Library is free software; you can redistribute it and/or
@@ -250,9 +279,8 @@ Subject: [PATCH] Implement SysV shared memory for GNU/Hurd.
 +   Lesser General Public License for more details.
 +
 +   You should have received a copy of the GNU Lesser General Public
-+   License along with the GNU C Library; if not, write to the Free
-+   Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-+   02111-1307 USA.  */
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
 +
 +#include <errno.h>
 +#include <utime.h>
@@ -293,7 +321,9 @@ Subject: [PATCH] Implement SysV shared memory for GNU/Hurd.
 +  res = __fstat (fd, &statbuf);
 +  if (res < 0)
 +    {
++      err = errno;
 +      __close (fd);
++      errno = err;
 +      return (void *) -1;
 +    }
 +
@@ -308,6 +338,7 @@ Subject: [PATCH] Implement SysV shared memory for GNU/Hurd.
 +  if (err)
 +    {
 +      __munmap (addr, statbuf.st_size);
++      errno = err;
 +      return (void *) -1;
 +    }
 +
@@ -760,5 +791,5 @@ Subject: [PATCH] Implement SysV shared memory for GNU/Hurd.
 +/* XPG4.2 shared memory is supported.  */
 +#define _XOPEN_SHM      1
  
- /* We do not have the POSIX threads interface.  */
- #define _POSIX_THREADS	-1
+ /* Tell we have POSIX threads.  */
+ #define _POSIX_THREADS	200809L

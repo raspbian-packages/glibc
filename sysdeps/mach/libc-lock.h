@@ -22,10 +22,9 @@
 #ifdef _LIBC
 
 #include <tls.h>
-#include <cthreads.h>
 #include <lowlevellock.h>
 
-/* The locking here is very inexpensive, even for inlining. */
+/* The locking here is very inexpensive, even for inlining.  */
 #define _IO_lock_inexpensive   1
 
 typedef unsigned int __libc_lock_t;
@@ -40,15 +39,12 @@ typedef __libc_lock_recursive_t __rtld_lock_recursive_t;
 
 extern char __libc_lock_self0[0];
 #define __libc_lock_owner_self()   \
-  (__LIBC_NO_TLS() ? (void *)&__libc_lock_self0 : THREAD_SELF)
+  (__LIBC_NO_TLS () ? (void *)&__libc_lock_self0 : THREAD_SELF)
 
 #else
 typedef struct __libc_lock_opaque__ __libc_lock_t;
 typedef struct __libc_lock_recursive_opaque__ __libc_lock_recursive_t;
 #endif
-
-/* Type for key of thread specific data.  */
-typedef cthread_key_t __libc_key_t;
 
 /* Define a lock variable NAME with storage class CLASS.  The lock must be
    initialized with __libc_lock_init before it can be used (or define it
@@ -103,7 +99,10 @@ typedef cthread_key_t __libc_key_t;
   __libc_lock_define_initialized_recursive (CLASS, NAME)
 
 #define __libc_lock_init_recursive(NAME)   \
-  ((NAME) = (__libc_lock_recursive_t)_LIBC_LOCK_RECURSIVE_INITIALIZER, 0)
+  ({   \
+     (NAME) = (__libc_lock_recursive_t)_LIBC_LOCK_RECURSIVE_INITIALIZER;   \
+     0;   \
+  })
 
 #define __libc_lock_trylock_recursive(NAME)   \
   ({   \
@@ -183,7 +182,7 @@ __libc_cleanup_fct (struct __libc_cleanup_frame *framep)
         __attribute__ ((__cleanup__ (__libc_cleanup_fct))) =   \
         { .__fct = (FCT), .__argp = (ARG), .__doit = (DOIT) };
 
-/* This one closes the brace above. */
+/* This one closes the brace above.  */
 #define __libc_cleanup_region_end(DOIT)   \
       __cleanup.__doit = (DOIT);   \
     }   \
@@ -194,7 +193,7 @@ __libc_cleanup_fct (struct __libc_cleanup_frame *framep)
 #define __libc_cleanup_push(fct, arg) __libc_cleanup_region_start (1, fct, arg)
 #define __libc_cleanup_pop(execute) __libc_cleanup_region_end (execute)
 
-/* Use mutexes as once control variables. */
+/* Use mutexes as once control variables.  */
 
 struct __libc_once
   {
@@ -222,10 +221,6 @@ struct __libc_once
 /* We need portable names for some functions.  E.g., when they are
    used as argument to __libc_cleanup_region_start.  */
 #define __libc_mutex_unlock __libc_lock_unlock
-
-#define __libc_key_create(KEY,DEST) __cthread_keycreate (KEY)
-#define __libc_setspecific(KEY,VAL) __cthread_setspecific (KEY, VAL)
-void *__libc_getspecific (__libc_key_t key);
 
 /* Hide the definitions which are only supposed to be used inside libc in
    a separate file.  This file is not present in the installation!  */

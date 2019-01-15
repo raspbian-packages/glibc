@@ -16,7 +16,9 @@
 #include <errno.h>
 #include <float.h>
 #include <math.h>
+#include <math-narrow-eval.h>
 #include <math_private.h>
+#include <math-underflow.h>
 
 static const float
 two   =  2.0000000000e+00, /* 0x40000000 */

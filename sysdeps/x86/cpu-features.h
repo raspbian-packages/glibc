@@ -40,6 +40,7 @@
 #define bit_arch_Prefer_No_AVX512		(1 << 20)
 #define bit_arch_MathVec_Prefer_No_AVX512	(1 << 21)
 #define bit_arch_XSAVEC_Usable			(1 << 22)
+#define bit_arch_Prefer_FSRM			(1 << 23)
 
 /* CPUID Feature flags.  */
 
@@ -76,6 +77,7 @@
 #define bit_cpu_AVX512VL	(1u << 31)
 #define bit_cpu_IBT		(1u << 20)
 #define bit_cpu_SHSTK		(1u << 7)
+#define bit_cpu_FSRM		(1 << 4)
 
 /* XCR0 Feature flags.  */
 #define bit_XMM_state		(1 << 1)
@@ -207,6 +209,7 @@ extern const struct cpu_features *__get_cpu_features (void)
 # define index_cpu_POPCNT	COMMON_CPUID_INDEX_1
 # define index_cpu_IBT		COMMON_CPUID_INDEX_7
 # define index_cpu_SHSTK	COMMON_CPUID_INDEX_7
+# define index_cpu_FSRM		COMMON_CPUID_INDEX_7
 
 # define reg_CX8		edx
 # define reg_CMOV		edx
@@ -238,6 +241,7 @@ extern const struct cpu_features *__get_cpu_features (void)
 # define reg_POPCNT		ecx
 # define reg_IBT		edx
 # define reg_SHSTK		ecx
+# define reg_FSRM		edx
 
 # define index_arch_Fast_Rep_String	FEATURE_INDEX_1
 # define index_arch_Fast_Copy_Backward	FEATURE_INDEX_1
@@ -261,6 +265,7 @@ extern const struct cpu_features *__get_cpu_features (void)
 # define index_arch_Prefer_No_AVX512	FEATURE_INDEX_1
 # define index_arch_MathVec_Prefer_No_AVX512 FEATURE_INDEX_1
 # define index_arch_XSAVEC_Usable	FEATURE_INDEX_1
+# define index_arch_Prefer_FSRM		FEATURE_INDEX_1
 
 #endif	/* !__ASSEMBLER__ */
 

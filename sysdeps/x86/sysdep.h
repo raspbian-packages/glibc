@@ -21,9 +21,43 @@
 
 #include <sysdeps/generic/sysdep.h>
 
+/* __CET__ is defined by GCC with Control-Flow Protection values:
+
+enum cf_protection_level
+{
+  CF_NONE = 0,
+  CF_BRANCH = 1 << 0,
+  CF_RETURN = 1 << 1,
+  CF_FULL = CF_BRANCH | CF_RETURN,
+  CF_SET = 1 << 2
+};
+*/
+
+/* Set if CF_BRANCH (IBT) is enabled.  */
+#define X86_FEATURE_1_IBT	(1U << 0)
+/* Set if CF_RETURN (SHSTK) is enabled.  */
+#define X86_FEATURE_1_SHSTK	(1U << 1)
+
+#ifdef __CET__
+# define CET_ENABLED	1
+# define IBT_ENABLED	(__CET__ & X86_FEATURE_1_IBT)
+# define SHSTK_ENABLED	(__CET__ & X86_FEATURE_1_SHSTK)
+#else
+# define CET_ENABLED	0
+# define IBT_ENABLED	0
+# define SHSTK_ENABLED	0
+#endif
+
 #ifdef	__ASSEMBLER__
 
 /* Syntactic details of assembler.  */
+
+#ifdef _CET_ENDBR
+# define _CET_NOTRACK notrack
+#else
+# define _CET_ENDBR
+# define _CET_NOTRACK
+#endif
 
 /* ELF uses byte-counts for .align, most others use log2 of count of bytes.  */
 #define ALIGNARG(log2) 1<<log2
@@ -36,6 +70,7 @@
   .align ALIGNARG(4);							      \
   C_LABEL(name)								      \
   cfi_startproc;							      \
+  _CET_ENDBR;								      \
   CALL_MCOUNT
 
 #undef	END

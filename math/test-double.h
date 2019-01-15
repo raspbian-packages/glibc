@@ -29,3 +29,4 @@
 #define FTOSTR strfromd
 #define snan_value_MACRO SNAN
 #define TEST_FLOATN 0
+#define FUNC_NARROW_PREFIX d

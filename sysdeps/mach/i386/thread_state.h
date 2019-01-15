@@ -21,7 +21,9 @@
 
 #include <mach/machine/thread_status.h>
 
+/* This lets the kernel define segments for a new thread.  */
 #define MACHINE_NEW_THREAD_STATE_FLAVOR	i386_THREAD_STATE
+/* This makes the kernel load our segments descriptors.  */
 #define MACHINE_THREAD_STATE_FLAVOR	i386_REGS_SEGS_STATE
 #define MACHINE_THREAD_STATE_COUNT	i386_THREAD_STATE_COUNT
 

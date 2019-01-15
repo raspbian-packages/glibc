@@ -66,7 +66,8 @@ extern double ____strtod_l_internal (const char *, char **, int, locale_t);
 #include <float.h>
 #include "../locale/localeinfo.h"
 #include <math.h>
-#include <math_private.h>
+#include <math-barriers.h>
+#include <math-narrow-eval.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
@@ -309,7 +310,7 @@ round_and_return (mp_limb_t *retval, intmax_t exponent, int negative,
 	}
     }
 
-  if (exponent > MAX_EXP)
+  if (exponent >= MAX_EXP)
     goto overflow;
 
   bool half_bit = (round_limb & (((mp_limb_t) 1) << round_bit)) != 0;
@@ -342,7 +343,7 @@ round_and_return (mp_limb_t *retval, intmax_t exponent, int negative,
 	exponent = MIN_EXP - 1;
     }
 
-  if (exponent > MAX_EXP)
+  if (exponent >= MAX_EXP)
   overflow:
     return overflow_value (negative);
 
@@ -677,7 +678,7 @@ ____STRTOF_INTERNAL (const STRING_TYPE *nptr, STRING_TYPE **endptr, int group,
 	  if (endptr != NULL)
 	    *endptr = (STRING_TYPE *) cp;
 
-	  return retval;
+	  return negative ? -retval : retval;
 	}
 
       /* It is really a text we do not recognize.  */

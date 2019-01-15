@@ -24,6 +24,7 @@
 #include <string.h>
 #include <libc-lock.h>
 #include <ldsodefs.h>
+#include <libc-symbols.h>
 
 #if !defined SHARED && IS_IN (libdl)
 
@@ -197,7 +198,10 @@ check_free (struct dl_action_result *rec)
       Dl_info info;
       if (_dl_addr (check_free, &info, &map, NULL) != 0 && map->l_ns == 0)
 #endif
-	free ((char *) rec->errstring);
+	{
+	  free ((char *) rec->errstring);
+	  rec->errstring = NULL;
+	}
     }
 }
 
@@ -221,6 +225,19 @@ free_key_mem (void *mem)
 }
 
 # ifdef SHARED
+
+/* Free the dlerror-related resources.  */
+void
+__dlerror_main_freeres (void)
+{
+  void *mem;
+  /* Free the global memory if used.  */
+  check_free (&last_result);
+  /* Free the TSD memory if used.  */
+  mem = __libc_getspecific (key);
+  if (mem != NULL)
+    free_key_mem (mem);
+}
 
 struct dlfcn_hook *_dlfcn_hook __attribute__((nocommon));
 libdl_hidden_data_def (_dlfcn_hook)

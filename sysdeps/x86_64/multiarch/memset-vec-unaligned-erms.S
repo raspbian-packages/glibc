@@ -128,8 +128,14 @@ END (__memset_chk_erms)
 
 /* Only used to measure performance of REP STOSB.  */
 ENTRY (__memset_erms)
+	/* Skip zero length.  */
+	testq	%rdx, %rdx
+	jnz	 L(stosb)
+	movq	%rdi, %rax
+	ret
 # else
-/* Provide a symbol to debugger.  */
+/* Provide a hidden symbol to debugger.  */
+	.hidden	MEMSET_SYMBOL (__memset, erms)
 ENTRY (MEMSET_SYMBOL (__memset, erms))
 # endif
 L(stosb):

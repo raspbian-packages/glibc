@@ -111,7 +111,9 @@
 #include <errno.h>
 #include <float.h>
 #include <math.h>
+#include <math-barriers.h>
 #include <math_private.h>
+#include <math-underflow.h>
 #include <libm-alias-double.h>
 #define one Q[0]
 static const double

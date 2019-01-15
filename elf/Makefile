@@ -32,7 +32,7 @@ routines	= $(all-dl-routines) dl-support dl-iteratephdr \
 dl-routines	= $(addprefix dl-,load lookup object reloc deps hwcaps \
 				  runtime init fini debug misc \
 				  version profile tls origin scope \
-				  execstack caller open close trampoline \
+				  execstack open close trampoline \
 				  exception sort-maps)
 ifeq (yes,$(use-ldconfig))
 dl-routines += dl-cache
@@ -54,7 +54,6 @@ all-dl-routines = $(dl-routines) $(sysdep-dl-routines)
 # But they are absent from the shared libc, because that code is in ld.so.
 elide-routines.os = $(all-dl-routines) dl-support enbl-secure dl-origin \
 		    dl-sysdep dl-exception dl-reloc-static-pie
-shared-only-routines += dl-caller
 
 # ld.so uses those routines, plus some special stuff for being the program
 # interpreter and operating independent of libc.
@@ -175,7 +174,7 @@ tests += restest1 preloadtest loadfail multiload origtest resolvfail \
 	 tst-tls4 tst-tls5 \
 	 tst-tls10 tst-tls11 tst-tls12 tst-tls13 tst-tls14 tst-tls15 \
 	 tst-tls16 tst-tls17 tst-tls18 tst-tls19 tst-tls-dlinfo \
-	 tst-align tst-align2 $(tests-execstack-$(have-z-execstack)) \
+	 tst-align tst-align2 \
 	 tst-dlmodcount tst-dlopenrpath tst-deep1 \
 	 tst-dlmopen1 tst-dlmopen3 \
 	 unload3 unload4 unload5 unload6 unload7 unload8 tst-global1 order2 \
@@ -187,7 +186,8 @@ tests += restest1 preloadtest loadfail multiload origtest resolvfail \
 	 tst-tlsalign tst-tlsalign-extern tst-nodelete-opened \
 	 tst-nodelete2 tst-audit11 tst-audit12 tst-dlsym-error tst-noload \
 	 tst-latepthread tst-tls-manydynamic tst-nodelete-dlclose \
-	 tst-debug1 tst-main1 tst-big-note
+	 tst-debug1 tst-main1 tst-absolute-sym tst-absolute-zero tst-big-note \
+	 tst-unwind-main
 #	 reldep9
 tests-internal += loadtest unload unload2 circleload1 \
 	 neededtest neededtest2 neededtest3 neededtest4 \
@@ -203,6 +203,7 @@ ifneq ($(selinux-enabled),1)
 tests-execstack-yes = tst-execstack tst-execstack-needed tst-execstack-prog
 endif
 endif
+tests += $(tests-execstack-$(have-z-execstack))
 ifeq ($(run-built-tests),yes)
 tests-special += $(objpfx)tst-leaks1-mem.out \
 		 $(objpfx)tst-leaks1-static-mem.out $(objpfx)noload-mem.out \
@@ -272,8 +273,8 @@ modules-names = testobj1 testobj2 testobj3 testobj4 testobj5 testobj6 \
 		tst-audit12mod1 tst-audit12mod2 tst-audit12mod3 tst-auditmod12 \
 		tst-latepthreadmod $(tst-tls-many-dynamic-modules) \
 		tst-nodelete-dlclose-dso tst-nodelete-dlclose-plugin \
-		tst-main1mod tst-libc_dlvsym-dso \
-		tst-big-note-lib
+		tst-main1mod tst-libc_dlvsym-dso tst-absolute-sym-lib \
+		tst-absolute-zero-lib tst-big-note-lib
 
 ifeq (yes,$(have-mtls-dialect-gnu2))
 tests += tst-gnu2-tls1
@@ -348,7 +349,7 @@ ifeq ($(run-built-tests),yes)
 tests-special += $(objpfx)tst-pathopt.out $(objpfx)tst-rtld-load-self.out
 endif
 tests-special += $(objpfx)check-textrel.out $(objpfx)check-execstack.out \
-		 $(objpfx)check-localplt.out
+		 $(objpfx)check-localplt.out $(objpfx)check-initfini.out
 endif
 
 ifeq ($(run-built-tests),yes)
@@ -387,14 +388,21 @@ $(objpfx)tst-_dl_addr_inside_object: $(objpfx)dl-addr-obj.os
 CFLAGS-tst-_dl_addr_inside_object.c += $(PIE-ccflag)
 endif
 
-# By default tst-linkall-static should try to use crypt routines to test
-# static libcrypt use.
+# We can only test static libcrypt use if libcrypt has been built,
+# and either NSS crypto is not in use, or static NSS libraries are
+# available.
+ifeq ($(build-crypt),no)
+CFLAGS-tst-linkall-static.c += -DUSE_CRYPT=0
+else
+ifeq ($(nss-crypt),no)
 CFLAGS-tst-linkall-static.c += -DUSE_CRYPT=1
-# However, if we are using NSS crypto and we don't have a static
-# library, then we exclude the use of crypt functions in the test.
-# We similarly exclude libcrypt.a from the static link (see below).
-ifeq (yesno,$(nss-crypt)$(static-nss-crypt))
-CFLAGS-tst-linkall-static.c += -UUSE_CRYPT -DUSE_CRYPT=0
+else
+ifeq ($(static-nss-crypt),no)
+CFLAGS-tst-linkall-static.c += -DUSE_CRYPT=0
+else
+CFLAGS-tst-linkall-static.c += -DUSE_CRYPT=1
+endif
+endif
 endif
 
 include ../Rules
@@ -1051,6 +1059,8 @@ $(objpfx)tst-piemod1.so: $(libsupport)
 $(objpfx)tst-pie1: $(objpfx)tst-piemod1.so
 
 ifeq (yes,$(build-shared))
+# NB: Please keep cet-built-dso in sysdeps/x86/Makefile in sync with
+# all-built-dso here.
 all-built-dso := $(common-objpfx)elf/ld.so $(common-objpfx)libc.so \
 		 $(filter-out $(common-objpfx)linkobj/libc.so, \
 			      $(sort $(wildcard $(addprefix $(common-objpfx), \
@@ -1094,7 +1104,7 @@ common-generated += $(all-built-dso:$(common-objpfx)%=%.phdr)
 $(objpfx)check-execstack.out: $(..)scripts/check-execstack.awk \
 			      $(objpfx)execstack-default \
 			      $(all-built-dso:=.phdr)
-	LC_ALL=C $(AWK) -f $^ > $@; \
+	LC_ALL=C $(AWK) -v "xfail=$(check-execstack-xfail)" -f $^ > $@; \
 	$(evaluate-test)
 generated += check-execstack.out
 
@@ -1115,13 +1125,15 @@ localplt-built-dso := $(addprefix $(common-objpfx),\
 				  rt/librt.so \
 				  dlfcn/libdl.so \
 				  resolv/libresolv.so \
-				  crypt/libcrypt.so \
 		       )
 ifeq ($(build-mathvec),yes)
 localplt-built-dso += $(addprefix $(common-objpfx), mathvec/libmvec.so)
 endif
 ifeq ($(have-thread-library),yes)
 localplt-built-dso += $(filter-out %_nonshared.a, $(shared-thread-library))
+endif
+ifeq ($(build-crypt),yes)
+localplt-built-dso += $(addprefix $(common-objpfx), crypt/libcrypt.so)
 endif
 
 vpath localplt.data $(+sysdep_dirs)
@@ -1135,6 +1147,19 @@ $(objpfx)check-localplt.out: $(..)scripts/check-localplt.awk \
 	  > $@; \
 	$(evaluate-test)
 endif
+
+$(all-built-dso:=.dynsym): %.dynsym: %
+	@rm -f $@T
+	LC_ALL=C $(READELF) -W --dyn-syms $< > $@T
+	test -s $@T
+	mv -f $@T $@
+common-generated += $(all-built-dso:$(common-objpfx)%=%.dynsym)
+
+$(objpfx)check-initfini.out: $(..)scripts/check-initfini.awk \
+			    $(all-built-dso:=.dynsym)
+	LC_ALL=C $(AWK) -f $^ > $@; \
+	$(evaluate-test)
+generated += check-initfini.out
 
 $(objpfx)tst-dlopenrpathmod.so: $(libdl)
 $(objpfx)tst-dlopenrpath: $(objpfx)tst-dlopenrpathmod.so $(libdl)
@@ -1397,6 +1422,7 @@ $(objpfx)tst-linkall-static: \
   $(common-objpfx)resolv/libanl.a \
   $(static-thread-library)
 
+ifeq ($(build-crypt),yes)
 # If we are using NSS crypto and we have the ability to link statically
 # then we include libcrypt.a, otherwise we leave out libcrypt.a and
 # link as much as we can into the tst-linkall-static test.  This assumes
@@ -1411,6 +1437,7 @@ endif
 ifeq (no,$(nss-crypt))
 $(objpfx)tst-linkall-static: \
   $(common-objpfx)crypt/libcrypt.a
+endif
 endif
 
 # The application depends on the DSO, and the DSO loads the plugin.
@@ -1439,6 +1466,14 @@ tst-main1-no-pie = yes
 LDLIBS-tst-main1 = $(libsupport)
 tst-main1mod.so-no-z-defs = yes
 
+LDLIBS-tst-absolute-sym-lib.so = tst-absolute-sym-lib.lds
+$(objpfx)tst-absolute-sym-lib.so: $(LDLIBS-tst-absolute-sym-lib.so)
+$(objpfx)tst-absolute-sym: $(objpfx)tst-absolute-sym-lib.so
+
+LDLIBS-tst-absolute-zero-lib.so = tst-absolute-zero-lib.lds
+$(objpfx)tst-absolute-zero-lib.so: $(LDLIBS-tst-absolute-zero-lib.so)
+$(objpfx)tst-absolute-zero: $(objpfx)tst-absolute-zero-lib.so
+
 # Both the main program and the DSO for tst-libc_dlvsym need to link
 # against libdl.
 $(objpfx)tst-libc_dlvsym: $(libdl)
@@ -1450,3 +1485,5 @@ tst-libc_dlvsym-static-ENV = \
 $(objpfx)tst-libc_dlvsym-static.out: $(objpfx)tst-libc_dlvsym-dso.so
 
 $(objpfx)tst-big-note: $(objpfx)tst-big-note-lib.so
+
+CFLAGS-tst-unwind-main.c += -funwind-tables

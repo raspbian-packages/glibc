@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <math.h>
 #include <math_private.h>
+#include <math-underflow.h>
 #include <float.h>
 
 /* 1 / sqrt(pi) */
@@ -659,7 +660,7 @@ __ieee754_j1l (long double x)
 
   if (xx > 0x1p256L)
     {
-      z = ONEOSQPI * cc / __ieee754_sqrtl (xx);
+      z = ONEOSQPI * cc / sqrtl (xx);
       if (x < 0)
 	z = -z;
       return z;
@@ -726,7 +727,7 @@ __ieee754_j1l (long double x)
   p = 1 + z * p;
   q = z * q;
   q = q * xinv + 0.375L * xinv;
-  z = ONEOSQPI * (p * cc - q * ss) / __ieee754_sqrtl (xx);
+  z = ONEOSQPI * (p * cc - q * ss) / sqrtl (xx);
   if (x < 0)
     z = -z;
   return z;
@@ -815,7 +816,7 @@ __ieee754_y1l (long double x)
     }
 
   if (xx > 0x1p256L)
-    return ONEOSQPI * ss / __ieee754_sqrtl (xx);
+    return ONEOSQPI * ss / sqrtl (xx);
 
   xinv = 1 / xx;
   z = xinv * xinv;
@@ -878,7 +879,7 @@ __ieee754_y1l (long double x)
   p = 1 + z * p;
   q = z * q;
   q = q * xinv + 0.375L * xinv;
-  z = ONEOSQPI * (p * ss + q * cc) / __ieee754_sqrtl (xx);
+  z = ONEOSQPI * (p * ss + q * cc) / sqrtl (xx);
   return z;
 }
 strong_alias (__ieee754_y1l, __y1l_finite)

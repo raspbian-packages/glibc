@@ -39,11 +39,7 @@ typedef struct
   uintptr_t sysinfo;
   uintptr_t stack_guard;
   int gscope_flag;
-#ifndef __ASSUME_PRIVATE_FUTEX
-  int private_futex;
-#else
   int __glibc_reserved1;
-#endif
   /* GCC split stack support.  */
   void *__private_ss;
 } tcbhead_t;
@@ -169,6 +165,7 @@ typedef struct
 #define THREAD_COPY_POINTER_GUARD(descr)
 
 /* Get and set the global scope generation counter in struct pthread.  */
+#define THREAD_GSCOPE_IN_TCB      1
 #define THREAD_GSCOPE_FLAG_UNUSED 0
 #define THREAD_GSCOPE_FLAG_USED   1
 #define THREAD_GSCOPE_FLAG_WAIT   2

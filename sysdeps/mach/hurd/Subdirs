@@ -7,5 +7,3 @@
 # way with more somewhat expensive `make' invocations.
 
 first hurd
-
-libpthread

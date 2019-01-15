@@ -1,4 +1,5 @@
-/* Copyright (C) 1994-2017 Free Software Foundation, Inc.
+/* Low-level lock implementation.  Mach gsync-based version.
+   Copyright (C) 1994-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -15,35 +16,35 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-#ifndef __MACH_LOWLEVELLOCK_H__
-#define __MACH_LOWLEVELLOCK_H__   1
+#ifndef _MACH_LOWLEVELLOCK_H
+#define _MACH_LOWLEVELLOCK_H   1
 
 #include <mach/gnumach.h>
 #include <atomic.h>
 
-/* Gsync flags. */
+/* Gsync flags.  */
 #ifndef GSYNC_SHARED
-  #define GSYNC_SHARED      0x01
-  #define GSYNC_QUAD        0x02
-  #define GSYNC_TIMED       0x04
-  #define GSYNC_BROADCAST   0x08
-  #define GSYNC_MUTATE      0x10
+# define GSYNC_SHARED      0x01
+# define GSYNC_QUAD        0x02
+# define GSYNC_TIMED       0x04
+# define GSYNC_BROADCAST   0x08
+# define GSYNC_MUTATE      0x10
 #endif
 
-/* Static initializer for low-level locks. */
+/* Static initializer for low-level locks.  */
 #define LLL_INITIALIZER   0
 
 /* Wait on address PTR, without blocking if its contents
- * are different from VAL. */
+ * are different from VAL.  */
 #define lll_wait(ptr, val, flags)   \
   __gsync_wait (__mach_task_self (),   \
     (vm_offset_t)(ptr), (val), 0, 0, (flags))
 
-/* Wake one or more threads waiting on address PTR. */
+/* Wake one or more threads waiting on address PTR.  */
 #define lll_wake(ptr, flags)   \
   __gsync_wake (__mach_task_self (), (vm_offset_t)(ptr), 0, (flags))
 
-/* Acquire the lock at PTR. */
+/* Acquire the lock at PTR.  */
 #define lll_lock(ptr, flags)   \
   ({   \
      int *__iptr = (int *)(ptr);   \
@@ -60,7 +61,7 @@
    })
 
 /* Try to acquire the lock at PTR, without blocking.
- * Evaluates to zero on success. */
+   Evaluates to zero on success.  */
 #define lll_trylock(ptr)   \
   ({   \
      int *__iptr = (int *)(ptr);   \
@@ -68,7 +69,7 @@
        atomic_compare_and_exchange_bool_acq (__iptr, 1, 0) == 0 ? 0 : -1;   \
    })
 
-/* Release the lock at PTR. */
+/* Release the lock at PTR.  */
 #define lll_unlock(ptr, flags)   \
   ({   \
      int *__iptr = (int *)(ptr);   \

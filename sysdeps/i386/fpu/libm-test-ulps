@@ -2749,10 +2749,10 @@ ldouble: 5
 
 Function: "yn_towardzero":
 double: 3
-float: 4
+float: 3
 float128: 5
 idouble: 3
-ifloat: 4
+ifloat: 3
 ifloat128: 5
 ildouble: 5
 ldouble: 5
