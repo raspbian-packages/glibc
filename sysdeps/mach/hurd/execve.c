@@ -31,7 +31,8 @@ __execve (const char *file_name, char *const argv[], char *const envp[])
     return -1;
 
   /* Hopefully this will not return.  */
-  err = _hurd_exec (__mach_task_self (), file, argv, envp);
+  err = _hurd_exec_file_name (__mach_task_self (), file,
+			      file_name, argv, envp);
 
   /* Oh well.  Might as well be tidy.  */
   __mach_port_deallocate (__mach_task_self (), file);
