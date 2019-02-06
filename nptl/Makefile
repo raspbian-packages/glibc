@@ -268,7 +268,7 @@ tests = tst-typesizes \
 	tst-flock1 tst-flock2 \
 	tst-signal1 tst-signal2 tst-signal3 tst-signal4 tst-signal5 \
 	tst-signal6 tst-signal7 \
-	tst-exec1 tst-exec2 tst-exec3 tst-exec4 \
+	tst-exec1 tst-exec2 tst-exec3 tst-exec4 tst-exec5 \
 	tst-exit1 tst-exit2 tst-exit3 \
 	tst-stdio1 tst-stdio2 \
 	tst-stack1 tst-stack2 tst-stack3 tst-stack4 tst-pthread-getattr \
@@ -290,7 +290,10 @@ tests = tst-typesizes \
 	tst-initializers1 $(addprefix tst-initializers1-,\
 			    c89 gnu89 c99 gnu99 c11 gnu11) \
 	tst-bad-schedattr \
-	tst-thread_local1 tst-mutex-errorcheck tst-robust10
+	tst-thread_local1 tst-mutex-errorcheck tst-robust10 \
+	tst-minstack-cancel tst-minstack-exit \
+	tst-create-detached
+
 xtests = tst-setuid1 tst-setuid1-static tst-setuid2 \
 	tst-mutexpp1 tst-mutexpp6 tst-mutexpp10
 test-srcs = tst-oddstacklimit
