@@ -1,0 +1,76 @@
+From: John Ogness <john.ogness@linutronix.de>
+Date: Wed, 16 May 2018 22:34:41 +0200
+Subject: [PATCH] condvar: do not use requeue for pshared condvars
+
+With commit e42a990eccb (Update.) condvars were changed to not
+store the mutex address when pshared. Instead, ~0l is stored.
+This value is checked for in USE_REQUEUE_PI() to determine if
+requeue should be used.
+
+pthread_cond_signal() and pthread_cond_broadcast() both use
+USE_REQUEUE_PI() with the mutex address stored on the condvar.
+
+However, pthread_cond_wait() and pthread_cond_timedwait() use
+USE_REQUEUE_PI() on the mutex address passed in from the caller
+(even though that address is *not* stored on the condvar in the
+pshared case). The result is that in the pshared case, the
+wait functions are using requeue and the wake functions are
+not! This is not allowed by the kernel (the waking futex call
+returns EINVAL).
+
+Modify the wait functions to use USE_REQUEUE_PI() on the mutex
+address stored on the condvar, thus mirroring the behavior of
+the wake functions.
+
+Signed-off-by: John Ogness <john.ogness@linutronix.de>
+Acked-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Reviewed-by: Kurt Kanzenbach <kurt@linutronix.de>
+Signed-off-by: Kurt Kanzenbach <kurt@linutronix.de>
+---
+ nptl/pthread_cond_timedwait.c | 4 +++-
+ nptl/pthread_cond_wait.c      | 4 +++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+--- a/nptl/pthread_cond_timedwait.c
++++ b/nptl/pthread_cond_timedwait.c
+@@ -163,6 +163,8 @@ __pthread_cond_timedwait (pthread_cond_t *cond, pthread_mutex_t *mutex,
+    to check just the former.  */
+ #if (defined lll_futex_timed_wait_requeue_pi \
+      && defined __ASSUME_REQUEUE_PI)
++      pthread_mutex_t *mut = cond->__data.__mutex;
++
+       /* If pi_flag remained 1 then it means that we had the lock and the mutex
+ 	 but a spurious waker raced ahead of us.  Give back the mutex before
+ 	 going into wait again.  */
+@@ -171,7 +173,7 @@ __pthread_cond_timedwait (pthread_cond_t *cond, pthread_mutex_t *mutex,
+ 	  __pthread_mutex_cond_lock_adjust (mutex);
+ 	  __pthread_mutex_unlock_usercnt (mutex, 0);
+ 	}
+-      pi_flag = USE_REQUEUE_PI (mutex);
++      pi_flag = USE_REQUEUE_PI (mut);
+ 
+       if (pi_flag)
+ 	{
+--- a/nptl/pthread_cond_wait.c
++++ b/nptl/pthread_cond_wait.c
+@@ -162,6 +162,8 @@ __pthread_cond_wait (pthread_cond_t *cond, pthread_mutex_t *mutex)
+ 
+ #if (defined lll_futex_wait_requeue_pi \
+      && defined __ASSUME_REQUEUE_PI)
++      pthread_mutex_t *mut = cond->__data.__mutex;
++
+       /* If pi_flag remained 1 then it means that we had the lock and the mutex
+ 	 but a spurious waker raced ahead of us.  Give back the mutex before
+ 	 going into wait again.  */
+@@ -170,7 +172,7 @@ __pthread_cond_wait (pthread_cond_t *cond, pthread_mutex_t *mutex)
+ 	  __pthread_mutex_cond_lock_adjust (mutex);
+ 	  __pthread_mutex_unlock_usercnt (mutex, 0);
+ 	}
+-      pi_flag = USE_REQUEUE_PI (mutex);
++      pi_flag = USE_REQUEUE_PI (mut);
+ 
+       if (pi_flag)
+ 	{
+-- 
+2.15.1
+
