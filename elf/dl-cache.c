@@ -263,8 +263,10 @@ _dl_load_cache_lookup (const char *name)
 
       uint64_t hwcap_mask = GET_HWCAP_MASK();
 
+#ifdef NEED_LD_SO_NOHWCAP
       if (__access_noerrno ("/etc/ld.so.nohwcap", F_OK) == 0)
 	disable_hwcap = 1;
+#endif
 
 #define _DL_HWCAP_TLS_MASK (1LL << 63)
       uint64_t hwcap_exclude = ~((GLRO(dl_hwcap) & hwcap_mask)
