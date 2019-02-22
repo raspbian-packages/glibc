@@ -1,9 +1,15 @@
-glibc (2.28-6+rpi1) buster-staging; urgency=medium
+glibc (2.28-7+rpi1) buster-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Sun, 10 Feb 2019 14:43:40 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Fri, 22 Feb 2019 01:39:52 +0000
+
+glibc (2.28-7) unstable; urgency=medium
+
+  * debian/patches/hurd-i386/local-no-bootstrap-fs-access.diff: Refresh.
+
+ -- Samuel Thibault <sthibault@debian.org>  Sat, 09 Feb 2019 18:34:27 +0100
 
 glibc (2.28-6) unstable; urgency=medium
 
