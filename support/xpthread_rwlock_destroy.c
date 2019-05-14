@@ -1,5 +1,5 @@
-/* Syscall wrapper that do not set errno.  Linux powerpc version.
-   Copyright (C) 2018 Free Software Foundation, Inc.
+/* pthread_rwlock_destroy with error checking.
+   Copyright (C) 2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,15 +16,11 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-/* __access_noerrno is used during process initialization in elf/dl-tunables.c
-   before the TCB is initialized, prohibiting the usage of
-   ABORT_TRANSACTION.  */
-#undef ABORT_TRANSACTION
-#define ABORT_TRANSACTION
+#include <support/xthread.h>
 
-#include "sysdeps/unix/sysv/linux/not-errno.h"
-
-/* Recover ABORT_TRANSACTION's previous value, in order to not affect
-   other syscalls.  */
-#undef ABORT_TRANSACTION
-#define ABORT_TRANSACTION ABORT_TRANSACTION_IMPL
+void
+xpthread_rwlock_destroy (pthread_rwlock_t *rwlock)
+{
+  xpthread_check_return ("pthread_rwlock_destroy",
+                         pthread_rwlock_destroy (rwlock));
+}

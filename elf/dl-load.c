@@ -1974,8 +1974,6 @@ open_verify (const char *name, int fd,
 
 	    break;
 	  }
-      free (abi_note_malloced);
-    }
       if (-1 != fd)
 	{
 	  int error = arch_specific_checks(fd, name, ehdr);
@@ -1989,7 +1987,8 @@ open_verify (const char *name, int fd,
 	      goto call_lose;
 	    }
 	}
-
+      }
+      free (abi_note_malloced);
     }
 
   return fd;
