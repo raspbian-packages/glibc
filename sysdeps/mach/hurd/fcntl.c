@@ -1,4 +1,4 @@
-/* Copyright (C) 1992-2018 Free Software Foundation, Inc.
+/* Copyright (C) 1992-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -143,7 +143,6 @@ __libc_fcntl (int fd, int cmd, ...)
 	  case F_SETLK:
 	    return __f_setlk (fd, fl->l_type, fl->l_whence,
 			      fl->l_start, fl->l_len, wait);
-	    break;
 	  default:
 	    errno = EINVAL;
 	    return -1;
@@ -168,7 +167,6 @@ __libc_fcntl (int fd, int cmd, ...)
 	  case F_SETLK64:
 	    return __f_setlk (fd, fl->l_type, fl->l_whence,
 			      fl->l_start, fl->l_len, wait);
-	    break;
 	  default:
 	    errno = EINVAL;
 	    return -1;

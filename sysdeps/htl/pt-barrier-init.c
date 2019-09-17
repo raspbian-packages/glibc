@@ -1,5 +1,5 @@
 /* pthread_barrier_init.  Generic version.
-   Copyright (C) 2002-2018 Free Software Foundation, Inc.
+   Copyright (C) 2002-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -36,7 +36,7 @@ pthread_barrier_init (pthread_barrier_t *barrier,
   barrier->__count = count;
 
   if (attr == NULL
-      || memcmp (attr, &__pthread_default_barrierattr, sizeof (*attr) == 0))
+      || memcmp (attr, &__pthread_default_barrierattr, sizeof (*attr)) == 0)
     /* Use the default attributes.  */
     return 0;
 

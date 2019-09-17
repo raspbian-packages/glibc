@@ -1,6 +1,6 @@
 /* Multiple versions of strlen.
    All versions must be listed in ifunc-impl-list.c.
-   Copyright (C) 2017-2018 Free Software Foundation, Inc.
+   Copyright (C) 2017-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -29,6 +29,6 @@
 libc_ifunc_redirected (__redirect_strlen, strlen, IFUNC_SELECTOR ());
 # ifdef SHARED
 __hidden_ver1 (strlen, __GI_strlen, __redirect_strlen)
-  __attribute__((visibility ("hidden")));
+  __attribute__((visibility ("hidden"))) __attribute_copy__ (strlen);
 # endif
 #endif

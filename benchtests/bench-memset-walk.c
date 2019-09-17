@@ -1,5 +1,5 @@
 /* Measure memset function throughput with large data sizes.
-   Copyright (C) 2017-2018 Free Software Foundation, Inc.
+   Copyright (C) 2017-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -28,16 +28,9 @@
 #include "bench-string.h"
 
 #ifndef WIDE
-# define MEMSET memset
-# define CHAR char
 # define SIMPLE_MEMSET simple_memset
-# define MEMCMP memcmp
 #else
-# include <wchar.h>
-# define MEMSET wmemset
-# define CHAR wchar_t
 # define SIMPLE_MEMSET simple_wmemset
-# define MEMCMP wmemcmp
 #endif /* WIDE */
 
 #include <assert.h>
@@ -88,7 +81,7 @@ do_test (json_ctx_t *json_ctx, int c, size_t len)
     {
       do_one_test (json_ctx, impl, (CHAR *) buf1,
 		   (CHAR *) buf1 + MIN_PAGE_SIZE - len, c, len);
-      realloc_bufs ();
+      alloc_bufs ();
     }
 
   json_array_end (json_ctx);

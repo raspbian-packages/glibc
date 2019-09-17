@@ -1,5 +1,5 @@
 /* futex operations for glibc-internal use.  Linux version.
-   Copyright (C) 2014-2018 Free Software Foundation, Inc.
+   Copyright (C) 2014-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -138,9 +138,9 @@ futex_reltimed_wait_cancelable (unsigned int *futex_word,
 			        const struct timespec *reltime, int private)
 {
   int oldtype;
-  oldtype = __pthread_enable_asynccancel ();
+  oldtype = LIBC_CANCEL_ASYNC ();
   int err = lll_futex_timed_wait (futex_word, expected, reltime, private);
-  __pthread_disable_asynccancel (oldtype);
+  LIBC_CANCEL_RESET (oldtype);
   switch (err)
     {
     case 0:

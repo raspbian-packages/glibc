@@ -1,5 +1,5 @@
 # configuration options for all flavours
-extra_cflags = -mno-plt
+CC = $(DEB_HOST_GNU_TYPE)-$(BASE_CC)$(DEB_GCC_VERSION) -no-pie
 
 # main library
 libc_rtlddir = /lib64
@@ -60,7 +60,7 @@ endef
 # create a symlink for the 32 bit dynamic linker in /lib
 define libc6-mips32_extra_pkg_install
 mkdir -p debian/libc6-mips32/lib
-ln -sf /libo32/ld.so.1 debian/libc6-mips32/lib
+ln -sf /libo32/ld-linux-mipsn8.so.1 debian/libc6-mips32/lib
 endef
 
 endif # multilib

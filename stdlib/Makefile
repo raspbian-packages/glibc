@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2018 Free Software Foundation, Inc.
+# Copyright (C) 1991-2019 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -24,12 +24,12 @@ include ../Makeconfig
 
 headers	:= stdlib.h bits/stdlib.h bits/stdlib-ldbl.h bits/stdlib-float.h      \
 	   monetary.h bits/monetary-ldbl.h				      \
-	   inttypes.h stdint.h bits/wordsize.h				      \
+	   inttypes.h stdint.h bits/wordsize.h bits/timesize.h		      \
 	   errno.h sys/errno.h bits/errno.h bits/types/error_t.h	      \
 	   ucontext.h sys/ucontext.h bits/indirect-return.h		      \
 	   alloca.h fmtmsg.h						      \
 	   bits/stdlib-bsearch.h sys/random.h bits/stdint-intn.h	      \
-	   bits/stdint-uintn.h
+	   bits/stdint-uintn.h bits/time64.h				      \
 
 routines	:=							      \
 	atof atoi atol atoll						      \
@@ -87,7 +87,7 @@ tests		:= tst-strtol tst-strtod testmb testrand testsort testdiv   \
 		   tst-makecontext-align test-bz22786 tst-strtod-nan-sign \
 		   tst-swapcontext1 tst-setcontext4 tst-setcontext5 \
 		   tst-setcontext6 tst-setcontext7 tst-setcontext8 \
-		   tst-setcontext9
+		   tst-setcontext9 tst-bz20544
 
 tests-internal	:= tst-strtod1i tst-strtod3 tst-strtod4 tst-strtod5i \
 		   tst-tls-atexit tst-tls-atexit-nodelete

@@ -1,5 +1,5 @@
 /* Tests for AIO in librt.
-   Copyright (C) 1998-2018 Free Software Foundation, Inc.
+   Copyright (C) 1998-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1998.
 
@@ -33,9 +33,6 @@ extern int do_test (int argc, char *argv[]);
 
 /* We have a preparation function.  */
 #define PREPARE do_prepare
-
-/* We might need a bit longer timeout.  */
-#define TIMEOUT 20 /* sec */
 
 /* This defines the `main' function and some more.  */
 #include <test-skeleton.c>

@@ -1,5 +1,5 @@
 /* Guts of POSIX spawn interface.  Generic POSIX.1 version.
-   Copyright (C) 2000-2018 Free Software Foundation, Inc.
+   Copyright (C) 2000-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -68,7 +68,7 @@ maybe_script_execute (struct posix_spawn_args *args)
       ptrdiff_t argc = args->argc;
 
       /* Construct an argument list for the shell.  */
-      char *new_argv[argc + 1];
+      char *new_argv[argc + 2];
       new_argv[0] = (char *) _PATH_BSHELL;
       new_argv[1] = (char *) args->file;
       if (argc > 1)
@@ -204,9 +204,31 @@ __spawni_child (void *arguments)
 	      break;
 
 	    case spawn_do_dup2:
-	      if (__dup2 (action->action.dup2_action.fd,
-			  action->action.dup2_action.newfd)
-		  != action->action.dup2_action.newfd)
+	      /* Austin Group issue #411 requires adddup2 action with source
+		 and destination being equal to remove close-on-exec flag.  */
+	      if (action->action.dup2_action.fd
+		  == action->action.dup2_action.newfd)
+		{
+		  int fd = action->action.dup2_action.newfd;
+		  int flags = __fcntl (fd, F_GETFD, 0);
+		  if (flags == -1)
+		    goto fail;
+		  if (__fcntl (fd, F_SETFD, flags & ~FD_CLOEXEC) == -1)
+		    goto fail;
+		}
+	      else if (__dup2 (action->action.dup2_action.fd,
+			       action->action.dup2_action.newfd)
+		       != action->action.dup2_action.newfd)
+		goto fail;
+	      break;
+
+	    case spawn_do_chdir:
+	      if (__chdir (action->action.chdir_action.path) != 0)
+		goto fail;
+	      break;
+
+	    case spawn_do_fchdir:
+	      if (__fchdir (action->action.fchdir_action.fd) != 0)
 		goto fail;
 	      break;
 	    }

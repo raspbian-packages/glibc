@@ -1,6 +1,6 @@
 /* Multiple versions of strcat.
    All versions must be listed in ifunc-impl-list.c.
-   Copyright (C) 2017-2018 Free Software Foundation, Inc.
+   Copyright (C) 2017-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,12 +24,12 @@
 # undef strcat
 
 # define SYMBOL_NAME strcat
-# include "ifunc-unaligned-ssse3.h"
+# include "ifunc-strcpy.h"
 
 libc_ifunc_redirected (__redirect_strcat, strcat, IFUNC_SELECTOR ());
 
 # ifdef SHARED
 __hidden_ver1 (strcat, __GI_strcat, __redirect_strcat)
-  __attribute__ ((visibility ("hidden")));
+  __attribute__ ((visibility ("hidden"))) __attribute_copy__ (strcat);
 # endif
 #endif

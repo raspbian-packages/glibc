@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2018 Free Software Foundation, Inc.
+# Copyright (C) 1995-2019 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -187,12 +187,14 @@ tests += restest1 preloadtest loadfail multiload origtest resolvfail \
 	 tst-nodelete2 tst-audit11 tst-audit12 tst-dlsym-error tst-noload \
 	 tst-latepthread tst-tls-manydynamic tst-nodelete-dlclose \
 	 tst-debug1 tst-main1 tst-absolute-sym tst-absolute-zero tst-big-note \
-	 tst-unwind-main
+	 tst-unwind-ctor tst-unwind-main
 #	 reldep9
 tests-internal += loadtest unload unload2 circleload1 \
 	 neededtest neededtest2 neededtest3 neededtest4 \
 	 tst-tls3 tst-tls6 tst-tls7 tst-tls8 tst-dlmopen2 \
-	 tst-ptrguard1 tst-stackguard1 tst-libc_dlvsym
+	 tst-ptrguard1 tst-stackguard1 tst-libc_dlvsym \
+	 tst-create_format1
+tests-container += tst-pldd
 ifeq ($(build-hardcoded-path-in-tests),yes)
 tests += tst-dlopen-aout
 tst-dlopen-aout-no-pie = yes
@@ -274,7 +276,11 @@ modules-names = testobj1 testobj2 testobj3 testobj4 testobj5 testobj6 \
 		tst-latepthreadmod $(tst-tls-many-dynamic-modules) \
 		tst-nodelete-dlclose-dso tst-nodelete-dlclose-plugin \
 		tst-main1mod tst-libc_dlvsym-dso tst-absolute-sym-lib \
-		tst-absolute-zero-lib tst-big-note-lib
+		tst-absolute-zero-lib tst-big-note-lib tst-unwind-ctor-lib
+# Most modules build with _ISOMAC defined, but those filtered out
+# depend on internal headers.
+modules-names-tests = $(filter-out ifuncmod% tst-libc_dlvsym-dso tst-tlsmod%,\
+				   $(modules-names))
 
 ifeq (yes,$(have-mtls-dialect-gnu2))
 tests += tst-gnu2-tls1
@@ -337,6 +343,9 @@ test-internal-extras += $(ifunc-test-modules)
 ifeq (yes,$(have-fpie))
 ifunc-pie-tests = ifuncmain1pie ifuncmain1vispie ifuncmain1staticpie \
 		  ifuncmain5pie ifuncmain6pie ifuncmain7pie
+ifeq (yes,$(have-textrel_ifunc))
+ifunc-pie-tests += tst-ifunc-textrel
+endif
 tests-internal += $(ifunc-pie-tests)
 tests-pie += $(ifunc-pie-tests)
 endif
@@ -1005,7 +1014,7 @@ $(objpfx)tst-execstack: $(libdl)
 $(objpfx)tst-execstack.out: $(objpfx)tst-execstack-mod.so
 CPPFLAGS-tst-execstack.c += -DUSE_PTHREADS=0
 LDFLAGS-tst-execstack = -Wl,-z,noexecstack
-LDFLAGS-tst-execstack-mod = -Wl,-z,execstack
+LDFLAGS-tst-execstack-mod.so = -Wl,-z,execstack
 
 $(objpfx)tst-execstack-needed: $(objpfx)tst-execstack-mod.so
 LDFLAGS-tst-execstack-needed = -Wl,-z,noexecstack
@@ -1266,6 +1275,7 @@ CFLAGS-ifuncmain1staticpie.c += $(pie-ccflag)
 CFLAGS-ifuncmain5pie.c += $(pie-ccflag)
 CFLAGS-ifuncmain6pie.c += $(pie-ccflag)
 CFLAGS-ifuncmain7pie.c += $(pie-ccflag)
+CFLAGS-tst-ifunc-textrel.c += $(pic-ccflag)
 
 $(objpfx)ifuncmain1pie: $(objpfx)ifuncmod1.so
 $(objpfx)ifuncmain1staticpie: $(objpfx)ifuncdep1pic.o
@@ -1486,4 +1496,6 @@ $(objpfx)tst-libc_dlvsym-static.out: $(objpfx)tst-libc_dlvsym-dso.so
 
 $(objpfx)tst-big-note: $(objpfx)tst-big-note-lib.so
 
-CFLAGS-tst-unwind-main.c += -funwind-tables -DUSE_PTHREADS=0
+$(objpfx)tst-unwind-ctor: $(objpfx)tst-unwind-ctor-lib.so
+
+CFLAGS-tst-unwind-main.c += -funwind-tables

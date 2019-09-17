@@ -1,5 +1,5 @@
 /* Support code for testing libm functions (compiled once per type).
-   Copyright (C) 1997-2018 Free Software Foundation, Inc.
+   Copyright (C) 1997-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -25,7 +25,7 @@
    different types and for variants such as testing inline functions.
 
    The tests of individual functions are in .inc files processed by
-   gen-libm-test.pl, with the resulting files included together with
+   gen-libm-test.py, with the resulting files included together with
    libm-test-driver.c.
 
    The per-type headers included both before libm-test-support.c and

@@ -41,6 +41,7 @@
 #include <math.h>
 #include <math-narrow-eval.h>
 #include <math_private.h>
+#include <fenv_private.h>
 #include <math-underflow.h>
 
 static const double
@@ -108,6 +109,7 @@ __ieee754_jn (int n, double x)
 	      case 1: temp = -c + s; break;
 	      case 2: temp = -c - s; break;
 	      case 3: temp = c - s; break;
+	      default: __builtin_unreachable ();
 	      }
 	    b = invsqrtpi * temp / sqrt (x);
 	  }
@@ -249,7 +251,7 @@ __ieee754_jn (int n, double x)
   }
   if (ret == 0)
     {
-      ret = math_narrow_eval (__copysign (DBL_MIN, ret) * DBL_MIN);
+      ret = math_narrow_eval (copysign (DBL_MIN, ret) * DBL_MIN);
       __set_errno (ERANGE);
     }
   else
@@ -315,6 +317,7 @@ __ieee754_yn (int n, double x)
 	  case 1: temp = -s - c; break;
 	  case 2: temp = -s + c; break;
 	  case 3: temp = s + c; break;
+	  default: __builtin_unreachable ();
 	  }
 	b = invsqrtpi * temp / sqrt (x);
       }
@@ -343,7 +346,7 @@ __ieee754_yn (int n, double x)
   }
  out:
   if (isinf (ret))
-    ret = __copysign (DBL_MAX, ret) * DBL_MAX;
+    ret = copysign (DBL_MAX, ret) * DBL_MAX;
   return ret;
 }
 strong_alias (__ieee754_yn, __yn_finite)

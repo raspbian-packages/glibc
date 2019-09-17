@@ -1,4 +1,4 @@
-# Copyright (C) 1996-2018 Free Software Foundation, Inc.
+# Copyright (C) 1996-2019 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -55,10 +55,12 @@ tests-internal		= tst-field
 tests			= test-netdb test-digits-dots tst-nss-getpwent bug17079 \
 			  tst-nss-test1 \
 			  tst-nss-test2 \
-			  tst-nss-test3 \
 			  tst-nss-test4 \
 			  tst-nss-test5
 xtests			= bug-erange
+
+tests-container = \
+			  tst-nss-test3
 
 # Tests which need libdl
 ifeq (yes,$(build-shared))
@@ -161,7 +163,7 @@ ifdef libnss_test2.so-version
 $(objpfx)/libnss_test2.so$(libnss_test2.so-version): $(objpfx)/libnss_test2.so
 	$(make-link)
 endif
-$(patsubst %,$(objpfx)%.out,$(tests)) : \
+$(patsubst %,$(objpfx)%.out,$(tests) $(tests-container)) : \
 	$(objpfx)/libnss_test1.so$(libnss_test1.so-version) \
 	$(objpfx)/libnss_test2.so$(libnss_test2.so-version)
 

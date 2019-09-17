@@ -1,5 +1,5 @@
 /* Formatting a monetary value according to the given locale.
-   Copyright (C) 1996-2018 Free Software Foundation, Inc.
+   Copyright (C) 1996-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1996.
 
@@ -76,8 +76,8 @@
    too.  Some of the information contradicts the information which can
    be specified in format string.  */
 ssize_t
-__vstrfmon_l (char *s, size_t maxsize, locale_t loc, const char *format,
-	      va_list ap)
+__vstrfmon_l_internal (char *s, size_t maxsize, locale_t loc,
+		       const char *format, va_list ap, unsigned int flags)
 {
   struct __locale_data *current = loc->__locales[LC_MONETARY];
   _IO_strfile f;
@@ -268,7 +268,7 @@ __vstrfmon_l (char *s, size_t maxsize, locale_t loc, const char *format,
       if (*fmt == 'L')
 	{
 	  ++fmt;
-	  if (!__ldbl_is_dbl)
+	  if (__glibc_likely ((flags & STRFMON_LDBL_IS_DBL) == 0))
 	    is_long_double = 1;
 	}
 
@@ -608,7 +608,7 @@ ___strfmon_l (char *s, size_t maxsize, locale_t loc, const char *format, ...)
 
   va_start (ap, format);
 
-  ssize_t res = __vstrfmon_l (s, maxsize, loc, format, ap);
+  ssize_t res = __vstrfmon_l_internal (s, maxsize, loc, format, ap, 0);
 
   va_end (ap);
 

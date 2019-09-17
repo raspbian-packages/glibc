@@ -1,4 +1,4 @@
-/* Copyright (C) 1993-2018 Free Software Foundation, Inc.
+/* Copyright (C) 1993-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -658,12 +658,60 @@ extern off64_t _IO_wstr_seekoff (FILE *, off64_t, int, int)
 extern wint_t _IO_wstr_pbackfail (FILE *, wint_t) __THROW;
 extern void _IO_wstr_finish (FILE *, int) __THROW;
 
-extern int _IO_vasprintf (char **result_ptr, const char *format,
-			  va_list args) __THROW;
-extern int _IO_vdprintf (int d, const char *format, va_list arg);
-extern int _IO_vsnprintf (char *string, size_t maxlen,
-			  const char *format, va_list args) __THROW;
+/* Internal versions of v*printf that take an additional flags
+   parameter.  */
+extern int __vfprintf_internal (FILE *fp, const char *format, va_list ap,
+				unsigned int mode_flags)
+    attribute_hidden;
+extern int __vfwprintf_internal (FILE *fp, const wchar_t *format, va_list ap,
+				 unsigned int mode_flags)
+    attribute_hidden;
 
+extern int __vasprintf_internal (char **result_ptr, const char *format,
+				 va_list ap, unsigned int mode_flags)
+    attribute_hidden;
+extern int __vdprintf_internal (int d, const char *format, va_list ap,
+				unsigned int mode_flags)
+    attribute_hidden;
+extern int __obstack_vprintf_internal (struct obstack *ob, const char *fmt,
+				       va_list ap, unsigned int mode_flags)
+    attribute_hidden;
+
+/* Note: __vsprintf_internal, unlike vsprintf, does take a maxlen argument,
+   because it's called by both vsprintf and vsprintf_chk.  If maxlen is
+   not set to -1, overrunning the buffer will cause a prompt crash.
+   This is the behavior of ordinary (v)sprintf functions, thus they call
+   __vsprintf_internal with that argument set to -1.  */
+extern int __vsprintf_internal (char *string, size_t maxlen,
+				const char *format, va_list ap,
+				unsigned int mode_flags)
+    attribute_hidden;
+
+extern int __vsnprintf_internal (char *string, size_t maxlen,
+				 const char *format, va_list ap,
+				 unsigned int mode_flags)
+    attribute_hidden;
+extern int __vswprintf_internal (wchar_t *string, size_t maxlen,
+				 const wchar_t *format, va_list ap,
+				 unsigned int mode_flags)
+    attribute_hidden;
+
+/* Flags for __v*printf_internal.
+
+   PRINTF_LDBL_IS_DBL indicates whether long double values are to be
+   handled as having the same format as double, in which case the flag
+   should be set to one, or as another format, otherwise.
+
+   PRINTF_FORTIFY, when set to one, indicates that fortification checks
+   are to be performed in input parameters.  This is used by the
+   __*printf_chk functions, which are used when _FORTIFY_SOURCE is
+   defined to 1 or 2.  Otherwise, such checks are ignored.
+
+   PRINTF_CHK indicates, to the internal function being called, that the
+   call is originated from one of the __*printf_chk functions.  */
+#define PRINTF_LDBL_IS_DBL 0x0001
+#define PRINTF_FORTIFY     0x0002
+#define PRINTF_CHK	   0x0004
 
 extern size_t _IO_getline (FILE *,char *, size_t, int, int);
 libc_hidden_proto (_IO_getline)
@@ -703,6 +751,40 @@ extern off64_t _IO_seekpos_unlocked (FILE *, off64_t, int)
 # endif
 
 #endif /* _G_HAVE_MMAP */
+
+/* Flags for __vfscanf_internal and __vfwscanf_internal.
+
+   SCANF_LDBL_IS_DBL indicates whether long double values are to be
+   handled as having the same format as double, in which case the flag
+   should be set to one, or as another format, otherwise.
+
+   SCANF_ISOC99_A, when set to one, indicates that the ISO C99 or POSIX
+   behavior of the scanf functions is to be used, i.e. automatic
+   allocation for input strings with %as, %aS and %a[, a GNU extension,
+   is disabled. This is the behavior that the __isoc99_scanf family of
+   functions use.  When the flag is set to zero, automatic allocation is
+   enabled.
+
+   SCANF_LDBL_USES_FLOAT128 is used on platforms where the long double
+   format used to be different from the IEC 60559 double format *and*
+   also different from the Quadruple 128-bits IEC 60559 format (such as
+   the IBM Extended Precision format on powerpc or the 80-bits IEC 60559
+   format on x86), but was later converted to the Quadruple 128-bits IEC
+   60559 format, which is the same format that the _Float128 always has
+   (hence the `USES_FLOAT128' suffix in the name of the flag).  When set
+   to one, this macros indicates that long double values are to be
+   handled as having this new format.  Otherwise, they should be handled
+   as the previous format on that platform.  */
+#define SCANF_LDBL_IS_DBL		0x0001
+#define SCANF_ISOC99_A			0x0002
+#define SCANF_LDBL_USES_FLOAT128	0x0004
+
+extern int __vfscanf_internal (FILE *fp, const char *format, va_list argp,
+			       unsigned int flags)
+  attribute_hidden;
+extern int __vfwscanf_internal (FILE *fp, const wchar_t *format, va_list argp,
+				unsigned int flags)
+  attribute_hidden;
 
 extern int _IO_vscanf (const char *, va_list) __THROW;
 
@@ -759,27 +841,10 @@ _IO_acquire_lock_fct (FILE **p)
     _IO_funlockfile (fp);
 }
 
-static inline void
-__attribute__ ((__always_inline__))
-_IO_acquire_lock_clear_flags2_fct (FILE **p)
-{
-  FILE *fp = *p;
-  fp->_flags2 &= ~(_IO_FLAGS2_FORTIFY | _IO_FLAGS2_SCANF_STD);
-  if ((fp->_flags & _IO_USER_LOCK) == 0)
-    _IO_funlockfile (fp);
-}
-
 #if !defined _IO_MTSAFE_IO && IS_IN (libc)
 # define _IO_acquire_lock(_fp)						      \
-  do {									      \
-    FILE *_IO_acquire_lock_file = NULL
-# define _IO_acquire_lock_clear_flags2(_fp)				      \
-  do {									      \
-    FILE *_IO_acquire_lock_file = (_fp)
+  do {
 # define _IO_release_lock(_fp)						      \
-    if (_IO_acquire_lock_file != NULL)					      \
-      _IO_acquire_lock_file->_flags2 &= ~(_IO_FLAGS2_FORTIFY		      \
-                                          | _IO_FLAGS2_SCANF_STD);	      \
   } while (0)
 #endif
 

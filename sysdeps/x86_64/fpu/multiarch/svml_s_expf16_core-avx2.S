@@ -1,5 +1,5 @@
 /* AVX2 version of vectorized expf.
-   Copyright (C) 2014-2018 Free Software Foundation, Inc.
+   Copyright (C) 2014-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -17,7 +17,6 @@
    <http://www.gnu.org/licenses/>.  */
 
 #include <sysdep.h>
-#include <init-arch.h>
 
 #define _ZGVeN16v_expf _ZGVeN16v_expf_avx2_wrapper
 #include "../svml_s_expf16_core.S"

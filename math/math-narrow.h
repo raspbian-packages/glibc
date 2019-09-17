@@ -1,5 +1,5 @@
 /* Helper macros for functions returning a narrower type.
-   Copyright (C) 2018 Free Software Foundation, Inc.
+   Copyright (C) 2018-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -26,6 +26,7 @@
 #include <ieee754.h>
 #include <math-barriers.h>
 #include <math_private.h>
+#include <fenv_private.h>
 
 /* Carry out a computation using round-to-odd.  The computation is
    EXPR; the union type in which to store the result is UNION and the

@@ -1,7 +1,7 @@
 /*
  * IBM Accurate Mathematical Library
  * written by International Business Machines Corp.
- * Copyright (C) 2001-2018 Free Software Foundation, Inc.
+ * Copyright (C) 2001-2019 Free Software Foundation, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -41,6 +41,7 @@
 #include "MathLib.h"
 #include <math.h>
 #include <math_private.h>
+#include <fenv_private.h>
 #include <math-underflow.h>
 #include <libm-alias-double.h>
 #include <fenv.h>
@@ -143,7 +144,7 @@ do_sin (double x, double dx)
   c = x * dx + xx * (cs2 + xx * (cs4 + xx * cs6));
   SINCOS_TABLE_LOOKUP (u, sn, ssn, cs, ccs);
   cor = (ssn + s * ccs - sn * c) + cs * s;
-  return __copysign (sn + cor, xold);
+  return copysign (sn + cor, xold);
 }
 
 /* Reduce range of x to within PI/2 with abs (x) < 105414350.  The high part
@@ -230,7 +231,7 @@ __sin (double x)
     {
       t = hp0 - fabs (x);
       /* Max ULP is 0.51.  */
-      retval = __copysign (do_cos (t, hp1), x);
+      retval = copysign (do_cos (t, hp1), x);
     }				/*   else  if (k < 0x400368fd)    */
 
 /*-------------------------- 2.426265<|x|< 105414350 ----------------------*/

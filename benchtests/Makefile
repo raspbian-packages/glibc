@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2018 Free Software Foundation, Inc.
+# Copyright (C) 2013-2019 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -131,6 +131,12 @@ CPPFLAGS-nonlib += -DDURATION=$(BENCH_DURATION) -D_ISOMAC
 # HP_TIMING if it is available.
 ifdef USE_CLOCK_GETTIME
 CPPFLAGS-nonlib += -DUSE_CLOCK_GETTIME
+else
+# On x86 processors, use RDTSCP, instead of RDTSC, to measure performance
+# of functions.  All x86 processors since 2010 support RDTSCP instruction.
+ifdef USE_RDTSCP
+CPPFLAGS-nonlib += -DUSE_RDTSCP
+endif
 endif
 
 DETAILED_OPT :=
@@ -174,14 +180,7 @@ $(error Invalid BENCHSET value)
 endif
 endif
 
-# Define the bench target only if the target has a usable python installation.
-ifdef PYTHON
 bench: bench-build bench-set bench-func bench-malloc
-else
-bench:
-	@echo "The bench target needs python to run."
-	@exit 1
-endif
 
 # Target to only build the benchmark without running it.  We generate locales
 # only if we're building natively.

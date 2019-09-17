@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2018 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -29,7 +29,7 @@ __wprintf (const wchar_t *format, ...)
   int done;
 
   va_start (arg, format);
-  done = __vfwprintf (stdout, format, arg);
+  done = __vfwprintf_internal (stdout, format, arg, 0);
   va_end (arg);
 
   return done;

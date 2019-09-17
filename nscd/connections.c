@@ -1,5 +1,5 @@
 /* Inner loops of cache daemon.
-   Copyright (C) 1998-2018 Free Software Foundation, Inc.
+   Copyright (C) 1998-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1998.
 
@@ -304,7 +304,8 @@ static int
 check_use (const char *data, nscd_ssize_t first_free, uint8_t *usemap,
 	   enum usekey use, ref_t start, size_t len)
 {
-  assert (len >= 2);
+  if (len < 2)
+    return 0;
 
   if (start > first_free || start + len > first_free
       || (start & BLOCK_ALIGN_M1))

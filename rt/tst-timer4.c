@@ -1,5 +1,5 @@
 /* Tests for POSIX timer implementation.
-   Copyright (C) 2004-2018 Free Software Foundation, Inc.
+   Copyright (C) 2004-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Jakub Jelinek <jakub@redhat.com>, 2004
 
@@ -178,7 +178,6 @@ check_ts (const char *name, const struct timespec *start,
     return 0;
 }
 
-#define TIMEOUT 15
 #define TEST_FUNCTION do_test ()
 static int
 do_test (void)

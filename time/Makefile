@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2018 Free Software Foundation, Inc.
+# Copyright (C) 1991-2019 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -43,13 +43,14 @@ tests	:= test_time clocktest tst-posixtz tst-strptime tst_wcsftime \
 	   tst-getdate tst-mktime tst-mktime2 tst-ftime_l tst-strftime \
 	   tst-mktime3 tst-strptime2 bug-asctime bug-asctime_r bug-mktime1 \
 	   tst-strptime3 bug-getdate1 tst-strptime-whitespace tst-ftime \
-	   tst-tzname tst-y2039
+	   tst-tzname tst-y2039 bug-mktime4 tst-strftime2
 
 include ../Rules
 
 ifeq ($(run-built-tests),yes)
 LOCALES := de_DE.ISO-8859-1 en_US.ISO-8859-1 ja_JP.EUC-JP fr_FR.UTF-8 \
-	   es_ES.UTF-8 pl_PL.UTF-8 ru_RU.UTF-8
+	   es_ES.UTF-8 pl_PL.UTF-8 ru_RU.UTF-8 \
+	   ja_JP.UTF-8 lo_LA.UTF-8 th_TH.UTF-8
 include ../gen-locales.mk
 
 $(objpfx)tst-ftime_l.out: $(gen-locales)

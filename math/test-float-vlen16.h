@@ -1,5 +1,5 @@
 /* Definitions for float vector tests with vector length 16.
-   Copyright (C) 2014-2018 Free Software Foundation, Inc.
+   Copyright (C) 2014-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -19,8 +19,6 @@
 #include "test-float.h"
 #include "test-math-no-inline.h"
 #include "test-math-vector.h"
-
-#define ROUNDING_TESTS_float(MODE) ((MODE) == FE_TONEAREST)
 
 #define VEC_SUFF _vlen16
 #define VEC_LEN 16

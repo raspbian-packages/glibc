@@ -1,6 +1,6 @@
 /* Software floating-point emulation.
    c = (long double)(a)
-   Copyright (C) 1997-2018 Free Software Foundation, Inc.
+   Copyright (C) 1997-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Richard Henderson (rth@cygnus.com) and
 		  Jakub Jelinek (jj@ultra.linux.cz).
@@ -31,7 +31,7 @@ long double _Q_stoq(const float a)
   long double c;
 
   FP_UNPACK_RAW_S(A, a);
-#if (2 * _FP_W_TYPE_SIZE) < _FP_FRACBITS_Q
+#if _FP_W_TYPE_SIZE < 64
   FP_EXTEND(Q,S,4,1,C,A);
 #else
   FP_EXTEND(Q,S,2,1,C,A);

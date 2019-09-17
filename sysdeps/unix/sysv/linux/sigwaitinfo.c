@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2018 Free Software Foundation, Inc.
+/* Copyright (C) 1997-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -28,6 +28,3 @@ __sigwaitinfo (const sigset_t *set, siginfo_t *info)
 libc_hidden_def (__sigwaitinfo)
 weak_alias (__sigwaitinfo, sigwaitinfo)
 strong_alias (__sigwaitinfo, __libc_sigwaitinfo)
-
-/* __sigtimedwait handles cancellation.  */
-LIBC_CANCEL_HANDLED ();

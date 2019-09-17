@@ -1,5 +1,5 @@
 /* Test program for POSIX clock_* functions.
-   Copyright (C) 2000-2018 Free Software Foundation, Inc.
+   Copyright (C) 2000-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 2000.
 
@@ -25,9 +25,6 @@
 
 /* We want to see output immediately.  */
 #define STDOUT_UNBUFFERED
-
-/* We expect to run at least 10 seconds.  */
-#define TIMEOUT 15
 
 static int
 clock_test (clockid_t cl)

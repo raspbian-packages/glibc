@@ -1,5 +1,5 @@
 /* Some basic tests for LFS.
-   Copyright (C) 2000-2018 Free Software Foundation, Inc.
+   Copyright (C) 2000-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Andreas Jaeger <aj@suse.de>, 2000.
 
@@ -25,6 +25,7 @@
 #include <error.h>
 #include <errno.h>
 #include <sys/resource.h>
+#include <support/check.h>
 
 /* Prototype for our test function.  */
 extern void do_prepare (int argc, char *argv[]);
@@ -32,9 +33,6 @@ extern int do_test (int argc, char *argv[]);
 
 /* We have a preparation function.  */
 #define PREPARE do_prepare
-
-/* We might need a bit longer timeout.  */
-#define TIMEOUT 20 /* sec */
 
 /* This defines the `main' function and some more.  */
 #include <test-skeleton.c>
@@ -70,6 +68,8 @@ do_prepare (int argc, char *argv[])
       else
 	error (EXIT_FAILURE, errno, "cannot create temporary file");
     }
+  if (!support_descriptor_supports_holes (fd))
+    FAIL_UNSUPPORTED ("File %s does not support holes", name);
   add_temp_file (name);
 
   if (getrlimit64 (RLIMIT_FSIZE, &rlim) != 0)

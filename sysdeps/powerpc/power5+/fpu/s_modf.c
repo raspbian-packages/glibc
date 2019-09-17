@@ -1,4 +1,4 @@
-/* Copyright (C) 2013-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2013-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,7 +16,6 @@
    not, see <http://www.gnu.org/licenses/>.  */
 
 #include <math.h>
-#include <math_private.h>
 #include <math_ldbl_opt.h>
 #include <libm-alias-double.h>
 
@@ -26,7 +25,7 @@ __modf (double x, double *iptr)
   if (__builtin_isinf (x))
     {
       *iptr = x;
-      return __copysign (0.0, x);
+      return copysign (0.0, x);
     }
   else if (__builtin_isnan (x))
     {
@@ -36,13 +35,13 @@ __modf (double x, double *iptr)
 
   if (x >= 0.0)
     {
-      *iptr = __floor (x);
-      return __copysign (x - *iptr, x);
+      *iptr = floor (x);
+      return copysign (x - *iptr, x);
     }
   else
     {
-      *iptr = __ceil (x);
-      return __copysign (x - *iptr, x);
+      *iptr = ceil (x);
+      return copysign (x - *iptr, x);
     }
 }
 libm_alias_double (__modf, modf)

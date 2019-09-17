@@ -1,4 +1,4 @@
-/* Copyright (C) 2000-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2000-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Maciej W. Rozycki <macro@ds2.pg.gda.pl>, 2000.
 
@@ -38,10 +38,11 @@ __NTH (_test_and_set (int *__p, int __v))
 {
   int __r, __t;
 
+  /* The R5900 reports itself as MIPS III but it does not have LL/SC.  */
   __asm__ __volatile__
     ("/* Inline test and set */\n"
      ".set	push\n\t"
-#if _MIPS_SIM == _ABIO32 && __mips < 2
+#if _MIPS_SIM == _ABIO32 && (__mips < 2 || defined (_MIPS_ARCH_R5900))
      ".set	mips2\n\t"
 #endif
      "sync\n\t"

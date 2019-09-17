@@ -1,5 +1,5 @@
 /* Measure strncmp functions.
-   Copyright (C) 2013-2018 Free Software Foundation, Inc.
+   Copyright (C) 2013-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -26,14 +26,9 @@
 #include "json-lib.h"
 
 #ifdef WIDE
-# include <wchar.h>
-
 # define L(str) L##str
-# define STRNCMP wcsncmp
 # define SIMPLE_STRNCMP simple_wcsncmp
 # define STUPID_STRNCMP stupid_wcsncmp
-# define CHAR wchar_t
-# define CHARBYTES 4
 
 /* Wcsncmp uses signed semantics for comparison, not unsigned.
    Avoid using substraction since possible overflow.  */
@@ -73,11 +68,8 @@ stupid_wcsncmp (const CHAR *s1, const CHAR *s2, size_t n)
 
 #else
 # define L(str) str
-# define STRNCMP strncmp
 # define SIMPLE_STRNCMP simple_strncmp
 # define STUPID_STRNCMP stupid_strncmp
-# define CHAR char
-# define CHARBYTES 1
 
 /* Strncmp uses unsigned semantics for comparison.  */
 int
@@ -150,7 +142,7 @@ do_test_limit (json_ctx_t *json_ctx, size_t align1, size_t align2, size_t len,
 
   FOR_EACH_IMPL (impl, 0)
     {
-      realloc_bufs ();
+      alloc_bufs ();
       s1 = (CHAR *) (buf1 + page_size - n * CHARBYTES);
       s2 = (CHAR *) (buf2 + page_size - n * CHARBYTES);
 
@@ -207,7 +199,7 @@ do_test (json_ctx_t *json_ctx, size_t align1, size_t align2, size_t len, size_t
 
   FOR_EACH_IMPL (impl, 0)
     {
-      realloc_bufs ();
+      alloc_bufs ();
       s1 = (CHAR *) (buf1 + align1);
       s2 = (CHAR *) (buf2 + align2);
 

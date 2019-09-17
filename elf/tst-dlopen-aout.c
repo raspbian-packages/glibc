@@ -3,7 +3,7 @@
    Verify that incorrectly dlopen()ing an executable without
    __RTLD_OPENEXEC does not cause assertion in ld.so.
 
-   Copyright (C) 2014-2018 Free Software Foundation, Inc.
+   Copyright (C) 2014-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -27,6 +27,7 @@
 #include <dlfcn.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <support/xthread.h>
 
 __thread int x;
 
@@ -45,7 +46,6 @@ do_test (int argc, char *argv[])
     {
       pthread_t thr;
       void *p;
-      int rc;
 
       p = dlopen (argv[0], RTLD_LAZY);
       if (p != NULL)
@@ -53,11 +53,11 @@ do_test (int argc, char *argv[])
           fprintf (stderr, "dlopen unexpectedly succeeded\n");
           return 1;
         }
-      rc = pthread_create (&thr, NULL, fn, NULL);
-      assert (rc == 0);
-
-      rc = pthread_join (thr, NULL);
-      assert (rc == 0);
+      /* We create threads to force TLS allocation, which triggers
+	 the original bug i.e. running out of surplus slotinfo entries
+	 for TLS.  */
+      thr = xpthread_create (NULL, fn, NULL);
+      xpthread_join (thr);
     }
 
   return 0;

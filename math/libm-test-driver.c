@@ -1,5 +1,5 @@
 /* Support code for testing libm functions (driver).
-   Copyright (C) 1997-2018 Free Software Foundation, Inc.
+   Copyright (C) 1997-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -154,7 +154,7 @@ struct test_ff_f_data
     int exceptions;
   } rd, rn, rz, ru;
 };
-/* Strictly speaking, a j type argument is one gen-libm-test.pl will not
+/* Strictly speaking, a j type argument is one gen-libm-test.py will not
    attempt to muck with.  For now, it is only used to prevent it from
    mucking up an explicitly long double argument.  */
 struct test_fj_f_data
@@ -389,6 +389,7 @@ struct test_Ff_b1_data
 #define IF_ROUND_INIT_FE_DOWNWARD		\
   int save_round_mode = fegetround ();		\
   if (ROUNDING_TESTS (FLOAT, FE_DOWNWARD)	\
+      && !TEST_MATHVEC				\
       && fesetround (FE_DOWNWARD) == 0)
 #define IF_ROUND_INIT_FE_TONEAREST		\
   int save_round_mode = fegetround ();		\
@@ -397,10 +398,12 @@ struct test_Ff_b1_data
 #define IF_ROUND_INIT_FE_TOWARDZERO		\
   int save_round_mode = fegetround ();		\
   if (ROUNDING_TESTS (FLOAT, FE_TOWARDZERO)	\
+      && !TEST_MATHVEC				\
       && fesetround (FE_TOWARDZERO) == 0)
 #define IF_ROUND_INIT_FE_UPWARD			\
   int save_round_mode = fegetround ();		\
   if (ROUNDING_TESTS (FLOAT, FE_UPWARD)		\
+      && !TEST_MATHVEC				\
       && fesetround (FE_UPWARD) == 0)
 #define ROUND_RESTORE_	/* Empty.  */
 #define ROUND_RESTORE_FE_DOWNWARD		\

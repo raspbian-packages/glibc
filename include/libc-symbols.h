@@ -1,6 +1,6 @@
 /* Support macros for making weak and strong aliases for symbols,
    and for using symbol sets and linker warnings with GNU ld.
-   Copyright (C) 1995-2018 Free Software Foundation, Inc.
+   Copyright (C) 1995-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -125,6 +125,11 @@
 # define ASM_LINE_SEP ;
 #endif
 
+#ifndef __attribute_copy__
+/* Provide an empty definition when cdefs.h is not included.  */
+# define __attribute_copy__(arg)
+#endif
+
 #ifndef __ASSEMBLER__
 /* GCC understands weak symbols and aliases; use its interface where
    possible, instead of embedded assembly language.  */
@@ -132,7 +137,8 @@
 /* Define ALIASNAME as a strong alias for NAME.  */
 # define strong_alias(name, aliasname) _strong_alias(name, aliasname)
 # define _strong_alias(name, aliasname) \
-  extern __typeof (name) aliasname __attribute__ ((alias (#name)));
+  extern __typeof (name) aliasname __attribute__ ((alias (#name))) \
+    __attribute_copy__ (name);
 
 /* This comes between the return type and function name in
    a function definition to make that definition weak.  */
@@ -143,14 +149,16 @@
    If weak aliases are not available, this defines a strong alias.  */
 # define weak_alias(name, aliasname) _weak_alias (name, aliasname)
 # define _weak_alias(name, aliasname) \
-  extern __typeof (name) aliasname __attribute__ ((weak, alias (#name)));
+  extern __typeof (name) aliasname __attribute__ ((weak, alias (#name))) \
+    __attribute_copy__ (name);
 
 /* Same as WEAK_ALIAS, but mark symbol as hidden.  */
 # define weak_hidden_alias(name, aliasname) \
   _weak_hidden_alias (name, aliasname)
 # define _weak_hidden_alias(name, aliasname) \
   extern __typeof (name) aliasname \
-    __attribute__ ((weak, alias (#name), __visibility__ ("hidden")));
+    __attribute__ ((weak, alias (#name), __visibility__ ("hidden"))) \
+    __attribute_copy__ (name);
 
 /* Declare SYMBOL as weak undefined symbol (resolved to 0 if not defined).  */
 # define weak_extern(symbol) _weak_extern (weak symbol)
@@ -530,13 +538,19 @@ for linking")
 #  define __hidden_asmname1(prefix, name) __hidden_asmname2(prefix, name)
 #  define __hidden_asmname2(prefix, name) #prefix name
 #  define __hidden_ver1(local, internal, name) \
-  extern __typeof (name) __EI_##name __asm__(__hidden_asmname (#internal)); \
-  extern __typeof (name) __EI_##name \
-	__attribute__((alias (__hidden_asmname (#local))))
+  __hidden_ver2 (, local, internal, name)
+#  define __hidden_ver2(thread, local, internal, name)			\
+  extern thread __typeof (name) __EI_##name \
+    __asm__(__hidden_asmname (#internal));  \
+  extern thread __typeof (name) __EI_##name \
+    __attribute__((alias (__hidden_asmname (#local))))	\
+    __attribute_copy__ (name)
 #  define hidden_ver(local, name)	__hidden_ver1(local, __GI_##name, name);
 #  define hidden_data_ver(local, name)	hidden_ver(local, name)
 #  define hidden_def(name)		__hidden_ver1(__GI_##name, name, name);
 #  define hidden_data_def(name)		hidden_def(name)
+#  define hidden_tls_def(name)				\
+  __hidden_ver2 (__thread, __GI_##name, name, name);
 #  define hidden_weak(name) \
 	__hidden_ver1(__GI_##name, name, name) __attribute__((weak));
 #  define hidden_data_weak(name)	hidden_weak(name)
@@ -545,7 +559,8 @@ for linking")
 #  define __hidden_nolink1(local, internal, name, version) \
   __hidden_nolink2 (local, internal, name, version)
 #  define __hidden_nolink2(local, internal, name, version) \
-  extern __typeof (name) internal __attribute__ ((alias (#local))); \
+  extern __typeof (name) internal __attribute__ ((alias (#local)))	\
+    __attribute_copy__ (name);						\
   __hidden_nolink3 (local, internal, #name "@" #version)
 #  define __hidden_nolink3(local, internal, vername) \
   __asm__ (".symver " #internal ", " vername);
@@ -563,6 +578,7 @@ for linking")
 #  define hidden_weak(name)	hidden_def (name)
 #  define hidden_ver(local, name) strong_alias (local, __GI_##name)
 #  define hidden_data_def(name)	strong_data_alias (name, __GI_##name)
+#  define hidden_tls_def(name)	hidden_data_def (name)
 #  define hidden_data_weak(name)	hidden_data_def (name)
 #  define hidden_data_ver(local, name) strong_data_alias (local, __GI_##name)
 #  define HIDDEN_JUMPTARGET(name) __GI_##name
@@ -592,6 +608,7 @@ for linking")
 # define hidden_ver(local, name)
 # define hidden_data_weak(name)
 # define hidden_data_def(name)
+# define hidden_tls_def(name)
 # define hidden_data_ver(local, name)
 # define hidden_nolink(name, lib, version)
 #endif
@@ -609,6 +626,7 @@ for linking")
 # endif
 # define libc_hidden_ver(local, name) hidden_ver (local, name)
 # define libc_hidden_data_def(name) hidden_data_def (name)
+# define libc_hidden_tls_def(name) hidden_tls_def (name)
 # define libc_hidden_data_weak(name) hidden_data_weak (name)
 # define libc_hidden_data_ver(local, name) hidden_data_ver (local, name)
 #else
@@ -618,6 +636,7 @@ for linking")
 # define libc_hidden_weak(name)
 # define libc_hidden_ver(local, name)
 # define libc_hidden_data_def(name)
+# define libc_hidden_tls_def(name)
 # define libc_hidden_data_weak(name)
 # define libc_hidden_data_ver(local, name)
 #endif
@@ -629,6 +648,7 @@ for linking")
 # define rtld_hidden_weak(name) hidden_weak (name)
 # define rtld_hidden_ver(local, name) hidden_ver (local, name)
 # define rtld_hidden_data_def(name) hidden_data_def (name)
+# define rtld_hidden_tls_def(name) hidden_tls_def (name)
 # define rtld_hidden_data_weak(name) hidden_data_weak (name)
 # define rtld_hidden_data_ver(local, name) hidden_data_ver (local, name)
 #else
@@ -638,6 +658,7 @@ for linking")
 # define rtld_hidden_weak(name)
 # define rtld_hidden_ver(local, name)
 # define rtld_hidden_data_def(name)
+# define rtld_hidden_tls_def(name)
 # define rtld_hidden_data_weak(name)
 # define rtld_hidden_data_ver(local, name)
 #endif
@@ -649,6 +670,7 @@ for linking")
 # define libm_hidden_weak(name) hidden_weak (name)
 # define libm_hidden_ver(local, name) hidden_ver (local, name)
 # define libm_hidden_data_def(name) hidden_data_def (name)
+# define libm_hidden_tls_def(name) hidden_tls_def (name)
 # define libm_hidden_data_weak(name) hidden_data_weak (name)
 # define libm_hidden_data_ver(local, name) hidden_data_ver (local, name)
 #else
@@ -658,6 +680,7 @@ for linking")
 # define libm_hidden_weak(name)
 # define libm_hidden_ver(local, name)
 # define libm_hidden_data_def(name)
+# define libm_hidden_tls_def(name)
 # define libm_hidden_data_weak(name)
 # define libm_hidden_data_ver(local, name)
 #endif
@@ -669,6 +692,7 @@ for linking")
 # define libmvec_hidden_weak(name) hidden_weak (name)
 # define libmvec_hidden_ver(local, name) hidden_ver (local, name)
 # define libmvec_hidden_data_def(name) hidden_data_def (name)
+# define libmvec_hidden_tls_def(name) hidden_tls_def (name)
 # define libmvec_hidden_data_weak(name) hidden_data_weak (name)
 # define libmvec_hidden_data_ver(local, name) hidden_data_ver (local, name)
 #else
@@ -678,6 +702,7 @@ for linking")
 # define libmvec_hidden_weak(name)
 # define libmvec_hidden_ver(local, name)
 # define libmvec_hidden_data_def(name)
+# define libmvec_hidden_tls_def(name)
 # define libmvec_hidden_data_weak(name)
 # define libmvec_hidden_data_ver(local, name)
 #endif
@@ -690,6 +715,7 @@ for linking")
 # define libresolv_hidden_weak(name) hidden_weak (name)
 # define libresolv_hidden_ver(local, name) hidden_ver (local, name)
 # define libresolv_hidden_data_def(name) hidden_data_def (name)
+# define libresolv_hidden_tls_def(name) hidden_tls_def (name)
 # define libresolv_hidden_data_weak(name) hidden_data_weak (name)
 # define libresolv_hidden_data_ver(local, name) hidden_data_ver (local, name)
 #else
@@ -699,6 +725,7 @@ for linking")
 # define libresolv_hidden_weak(name)
 # define libresolv_hidden_ver(local, name)
 # define libresolv_hidden_data_def(name)
+# define libresolv_hidden_tls_def(name)
 # define libresolv_hidden_data_weak(name)
 # define libresolv_hidden_data_ver(local, name)
 #endif
@@ -711,6 +738,7 @@ for linking")
 # define librt_hidden_weak(name) hidden_weak (name)
 # define librt_hidden_ver(local, name) hidden_ver (local, name)
 # define librt_hidden_data_def(name) hidden_data_def (name)
+# define librt_hidden_tls_def(name) hidden_tls_def (name)
 # define librt_hidden_data_weak(name) hidden_data_weak (name)
 # define librt_hidden_data_ver(local, name) hidden_data_ver (local, name)
 #else
@@ -720,6 +748,7 @@ for linking")
 # define librt_hidden_weak(name)
 # define librt_hidden_ver(local, name)
 # define librt_hidden_data_def(name)
+# define librt_hidden_tls_def(name)
 # define librt_hidden_data_weak(name)
 # define librt_hidden_data_ver(local, name)
 #endif
@@ -732,6 +761,7 @@ for linking")
 # define libdl_hidden_weak(name) hidden_weak (name)
 # define libdl_hidden_ver(local, name) hidden_ver (local, name)
 # define libdl_hidden_data_def(name) hidden_data_def (name)
+# define libdl_hidden_tls_def(name) hidden_tls_def (name)
 # define libdl_hidden_data_weak(name) hidden_data_weak (name)
 # define libdl_hidden_data_ver(local, name) hidden_data_ver (local, name)
 #else
@@ -741,6 +771,7 @@ for linking")
 # define libdl_hidden_weak(name)
 # define libdl_hidden_ver(local, name)
 # define libdl_hidden_data_def(name)
+# define libdl_hidden_tls_def(name)
 # define libdl_hidden_data_weak(name)
 # define libdl_hidden_data_ver(local, name)
 #endif
@@ -753,6 +784,7 @@ for linking")
 # define libnss_files_hidden_weak(name) hidden_weak (name)
 # define libnss_files_hidden_ver(local, name) hidden_ver (local, name)
 # define libnss_files_hidden_data_def(name) hidden_data_def (name)
+# define libnss_files_hidden_tls_def(name) hidden_tls_def (name)
 # define libnss_files_hidden_data_weak(name) hidden_data_weak (name)
 # define libnss_files_hidden_data_ver(local, name) hidden_data_ver(local, name)
 #else
@@ -762,6 +794,7 @@ for linking")
 # define libnss_files_hidden_weak(name)
 # define libnss_files_hidden_ver(local, name)
 # define libnss_files_hidden_data_def(name)
+# define libnss_files_hidden_tls_def(name)
 # define libnss_files_hidden_data_weak(name)
 # define libnss_files_hidden_data_ver(local, name)
 #endif
@@ -780,6 +813,7 @@ for linking")
 # define libnsl_hidden_weak(name) hidden_weak (name)
 # define libnsl_hidden_ver(local, name) hidden_ver (local, name)
 # define libnsl_hidden_data_def(name) hidden_data_def (name)
+# define libnsl_hidden_tls_def(name) hidden_tls_def (name)
 # define libnsl_hidden_data_weak(name) hidden_data_weak (name)
 # define libnsl_hidden_data_ver(local, name) hidden_data_ver (local, name)
 #else
@@ -789,6 +823,7 @@ for linking")
 # define libnsl_hidden_weak(name)
 # define libnsl_hidden_ver(local, name)
 # define libnsl_hidden_data_def(name)
+# define libnsl_hidden_tls_def(name)
 # define libnsl_hidden_data_weak(name)
 # define libnsl_hidden_data_ver(local, name)
 #endif
@@ -801,6 +836,7 @@ for linking")
 # define libnss_nisplus_hidden_weak(name) hidden_weak (name)
 # define libnss_nisplus_hidden_ver(local, name) hidden_ver (local, name)
 # define libnss_nisplus_hidden_data_def(name) hidden_data_def (name)
+# define libnss_nisplus_hidden_tls_def(name) hidden_tls_def (name)
 # define libnss_nisplus_hidden_data_weak(name) hidden_data_weak (name)
 # define libnss_nisplus_hidden_data_ver(local, name) hidden_data_ver (local, name)
 #else
@@ -810,6 +846,7 @@ for linking")
 # define libnss_nisplus_hidden_weak(name)
 # define libnss_nisplus_hidden_ver(local, name)
 # define libnss_nisplus_hidden_data_def(name)
+# define libnss_nisplus_hidden_tls_def(name)
 # define libnss_nisplus_hidden_data_weak(name)
 # define libnss_nisplus_hidden_data_ver(local, name)
 #endif
@@ -830,6 +867,7 @@ for linking")
 # define libutil_hidden_weak(name) hidden_weak (name)
 # define libutil_hidden_ver(local, name) hidden_ver (local, name)
 # define libutil_hidden_data_def(name) hidden_data_def (name)
+# define libutil_hidden_tls_def(name) hidden_tls_def (name)
 # define libutil_hidden_data_weak(name) hidden_data_weak (name)
 # define libutil_hidden_data_ver(local, name) hidden_data_ver (local, name)
 #else
@@ -839,6 +877,7 @@ for linking")
 # define libutil_hidden_weak(name)
 # define libutil_hidden_ver(local, name)
 # define libutil_hidden_data_def(name)
+# define libutil_hidden_tls_def(name)
 # define libutil_hidden_data_weak(name)
 # define libutil_hidden_data_ver(local, name)
 #endif

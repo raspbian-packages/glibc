@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2018 Free Software Foundation, Inc.
+/* Copyright (C) 1997-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -30,5 +30,8 @@ struct __kernel_termios
     cc_t c_line;		/* line discipline */
     cc_t c_cc[__KERNEL_NCCS];	/* control characters */
   };
+
+#define _HAVE_C_ISPEED 0
+#define _HAVE_C_OSPEED 0
 
 #endif /* kernel_termios.h */

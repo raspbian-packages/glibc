@@ -1,4 +1,4 @@
-/* Copyright (C) 2000-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2000-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -20,7 +20,7 @@
 
 /* Set signal mask for the new process in ATTR to SIGMASK.  */
 int
-posix_spawnattr_setsigmask (posix_spawnattr_t *attr,
+__posix_spawnattr_setsigmask (posix_spawnattr_t *attr,
 			    const sigset_t *sigmask)
 {
   /* Copy the sigset_t data to the user buffer.  */
@@ -28,3 +28,4 @@ posix_spawnattr_setsigmask (posix_spawnattr_t *attr,
 
   return 0;
 }
+weak_alias (__posix_spawnattr_setsigmask, posix_spawnattr_setsigmask)

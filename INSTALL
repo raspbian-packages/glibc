@@ -90,6 +90,22 @@ if 'CFLAGS' is specified it must enable optimization.  For example:
      library will still be usable, but functionality may be lost--for
      example, you can't build a shared libc with old binutils.
 
+'--with-nonshared-cflags=CFLAGS'
+     Use additional compiler flags CFLAGS to build the parts of the
+     library which are always statically linked into applications and
+     libraries even with shared linking (that is, the object files
+     contained in 'lib*_nonshared.a' libraries).  The build process will
+     automatically use the appropriate flags, but this option can be
+     used to set additional flags required for building applications and
+     libraries, to match local policy.  For example, if such a policy
+     requires that all code linked into applications must be built with
+     source fortification,
+     '--with-nonshared-cflags=-Wp,-D_FORTIFY_SOURCE=2' will make sure
+     that the objects in 'libc_nonshared.a' are compiled with this flag
+     (although this will not affect the generated code in this
+     particular case and potentially change debugging information and
+     metadata only).
+
 '--disable-shared'
      Don't build shared libraries even if it is possible.  Not all
      systems support shared libraries; you need ELF support and
@@ -211,7 +227,10 @@ if 'CFLAGS' is specified it must enable optimization.  For example:
      By default, libnsl is only built as shared library for backward
      compatibility and the NSS modules libnss_compat, libnss_nis and
      libnss_nisplus are not built at all.  Use this option to enable
-     libnsl with all depending NSS modules and header files.
+     libnsl with all depending NSS modules and header files.  For
+     architectures and ABIs that have been added after version 2.28 of
+     the GNU C Library this option is not available, and the libnsl
+     compatibility library is not built.
 
 '--disable-crypt'
      Do not install the passphrase-hashing library 'libcrypt' or the
@@ -295,38 +314,6 @@ problems found and exiting with error status if any problems occurred.
 You can specify 'stop-on-test-failure=y' when running 'make check' to
 make the test run stop and exit with an error status immediately when a
 failure occurs.
-
-   The GNU C Library pretty printers come with their own set of scripts
-for testing, which run together with the rest of the testsuite through
-'make check'.  These scripts require the following tools to run
-successfully:
-
-   * Python 2.7/3.4 or later
-
-     Python is required for running the printers' test scripts.  As of
-     release time, Python 3.6 is the newest verified to work to test the
-     pretty printers.
-
-   * PExpect 4.0
-
-     The printer tests drive GDB through test programs and compare its
-     output to the printers'.  PExpect is used to capture the output of
-     GDB, and should be compatible with the Python version in your
-     system.  As of release time PExpect 4.3 is the newest verified to
-     work to test the pretty printers.
-
-   * GDB 7.8 or later with support for Python 2.7/3.4 or later
-
-     GDB itself needs to be configured with Python support in order to
-     use the pretty printers.  Notice that your system having Python
-     available doesn't imply that GDB supports it, nor that your
-     system's Python and GDB's have the same version.  As of release
-     time GNU 'debugger' 8.0.1 is the newest verified to work to test
-     the pretty printers.
-
-If these tools are absent, the printer tests will report themselves as
-'UNSUPPORTED'.  Notice that some of the printer tests require the GNU C
-Library to be compiled with debugging symbols.
 
    To format the 'GNU C Library Reference Manual' for printing, type
 'make dvi'.  You need a working TeX installation to do this.  The
@@ -424,13 +411,33 @@ a pseudoterminal so it can be used by the calling process.  If you are
 using a Linux kernel with the 'devpts' filesystem enabled and mounted at
 '/dev/pts', you don't need this program.
 
-   After installation you might want to configure the timezone and
-locale installation of your system.  The GNU C Library comes with a
-locale database which gets configured with 'localedef'.  For example, to
-set up a German locale with name 'de_DE', simply issue the command
-'localedef -i de_DE -f ISO-8859-1 de_DE'.  To configure all locales that
+   After installation you should configure the timezone and install
+locales for your system.  The time zone configuration ensures that your
+system time matches the time for your current timezone.  The locales
+ensure that the display of information on your system matches the
+expectations of your language and geographic region.
+
+   The GNU C Library is able to use two kinds of localization
+information sources, the first is a locale database named
+'locale-archive' which is generally installed as
+'/usr/lib/locale/locale-archive'.  The locale archive has the benefit of
+taking up less space and being very fast to load, but only if you plan
+to install sixty or more locales.  If you plan to install one or two
+locales you can instead install individual locales into their self-named
+directories e.g. '/usr/lib/locale/en_US.utf8'.  For example to install
+the German locale using the character set for UTF-8 with name 'de_DE'
+into the locale archive issue the command 'localedef -i de_DE -f UTF-8
+de_DE', and to install just the one locale issue the command 'localedef
+--no-archive -i de_DE -f UTF-8 de_DE'.  To configure all locales that
 are supported by the GNU C Library, you can issue from your build
-directory the command 'make localedata/install-locales'.
+directory the command 'make localedata/install-locales' to install all
+locales into the locale archive or 'make
+localedata/install-locale-files' to install all locales as files in the
+default configured locale installation directory (derived from
+'--prefix' or '--localedir').  To install into an alternative system
+root use 'DESTDIR' e.g. 'make localedata/install-locale-files
+DESTDIR=/opt/glibc', but note that this does not change the configured
+prefix.
 
    To configure the locally used timezone, set the 'TZ' environment
 variable.  The script 'tzselect' helps you to select the right value.
@@ -452,12 +459,12 @@ build the GNU C Library:
      As of relase time, GNU 'make' 4.2.1 is the newest verified to work
      to build the GNU C Library.
 
-   * GCC 4.9 or newer
+   * GCC 5 or newer
 
-     GCC 4.9 or higher is required.  In general it is recommended to use
+     GCC 5 or higher is required.  In general it is recommended to use
      the newest version of the compiler that is known to work for
      building the GNU C Library, as newer compilers usually produce
-     better code.  As of release time, GCC 8.1.1 is the newest compiler
+     better code.  As of release time, GCC 8.2.1 is the newest compiler
      verified to work to build the GNU C Library.
 
      For PowerPC 64-bits little-endian (powerpc64le), GCC 6.2 or higher
@@ -507,21 +514,49 @@ build the GNU C Library:
    * GNU 'bison' 2.7 or later
 
      'bison' is used to generate the 'yacc' parser code in the 'intl'
-     subdirectory.  As of release time, 'bison' version 3.0.4 is the
+     subdirectory.  As of release time, 'bison' version 3.0.5 is the
      newest verified to work to build the GNU C Library.
 
    * Perl 5
 
-     Perl is not required, but it is used if present to test the
-     installation.  We may decide to use it elsewhere in the future.  As
-     of release time 'perl' version 5.28.0 is the newest verified to
-     work to build the GNU C Library.
+     Perl is not required, but if present it is used in some tests and
+     the 'mtrace' program, to build the GNU C Library manual.  As of
+     release time 'perl' version 5.28.1 is the newest verified to work
+     to build the GNU C Library.
 
    * GNU 'sed' 3.02 or newer
 
      'Sed' is used in several places to generate files.  Most scripts
      work with any version of 'sed'.  As of release time, 'sed' version
      4.5 is the newest verified to work to build the GNU C Library.
+
+   * Python 3.4 or later
+
+     Python is required to build the GNU C Library.  As of release time,
+     Python 3.7.1 is the newest verified to work for building and
+     testing the GNU C Library.
+
+   * PExpect 4.0
+
+     The pretty printer tests drive GDB through test programs and
+     compare its output to the printers'.  PExpect is used to capture
+     the output of GDB, and should be compatible with the Python version
+     in your system.  As of release time PExpect 4.3 is the newest
+     verified to work to test the pretty printers.
+
+   * GDB 7.8 or later with support for Python 2.7/3.4 or later
+
+     GDB itself needs to be configured with Python support in order to
+     use the pretty printers.  Notice that your system having Python
+     available doesn't imply that GDB supports it, nor that your
+     system's Python and GDB's have the same version.  As of release
+     time GNU 'debugger' 8.2 is the newest verified to work to test the
+     pretty printers.
+
+     Unless Python, PExpect and GDB with Python support are present, the
+     printer tests will report themselves as 'UNSUPPORTED'.  Notice that
+     some of the printer tests require the GNU C Library to be compiled
+     with debugging symbols.
 
 If you change any of the 'configure.ac' files you will also need
 

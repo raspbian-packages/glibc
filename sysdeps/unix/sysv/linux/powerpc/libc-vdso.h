@@ -1,5 +1,5 @@
 /* Resolve function pointers to VDSO functions.
-   Copyright (C) 2005-2018 Free Software Foundation, Inc.
+   Copyright (C) 2005-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -20,8 +20,7 @@
 #ifndef _LIBC_VDSO_H
 #define _LIBC_VDSO_H
 
-#ifdef SHARED
-
+#include <sysdep.h>
 #include <sysdep-vdso.h>
 
 extern int (*VDSO_SYMBOL(gettimeofday)) (struct timeval *, void *)
@@ -67,8 +66,6 @@ extern void *VDSO_SYMBOL(sigtramp_rt32);
 
 #else
 #define VDSO_IFUNC_RET(value)  ((void *) (value))
-#endif
-
 #endif
 
 #endif /* _LIBC_VDSO_H */

@@ -1,4 +1,4 @@
-/* Copyright (C) 2005-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2005-2019 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -18,6 +18,9 @@
 
 #ifndef _LINUX_AARCH64_SYSDEP_H
 #define _LINUX_AARCH64_SYSDEP_H 1
+
+/* Always enable vsyscalls on aarch64 */
+#define ALWAYS_USE_VSYSCALL 1
 
 #include <sysdeps/unix/sysdep.h>
 #include <sysdeps/aarch64/sysdep.h>

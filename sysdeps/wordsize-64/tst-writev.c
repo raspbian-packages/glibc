@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ryan S. Arnold <rsa@us.ibm.com>, 2011.
 
@@ -109,9 +109,6 @@ do_test (void)
 
   return 0;
 }
-
-/* Time enough for a large writev syscall to complete.  */
-#define TIMEOUT 20
 
 #define TEST_FUNCTION do_test ()
 #include "../test-skeleton.c"

@@ -1,6 +1,6 @@
 /* Multiple versions of stpncpy.
    All versions must be listed in ifunc-impl-list.c.
-   Copyright (C) 2017-2018 Free Software Foundation, Inc.
+   Copyright (C) 2017-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -26,7 +26,7 @@
 # undef __stpncpy
 
 # define SYMBOL_NAME stpncpy
-# include "ifunc-unaligned-ssse3.h"
+# include "ifunc-strcpy.h"
 
 libc_ifunc_redirected (__redirect_stpncpy, __stpncpy, IFUNC_SELECTOR ());
 

@@ -1,4 +1,4 @@
-# Copyright (C) 1996-2018 Free Software Foundation, Inc.
+# Copyright (C) 1996-2019 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -42,7 +42,7 @@ extra-libs-others = $(extra-libs)
 libm-support = s_lib_version s_matherr s_signgam			\
 	       fclrexcpt fgetexcptflg fraiseexcpt fsetexcptflg		\
 	       ftestexcept fegetround fesetround fegetenv feholdexcpt	\
-	       fesetenv feupdateenv t_exp fedisblxcpt feenablxcpt	\
+	       fesetenv feupdateenv fedisblxcpt feenablxcpt	\
 	       fegetexcept fesetexcept fetestexceptflag fegetmode	\
 	       fesetmode
 
@@ -64,9 +64,9 @@ gen-libm-calls = cargF conjF cimagF crealF cabsF s_cacosF		  \
 libm-calls =								  \
 	e_acosF e_acoshF e_asinF e_atan2F e_atanhF e_coshF e_expF e_fmodF \
 	e_hypotF e_j0F e_j1F e_jnF e_lgammaF_r e_logF e_log10F e_powF	  \
-	e_rem_pio2F e_remainderF e_scalbF e_sinhF e_sqrtF e_gammaF_r	  \
+	e_remainderF e_scalbF e_sinhF e_sqrtF e_gammaF_r	  \
 	e_ilogbF							  \
-	k_cosF k_sinF k_tanF s_asinhF s_atanF s_cbrtF			  \
+	k_tanF s_asinhF s_atanF s_cbrtF					  \
 	s_ceilF s_cosF s_erfF s_expm1F s_fabsF				  \
 	s_floorF s_log1pF s_logbF				  \
 	s_nextafterF s_nexttowardF s_rintF s_scalblnF			  \
@@ -119,23 +119,26 @@ test-types-basic = ldouble double float
 
 # long double support
 type-ldouble-suffix := l
-type-ldouble-routines := t_sincosl k_sincosl s_iscanonicall
+type-ldouble-routines := t_sincosl k_sinl k_cosl k_sincosl s_iscanonicall \
+			 e_rem_pio2l
 type-ldouble-yes := ldouble
 
 # double support
 type-double-suffix :=
 type-double-routines := branred doasin dosincos mpa mpatan2	\
-		       mpatan mpsqrt mptan sincos32	\
-		       sincostab k_rem_pio2
+		       k_rem_pio2 mpatan mpsqrt mptan sincos32	\
+		       sincostab math_err e_exp_data e_log_data	\
+		       e_log2_data e_pow_log_data
 
 # float support
 type-float-suffix := f
-type-float-routines := k_rem_pio2f math_errf e_exp2f_data e_logf_data	\
-		       e_log2f_data e_powf_log2_data
+type-float-routines := math_errf e_exp2f_data e_logf_data	\
+		       e_log2f_data e_powf_log2_data s_sincosf_data
 
 # _Float128 support
 type-float128-suffix := f128
-type-float128-routines := t_sincosf128 k_sincosf128
+type-float128-routines := t_sincosf128 k_sinf128 k_cosf128 k_sincosf128 \
+			  e_rem_pio2f128
 type-float128-yes := float128
 
 # _Float64x may be supported, only as an alias type.
@@ -252,7 +255,6 @@ tests += test-math-isinff test-math-iszero test-math-issignaling \
 	 test-math-iscanonical test-math-cxx11 test-math-iseqsig
 endif
 
-ifneq (no,$(PERL))
 libm-vec-tests = $(addprefix test-,$(libmvec-tests))
 libm-test-support = $(foreach t,$(test-types),libm-test-support-$(t))
 test-extras += $(libm-test-support)
@@ -263,9 +265,9 @@ extra-test-objs += $(addsuffix .o, $(libm-vec-test-wrappers))
 
 ulps-file = $(firstword $(wildcard $(sysdirs:%=%/libm-test-ulps)))
 
-$(objpfx)libm-test-ulps.h: $(ulps-file) gen-libm-test.pl
+$(objpfx)libm-test-ulps.h: $(ulps-file) gen-libm-test.py
 	$(make-target-directory)
-	$(PERL) gen-libm-test.pl -u $< -H $@
+	$(PYTHON) gen-libm-test.py -u $< -H $@
 
 libm-test-funcs-auto = acos acosh asin asinh atan atan2 atanh cabs cacos \
 		       cacosh carg casin casinh catan catanh cbrt ccos ccosh \
@@ -333,24 +335,22 @@ libm-test-c-noauto-obj = $(addprefix $(objpfx),$(libm-test-c-noauto))
 libm-test-c-narrow-obj = $(addprefix $(objpfx),$(libm-test-c-narrow))
 
 $(libm-test-c-noauto-obj): $(objpfx)libm-test%.c: libm-test%.inc \
-						  gen-libm-test.pl
+						  gen-libm-test.py
 	$(make-target-directory)
-	$(PERL) gen-libm-test.pl -c $< -a /dev/null -C $@
+	$(PYTHON) gen-libm-test.py -c $< -a /dev/null -C $@
 
 $(libm-test-c-auto-obj): $(objpfx)libm-test%.c: libm-test%.inc \
-						gen-libm-test.pl \
+						gen-libm-test.py \
 						auto-libm-test-out%
 	$(make-target-directory)
-	$(PERL) gen-libm-test.pl -c $< -a auto-libm-test-out$* -C $@
+	$(PYTHON) gen-libm-test.py -c $< -a auto-libm-test-out$* -C $@
 
 $(libm-test-c-narrow-obj): $(objpfx)libm-test%.c: libm-test%.inc \
-						  gen-libm-test.pl \
+						  gen-libm-test.py \
 						  auto-libm-test-out%
 	$(make-target-directory)
-	$(PERL) gen-libm-test.pl -c $< -a auto-libm-test-out$* -C $@
-endif
+	$(PYTHON) gen-libm-test.py -c $< -a auto-libm-test-out$* -C $@
 
-ifdef PYTHON
 tgmath3-macros = atan2 cbrt ceil copysign erf erfc exp2 expm1 fdim floor \
 		 fma fmax fmin fmod frexp hypot ilogb ldexp lgamma llrint \
 		 llround log10 log1p log2 logb lrint lround nearbyint \
@@ -377,7 +377,6 @@ tests-special += $(objpfx)test-tgmath3-macro-list.out
 $(objpfx)test-tgmath3-macro-list.out: gen-tgmath-tests.py
 	$(PYTHON) $< check-list $(tgmath3-macros) > $@; \
 	$(evaluate-test)
-endif
 
 libm-test-fast-math-cflags = -fno-builtin -D__FAST_MATH__ -DTEST_FAST_MATH
 libm-test-vec-cflags = $(libm-test-fast-math-cflags) -fno-inline \
@@ -473,7 +472,6 @@ $(objpfx)gen-libm-templates.stmp: Makefile
 $(foreach t, $(call type-foreach, $(gen-all-calls)), \
              $(objpfx)$(t).c): $(objpfx)gen-libm-templates.stmp
 
-ifneq (no,$(PERL))
 # This must come after the inclusion of sysdeps Makefiles via Rules.
 
 $(foreach t,$(libm-tests-normal),$(objpfx)$(t).c): $(objpfx)test-%.c:
@@ -628,17 +626,12 @@ regen-ulps: $(addprefix $(objpfx),$(libm-tests))
 	  cat $(objpfx)ULPs >> $(objpfx)libm-test-ulps; \
 	  rm $(objpfx)ULPs; \
 	done; \
-	$(PERL) gen-libm-test.pl -n $(objpfx)NewUlps \
-				 -u $(objpfx)libm-test-ulps; \
+	$(PYTHON) gen-libm-test.py -n $(objpfx)NewUlps \
+				   -u $(objpfx)libm-test-ulps; \
 	echo "Automatic regeneration of ULPs complete."; \
 	echo "Difference between the current baseline and the new baseline is:";\
 	diff -urN $(ulps-file) $(objpfx)NewUlps; \
 	echo "Copy $(objpfx)NewUlps to $(ulps-file) (relative to source)."
-else
-regen-ulps:
-	@echo "Automatic regeneration of ULPs requires perl."; \
-	exit 1;
-endif
 
 # The generated sysd-rules file defines rules like this for sources
 # coming from sysdeps/ directories.  These rules find the generic sources.

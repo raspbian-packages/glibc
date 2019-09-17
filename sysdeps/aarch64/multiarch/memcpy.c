@@ -1,5 +1,5 @@
 /* Multiple versions of memcpy. AARCH64 version.
-   Copyright (C) 2017-2018 Free Software Foundation, Inc.
+   Copyright (C) 2017-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -36,7 +36,7 @@ extern __typeof (__redirect_memcpy) __memcpy_falkor attribute_hidden;
 libc_ifunc (__libc_memcpy,
             (IS_THUNDERX (midr)
 	     ? __memcpy_thunderx
-	     : (IS_FALKOR (midr) || IS_PHECDA (midr)
+	     : (IS_FALKOR (midr) || IS_PHECDA (midr) || IS_ARES (midr)
 		? __memcpy_falkor
 		: (IS_THUNDERX2 (midr) || IS_THUNDERX2PA (midr)
 		  ? __memcpy_thunderx2

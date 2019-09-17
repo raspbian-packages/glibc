@@ -1,5 +1,5 @@
 /* Defines for bits in AT_HWCAP.  AArch64 Linux version.
-   Copyright (C) 2016-2018 Free Software Foundation, Inc.
+   Copyright (C) 2016-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -20,7 +20,8 @@
 # error "Never include <bits/hwcap.h> directly; use <sys/auxv.h> instead."
 #endif
 
-/* The following must match the kernel's <asm/hwcap.h>.  */
+/* The following must match the kernel's <asm/hwcap.h> and update the
+   list together with sysdeps/unix/sysv/linux/aarch64/dl-procinfo.c.  */
 #define HWCAP_FP		(1 << 0)
 #define HWCAP_ASIMD		(1 << 1)
 #define HWCAP_EVTSTRM		(1 << 2)
@@ -49,3 +50,4 @@
 #define HWCAP_USCAT		(1 << 25)
 #define HWCAP_ILRCPC		(1 << 26)
 #define HWCAP_FLAGM		(1 << 27)
+#define HWCAP_SSBS		(1 << 28)

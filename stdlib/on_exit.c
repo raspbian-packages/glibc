@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2018 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -15,6 +15,7 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#include <assert.h>
 #include <stdlib.h>
 #include "exit.h"
 #include <sysdep.h>
@@ -24,6 +25,10 @@ int
 __on_exit (void (*func) (int status, void *arg), void *arg)
 {
   struct exit_function *new;
+
+  /* As a QoI issue we detect NULL early with an assertion instead
+     of a SIGSEGV at program exit when the handler is run (bug 20544).  */
+  assert (func != NULL);
 
    __libc_lock_lock (__exit_funcs_lock);
   new = __new_exitfn (&__exit_funcs);

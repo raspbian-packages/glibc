@@ -1,5 +1,5 @@
 /* Initialization code run first thing by the ELF startup code.  Linux/ARM.
-   Copyright (C) 2015-2018 Free Software Foundation, Inc.
+   Copyright (C) 2015-2019 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -17,9 +17,9 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-#ifdef SHARED
-# include <dl-vdso.h>
-# include <libc-vdso.h>
+#include <dl-vdso.h>
+#include <libc-vdso.h>
+#include <sysdep-vdso.h>
 
 int (*VDSO_SYMBOL(gettimeofday)) (struct timeval *, void *) attribute_hidden;
 int (*VDSO_SYMBOL(clock_gettime)) (clockid_t, struct timespec *);
@@ -38,7 +38,6 @@ _libc_vdso_platform_setup (void)
   VDSO_SYMBOL (clock_gettime) = p;
 }
 
-# define VDSO_SETUP _libc_vdso_platform_setup
-#endif
+#define VDSO_SETUP _libc_vdso_platform_setup
 
 #include <csu/init-first.c>

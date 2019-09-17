@@ -1,4 +1,4 @@
-/* Copyright (C) 2004-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2004-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 2004.
 
@@ -32,12 +32,6 @@
 #define __libc_use_alloca(size) (size <= __MAX_ALLOCA_CUTOFF)
 #define __getifaddrs getifaddrs
 #define __freeifaddrs freeifaddrs
-
-/* We do not want to export __inet_aton_exact.  Get the prototype and
-   change its visibility to hidden.  */
-#include <arpa/inet.h>
-__typeof__ (__inet_aton_exact) __inet_aton_exact
-  __attribute__ ((visibility ("hidden")));
 
 /* We are nscd, so we don't want to be talking to ourselves.  */
 #undef  USE_NSCD

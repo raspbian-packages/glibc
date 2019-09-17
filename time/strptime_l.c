@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -306,7 +306,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp,
 	}
 
       /* Any character but `%' must be matched by the same character
-	 in the iput string.  */
+	 in the input string.  */
       if (*fmt != '%')
 	{
 	  match_char (*fmt++, *rp++);

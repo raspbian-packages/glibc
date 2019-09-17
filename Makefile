@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2018 Free Software Foundation, Inc.
+# Copyright (C) 1991-2019 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -181,7 +181,7 @@ endef
 # the current libc build for testing.
 $(common-objpfx)testrun.sh: $(common-objpfx)config.make \
 			    $(..)Makeconfig $(..)Makefile
-	$(file >$@T, $(testrun-script))
+	$(file >$@T,$(testrun-script))
 	chmod a+x $@T
 	mv -f $@T $@
 postclean-generated += testrun.sh
@@ -356,6 +356,64 @@ define summarize-tests
 @sed 's/:.*//' < $(objpfx)$1 | sort | uniq -c
 @! egrep -q -v '^(X?PASS|XFAIL|UNSUPPORTED):' $(objpfx)$1
 endef
+
+# The intention here is to do ONE install of our build into the
+# testroot.pristine/ directory, then rsync (internal to
+# support/test-container) that to testroot.root/ at the start of each
+# test.  That way we can promise each test a "clean" install, without
+# having to do the install for each test.
+#
+# In addition, we have to copy some files (which we build) into this
+# root in addition to what glibc installs.  For example, many tests
+# require additional programs including /bin/sh, /bin/true, and
+# /bin/echo, all of which we build below to limit library dependencies
+# to just those things in glibc and language support libraries which
+# we also copy into the into the rootfs.  To determine what language
+# support libraries we need we build a "test" program in either C or
+# (if available) C++ just so we can copy in any shared objects
+# (which we do not build) that GCC-compiled programs depend on.
+
+
+ifeq (,$(CXX))
+LINKS_DSO_PROGRAM = links-dso-program-c
+else
+LINKS_DSO_PROGRAM = links-dso-program
+endif
+
+$(tests-container) $(addsuffix /tests,$(subdirs)) : \
+		$(objpfx)testroot.pristine/install.stamp
+$(objpfx)testroot.pristine/install.stamp :
+	test -d $(objpfx)testroot.pristine || \
+	  mkdir $(objpfx)testroot.pristine
+	# We need a working /bin/sh for some of the tests.
+	test -d $(objpfx)testroot.pristine/bin || \
+	  mkdir $(objpfx)testroot.pristine/bin
+	cp $(objpfx)support/shell-container $(objpfx)testroot.pristine/bin/sh
+	cp $(objpfx)support/echo-container $(objpfx)testroot.pristine/bin/echo
+	cp $(objpfx)support/true-container $(objpfx)testroot.pristine/bin/true
+ifeq ($(run-built-tests),yes)
+	# Copy these DSOs first so we can overwrite them with our own.
+	for dso in `$(test-wrapper-env) LD_TRACE_LOADED_OBJECTS=1  \
+		$(objpfx)elf/$(rtld-installed-name) \
+		$(objpfx)testroot.pristine/bin/sh \
+	        | grep / | sed 's/^[^/]*//' | sed 's/ .*//'` ;\
+	  do \
+	    test -d `dirname $(objpfx)testroot.pristine$$dso` || \
+	      mkdir -p `dirname $(objpfx)testroot.pristine$$dso` ;\
+	    $(test-wrapper) cp $$dso $(objpfx)testroot.pristine$$dso ;\
+	  done
+	for dso in `$(test-wrapper-env) LD_TRACE_LOADED_OBJECTS=1  \
+		$(objpfx)elf/$(rtld-installed-name) \
+		$(objpfx)support/$(LINKS_DSO_PROGRAM) \
+	        | grep / | sed 's/^[^/]*//' | sed 's/ .*//'` ;\
+	  do \
+	    test -d `dirname $(objpfx)testroot.pristine$$dso` || \
+	      mkdir -p `dirname $(objpfx)testroot.pristine$$dso` ;\
+	    $(test-wrapper) cp $$dso $(objpfx)testroot.pristine$$dso ;\
+	  done
+endif
+	$(MAKE) install DESTDIR=$(objpfx)testroot.pristine
+	touch $(objpfx)testroot.pristine/install.stamp
 
 tests-special-notdir = $(patsubst $(objpfx)%, %, $(tests-special))
 tests: $(tests-special)

@@ -1,5 +1,5 @@
 /* Internal declarations for malloc, for use within libc.
-   Copyright (C) 2016-2018 Free Software Foundation, Inc.
+   Copyright (C) 2016-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -73,25 +73,5 @@ void __malloc_fork_unlock_child (void) attribute_hidden;
 
 /* Called as part of the thread shutdown sequence.  */
 void __malloc_arena_thread_freeres (void) attribute_hidden;
-
-/* Set *RESULT to LEFT * RIGHT.  Return true if the multiplication
-   overflowed.  */
-static inline bool
-check_mul_overflow_size_t (size_t left, size_t right, size_t *result)
-{
-#if __GNUC__ >= 5
-  return __builtin_mul_overflow (left, right, result);
-#else
-  /* size_t is unsigned so the behavior on overflow is defined.  */
-  *result = left * right;
-  size_t half_size_t = ((size_t) 1) << (8 * sizeof (size_t) / 2);
-  if (__glibc_unlikely ((left | right) >= half_size_t))
-    {
-      if (__glibc_unlikely (right != 0 && *result / right != left))
-        return true;
-    }
-  return false;
-#endif
-}
 
 #endif /* _MALLOC_INTERNAL_H */

@@ -1,7 +1,7 @@
 /*
  * IBM Accurate Mathematical Library
  * written by International Business Machines Corp.
- * Copyright (C) 2001-2018 Free Software Foundation, Inc.
+ * Copyright (C) 2001-2019 Free Software Foundation, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -46,6 +46,7 @@
 #include <math.h>
 #include <math-barriers.h>
 #include <math_private.h>
+#include <fenv_private.h>
 #include <stap-probe.h>
 
 #ifndef SECTION
@@ -63,7 +64,7 @@ static double atan2Mp (double, double, const int[]);
 static double
 signArctan2 (double y, double z)
 {
-  return __copysign (z, y);
+  return copysign (z, y);
 }
 
 static double normalized (double, double, double, double);

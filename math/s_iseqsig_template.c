@@ -1,5 +1,5 @@
 /* Test whether X == Y.
-   Copyright (C) 2016-2018 Free Software Foundation, Inc.
+   Copyright (C) 2016-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -19,7 +19,6 @@
 #include <errno.h>
 #include <fenv.h>
 #include <math.h>
-#include <math_private.h>
 #include <stdbool.h>
 #include <fix-fp-int-compare-invalid.h>
 

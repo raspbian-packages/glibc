@@ -1,4 +1,4 @@
-/* Copyright (C) 1993-2018 Free Software Foundation, Inc.
+/* Copyright (C) 1993-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Written by Ulrich Drepper <drepper@cygnus.com>.
    Based on the single byte version by Per Bothner <bothner@cygnus.com>.
@@ -508,11 +508,12 @@ _IO_wfile_sync (FILE *fp)
 	     generate the wide characters up to the current reading
 	     position.  */
 	  int nread;
-
+	  size_t wnread = (fp->_wide_data->_IO_read_ptr
+			   - fp->_wide_data->_IO_read_base);
 	  fp->_wide_data->_IO_state = fp->_wide_data->_IO_last_state;
 	  nread = (*cv->__codecvt_do_length) (cv, &fp->_wide_data->_IO_state,
 					      fp->_IO_read_base,
-					      fp->_IO_read_end, delta);
+					      fp->_IO_read_end, wnread);
 	  fp->_IO_read_ptr = fp->_IO_read_base + nread;
 	  delta = -(fp->_IO_read_end - fp->_IO_read_base - nread);
 	}

@@ -1,6 +1,6 @@
 /* Set flags signalling availability of kernel features based on given
    kernel version number.
-   Copyright (C) 2006-2018 Free Software Foundation, Inc.
+   Copyright (C) 2006-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -39,6 +39,13 @@
 
 #define __ASSUME_RECV_SYSCALL   1
 #define __ASSUME_SEND_SYSCALL	1
+
+/* Support for the mlock2 and copy_file_range syscalls was added to
+   the compat syscall table for 64-bit kernels in 4.7, although
+   present in 32-bit kernels from 4.4 and 4.5 respectively.  */
+#if __LINUX_KERNEL_VERSION < 0x040700
+# undef __ASSUME_MLOCK2
+#endif
 
 #undef __ASSUME_CLONE_DEFAULT
 #define __ASSUME_CLONE_BACKWARDS	1

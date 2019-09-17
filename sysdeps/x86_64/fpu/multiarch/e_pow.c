@@ -1,5 +1,5 @@
 /* Multiple versions of IEEE 754 pow.
-   Copyright (C) 2017-2018 Free Software Foundation, Inc.
+   Copyright (C) 2017-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,6 +16,8 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#include <math.h>
+
 extern double __redirect_ieee754_pow (double, double);
 
 #define SYMBOL_NAME ieee754_pow
@@ -25,5 +27,5 @@ libc_ifunc_redirected (__redirect_ieee754_pow,
 		       __ieee754_pow, IFUNC_SELECTOR ());
 strong_alias (__ieee754_pow, __pow_finite)
 
-#define __ieee754_pow __ieee754_pow_sse2
+#define __pow __ieee754_pow_sse2
 #include <sysdeps/ieee754/dbl-64/e_pow.c>

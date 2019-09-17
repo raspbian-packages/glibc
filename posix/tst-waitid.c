@@ -1,5 +1,5 @@
 /* Tests for waitid.
-   Copyright (C) 2004-2018 Free Software Foundation, Inc.
+   Copyright (C) 2004-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -22,8 +22,6 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <signal.h>
-
-#define TIMEOUT 15
 
 static void
 test_child (void)

@@ -1,5 +1,5 @@
 /* POSIX.1 sigaction call for Linux/SPARC.
-   Copyright (C) 1997-2018 Free Software Foundation, Inc.
+   Copyright (C) 1997-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Miguel de Icaza <miguel@nuclecu.unam.mx>, 1997.
 
@@ -27,11 +27,12 @@
 static void __rt_sigreturn_stub (void);
 static void __sigreturn_stub (void);
 
-#define STUB(act) \
+#define STUB(act, sigsetsize) \
   (act) ? ((unsigned long)((act->sa_flags & SA_SIGINFO)	\
 			    ? &__rt_sigreturn_stub	\
 			    : &__sigreturn_stub) - 8)	\
-	: 0,
+	: 0,						\
+  (sigsetsize)
 
 #include <sysdeps/unix/sysv/linux/sigaction.c>
 

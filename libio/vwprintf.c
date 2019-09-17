@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2018 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -25,6 +25,6 @@
 int
 __vwprintf (const wchar_t *format, __gnuc_va_list arg)
 {
-  return __vfwprintf (stdout, format, arg);
+  return __vfwprintf_internal (stdout, format, arg, 0);
 }
 ldbl_strong_alias (__vwprintf, vwprintf)

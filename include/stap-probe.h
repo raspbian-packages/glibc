@@ -1,5 +1,5 @@
 /* Macros for defining Systemtap <sys/sdt.h> static probe points.
-   Copyright (C) 2012-2018 Free Software Foundation, Inc.
+   Copyright (C) 2012-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -21,6 +21,7 @@
 
 #ifdef USE_STAP_PROBE
 
+# include <stap-probe-machine.h>
 # include <sys/sdt.h>
 
 /* Our code uses one macro LIBC_PROBE (name, n, arg1, ..., argn).

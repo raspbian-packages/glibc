@@ -591,7 +591,7 @@ GLIBC_2.2.6 __xstat64 F
 GLIBC_2.2.6 _authenticate F
 GLIBC_2.2.6 _dl_mcount_wrapper F
 GLIBC_2.2.6 _dl_mcount_wrapper_check F
-GLIBC_2.2.6 _end GLIBC_2.2.6 g ? D .bss 00000000
+GLIBC_2.2.6 _end D 0x0
 GLIBC_2.2.6 _environ D 0x4
 GLIBC_2.2.6 _exit F
 GLIBC_2.2.6 _flushlbf F
@@ -2082,6 +2082,9 @@ GLIBC_2.27 wcstof64x_l F
 GLIBC_2.28 fcntl64 F
 GLIBC_2.28 renameat2 F
 GLIBC_2.28 statx F
+GLIBC_2.29 _hurd_port_move F
+GLIBC_2.29 posix_spawn_file_actions_addchdir_np F
+GLIBC_2.29 posix_spawn_file_actions_addfchdir_np F
 GLIBC_2.3 __ctype_b_loc F
 GLIBC_2.3 __ctype_tolower_loc F
 GLIBC_2.3 __ctype_toupper_loc F

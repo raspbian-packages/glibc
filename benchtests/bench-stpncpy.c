@@ -1,5 +1,5 @@
 /* Measure stpncpy functions.
-   Copyright (C) 2013-2018 Free Software Foundation, Inc.
+   Copyright (C) 2013-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -25,18 +25,11 @@
 #endif /* WIDE */
 #include "bench-string.h"
 #ifndef WIDE
-# define CHAR char
 # define SIMPLE_STPNCPY simple_stpncpy
 # define STUPID_STPNCPY stupid_stpncpy
-# define STPNCPY stpncpy
-# define STRNLEN strnlen
 #else
-# include <wchar.h>
-# define CHAR wchar_t
 # define SIMPLE_STPNCPY simple_wcpncpy
 # define STUPID_STPNCPY stupid_wcpncpy
-# define STPNCPY wcpncpy
-# define STRNLEN wcsnlen
 #endif /* WIDE */
 
 CHAR *SIMPLE_STPNCPY (CHAR *, const CHAR *, size_t);
@@ -74,5 +67,4 @@ STUPID_STPNCPY (CHAR *dst, const CHAR *src, size_t n)
   return dst + nc;
 }
 
-#undef CHAR
 #include "bench-strncpy.c"

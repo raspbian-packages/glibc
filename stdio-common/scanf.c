@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2018 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -15,6 +15,11 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+/* This file defines one of the deprecated scanf variants.  */
+#include <features.h>
+#undef __GLIBC_USE_DEPRECATED_SCANF
+#define __GLIBC_USE_DEPRECATED_SCANF 1
+
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -30,7 +35,7 @@ __scanf (const char *format, ...)
   int done;
 
   va_start (arg, format);
-  done = _IO_vfscanf (stdin, format, arg, NULL);
+  done = __vfscanf_internal (stdin, format, arg, 0);
   va_end (arg);
 
   return done;

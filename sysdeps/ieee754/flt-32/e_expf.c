@@ -1,5 +1,5 @@
 /* Single-precision e^x function.
-   Copyright (C) 2017-2018 Free Software Foundation, Inc.
+   Copyright (C) 2017-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -85,10 +85,7 @@ __expf (float x)
 #if TOINT_INTRINSICS
   kd = roundtoint (z);
   ki = converttoint (z);
-#elif TOINT_RINT
-  kd = rint (z);
-  ki = (long) kd;
-#elif TOINT_SHIFT
+#else
 # define SHIFT __exp2f_data.shift
   kd = math_narrow_eval ((double) (z + SHIFT)); /* Needs to be double.  */
   ki = asuint64 (kd);

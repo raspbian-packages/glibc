@@ -1,6 +1,6 @@
 /* Multiple versions of memcmp.
    All versions must be listed in ifunc-impl-list.c.
-   Copyright (C) 2017-2018 Free Software Foundation, Inc.
+   Copyright (C) 2017-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -32,6 +32,6 @@ weak_alias (memcmp, bcmp)
 
 # ifdef SHARED
 __hidden_ver1 (memcmp, __GI_memcmp, __redirect_memcmp)
-  __attribute__ ((visibility ("hidden")));
+  __attribute__ ((visibility ("hidden"))) __attribute_copy__ (memcmp);
 # endif
 #endif

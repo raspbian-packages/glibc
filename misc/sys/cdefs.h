@@ -1,4 +1,4 @@
-/* Copyright (C) 1992-2018 Free Software Foundation, Inc.
+/* Copyright (C) 1992-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -337,7 +337,7 @@
    semantics.
 
    clang++ identifies itself as gcc-4.2, but has support for GNU inlining
-   semantics, that can be checked fot by using the __GNUC_STDC_INLINE_ and
+   semantics, that can be checked for by using the __GNUC_STDC_INLINE_ and
    __GNUC_GNU_INLINE__ macro definitions.  */
 #if (!defined __cplusplus || __GNUC_PREREQ (4,3) \
      || (defined __clang__ && (defined __GNUC_STDC_INLINE__ \
@@ -429,6 +429,16 @@
 # define __attribute_nonstring__ __attribute__ ((__nonstring__))
 #else
 # define __attribute_nonstring__
+#endif
+
+/* Undefine (also defined in libc-symbols.h).  */
+#undef __attribute_copy__
+#if __GNUC_PREREQ (9, 0)
+/* Copies attributes from the declaration or type referenced by
+   the argument.  */
+# define __attribute_copy__(arg) __attribute__ ((__copy__ (arg)))
+#else
+# define __attribute_copy__(arg)
 #endif
 
 #if (!defined _Static_assert && !defined __cplusplus \

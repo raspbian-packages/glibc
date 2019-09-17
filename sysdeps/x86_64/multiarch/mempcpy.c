@@ -1,6 +1,6 @@
 /* Multiple versions of mempcpy.
    All versions must be listed in ifunc-impl-list.c.
-   Copyright (C) 2017-2018 Free Software Foundation, Inc.
+   Copyright (C) 2017-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -35,8 +35,8 @@ libc_ifunc_redirected (__redirect_mempcpy, __mempcpy, IFUNC_SELECTOR ());
 weak_alias (__mempcpy, mempcpy)
 # ifdef SHARED
 __hidden_ver1 (__mempcpy, __GI___mempcpy, __redirect___mempcpy)
-  __attribute__ ((visibility ("hidden")));
+  __attribute__ ((visibility ("hidden"))) __attribute_copy__ (mempcpy);
 __hidden_ver1 (mempcpy, __GI_mempcpy, __redirect_mempcpy)
-  __attribute__ ((visibility ("hidden")));
+  __attribute__ ((visibility ("hidden"))) __attribute_copy__ (mempcpy);
 # endif
 #endif

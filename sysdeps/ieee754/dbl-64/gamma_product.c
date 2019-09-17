@@ -1,5 +1,5 @@
 /* Compute a product of X, X+1, ..., with an error estimate.
-   Copyright (C) 2013-2018 Free Software Foundation, Inc.
+   Copyright (C) 2013-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -18,6 +18,7 @@
 
 #include <math.h>
 #include <math_private.h>
+#include <fenv_private.h>
 #include <mul_split.h>
 
 /* Compute the product of X + X_EPS, X + X_EPS + 1, ..., X + X_EPS + N

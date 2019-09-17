@@ -1,5 +1,5 @@
 /* Wrapper to implement llogb in terms of ilogb.
-   Copyright (C) 2012-2018 Free Software Foundation, Inc.
+   Copyright (C) 2012-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <math_private.h>
+#include <fenv.h>
 
 long int
 M_DECL_FUNC (__llogb) (FLOAT x)

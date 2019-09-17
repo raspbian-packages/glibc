@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2018 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Written by Per Bothner <bothner@cygnus.com>.
 
@@ -90,9 +90,7 @@ typedef union
 /* Bits for the _flags2 field.  */
 #define _IO_FLAGS2_MMAP 1
 #define _IO_FLAGS2_NOTCANCEL 2
-#define _IO_FLAGS2_FORTIFY 4
 #define _IO_FLAGS2_USER_WBUF 8
-#define _IO_FLAGS2_SCANF_STD 16
 #define _IO_FLAGS2_NOCLOSE 32
 #define _IO_FLAGS2_CLOEXEC 64
 #define _IO_FLAGS2_NEED_LOCK 128
@@ -256,8 +254,6 @@ extern int _IO_ftrylockfile (FILE *) __THROW;
 
 extern int _IO_vfscanf (FILE * __restrict, const char * __restrict,
 			__gnuc_va_list, int *__restrict);
-extern int _IO_vfprintf (FILE *__restrict, const char *__restrict,
-			 __gnuc_va_list);
 extern __ssize_t _IO_padn (FILE *, int, __ssize_t);
 extern size_t _IO_sgetn (FILE *, void *, size_t);
 
@@ -299,14 +295,11 @@ weak_extern (_IO_stdin_used);
 
 extern int _IO_vfwscanf (FILE * __restrict, const wchar_t * __restrict,
 			 __gnuc_va_list, int *__restrict);
-extern int _IO_vfwprintf (FILE *__restrict, const wchar_t *__restrict,
-			  __gnuc_va_list);
 extern __ssize_t _IO_wpadn (FILE *, wint_t, __ssize_t);
 extern void _IO_free_wbackup_area (FILE *) __THROW;
 
 #ifdef __LDBL_COMPAT
 __LDBL_REDIR_DECL (_IO_vfscanf)
-__LDBL_REDIR_DECL (_IO_vfprintf)
 #endif
 
 libc_hidden_proto (__overflow)
@@ -320,8 +313,6 @@ libc_hidden_proto (_IO_free_wbackup_area)
 libc_hidden_proto (_IO_padn)
 libc_hidden_proto (_IO_putc)
 libc_hidden_proto (_IO_sgetn)
-libc_hidden_proto (_IO_vfprintf)
-libc_hidden_proto (_IO_vfscanf)
 
 #ifdef _IO_MTSAFE_IO
 # undef _IO_peekc

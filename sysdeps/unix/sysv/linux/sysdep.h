@@ -1,4 +1,4 @@
-/* Copyright (C) 2015-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2015-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -17,6 +17,13 @@
 
 #include <bits/wordsize.h>
 #include <kernel-features.h>
+
+/* By default only shared builds use vdso. */
+#ifndef ALWAYS_USE_VSYSCALL
+#define ALWAYS_USE_VSYSCALL 0
+#endif
+
+#define USE_VSYSCALL (defined (SHARED) || ALWAYS_USE_VSYSCALL)
 
 /* Set error number and return -1.  A target may choose to return the
    internal function, __syscall_error, which sets errno and returns -1.

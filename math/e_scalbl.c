@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@gmail.com>, 2011.
 
@@ -24,7 +24,7 @@ static long double
 __attribute__ ((noinline))
 invalid_fn (long double x, long double fn)
 {
-  if (__rintl (fn) != fn)
+  if (rintl (fn) != fn)
     return (fn - fn) / (fn - fn);
   else if (fn > 65000.0L)
     return __scalbnl (x, 65000);

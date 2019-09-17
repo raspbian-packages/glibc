@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2018 Free Software Foundation, Inc.
+/* Copyright (C) 1997-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 
@@ -28,29 +28,12 @@
 __BEGIN_DECLS
 
 
-/* Type to represent search path.  */
-struct path_elem
-{
-  const char *name;
-  size_t len;
-};
-
-/* Variable with search path for `gconv' implementation.  */
-extern struct path_elem *__gconv_path_elem attribute_hidden;
-/* Maximum length of a single path element.  */
-extern size_t __gconv_max_path_elem_len attribute_hidden;
-
-
 /* Structure for alias definition.  Simply two strings.  */
 struct gconv_alias
 {
   char *fromname;
   char *toname;
 };
-
-
-/* How many character should be converted in one call?  */
-#define GCONV_NCHAR_GOAL	8160
 
 
 /* Structure describing one loaded shared object.  This normally are
@@ -111,7 +94,6 @@ enum
 extern void *__gconv_alias_db attribute_hidden;
 
 /* Array with available modules.  */
-extern size_t __gconv_nmodules;
 extern struct gconv_module *__gconv_modules_db attribute_hidden;
 
 /* Value of the GCONV_PATH environment variable.  */
@@ -196,8 +178,8 @@ extern int __gconv_compare_alias_cache (const char *name1, const char *name2,
 extern void __gconv_release_step (struct __gconv_step *step)
      attribute_hidden;
 
-/* Read all the configuration data and cache it.  */
-extern void __gconv_read_conf (void) attribute_hidden;
+/* Read all the configuration data and cache it if not done so already.  */
+extern void __gconv_load_conf (void) attribute_hidden;
 
 /* Try to read module cache file.  */
 extern int __gconv_load_cache (void) attribute_hidden;
@@ -210,9 +192,6 @@ extern struct gconv_module *__gconv_get_modules_db (void);
 
 /* Retrieve pointer to internal alias database.  */
 extern void *__gconv_get_alias_db (void);
-
-/* Determine the directories we are looking in.  */
-extern void __gconv_get_path (void) attribute_hidden;
 
 /* Comparison function to search alias.  */
 extern int __gconv_alias_compare (const void *p1, const void *p2)

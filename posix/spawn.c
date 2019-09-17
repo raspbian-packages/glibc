@@ -1,4 +1,4 @@
-/* Copyright (C) 2000-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2000-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -30,6 +30,7 @@ __posix_spawn (pid_t *pid, const char *path,
   return __spawni (pid, path, file_actions, attrp, argv, envp, 0);
 }
 versioned_symbol (libc, __posix_spawn, posix_spawn, GLIBC_2_15);
+libc_hidden_def (__posix_spawn)
 
 
 #if SHLIB_COMPAT (libc, GLIBC_2_2, GLIBC_2_15)

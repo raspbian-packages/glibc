@@ -664,6 +664,7 @@ INSTALL_PROGRAM
 sysnames
 submachine
 multi_arch
+libc_cv_textrel_ifunc
 no_stack_protector
 stack_protector
 libc_cv_ssp
@@ -684,6 +685,7 @@ force_install
 bindnow
 hardcoded_path_in_tests
 enable_timezone_tools
+extra_nonshared_cflags
 use_default_link
 sysheaders
 ac_ct_CXX
@@ -762,6 +764,7 @@ with_binutils
 with_selinux
 with_headers
 with_default_link
+with_nonshared_cflags
 enable_sanity_checks
 enable_shared
 enable_profile
@@ -1482,6 +1485,8 @@ Optional Packages:
   --with-headers=PATH     location of system headers to use (for example
                           /usr/src/linux/include) [default=compiler default]
   --with-default-link     do not use explicit linker scripts
+  --with-nonshared-cflags=CFLAGS
+                          build nonshared libraries with additional CFLAGS
   --with-cpu=CPU          select code for CPU variant
 
 Some influential environment variables:
@@ -3339,6 +3344,16 @@ else
 fi
 
 
+
+# Check whether --with-nonshared-cflags was given.
+if test "${with_nonshared_cflags+set}" = set; then :
+  withval=$with_nonshared_cflags; extra_nonshared_cflags=$withval
+else
+  extra_nonshared_cflags=
+fi
+
+
+
 # Check whether --enable-sanity-checks was given.
 if test "${enable_sanity_checks+set}" = set; then :
   enableval=$enable_sanity_checks; enable_sanity=$enableval
@@ -4037,6 +4052,52 @@ rm -f conftest*
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $libc_cv_gcc_indirect_function" >&5
 $as_echo "$libc_cv_gcc_indirect_function" >&6; }
+
+# Check if linker supports textrel relocation with ifunc (used on elf/tests).
+# Note that it relies on libc_cv_ld_gnu_indirect_function test above.
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether the linker supports textrels along with ifunc" >&5
+$as_echo_n "checking whether the linker supports textrels along with ifunc... " >&6; }
+if ${libc_cv_textrel_ifunc+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat > conftest.S <<EOF
+.type foo,%gnu_indirect_function
+foo:
+.globl _start
+_start:
+.globl __start
+__start:
+.data
+#ifdef _LP64
+.quad foo
+#else
+.long foo
+#endif
+.text
+.globl address
+address:
+#ifdef _LP64
+.quad address
+#else
+.long address
+#endif
+EOF
+libc_cv_textrel_ifunc=no
+if test $libc_cv_ld_gnu_indirect_function = yes; then
+   if { ac_try='${CC-cc} $CFLAGS $CPPFLAGS $LDFLAGS -nostartfiles -nostdlib $no_ssp -pie -o conftest conftest.S'
+  { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_try\""; } >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; }; then
+     libc_cv_textrel_ifunc=yes
+   fi
+fi
+rm -f conftest*
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $libc_cv_textrel_ifunc" >&5
+$as_echo "$libc_cv_textrel_ifunc" >&6; }
+
 
 # Check if gcc warns about alias for function with incompatible types.
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking if compiler warns about alias for function with incompatible types" >&5
@@ -5060,7 +5121,7 @@ int
 main ()
 {
 
-#if !defined __GNUC__ || __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 9)
+#if !defined __GNUC__ || __GNUC__ < 5
 #error insufficient compiler
 #endif
   ;
@@ -5285,19 +5346,30 @@ fi
 
   test -n "$PYTHON_PROG" && break
 done
-test -n "$PYTHON_PROG" || PYTHON_PROG="no"
 
-case "x$PYTHON_PROG" in
-xno|x|x:) PYTHON_PROG=no ;;
-*) ;;
-esac
-
-if test "x$PYTHON_PROG" = xno; then
-  aux_missing="$aux_missing python"
+if test -z "$PYTHON_PROG"; then
+  ac_verc_fail=yes
 else
-  PYTHON="$PYTHON_PROG -B"
+  # Found it, now check the version.
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking version of $PYTHON_PROG" >&5
+$as_echo_n "checking version of $PYTHON_PROG... " >&6; }
+  ac_prog_version=`$PYTHON_PROG --version 2>&1 | sed -n 's/^.*Python \([0-9][0-9.]*\).*$/\1/p'`
+  case $ac_prog_version in
+    '') ac_prog_version="v. ?.??, bad"; ac_verc_fail=yes;;
+    3.[4-9]*|3.[1-9][0-9]*|[4-9].*|[1-9][0-9]*)
+       ac_prog_version="$ac_prog_version, ok"; ac_verc_fail=no;;
+    *) ac_prog_version="$ac_prog_version, bad"; ac_verc_fail=yes;;
 
+  esac
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_prog_version" >&5
+$as_echo "$ac_prog_version" >&6; }
 fi
+if test $ac_verc_fail = yes; then
+  critic_missing="$critic_missing python"
+fi
+
+PYTHON="$PYTHON_PROG -B"
+
 
 test -n "$critic_missing" && as_fn_error $? "
 *** These critical programs are missing or too old:$critic_missing

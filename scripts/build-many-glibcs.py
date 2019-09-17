@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # Build many configurations of glibc.
-# Copyright (C) 2016-2018 Free Software Foundation, Inc.
+# Copyright (C) 2016-2019 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 #
 # The GNU C Library is free software; you can redistribute it and/or
@@ -50,17 +50,6 @@ import time
 import urllib.request
 
 try:
-    os.cpu_count
-except:
-    import multiprocessing
-    os.cpu_count = lambda: multiprocessing.cpu_count()
-
-try:
-    re.fullmatch
-except:
-    re.fullmatch = lambda p,s,f=0: re.match(p+"\\Z",s,f)
-
-try:
     subprocess.run
 except:
     class _CompletedProcess:
@@ -91,13 +80,14 @@ class Context(object):
     """The global state associated with builds in a given directory."""
 
     def __init__(self, topdir, parallelism, keep, replace_sources, strip,
-                 action):
+                 full_gcc, action):
         """Initialize the context."""
         self.topdir = topdir
         self.parallelism = parallelism
         self.keep = keep
         self.replace_sources = replace_sources
         self.strip = strip
+        self.full_gcc = full_gcc
         self.srcdir = os.path.join(topdir, 'src')
         self.versions_json = os.path.join(self.srcdir, 'versions.json')
         self.build_state_json = os.path.join(topdir, 'build-state.json')
@@ -191,6 +181,13 @@ class Context(object):
                         variant='be8',
                         gcc_cfg=['--with-float=hard', '--with-arch=armv7-a',
                                  '--with-fpu=vfpv3'])
+        self.add_config(arch='csky',
+                        os_name='linux-gnuabiv2',
+                        variant='soft',
+                        gcc_cfg=['--disable-multilib'])
+        self.add_config(arch='csky',
+                        os_name='linux-gnuabiv2',
+                        gcc_cfg=['--with-float=hard', '--disable-multilib'])
         self.add_config(arch='hppa',
                         os_name='linux-gnu')
         self.add_config(arch='i686',
@@ -384,6 +381,9 @@ class Context(object):
                                 {'arch': 'i686', 'ccopts': '-m32 -march=i686'}],
                         extra_glibcs=[{'variant': 'disable-multi-arch',
                                        'cfg': ['--disable-multi-arch']},
+                                      {'variant': 'enable-obsolete',
+                                       'cfg': ['--enable-obsolete-rpc',
+                                               '--enable-obsolete-nsl']},
                                       {'variant': 'static-pie',
                                        'cfg': ['--enable-static-pie']},
                                       {'variant': 'x32-static-pie',
@@ -397,6 +397,11 @@ class Context(object):
                                        'arch': 'i686',
                                        'ccopts': '-m32 -march=i686',
                                        'cfg': ['--disable-multi-arch']},
+                                      {'variant': 'enable-obsolete',
+                                       'arch': 'i686',
+                                       'ccopts': '-m32 -march=i686',
+                                       'cfg': ['--enable-obsolete-rpc',
+                                               '--enable-obsolete-nsl']},
                                       {'arch': 'i486',
                                        'ccopts': '-m32 -march=i486'},
                                       {'arch': 'i586',
@@ -705,11 +710,11 @@ class Context(object):
 
     def checkout(self, versions):
         """Check out the desired component versions."""
-        default_versions = {'binutils': 'vcs-2.31',
+        default_versions = {'binutils': 'vcs-2.32',
                             'gcc': 'vcs-8',
                             'glibc': 'vcs-mainline',
                             'gmp': '6.1.2',
-                            'linux': '4.17',
+                            'linux': '4.20',
                             'mpc': '1.1.0',
                             'mpfr': '4.0.1',
                             'mig': 'vcs-mainline',
@@ -843,6 +848,19 @@ class Context(object):
         # Ensure that builds do not try to regenerate generated files
         # in the source tree.
         srcdir = self.component_srcdir('glibc')
+        # These files have Makefile dependencies to regenerate them in
+        # the source tree that may be active during a normal build.
+        # Some other files have such dependencies but do not need to
+        # be touched because nothing in a build depends on the files
+        # in question.
+        for f in ('sysdeps/gnu/errlist.c',
+                  'sysdeps/mach/hurd/bits/errno.h',
+                  'sysdeps/sparc/sparc32/rem.S',
+                  'sysdeps/sparc/sparc32/sdiv.S',
+                  'sysdeps/sparc/sparc32/udiv.S',
+                  'sysdeps/sparc/sparc32/urem.S'):
+            to_touch = os.path.join(srcdir, f)
+            subprocess.run(['touch', '-c', to_touch], check=True)
         for dirpath, dirnames, filenames in os.walk(srcdir):
             for f in filenames:
                 if (f == 'configure' or
@@ -1114,6 +1132,8 @@ class Context(object):
         """Run a copy of this script with given options."""
         cmd = [sys.executable, sys.argv[0], '--keep=none',
                '-j%d' % self.parallelism]
+        if self.full_gcc:
+            cmd.append('--full-gcc')
         cmd.extend(opts)
         cmd.extend([self.topdir, action])
         sys.stdout.flush()
@@ -1247,6 +1267,7 @@ class Config(object):
         arch_map = {'aarch64': 'arm64',
                     'alpha': 'alpha',
                     'arm': 'arm',
+                    'csky': 'csky',
                     'hppa': 'parisc',
                     'i486': 'x86',
                     'i586': 'x86',
@@ -1320,15 +1341,13 @@ class Config(object):
 
     def build_gcc(self, cmdlist, bootstrap):
         """Build GCC."""
-        # libsanitizer commonly breaks because of glibc header
-        # changes, or on unusual targets.  libssp is of little
-        # relevance with glibc's own stack checking support.
-        # libcilkrts does not support GNU/Hurd (and has been removed
-        # in GCC 8, so --disable-libcilkrts can be removed once glibc
-        # no longer supports building with older GCC versions).
+        # libssp is of little relevance with glibc's own stack
+        # checking support.  libcilkrts does not support GNU/Hurd (and
+        # has been removed in GCC 8, so --disable-libcilkrts can be
+        # removed once glibc no longer supports building with older
+        # GCC versions).
         cfg_opts = list(self.gcc_cfg)
-        cfg_opts += ['--disable-libsanitizer', '--disable-libssp',
-                     '--disable-libcilkrts']
+        cfg_opts += ['--disable-libssp', '--disable-libcilkrts']
         host_libs = self.ctx.host_libraries_installdir
         cfg_opts += ['--with-gmp=%s' % host_libs,
                      '--with-mpfr=%s' % host_libs,
@@ -1351,14 +1370,20 @@ class Config(object):
                          '--disable-libitm',
                          '--disable-libmpx',
                          '--disable-libquadmath',
+                         '--disable-libsanitizer',
                          '--without-headers', '--with-newlib',
                          '--with-glibc-version=%s' % self.ctx.glibc_version
                          ]
             cfg_opts += self.first_gcc_cfg
         else:
             tool_build = 'gcc'
-            cfg_opts += ['--enable-languages=c,c++', '--enable-shared',
-                         '--enable-threads']
+            # libsanitizer commonly breaks because of glibc header
+            # changes, or on unusual targets.
+            if not self.ctx.full_gcc:
+                cfg_opts += ['--disable-libsanitizer']
+            langs = 'all' if self.ctx.full_gcc else 'c,c++'
+            cfg_opts += ['--enable-languages=%s' % langs,
+                         '--enable-shared', '--enable-threads']
         self.build_cross_tool(cmdlist, 'gcc', tool_build, cfg_opts)
 
 
@@ -1422,25 +1447,14 @@ class Glibc(object):
                                                    self.compiler.name, 'glibc',
                                                    self.name)
             installdir = self.compiler.sysroot
-            srcdir_copy = self.ctx.component_builddir('compilers',
-                                                      self.compiler.name,
-                                                      'glibc-src',
-                                                      self.name)
         else:
             builddir = self.ctx.component_builddir('glibcs', self.name,
                                                    'glibc')
             installdir = self.ctx.glibc_installdir(self.name)
-            srcdir_copy = self.ctx.component_builddir('glibcs', self.name,
-                                                      'glibc-src')
         cmdlist.create_use_dir(builddir)
-        # glibc builds write into the source directory, and even if
-        # not intentionally there is a risk of bugs that involve
-        # writing into the working directory.  To avoid possible
-        # concurrency issues, copy the source directory.
-        cmdlist.create_copy_dir(srcdir, srcdir_copy)
         use_usr = self.os != 'gnu'
         prefix = '/usr' if use_usr else ''
-        cfg_cmd = [os.path.join(srcdir_copy, 'configure'),
+        cfg_cmd = [os.path.join(srcdir, 'configure'),
                    '--prefix=%s' % prefix,
                    '--enable-profile',
                    '--build=%s' % self.ctx.build_triplet,
@@ -1479,7 +1493,6 @@ class Glibc(object):
             cmdlist.add_command('check', ['make', 'check'])
             cmdlist.add_command('save-logs', [self.ctx.save_logs],
                                 always_run=True)
-        cmdlist.cleanup_dir('cleanup-src', srcdir_copy)
         cmdlist.cleanup_dir()
 
 
@@ -1564,14 +1577,6 @@ class CommandList(object):
         self.add_command_dir('mkdir', None, ['mkdir', '-p', dir])
         self.use_dir(dir)
 
-    def create_copy_dir(self, src, dest):
-        """Remove a directory and recreate it as a copy from the given
-        source."""
-        self.add_command_dir('copy-rm', None, ['rm', '-rf', dest])
-        parent = os.path.dirname(dest)
-        self.add_command_dir('copy-mkdir', None, ['mkdir', '-p', parent])
-        self.add_command_dir('copy', None, ['cp', '-a', src, dest])
-
     def add_command_dir(self, desc, dir, command, always_run=False):
         """Add a command to run in a given directory."""
         cmd = Command(self.desc_txt(desc), len(self.cmdlist), dir, self.path,
@@ -1650,6 +1655,8 @@ def get_parser():
                         'with the wrong version of a component')
     parser.add_argument('--strip', action='store_true',
                         help='Strip installed glibc libraries')
+    parser.add_argument('--full-gcc', action='store_true',
+                        help='Build GCC with all languages and libsanitizer')
     parser.add_argument('topdir',
                         help='Toplevel working directory')
     parser.add_argument('action',
@@ -1668,7 +1675,7 @@ def main(argv):
     opts = parser.parse_args(argv)
     topdir = os.path.abspath(opts.topdir)
     ctx = Context(topdir, opts.parallelism, opts.keep, opts.replace_sources,
-                  opts.strip, opts.action)
+                  opts.strip, opts.full_gcc, opts.action)
     ctx.run_builds(opts.action, opts.configs)
 
 

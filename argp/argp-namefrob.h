@@ -1,5 +1,5 @@
 /* Name frobnication for compiling argp outside of glibc
-   Copyright (C) 1997-2018 Free Software Foundation, Inc.
+   Copyright (C) 1997-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Written by Miles Bader <miles@gnu.ai.mit.edu>.
 
@@ -98,8 +98,6 @@
 #define __strerror_r strerror_r
 #undef __strndup
 #define __strndup strndup
-#undef __vsnprintf
-#define __vsnprintf vsnprintf
 
 #if defined(HAVE_DECL_CLEARERR_UNLOCKED) && !HAVE_DECL_CLEARERR_UNLOCKED
 # define clearerr_unlocked(x) clearerr (x)

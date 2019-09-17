@@ -1,4 +1,4 @@
-# Copyright (C) 1992-2018 Free Software Foundation, Inc.
+# Copyright (C) 1992-2019 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -72,11 +72,6 @@ tests		:= test-utime test-stat test-stat2 test-lfs tst-getcwd \
 		   tst-posix_fallocate tst-posix_fallocate64 \
 		   tst-fts tst-fts-lfs tst-open-tmpfile \
 		   tst-copy_file_range tst-getcwd-abspath \
-
-# This test includes the compat implementation of copy_file_range,
-# which uses internal, unexported libc functions.
-tests-static += tst-copy_file_range-compat
-tests-internal += tst-copy_file_range-compat
 
 # Likewise for statx, but we do not need static linking here.
 tests-internal += tst-statx

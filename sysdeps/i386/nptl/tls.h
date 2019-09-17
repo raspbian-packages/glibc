@@ -1,5 +1,5 @@
 /* Definition for thread-local data handling.  nptl/i386 version.
-   Copyright (C) 2002-2018 Free Software Foundation, Inc.
+   Copyright (C) 2002-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -360,43 +360,6 @@ tls_fill_user_desc (union user_desc_init *desc,
 			 "i" (offsetof (struct pthread, member)),	      \
 			 "r" (idx));					      \
        }})
-
-
-/* Atomic compare and exchange on TLS, returning old value.  */
-#define THREAD_ATOMIC_CMPXCHG_VAL(descr, member, newval, oldval) \
-  ({ __typeof (descr->member) __ret;					      \
-     __typeof (oldval) __old = (oldval);				      \
-     if (sizeof (descr->member) == 4)					      \
-       asm volatile (LOCK_PREFIX "cmpxchgl %2, %%gs:%P3"		      \
-		     : "=a" (__ret)					      \
-		     : "0" (__old), "r" (newval),			      \
-		       "i" (offsetof (struct pthread, member)));	      \
-     else								      \
-       /* Not necessary for other sizes in the moment.  */		      \
-       abort ();							      \
-     __ret; })
-
-
-/* Atomic logical and.  */
-#define THREAD_ATOMIC_AND(descr, member, val) \
-  (void) ({ if (sizeof ((descr)->member) == 4)				      \
-	      asm volatile (LOCK_PREFIX "andl %1, %%gs:%P0"		      \
-			    :: "i" (offsetof (struct pthread, member)),	      \
-			       "ir" (val));				      \
-	    else							      \
-	      /* Not necessary for other sizes in the moment.  */	      \
-	      abort (); })
-
-
-/* Atomic set bit.  */
-#define THREAD_ATOMIC_BIT_SET(descr, member, bit) \
-  (void) ({ if (sizeof ((descr)->member) == 4)				      \
-	      asm volatile (LOCK_PREFIX "orl %1, %%gs:%P0"		      \
-			    :: "i" (offsetof (struct pthread, member)),	      \
-			       "ir" (1 << (bit)));			      \
-	    else							      \
-	      /* Not necessary for other sizes in the moment.  */	      \
-	      abort (); })
 
 
 /* Set the stack guard field in TCB head.  */

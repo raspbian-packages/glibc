@@ -1,5 +1,5 @@
 /* Hardware capability support for run-time dynamic loader.
-   Copyright (C) 2017-2018 Free Software Foundation, Inc.
+   Copyright (C) 2017-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
 #include <elf/dl-tunables.h>
 
 #if HAVE_TUNABLES
-# define GET_HWCAP_MASK() TUNABLE_GET (glibc, tune, hwcap_mask, uint64_t, NULL)
+# define GET_HWCAP_MASK() TUNABLE_GET (glibc, cpu, hwcap_mask, uint64_t, NULL)
 #else
 # ifdef SHARED
 #   define GET_HWCAP_MASK() GLRO(dl_hwcap_mask)

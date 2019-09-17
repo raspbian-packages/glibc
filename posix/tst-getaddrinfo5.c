@@ -1,5 +1,5 @@
 /* Test host lookup with double dots at the end, [BZ #16469].
-   Copyright (C) 2014-2018 Free Software Foundation, Inc.
+   Copyright (C) 2014-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -66,5 +66,4 @@ test (void)
 }
 
 #define TEST_FUNCTION test ()
-#define TIMEOUT 10
 #include "../test-skeleton.c"

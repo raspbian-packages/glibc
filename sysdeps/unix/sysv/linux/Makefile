@@ -40,7 +40,15 @@ sysdep_headers += sys/mount.h sys/acct.h sys/sysctl.h \
 		  bits/signalfd.h bits/timerfd.h bits/epoll.h \
 		  bits/socket_type.h bits/syscall.h bits/sysctl.h \
 		  bits/mman-linux.h bits/mman-shared.h bits/ptrace-shared.h \
-		  bits/siginfo-arch.h bits/siginfo-consts-arch.h
+		  bits/siginfo-arch.h bits/siginfo-consts-arch.h \
+		  bits/procfs.h bits/procfs-id.h bits/procfs-extra.h \
+		  bits/procfs-prregset.h bits/mman-map-flags-generic.h \
+		  bits/msq-pad.h bits/sem-pad.h bits/shmlba.h bits/shm-pad.h \
+		  bits/termios-struct.h bits/termios-c_cc.h \
+		  bits/termios-c_iflag.h bits/termios-c_oflag.h \
+		  bits/termios-baud.h bits/termios-c_cflag.h \
+		  bits/termios-c_lflag.h bits/termios-tcflow.h \
+		  bits/termios-misc.h
 
 tests += tst-clone tst-clone2 tst-clone3 tst-fanotify tst-personality \
 	 tst-quota tst-sync_file_range tst-sysconf-iov_max tst-ttyname \
@@ -97,6 +105,15 @@ $(objpfx)tst-sysconf-iov_max: $(objpfx)tst-sysconf-iov_max-uapi.o
 
 $(objpfx)tst-pkey: $(shared-thread-library)
 
+tests-special += $(objpfx)tst-mman-consts.out
+$(objpfx)tst-mman-consts.out: ../sysdeps/unix/sysv/linux/tst-mman-consts.py
+	PYTHONPATH=../scripts \
+	$(PYTHON) ../sysdeps/unix/sysv/linux/tst-mman-consts.py \
+		   --cc="$(CC) $(patsubst -DMODULE_NAME=%, \
+					  -DMODULE_NAME=testsuite, \
+					  $(CPPFLAGS))" \
+	< /dev/null > $@ 2>&1; $(evaluate-test)
+
 endif # $(subdir) == misc
 
 ifeq ($(subdir),time)
@@ -112,21 +129,34 @@ tests-special += $(objpfx)tst-signal-numbers.out
 # in this context, but signal.c includes signal.h and not much else so it'll
 # be conservatively correct.
 $(objpfx)tst-signal-numbers.out: \
-		../sysdeps/unix/sysv/linux/tst-signal-numbers.sh \
+		../sysdeps/unix/sysv/linux/tst-signal-numbers.py \
 		$(objpfx)signal.o*
-	AWK=$(AWK) $(SHELL) ../sysdeps/unix/sysv/linux/tst-signal-numbers.sh \
-	$(CC) $(patsubst -DMODULE_NAME=%,-DMODULE_NAME=testsuite,$(CPPFLAGS)) \
-	< /dev/null > $@; $(evaluate-test)
+	PYTHONPATH=../scripts \
+	$(PYTHON) ../sysdeps/unix/sysv/linux/tst-signal-numbers.py \
+		   --cc="$(CC) $(patsubst -DMODULE_NAME=%, \
+					  -DMODULE_NAME=testsuite, \
+					  $(CPPFLAGS))" \
+	< /dev/null > $@ 2>&1; $(evaluate-test)
 endif
 
 ifeq ($(subdir),socket)
 sysdep_headers += net/if_ppp.h net/ppp-comp.h \
 		  net/ppp_defs.h net/if_arp.h net/route.h net/ethernet.h \
-		  net/if_slip.h net/if_packet.h net/if_shaper.h
+		  net/if_slip.h net/if_packet.h net/if_shaper.h \
+		  bits/socket-constants.h
 sysdep_routines += cmsg_nxthdr
 CFLAGS-recvmmsg.c = -fexceptions -fasynchronous-unwind-tables
 CFLAGS-sendmmsg.c = -fexceptions -fasynchronous-unwind-tables
-endif
+
+tests-special += $(objpfx)tst-socket-consts.out
+$(objpfx)tst-socket-consts.out: ../sysdeps/unix/sysv/linux/tst-socket-consts.py
+	PYTHONPATH=../scripts \
+	$(PYTHON) ../sysdeps/unix/sysv/linux/tst-socket-consts.py \
+		   --cc="$(CC) $(patsubst -DMODULE_NAME=%, \
+					  -DMODULE_NAME=testsuite, \
+					  $(CPPFLAGS)) -D_ISOMAC" \
+	< /dev/null > $@ 2>&1; $(evaluate-test)
+endif # $(subdir) == socket
 
 ifeq ($(subdir),sunrpc)
 sysdep_headers += nfs/nfs.h
@@ -139,9 +169,12 @@ endif
 ifeq ($(subdir),posix)
 sysdep_headers += bits/initspin.h
 
-sysdep_routines += sched_getcpu oldglob
+sysdep_routines += sched_getcpu oldglob getcpu
 
 tests += tst-affinity tst-affinity-pid
+
+tests-static := tst-affinity-static
+tests += $(tests-static)
 
 CFLAGS-fork.c = $(libio-mtsafe)
 CFLAGS-getpid.o = -fomit-frame-pointer
@@ -174,7 +207,8 @@ sysdep_routines += xstatconv internal_statvfs internal_statvfs64 \
 		   close_nocancel fcntl_nocancel nanosleep_nocancel \
 		   open_nocancel open64_nocancel \
 		   openat_nocancel openat64_nocancel \
-		   pause_nocancel read_nocancel waitpid_nocancel write_nocancel
+		   pause_nocancel read_nocancel waitpid_nocancel \
+		   write_nocancel statx_cp
 
 sysdep_headers += bits/fcntl-linux.h
 

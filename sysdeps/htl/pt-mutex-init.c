@@ -1,5 +1,5 @@
 /* Initialize a mutex.  Generic version.
-   Copyright (C) 2000-2018 Free Software Foundation, Inc.
+   Copyright (C) 2000-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -29,7 +29,7 @@ _pthread_mutex_init (pthread_mutex_t *mutex, const pthread_mutexattr_t *attr)
   *mutex = (pthread_mutex_t) __PTHREAD_MUTEX_INITIALIZER;
 
   if (attr == NULL
-      || memcmp (attr, &__pthread_default_mutexattr, sizeof (*attr) == 0))
+      || memcmp (attr, &__pthread_default_mutexattr, sizeof (*attr)) == 0)
     /* The default attributes.  */
     return 0;
 

@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -126,7 +126,7 @@ __pthread_mutex_lock (pthread_mutex_t *mutex)
       if (LLL_MUTEX_TRYLOCK (mutex) != 0)
 	{
 	  int cnt = 0;
-	  int max_cnt = MIN (MAX_ADAPTIVE_COUNT,
+	  int max_cnt = MIN (max_adaptive_count (),
 			     mutex->__data.__spins * 2 + 10);
 	  do
 	    {

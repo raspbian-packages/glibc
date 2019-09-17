@@ -1,4 +1,4 @@
-/* Copyright (C) 2000-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2000-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -20,11 +20,12 @@
 
 /* Set signal mask for signals with default handling in ATTR to SIGDEFAULT.  */
 int
-posix_spawnattr_setsigdefault (posix_spawnattr_t *attr,
-			       const sigset_t *sigdefault)
+__posix_spawnattr_setsigdefault (posix_spawnattr_t *attr,
+				 const sigset_t *sigdefault)
 {
   /* Copy the sigset_t data to the user buffer.  */
   memcpy (&attr->__sd, sigdefault, sizeof (sigset_t));
 
   return 0;
 }
+weak_alias (__posix_spawnattr_setsigdefault, posix_spawnattr_setsigdefault)

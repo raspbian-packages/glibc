@@ -1,5 +1,5 @@
 /* Common definition for pthread_{timed,try}join{_np}.
-   Copyright (C) 2017-2018 Free Software Foundation, Inc.
+   Copyright (C) 2017-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -81,18 +81,12 @@ __pthread_timedjoin_ex (pthread_t threadid, void **thread_return,
 	 un-wait-ed for again.  */
       pthread_cleanup_push (cleanup, &pd->joinid);
 
-      int oldtype = CANCEL_ASYNC ();
-
-      if (abstime != NULL)
-	result = lll_timedwait_tid (pd->tid, abstime);
-      else
-	lll_wait_tid (pd->tid);
-
-      CANCEL_RESET (oldtype);
+      result = lll_wait_tid (pd->tid, abstime);
 
       pthread_cleanup_pop (0);
     }
 
+  void *pd_result = pd->result;
   if (__glibc_likely (result == 0))
     {
       /* We mark the thread as terminated and as joined.  */
@@ -100,7 +94,7 @@ __pthread_timedjoin_ex (pthread_t threadid, void **thread_return,
 
       /* Store the return value if the caller is interested.  */
       if (thread_return != NULL)
-	*thread_return = pd->result;
+	*thread_return = pd_result;
 
       /* Free the TCB.  */
       __free_tcb (pd);
@@ -108,7 +102,7 @@ __pthread_timedjoin_ex (pthread_t threadid, void **thread_return,
   else
     pd->joinid = NULL;
 
-  LIBC_PROBE (pthread_join_ret, 3, threadid, result, pd->result);
+  LIBC_PROBE (pthread_join_ret, 3, threadid, result, pd_result);
 
   return result;
 }

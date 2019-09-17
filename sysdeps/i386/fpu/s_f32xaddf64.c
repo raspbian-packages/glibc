@@ -1,5 +1,5 @@
 /* Add _Float64 values, converting the result to _Float32x.  i386 version.
-   Copyright (C) 2018 Free Software Foundation, Inc.
+   Copyright (C) 2018-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -19,7 +19,6 @@
 #include <math.h>
 #include <fpu_control.h>
 #include <math-narrow-eval.h>
-#include <math_private.h>
 #include <math-narrow.h>
 
 _Float32x

@@ -1,5 +1,5 @@
 /* Quad-precision floating point e^x.
-   Copyright (C) 1999-2018 Free Software Foundation, Inc.
+   Copyright (C) 1999-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Jakub Jelinek <jj@ultra.linux.cz>
    Partly based on double-precision code
@@ -65,6 +65,7 @@
 #include <fenv.h>
 #include <inttypes.h>
 #include <math_private.h>
+#include <fenv_private.h>
 
 
 #include "t_expl.h"
@@ -133,6 +134,11 @@ static const long double C[] = {
  1.98412698413981650382436541785404286E-04L,
 };
 
+/* Avoid local PLT entry use from (int) roundl (...) being converted
+   to a call to lroundl in the case of 32-bit long and roundl not
+   inlined.  */
+long int lroundl (long double) asm ("__lroundl");
+
 long double
 __ieee754_expl (long double x)
 {
@@ -148,15 +154,15 @@ __ieee754_expl (long double x)
 
       SET_RESTORE_ROUND (FE_TONEAREST);
 
-      n = __roundl (x*M_1_LN2);
+      n = roundl (x*M_1_LN2);
       x = x-n*M_LN2_0;
       xl = n*M_LN2_1;
 
-      tval1 = __roundl (x*TWO8);
+      tval1 = roundl (x*TWO8);
       x -= __expl_table[T_EXPL_ARG1+2*tval1];
       xl -= __expl_table[T_EXPL_ARG1+2*tval1+1];
 
-      tval2 = __roundl (x*TWO15);
+      tval2 = roundl (x*TWO15);
       x -= __expl_table[T_EXPL_ARG2+2*tval2];
       xl -= __expl_table[T_EXPL_ARG2+2*tval2+1];
 

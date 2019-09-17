@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2019 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -18,7 +18,6 @@
 
 #include <math.h>
 #include <math-barriers.h>
-#include <math_private.h>
 #include <libm-alias-float.h>
 
 long long int

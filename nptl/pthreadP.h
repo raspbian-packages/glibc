@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -33,6 +33,7 @@
 #include <kernel-features.h>
 #include <errno.h>
 #include <internal-signals.h>
+#include "pthread_mutex_conf.h"
 
 
 /* Atomic operations on TLS memory.  */
@@ -47,10 +48,14 @@
 #endif
 
 
-/* Adaptive mutex definitions.  */
-#ifndef MAX_ADAPTIVE_COUNT
-# define MAX_ADAPTIVE_COUNT 100
+static inline short max_adaptive_count (void)
+{
+#if HAVE_TUNABLES
+  return __mutex_aconf.spin_count;
+#else
+  return DEFAULT_ADAPTIVE_COUNT;
 #endif
+}
 
 
 /* Magic cookie representing robust mutex with dead owner.  */
@@ -320,27 +325,17 @@ __do_cancel (void)
 /* Same as CANCEL_RESET, but for use in libc.so.  */
 # define LIBC_CANCEL_RESET(oldtype) \
   __libc_disable_asynccancel (oldtype)
-# define LIBC_CANCEL_HANDLED() \
-  __asm (".globl " __SYMBOL_PREFIX "__libc_enable_asynccancel"); \
-  __asm (".globl " __SYMBOL_PREFIX "__libc_disable_asynccancel")
 #elif IS_IN (libpthread)
 # define LIBC_CANCEL_ASYNC() CANCEL_ASYNC ()
 # define LIBC_CANCEL_RESET(val) CANCEL_RESET (val)
-# define LIBC_CANCEL_HANDLED() \
-  __asm (".globl " __SYMBOL_PREFIX "__pthread_enable_asynccancel"); \
-  __asm (".globl " __SYMBOL_PREFIX "__pthread_disable_asynccancel")
 #elif IS_IN (librt)
 # define LIBC_CANCEL_ASYNC() \
   __librt_enable_asynccancel ()
 # define LIBC_CANCEL_RESET(val) \
   __librt_disable_asynccancel (val)
-# define LIBC_CANCEL_HANDLED() \
-  __asm (".globl " __SYMBOL_PREFIX "__librt_enable_asynccancel"); \
-  __asm (".globl " __SYMBOL_PREFIX "__librt_disable_asynccancel")
 #else
 # define LIBC_CANCEL_ASYNC()	0 /* Just a dummy value.  */
 # define LIBC_CANCEL_RESET(val)	((void)(val)) /* Nothing, but evaluate it.  */
-# define LIBC_CANCEL_HANDLED()	/* Nothing.  */
 #endif
 
 

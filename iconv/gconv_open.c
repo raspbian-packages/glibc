@@ -1,5 +1,5 @@
 /* Find matching transformation algorithms and initialize steps.
-   Copyright (C) 1997-2018 Free Software Foundation, Inc.
+   Copyright (C) 1997-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 
@@ -24,6 +24,10 @@
 #include <string.h>
 
 #include <gconv_int.h>
+
+
+/* How many character should be converted in one call?  */
+#define GCONV_NCHAR_GOAL	8160
 
 
 int

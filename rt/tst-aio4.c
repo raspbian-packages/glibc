@@ -1,5 +1,5 @@
 /* Test for completion signal handling.
-   Copyright (C) 2000-2018 Free Software Foundation, Inc.
+   Copyright (C) 2000-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -22,9 +22,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
-
-/* We might need a bit longer timeout.  */
-#define TIMEOUT 10 /* sec */
 
 int my_signo;
 

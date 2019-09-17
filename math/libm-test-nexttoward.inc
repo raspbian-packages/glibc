@@ -1,5 +1,5 @@
 /* Test nexttoward.
-   Copyright (C) 1997-2018 Free Software Foundation, Inc.
+   Copyright (C) 1997-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -17,6 +17,10 @@
    <http://www.gnu.org/licenses/>.  */
 
 #include "libm-test-driver.c"
+
+/* Note, the second argument is always typed as long double.  The j type
+   argument to TEST_ indicates the literal should not be post-processed by
+   gen-libm-test.py.  */
 
 static const struct test_fj_f_data nexttoward_test_data[] =
   {

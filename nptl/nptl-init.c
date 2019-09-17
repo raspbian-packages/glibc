@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -38,6 +38,7 @@
 #include <kernel-features.h>
 #include <libc-pointer-arith.h>
 #include <pthread-pids.h>
+#include <pthread_mutex_conf.h>
 
 #ifndef TLS_MULTIPLE_THREADS_IN_TCB
 /* Pointer to the corresponding variable in libc.  */
@@ -431,6 +432,10 @@ __pthread_initialize_minimal_internal (void)
 
   /* Determine whether the machine is SMP or not.  */
   __is_smp = is_smp_system ();
+
+#if HAVE_TUNABLES
+  __pthread_tunables_init ();
+#endif
 }
 strong_alias (__pthread_initialize_minimal_internal,
 	      __pthread_initialize_minimal)

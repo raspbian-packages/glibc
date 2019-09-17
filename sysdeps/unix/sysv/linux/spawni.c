@@ -1,5 +1,5 @@
 /* POSIX spawn interface.  Linux version.
-   Copyright (C) 2016-2018 Free Software Foundation, Inc.
+   Copyright (C) 2016-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -138,11 +138,11 @@ __spawni_child (void *arguments)
   for (int sig = 1; sig < _NSIG; ++sig)
     {
       if ((attr->__flags & POSIX_SPAWN_SETSIGDEF)
-	  && sigismember (&attr->__sd, sig))
+	  && __sigismember (&attr->__sd, sig))
 	{
 	  sa.sa_handler = SIG_DFL;
 	}
-      else if (sigismember (&hset, sig))
+      else if (__sigismember (&hset, sig))
 	{
 	  if (__is_internal_signal (sig))
 	    sa.sa_handler = SIG_IGN;
@@ -253,9 +253,31 @@ __spawni_child (void *arguments)
 	      break;
 
 	    case spawn_do_dup2:
-	      if (__dup2 (action->action.dup2_action.fd,
-			  action->action.dup2_action.newfd)
-		  != action->action.dup2_action.newfd)
+	      /* Austin Group issue #411 requires adddup2 action with source
+		 and destination being equal to remove close-on-exec flag.  */
+	      if (action->action.dup2_action.fd
+		  == action->action.dup2_action.newfd)
+		{
+		  int fd = action->action.dup2_action.newfd;
+		  int flags = __fcntl (fd, F_GETFD, 0);
+		  if (flags == -1)
+		    goto fail;
+		  if (__fcntl (fd, F_SETFD, flags & ~FD_CLOEXEC) == -1)
+		    goto fail;
+		}
+	      else if (__dup2 (action->action.dup2_action.fd,
+			       action->action.dup2_action.newfd)
+		       != action->action.dup2_action.newfd)
+		goto fail;
+	      break;
+
+	    case spawn_do_chdir:
+	      if (__chdir (action->action.chdir_action.path) != 0)
+		goto fail;
+	      break;
+
+	    case spawn_do_fchdir:
+	      if (__fchdir (action->action.fchdir_action.fd) != 0)
 		goto fail;
 	      break;
 	    }

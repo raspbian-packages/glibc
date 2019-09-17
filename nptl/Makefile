@@ -1,4 +1,4 @@
-# Copyright (C) 2002-2018 Free Software Foundation, Inc.
+# Copyright (C) 2002-2019 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -145,7 +145,7 @@ libpthread-routines = nptl-init nptlfreeres vars events version pt-interp \
 		      mtx_destroy mtx_init mtx_lock mtx_timedlock \
 		      mtx_trylock mtx_unlock call_once cnd_broadcast \
 		      cnd_destroy cnd_init cnd_signal cnd_timedwait cnd_wait \
-		      tss_create tss_delete tss_get tss_set
+		      tss_create tss_delete tss_get tss_set pthread_mutex_conf
 #		      pthread_setuid pthread_seteuid pthread_setreuid \
 #		      pthread_setresuid \
 #		      pthread_setgid pthread_setegid pthread_setregid \
@@ -320,8 +320,7 @@ tests = tst-attr1 tst-attr2 tst-attr3 tst-default-attr \
 	tst-cnd-timedwait tst-thrd-detach tst-mtx-basic tst-thrd-sleep \
 	tst-mtx-recursive tst-tss-basic tst-call-once tst-mtx-timedlock \
 	tst-rwlock-pwn \
-	tst-rwlock-tryrdlock-stall tst-rwlock-trywrlock-stall \
-	tst-unwind-thread
+	tst-rwlock-tryrdlock-stall tst-rwlock-trywrlock-stall
 
 tests-internal := tst-rwlock19 tst-rwlock20 \
 		  tst-sem11 tst-sem12 tst-sem13 \
@@ -454,9 +453,10 @@ link-libc-static := $(common-objpfx)libc.a $(static-gnulib) \
 tests-static += tst-locale1 tst-locale2 tst-stackguard1-static \
 		tst-cancel21-static tst-cancel24-static tst-cond8-static \
 		tst-mutex8-static tst-mutexpi8-static tst-sem11-static \
-		tst-sem12-static
+		tst-sem12-static tst-cond11-static
+
 tests += tst-cancel21-static tst-cancel24-static \
-	 tst-cond8-static
+	 tst-cond8-static tst-cond11-static
 tests-internal += tst-sem11-static tst-sem12-static tst-stackguard1-static
 xtests-static += tst-setuid1-static
 
@@ -466,8 +466,7 @@ tests-reverse += tst-cancel5 tst-cancel23 tst-vfork1x tst-vfork2x
 ifeq ($(run-built-tests),yes)
 tests-special += $(objpfx)tst-stack3-mem.out $(objpfx)tst-oddstacklimit.out
 ifeq ($(build-shared),yes)
-tests-special += $(objpfx)tst-tls6.out $(objpfx)tst-cleanup0-cmp.out \
-		 $(objpfx)tst-cancel-wrappers.out
+tests-special += $(objpfx)tst-tls6.out $(objpfx)tst-cleanup0-cmp.out
 endif
 endif
 
@@ -670,8 +669,7 @@ $(objpfx)$(multidir)/crtn.o: $(objpfx)crtn.o $(objpfx)$(multidir)/
 	ln -f $< $@
 endif
 
-generated += multidir.mk tst-atfork2.mtrace tst-cancel-wrappers.out \
-	     tst-tls6.out
+generated += multidir.mk tst-atfork2.mtrace tst-tls6.out
 
 generated += $(objpfx)tst-atfork2.mtrace \
 	     $(addsuffix .so,$(strip $(modules-names)))
@@ -680,18 +678,6 @@ generated += $(objpfx)tst-atfork2.mtrace \
 LDFLAGS-pthread.so += -e __nptl_main
 # pt-interp.c exists just to get the runtime linker path into libpthread.so.
 $(objpfx)pt-interp.os: $(common-objpfx)runtime-linker.h
-endif
-
-ifeq ($(run-built-tests),yes)
-ifeq (yes,$(build-shared))
-$(objpfx)tst-cancel-wrappers.out: tst-cancel-wrappers.sh
-	$(SHELL) $< '$(NM)' \
-		    $(common-objpfx)libc_pic.a \
-		    $(common-objpfx)libc.a \
-		    $(objpfx)libpthread_pic.a \
-		    $(objpfx)libpthread.a > $@; \
-	$(evaluate-test)
-endif
 endif
 
 tst-exec4-ARGS = $(host-test-program-cmd)
@@ -723,8 +709,6 @@ LDFLAGS-tst-audit-threads = -Wl,-z,lazy
 $(objpfx)tst-audit-threads: $(objpfx)tst-audit-threads-mod2.so
 $(objpfx)tst-audit-threads.out: $(objpfx)tst-audit-threads-mod1.so
 tst-audit-threads-ENV = LD_AUDIT=$(objpfx)tst-audit-threads-mod1.so
-
-CFLAGS-tst-unwind-thread.c += -funwind-tables
 
 # The tests here better do not run in parallel
 ifneq ($(filter %tests,$(MAKECMDGOALS)),)

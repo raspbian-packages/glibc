@@ -1,6 +1,6 @@
 /* Initialize CPU feature data.  AArch64 version.
    This file is part of the GNU C Library.
-   Copyright (C) 2017-2018 Free Software Foundation, Inc.
+   Copyright (C) 2017-2019 Free Software Foundation, Inc.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -51,6 +51,8 @@
 
 #define IS_PHECDA(midr) (MIDR_IMPLEMENTOR(midr) == 'h'			      \
                         && MIDR_PARTNUM(midr) == 0x000)
+#define IS_ARES(midr) (MIDR_IMPLEMENTOR(midr) == 'A'			      \
+			&& MIDR_PARTNUM(midr) == 0xd0c)
 
 struct cpu_features
 {

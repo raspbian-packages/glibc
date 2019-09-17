@@ -1,4 +1,4 @@
-/* Copyright (C) 2013-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2013-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,7 +16,6 @@
    not, see <http://www.gnu.org/licenses/>.  */
 
 #include <math.h>
-#include <math_private.h>
 #include <libm-alias-float.h>
 
 float
@@ -25,7 +24,7 @@ __modff (float x, float *iptr)
   if (__builtin_isinff (x))
     {
       *iptr = x;
-      return __copysignf (0.0, x);
+      return copysignf (0.0, x);
     }
   else if (__builtin_isnanf (x))
     {
@@ -35,13 +34,13 @@ __modff (float x, float *iptr)
 
   if (x >= 0.0)
     {
-      *iptr = __floorf (x);
-      return __copysignf (x - *iptr, x);
+      *iptr = floorf (x);
+      return copysignf (x - *iptr, x);
     }
   else
     {
-      *iptr = __ceilf (x);
-      return __copysignf (x - *iptr, x);
+      *iptr = ceilf (x);
+      return copysignf (x - *iptr, x);
     }
 }
 libm_alias_float (__modf, modf)

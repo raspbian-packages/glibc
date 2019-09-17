@@ -1,5 +1,5 @@
 /* Wrapper to set errno for tgamma.
-   Copyright (C) 2017-2018 Free Software Foundation, Inc.
+   Copyright (C) 2017-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -41,7 +41,7 @@ M_DECL_FUNC (__tgamma) (FLOAT x)
       if (x == 0)
 	/* Pole error: tgamma(x=0).  */
 	__set_errno (ERANGE);
-      else if (M_SUF (__floor) (x) == x && x < 0)
+      else if (M_SUF (floor) (x) == x && x < 0)
 	/* Domain error: tgamma(integer x<0).  */
 	__set_errno (EDOM);
       else

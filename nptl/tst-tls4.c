@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2003-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Jakub Jelinek <jakub@redhat.com>, 2003.
 
@@ -176,6 +176,5 @@ do_test (void)
   return 0;
 }
 
-#define TIMEOUT 5
 #define TEST_FUNCTION do_test ()
 #include "../test-skeleton.c"

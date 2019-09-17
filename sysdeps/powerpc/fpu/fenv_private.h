@@ -1,5 +1,5 @@
 /* Private floating point rounding and exceptions handling. PowerPC version.
-   Copyright (C) 2013-2018 Free Software Foundation, Inc.
+   Copyright (C) 2013-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,8 +16,8 @@
    License along with the GNU C Library.  If not, see
    <http://www.gnu.org/licenses/>.  */
 
-#ifndef FENV_PRIVATE_H
-#define FENV_PRIVATE_H 1
+#ifndef POWERPC_FENV_PRIVATE_H
+#define POWERPC_FENV_PRIVATE_H 1
 
 #include <fenv.h>
 #include <fenv_libc.h>
@@ -224,5 +224,7 @@ libc_feresetround_ppc_ctx (struct rm_ctx *ctx)
 #define libc_feupdateenv_ctx             libc_feupdateenv_ppc_ctx
 #define libc_feupdateenvf_ctx            libc_feupdateenv_ppc_ctx
 #define libc_feupdateenvl_ctx            libc_feupdateenv_ppc_ctx
+
+#include_next <fenv_private.h>
 
 #endif

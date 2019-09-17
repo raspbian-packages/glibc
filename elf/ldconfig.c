@@ -1,4 +1,4 @@
-/* Copyright (C) 1999-2018 Free Software Foundation, Inc.
+/* Copyright (C) 1999-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Andreas Jaeger <aj@suse.de>, 1999.
 
@@ -110,7 +110,7 @@ int opt_verbose;
 
 /* Format to support.  */
 /* 0: only libc5/glibc2; 1: both; 2: only glibc 2.2.  */
-int opt_format = 1;
+int opt_format = 2;
 
 /* Build cache.  */
 static int opt_build_cache = 1;
@@ -163,7 +163,7 @@ static const struct argp_option options[] =
   { NULL, 'f', N_("CONF"), 0, N_("Use CONF as configuration file"), 0},
   { NULL, 'n', NULL, 0, N_("Only process directories specified on the command line.  Don't build cache."), 0},
   { NULL, 'l', NULL, 0, N_("Manually link individual libraries."), 0},
-  { "format", 'c', N_("FORMAT"), 0, N_("Format to use: new, old or compat (default)"), 0},
+  { "format", 'c', N_("FORMAT"), 0, N_("Format to use: new (default), old, or compat"), 0},
   { "ignore-aux-cache", 'i', NULL, 0, N_("Ignore auxiliary cache file"), 0},
   { NULL, 0, NULL, 0, NULL, 0 }
 };
@@ -340,7 +340,7 @@ print_version (FILE *stream, struct argp_state *state)
 Copyright (C) %s Free Software Foundation, Inc.\n\
 This is free software; see the source for copying conditions.  There is NO\n\
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\
-"), "2018");
+"), "2019");
   fprintf (stream, gettext ("Written by %s.\n"),
 	   "Andreas Jaeger");
 }

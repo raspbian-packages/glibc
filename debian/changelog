@@ -1,9 +1,137 @@
-glibc (2.28-10+rpi1) buster-staging; urgency=medium
+glibc (2.29-1+rpi1) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Tue, 14 May 2019 01:48:54 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Tue, 17 Sep 2019 01:28:57 +0000
+
+glibc (2.29-1) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix math tests on alpha.
+  * debian/sysdeps/alpha.mk, debian/control.in/main: do not force build with
+    gcc-8.
+  * debian/testsuite-xfail-debian.mk: XFAIL narrowing add/sub tests, they
+    have always failed since they have been introduced.
+  * debian/control.in/libc: add a Breaks: iraf-fitsutil (<< 2018.07.06-4) to
+    libc0.1/0.3/6/6.1. See bug#939523.
+  * debian/testsuite-xfail-debian.mk: drop XFAILs related to the wrong value
+    of (MIN)SIGSTKSZ for 32-bit processes on arm64, now that (old-)stable
+    kernels are fixed.
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/submitted-anon-mmap-shared.diff: Enable, now that
+    hurd 2017 is behind.
+  * control: Break old version of hurd package accordingly.
+  * debian/patches/hurd-i386/local-exec_filename.diff: Fix glibc 2.26
+    _hurd_exec_paths symbol visibility.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 08 Sep 2019 22:34:02 +0200
+
+glibc (2.29-0experimental1) experimental; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/patches/hurd-i386/submitted-net.diff: rebase.
+  * debian/patches/hurd-i386/local-fix-nss.diff: rebase.
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix math tests on hppa.
+  * debian/testsuite-xfail-debian.mk: XFAIL two new tests on HPPA that are
+    due to a bug in the testsuite, reported upstream.
+  * debian/sysdeps/sparc64.mk: disable PIE on sparc64 as it produces broken
+    binaries, causing issues in the testsuite.
+  * debian/sysdeps/alpha.mk, debian/control.in/main: build with gcc-8 on alpha
+    as gcc-9 introduces math errors in the testsuite.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Wed, 21 Aug 2019 11:13:51 +0200
+
+glibc (2.29-0experimental0) experimental; urgency=medium
+
+  [ Adam Conrad ]
+  * New upstream release 2.29, with git updates up to 2019-02-20:
+    - Add PF_XDP, AF_XDP and SOL_XDP to bits/socket.h.  Closes: #933800.
+    - debian/symbols.wildcard: Add 2.29, and debian/control: Regenrate.
+    - debian/patches/localedata/locales_CH.diff: Applied upstream.
+    - debian/patches/localedata/submitted-it_IT-thousands_sep.diff: Upstreamed.
+    - debian/patches/localedata/git-en_US-date_fmt.diff: Applied upstream.
+    - debian/patches/hurd-i386/git-magic-pid.diff: Applied upstream.
+    - debian/patches/hurd-i386/git-interrupt_timeout_EIO.diff: Upstreamed.
+    - debian/patches/hurd-i386/git-interrupt_timeout.diff: Applied upstream.
+    - debian/patches/hurd-i386/git-intr-msg.diff: Applied upstream.
+    - debian/patches/hurd-i386/git-pci.diff: Applied upstream.
+    - debian/patches/hurd-i386/git-msync.diff: Applied upstream.
+    - debian/patches/hurd-i386/git-spawn-open.diff: Applied upstream.
+    - debian/patches/hurd-i386/git-tst-preadvwritev2-common.c.diff: Upstreamed.
+    - debian/patches/hurd-i386/git-fcntl64.diff: Applied upstream.
+    - debian/patches/hurd-i386/git-lockf-0.diff: Applied upstream.
+    - debian/patches/hurd-i386/git-libpthread_setpshared.diff: Upstreamed.
+    - debian/patches/hurd-i386/git-AT_EMPTY_PATH.diff: Applied upstream.
+    - debian/patches/hurd-i386/git-altstack.diff: Applied upstream.
+    - debian/patches/riscv64/git-thread-debugging.diff: Applied upstream.
+    - debian/patches/sparc/submitted-sparc64-socketcall.diff: Applied upstream.
+    - debian/patches/any/local-tst-mktime2.diff: Applied upstream.
+    - debian/patches/all/local-remove-manual.diff: Rebased.
+    - debian/patches/alpha/local-string-functions.diff: Rebased.
+    - debian/patches/any/git-libio-stdout-putc.diff: Rebased.
+    - debian/patches/hurd-i386/local-exec_filename.diff: Rebased.
+    - debian/patches/hurd-i386/local-hurdsig-globaldisp-version.diff: Rebased.
+    - debian/patches/hurd-i386/submitted-anon-mmap-shared.diff: Rebased.
+    - debian/patches/hurd-i386/tg-EGREGIOUS-fr.diff: Rebased.
+    - debian/patches/hurd-i386/tg-EIEIO-fr.diff: Rebased.
+    - debian/patches/hurd-i386/tg-hurdsig-global-dispositions.diff: Rebased.
+    - debian/patches/hurd-i386/tg-io_select_timeout.diff: Rebased.
+    - debian/patches/kfreebsd/submitted-auxv.diff: Rebased.
+  * debian/rules.d/build.mk: Switch to new localedata/install-locale-files:
+    - debian/patches/localedata/local-all-no-archive.diff: Dropped for above.
+  * debian/testsuite-xfail-debian.mk: XFAIL tst-thread-exit-clobber, and
+    tst-minsigstksz*, and tst-xsigstack on armhf, which fail on aarch64 hosts.
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/submitted-net.diff: Rebased.
+  * debian/patches/hurd-i386/tg-bits_atomic.h_multiple_threads.diff: Rebased.
+  * debian/patches/hurd-i386/local-fix-nss.diff: Fix tst-nss-test3 test.
+  * debian/testsuite-xfail-debian.mk: Clean out test build failures, they are
+    now handled upstream. Clean out now-fixed tests.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix build on alpha with recent kernel headers.  Closes: #934823.
+    - debian/patches/any/git-libio-stdout-putc.diff: rebased.
+  * debian/control.in/main, debian/rules: drop the multiarch-support package.
+    Closes: #910669.
+  * debian/glibc-source.filelist, debian/libc6.symbols.powerpcspe,
+    debian/rules.d/control.mk, debian/sysdeps/powerpcspe.mk,
+    debian/testsuite-xfail-debian.mk: Drop the powerpcspe architecture, it is
+    not supported anymore by GCC 9 and will be removed in GLIBC 2.30.
+  * debian/rules: do not export SHELL, it is already set through configparms.
+  * debian/patches/git-pexpect-pretty-printers.diff: backport pretty printer
+    fix to support recent versions of GDB with color output.
+  * debian/testsuite-xfail-debian.mk: drop XFAILs that were due to kernel bugs
+    which are now fixed in both oldstable and stable kernels.
+  * debian/rules: drop -no-pie -fno-PIE options. This is now fully supported
+    by the GNU libc.
+  * debian/testsuite-xfail-debian.mk: drop XFAILs that have been fixed for
+    quite some time.
+  * debian/control.in/main, debian/rules: build with GCC 9.
+  * debian/sysdeps/mips*.mk: drop -mno-plt, but keep -mno-pie.
+  * debian/patches/any/git-socket-constants.diff: backport upstream change to
+    use in-tree copy of SO_ constants for !__USE_MISC to fix compatibility
+    with recent kernel headers.
+  * debian/shlibs-add-udebs: remove the udeb entries automatically added by
+    dh_makeshlibs before proceeding to workaround debhelper bugs#934889 and
+    #934891.
+
+  [ YunQiang Su ]
+  * Fix ld.so link on mips{64,n32}r6{,el}.  Closes: #933513.
+
+  [ Sven Mueller ]
+  * debian/rules: honor noudeb build profile.
+
+  [ Josh Triplett ]
+  * debian/patches/any/submitted-ld.so-cache-new-format.diff: default to the
+    new format for ld.so.cache.  Closes: #908946.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Fri, 16 Aug 2019 12:42:42 +0200
 
 glibc (2.28-10) unstable; urgency=medium
 

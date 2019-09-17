@@ -1,6 +1,6 @@
 /* x86 CPU feature tuning.
    This file is part of the GNU C Library.
-   Copyright (C) 2017-2018 Free Software Foundation, Inc.
+   Copyright (C) 2017-2019 Free Software Foundation, Inc.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -17,7 +17,7 @@
    <http://www.gnu.org/licenses/>.  */
 
 #if HAVE_TUNABLES
-# define TUNABLE_NAMESPACE tune
+# define TUNABLE_NAMESPACE cpu
 # include <stdbool.h>
 # include <stdint.h>
 # include <unistd.h>		/* Get STDOUT_FILENO for _dl_printf.  */
@@ -116,7 +116,7 @@ TUNABLE_CALLBACK (set_hwcaps) (tunable_val_t *valp)
      the hardware which wasn't available when the selection was made.
      The environment variable:
 
-     GLIBC_TUNABLES=glibc.tune.hwcaps=-xxx,yyy,-zzz,....
+     GLIBC_TUNABLES=glibc.cpu.hwcaps=-xxx,yyy,-zzz,....
 
      can be used to enable CPU/ARCH feature yyy, disable CPU/ARCH feature
      yyy and zzz, where the feature name is case-sensitive and has to

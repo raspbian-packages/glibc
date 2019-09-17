@@ -1,5 +1,5 @@
 /* Implementation of sigwait function from POSIX.1c.
-   Copyright (C) 1996-2018 Free Software Foundation, Inc.
+   Copyright (C) 1996-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1996.
 
@@ -85,16 +85,8 @@ do_sigwait (const sigset_t *set, int *sig)
 int
 __sigwait (const sigset_t *set, int *sig)
 {
-  if (SINGLE_THREAD_P)
-    return do_sigwait (set, sig);
-
-  int oldtype = LIBC_CANCEL_ASYNC ();
-
-  int result = do_sigwait (set, sig);
-
-  LIBC_CANCEL_RESET (oldtype);
-
-  return result;
+  /* __sigsuspend should be a cancellation point.  */
+  return do_sigitid (idtype, id, infop, options);
 }
 libc_hidden_def (__sigwait)
 weak_alias (__sigwait, sigwait)

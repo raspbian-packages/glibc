@@ -1,5 +1,5 @@
 /* Software floating-point exception handling emulation.
-   Copyright (C) 2002-2018 Free Software Foundation, Inc.
+   Copyright (C) 2002-2019 Free Software Foundation, Inc.
    Contributed by Aldy Hernandez <aldyh@redhat.com>, 2002.
    This file is part of the GNU C Library.
 
@@ -23,14 +23,14 @@
 
 /* Thread-local to store sticky exceptions.  */
 __thread int __sim_exceptions_thread __attribute__ ((nocommon));
-libc_hidden_data_def (__sim_exceptions_thread);
+libc_hidden_tls_def (__sim_exceptions_thread);
 
 /* By default, no exceptions should trap.  */
 __thread int __sim_disabled_exceptions_thread = 0xffffffff;
-libc_hidden_data_def (__sim_disabled_exceptions_thread);
+libc_hidden_tls_def (__sim_disabled_exceptions_thread);
 
 __thread int __sim_round_mode_thread __attribute__ ((nocommon));
-libc_hidden_data_def (__sim_round_mode_thread);
+libc_hidden_tls_def (__sim_round_mode_thread);
 
 #if SIM_GLOBAL_COMPAT
 int __sim_exceptions_global __attribute__ ((nocommon));

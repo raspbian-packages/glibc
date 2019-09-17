@@ -1,4 +1,4 @@
-/* Copyright (C) 1998-2018 Free Software Foundation, Inc.
+/* Copyright (C) 1998-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -98,8 +98,13 @@ typedef double fpregset_t[__NFPREG];
    a whole quadword speedup save/restore.  */
 typedef struct _libc_vscr
 {
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 	unsigned int __pad[3];
 	unsigned int __ctx(vscr_word);
+#else
+	unsigned int __ctx(vscr_word);
+	unsigned int __pad[3];
+#endif
 } vscr_t;
 
 /* Container for Altivec/VMX registers and status.

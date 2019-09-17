@@ -1,5 +1,5 @@
 /* Linux/sparc version of processor capability information handling macros.
-   Copyright (C) 1999-2018 Free Software Foundation, Inc.
+   Copyright (C) 1999-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Jakub Jelinek <jj@ultra.linux.cz>, 1999.
 
@@ -31,8 +31,8 @@ _dl_procinfo (unsigned int type, unsigned long int word)
 {
   int i;
 
-  /* Fallback to unknown output mechanism.  */
-  if (type == AT_HWCAP2)
+  /* Fallback to generic output mechanism.  */
+  if (type != AT_HWCAP)
     return -1;
 
   _dl_printf ("AT_HWCAP:   ");

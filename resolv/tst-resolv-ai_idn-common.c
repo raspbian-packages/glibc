@@ -1,5 +1,5 @@
 /* Common code for AI_IDN/NI_IDN tests.
-   Copyright (C) 2018 Free Software Foundation, Inc.
+   Copyright (C) 2018-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -241,6 +241,7 @@ response (const struct resolv_response_context *ctx,
               qname[0] };
         resolv_response_add_data (b, &addr, sizeof (addr));
       }
+      break;
     default:
       FAIL_EXIT1 ("invalid qtype: %d", qtype);
     }

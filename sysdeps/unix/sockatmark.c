@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2001-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -18,7 +18,7 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
-/* Determine wheter socket is at a out-of-band mark.  */
+/* Determine whether socket is at a out-of-band mark.  */
 int
 sockatmark (int fd)
 {

@@ -1,5 +1,5 @@
 /* Multiple versions of expf.
-   Copyright (C) 2012-2018 Free Software Foundation, Inc.
+   Copyright (C) 2012-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -26,7 +26,7 @@ libc_ifunc_redirected (__redirect_expf, __expf, IFUNC_SELECTOR ());
 #include <libm-alias-float.h>
 #ifdef SHARED
 __hidden_ver1 (__expf_ia32, __GI___expf, __redirect_expf)
-  __attribute__ ((visibility ("hidden")));
+  __attribute__ ((visibility ("hidden"))) __THROW;
 
 # include <shlib-compat.h>
 versioned_symbol (libm, __expf, expf, GLIBC_2_27);

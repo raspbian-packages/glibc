@@ -1,5 +1,5 @@
 /* Test CET property note parser for [BZ #23467].
-   Copyright (C) 2018 Free Software Foundation, Inc.
+   Copyright (C) 2018-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -44,9 +44,9 @@ sig_handler (int signo)
 static int
 do_test (void)
 {
-  char buf[20];
+  char buf[4];
 
-  if (scanf ("%20s", buf) != 1)
+  if (scanf ("%3s", buf) != 1)
     FAIL_UNSUPPORTED ("IBT not supported");
 
   if (strcmp (buf, "IBT") != 0)

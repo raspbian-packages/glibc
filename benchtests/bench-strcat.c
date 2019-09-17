@@ -1,5 +1,5 @@
 /* Measure strcat functions.
-   Copyright (C) 2013-2018 Free Software Foundation, Inc.
+   Copyright (C) 2013-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,24 +24,15 @@
 #endif /* WIDE */
 #include "bench-string.h"
 
+#define BIG_CHAR MAX_CHAR
+
 #ifndef WIDE
-# define STRCAT strcat
-# define CHAR char
 # define sfmt "s"
 # define SIMPLE_STRCAT simple_strcat
-# define STRLEN strlen
-# define STRCMP strcmp
-# define BIG_CHAR CHAR_MAX
 # define SMALL_CHAR 127
 #else
-# include <wchar.h>
-# define STRCAT wcscat
-# define CHAR wchar_t
 # define sfmt "ls"
 # define SIMPLE_STRCAT simple_wcscat
-# define STRLEN wcslen
-# define STRCMP wcscmp
-# define BIG_CHAR WCHAR_MAX
 # define SMALL_CHAR 1273
 #endif /* WIDE */
 

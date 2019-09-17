@@ -1,5 +1,5 @@
 /* `struct termios' speed frobnication functions.  Linux version.
-   Copyright (C) 1991-2018 Free Software Foundation, Inc.
+   Copyright (C) 1991-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -58,7 +58,7 @@ cfsetospeed (struct termios *termios_p, speed_t speed)
       && (speed < B57600 || speed > __MAX_BAUD))
     return INLINE_SYSCALL_ERROR_RETURN_VALUE (EINVAL);
 
-#ifdef _HAVE_STRUCT_TERMIOS_C_OSPEED
+#if _HAVE_STRUCT_TERMIOS_C_OSPEED
   termios_p->c_ospeed = speed;
 #endif
   termios_p->c_cflag &= ~(CBAUD | CBAUDEX);
@@ -80,7 +80,7 @@ cfsetispeed (struct termios *termios_p, speed_t speed)
       && (speed < B57600 || speed > __MAX_BAUD))
     return INLINE_SYSCALL_ERROR_RETURN_VALUE (EINVAL);
 
-#ifdef _HAVE_STRUCT_TERMIOS_C_ISPEED
+#if _HAVE_STRUCT_TERMIOS_C_ISPEED
   termios_p->c_ispeed = speed;
 #endif
   if (speed == 0)

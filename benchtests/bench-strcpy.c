@@ -1,5 +1,5 @@
 /* Measure strcpy functions.
-   Copyright (C) 2013-2018 Free Software Foundation, Inc.
+   Copyright (C) 2013-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,25 +16,14 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#define BIG_CHAR MAX_CHAR
+
 #ifdef WIDE
-# include <wchar.h>
-# define CHAR wchar_t
-# define UCHAR wchar_t
 # define sfmt "ls"
-# define BIG_CHAR WCHAR_MAX
 # define SMALL_CHAR 1273
-# define STRCMP wcscmp
-# define MEMCMP wmemcmp
-# define MEMSET wmemset
 #else
-# define CHAR char
-# define UCHAR unsigned char
 # define sfmt "s"
-# define BIG_CHAR CHAR_MAX
 # define SMALL_CHAR 127
-# define STRCMP strcmp
-# define MEMCMP memcmp
-# define MEMSET memset
 #endif
 
 #ifndef STRCPY_RESULT
@@ -48,10 +37,8 @@
 # include "bench-string.h"
 # ifndef WIDE
 #  define SIMPLE_STRCPY simple_strcpy
-#  define STRCPY strcpy
 # else
 #  define SIMPLE_STRCPY simple_wcscpy
-#  define STRCPY wcscpy
 # endif
 
 CHAR *SIMPLE_STRCPY (CHAR *, const CHAR *);

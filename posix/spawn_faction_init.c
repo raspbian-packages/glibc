@@ -1,4 +1,4 @@
-/* Copyright (C) 2000-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2000-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -45,9 +45,10 @@ __posix_spawn_file_actions_realloc (posix_spawn_file_actions_t *file_actions)
 
 /* Initialize data structure for file attribute for `spawn' call.  */
 int
-posix_spawn_file_actions_init (posix_spawn_file_actions_t *file_actions)
+__posix_spawn_file_actions_init (posix_spawn_file_actions_t *file_actions)
 {
   /* Simply clear all the elements.  */
   memset (file_actions, '\0', sizeof (*file_actions));
   return 0;
 }
+weak_alias (__posix_spawn_file_actions_init, posix_spawn_file_actions_init)

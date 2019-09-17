@@ -1,6 +1,6 @@
 /* Multiple versions of strcpy.
    All versions must be listed in ifunc-impl-list.c.
-   Copyright (C) 2017-2018 Free Software Foundation, Inc.
+   Copyright (C) 2017-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,12 +24,12 @@
 # undef strcpy
 
 # define SYMBOL_NAME strcpy
-# include "ifunc-unaligned-ssse3.h"
+# include "ifunc-strcpy.h"
 
 libc_ifunc_redirected (__redirect_strcpy, strcpy, IFUNC_SELECTOR ());
 
 # ifdef SHARED
 __hidden_ver1 (strcpy, __GI_strcpy, __redirect_strcpy)
-  __attribute__ ((visibility ("hidden")));
+  __attribute__ ((visibility ("hidden"))) __attribute_copy__ (strcpy);
 # endif
 #endif

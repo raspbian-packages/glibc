@@ -1,5 +1,5 @@
 /* Enumerate available IFUNC implementations of a function.  AARCH64 version.
-   Copyright (C) 2017-2018 Free Software Foundation, Inc.
+   Copyright (C) 2017-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -52,6 +52,10 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 		 can do a comparative analysis with __memset_generic.  */
 	      IFUNC_IMPL_ADD (array, i, memset, (zva_size == 64), __memset_falkor)
 	      IFUNC_IMPL_ADD (array, i, memset, 1, __memset_generic))
+
+  IFUNC_IMPL (i, name, strlen,
+	      IFUNC_IMPL_ADD (array, i, strlen, 1, __strlen_asimd)
+	      IFUNC_IMPL_ADD (array, i, strlen, 1, __strlen_generic))
 
   return i;
 }

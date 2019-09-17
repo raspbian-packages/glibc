@@ -1,5 +1,5 @@
 /* vDSO common definition for Linux.
-   Copyright (C) 2015-2018 Free Software Foundation, Inc.
+   Copyright (C) 2015-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -26,13 +26,11 @@
      funcptr (args)
 #endif
 
-#ifdef SHARED
+#if USE_VSYSCALL && defined HAVE_VSYSCALL
 
-# ifdef HAVE_VSYSCALL
+# include <libc-vdso.h>
 
-#  include <libc-vdso.h>
-
-#  define INLINE_VSYSCALL(name, nr, args...)				      \
+# define INLINE_VSYSCALL(name, nr, args...)				      \
   ({									      \
     __label__ out;							      \
     __label__ iserr;							      \
@@ -61,7 +59,7 @@
     sc_ret;								      \
   })
 
-#  define INTERNAL_VSYSCALL(name, err, nr, args...)			      \
+# define INTERNAL_VSYSCALL(name, err, nr, args...)			      \
   ({									      \
     __label__ out;							      \
     long v_ret;								      \
@@ -79,20 +77,13 @@
   out:									      \
     v_ret;								      \
   })
-# else
-#  define INLINE_VSYSCALL(name, nr, args...) \
-    INLINE_SYSCALL (name, nr, ##args)
-#  define INTERNAL_VSYSCALL(name, err, nr, args...) \
-    INTERNAL_SYSCALL (name, err, nr, ##args)
-# endif /* HAVE_VSYSCALL  */
+#else
 
-# else /* SHARED  */
+# define INLINE_VSYSCALL(name, nr, args...) \
+   INLINE_SYSCALL (name, nr, ##args)
+# define INTERNAL_VSYSCALL(name, err, nr, args...) \
+   INTERNAL_SYSCALL (name, err, nr, ##args)
 
-#  define INLINE_VSYSCALL(name, nr, args...) \
-    INLINE_SYSCALL (name, nr, ##args)
-#  define INTERNAL_VSYSCALL(name, err, nr, args...) \
-    INTERNAL_SYSCALL (name, err, nr, ##args)
-
-#endif /* SHARED  */
+#endif /* USE_VSYSCALL && defined HAVE_VSYSCALL */
 
 #endif /* SYSDEP_VDSO_LINUX_H  */

@@ -1,5 +1,5 @@
 /* Hierarchial argument parsing help output
-   Copyright (C) 1995-2018 Free Software Foundation, Inc.
+   Copyright (C) 1995-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Written by Miles Bader <miles@gnu.ai.mit.edu>.
 
@@ -1540,7 +1540,7 @@ argp_doc (const struct argp *argp, const struct argp_state *state,
 }
 
 /* Output a usage message for ARGP to STREAM.  If called from
-   argp_state_help, STATE is the relevent parsing state.  FLAGS are from the
+   argp_state_help, STATE is the relevant parsing state.  FLAGS are from the
    set ARGP_HELP_*.  NAME is what to use wherever a `program name' is
    needed. */
 static void
@@ -1769,7 +1769,7 @@ __argp_error (const struct argp_state *state, const char *fmt, ...)
 #ifdef _LIBC
 	  char *buf;
 
-	  if (_IO_vasprintf (&buf, fmt, ap) < 0)
+	  if (__vasprintf_internal (&buf, fmt, ap, 0) < 0)
 	    buf = NULL;
 
 	  __fxprintf (stream, "%s: %s\n",
@@ -1839,7 +1839,7 @@ __argp_failure (const struct argp_state *state, int status, int errnum,
 #ifdef _LIBC
 	      char *buf;
 
-	      if (_IO_vasprintf (&buf, fmt, ap) < 0)
+	      if (__vasprintf_internal (&buf, fmt, ap, 0) < 0)
 		buf = NULL;
 
 	      __fxprintf (stream, ": %s", buf);
@@ -1873,9 +1873,11 @@ __argp_failure (const struct argp_state *state, int status, int errnum,
 #endif
 	    }
 
+#ifdef _LIBC
 	  if (_IO_fwide (stream, 0) > 0)
 	    putwc_unlocked (L'\n', stream);
 	  else
+#endif
 	    putc_unlocked ('\n', stream);
 
 #if _LIBC || (HAVE_FLOCKFILE && HAVE_FUNLOCKFILE)

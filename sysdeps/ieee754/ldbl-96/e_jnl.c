@@ -60,6 +60,7 @@
 #include <float.h>
 #include <math.h>
 #include <math_private.h>
+#include <fenv_private.h>
 #include <math-underflow.h>
 
 static const long double
@@ -142,6 +143,8 @@ __ieee754_jnl (int n, long double x)
 	      case 3:
 		temp = c - s;
 		break;
+	      default:
+		__builtin_unreachable ();
 	      }
 	    b = invsqrtpi * temp / sqrtl (x);
 	  }
@@ -291,7 +294,7 @@ __ieee754_jnl (int n, long double x)
   }
   if (ret == 0)
     {
-      ret = __copysignl (LDBL_MIN, ret) * LDBL_MIN;
+      ret = copysignl (LDBL_MIN, ret) * LDBL_MIN;
       __set_errno (ERANGE);
     }
   else
@@ -371,6 +374,8 @@ __ieee754_ynl (int n, long double x)
 	  case 3:
 	    temp = s + c;
 	    break;
+	  default:
+	    __builtin_unreachable ();
 	  }
 	b = invsqrtpi * temp / sqrtl (x);
       }
@@ -399,7 +404,7 @@ __ieee754_ynl (int n, long double x)
   }
  out:
   if (isinf (ret))
-    ret = __copysignl (LDBL_MAX, ret) * LDBL_MAX;
+    ret = copysignl (LDBL_MAX, ret) * LDBL_MAX;
   return ret;
 }
 strong_alias (__ieee754_ynl, __ynl_finite)

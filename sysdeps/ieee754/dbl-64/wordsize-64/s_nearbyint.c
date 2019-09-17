@@ -24,6 +24,7 @@
 #include <math.h>
 #include <math-barriers.h>
 #include <math_private.h>
+#include <fenv_private.h>
 #include <libm-alias-double.h>
 
 static const double
@@ -48,7 +49,7 @@ __nearbyint(double x)
 		double t =  w-TWO52[sx];
 		math_force_eval (t);
 		libc_fesetenv (&env);
-		return __copysign (t, x);
+		return copysign (t, x);
 	    }
 	} else {
 	    if(j0==0x400) return x+x;	/* inf or NaN */

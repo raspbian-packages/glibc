@@ -1,5 +1,5 @@
 /* logbf(). PowerPC/POWER7 version.
-   Copyright (C) 2012-2018 Free Software Foundation, Inc.
+   Copyright (C) 2012-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,7 +16,6 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-#include "math_private.h"
 #include <libm-alias-float.h>
 
 /* This implementation avoids FP to INT conversions by using VSX

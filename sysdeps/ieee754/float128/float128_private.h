@@ -1,5 +1,5 @@
 /* _Float128 overrides for building ldbl-128 as _Float128.
-   Copyright (C) 2017-2018 Free Software Foundation, Inc.
+   Copyright (C) 2017-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -29,6 +29,7 @@
 
 /* Renames derived from math_private.h.  */
 #include <math_private.h>
+#include <fenv_private.h>
 #include <ieee754_float128.h>
 #define ieee854_long_double_shape_type ieee854_float128_shape_type
 #define ieee854_long_double ieee854_float128

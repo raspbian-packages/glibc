@@ -33,8 +33,6 @@ stamp := $(CURDIR)/stamp-dir/
 DUMMY := $(shell mkdir -p $(stamp))
 
 # Beyond here you shouldn't need to customise anything:
-export SHELL          = /bin/bash -e
-
 DEB_HOST_ARCH         ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 DEB_HOST_ARCH_ENDIAN  ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_ENDIAN)
 DEB_HOST_ARCH_OS      ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
@@ -96,14 +94,14 @@ mvec = no
 BASE_CC = gcc
 BASE_CXX = g++
 BASE_MIG = mig
-DEB_GCC_VERSION ?= -8
+DEB_GCC_VERSION ?= -9
 
 RUN_TESTSUITE = no
 TIMEOUTFACTOR = 25
 
 # Set cross and native compiler names, including version.
-CC     = $(DEB_HOST_GNU_TYPE)-$(BASE_CC)$(DEB_GCC_VERSION) -no-pie -fno-PIE
-CXX    = $(DEB_HOST_GNU_TYPE)-$(BASE_CXX)$(DEB_GCC_VERSION) -no-pie -fno-PIE
+CC     = $(DEB_HOST_GNU_TYPE)-$(BASE_CC)$(DEB_GCC_VERSION)
+CXX    = $(DEB_HOST_GNU_TYPE)-$(BASE_CXX)$(DEB_GCC_VERSION)
 MIG    = $(DEB_HOST_GNU_TYPE)-$(BASE_MIG)
 BUILD_CC = $(DEB_BUILD_GNU_TYPE)-$(BASE_CC)
 BUILD_CXX = $(DEB_BUILD_GNU_TYPE)-$(BASE_CXX)
@@ -136,9 +134,13 @@ ifneq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
     DEB_BUILD_OPTIONS+=nocheck
   endif
 else
-  DEB_ARCH_REGULAR_PACKAGES = $(libc) $(libc)-dev $(libc)-dbg $(libc)-pic libc-bin libc-dev-bin multiarch-support
+  DEB_ARCH_REGULAR_PACKAGES = $(libc) $(libc)-dev $(libc)-dbg $(libc)-pic libc-bin libc-dev-bin
   DEB_INDEP_REGULAR_PACKAGES = glibc-doc glibc-source libc-l10n locales
-  DEB_UDEB_PACKAGES = $(libc)-udeb
+  ifneq ($(filter noudeb,$(DEB_BUILD_PROFILES)),)
+    DEB_UDEB_PACKAGES =
+  else
+    DEB_UDEB_PACKAGES = $(libc)-udeb
+  endif
   ## Locales can only be pre-generated during native compiles
   ifeq ($(DEB_HOST_ARCH),$(DEB_BUILD_ARCH))
     DEB_ARCH_REGULAR_PACKAGES += locales-all

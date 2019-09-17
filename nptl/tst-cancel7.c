@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Jakub Jelinek <jakub@redhat.com>, 2002.
 
@@ -205,5 +205,4 @@ cmdline_process (int c)
 #define CMDLINE_PROCESS cmdline_process
 #define CLEANUP_HANDLER do_cleanup
 #define PREPARE do_prepare
-#define TIMEOUT 5
 #include <support/test-driver.c>

@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# Copyright (C) 2015-2018 Free Software Foundation, Inc.
+# Copyright (C) 2015-2019 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 #
 # The GNU C Library is free software; you can redistribute it and/or
@@ -42,17 +42,26 @@ def do_compare(func, var, tl1, tl2, par, threshold):
         threshold: The threshold for differences, beyond which the script should
         print a warning.
     """
-    d = abs(tl2[par] - tl1[par]) * 100 / tl1[str(par)]
+    try:
+        v1 = tl1[str(par)]
+        v2 = tl2[str(par)]
+        d = abs(v2 - v1) * 100 / v1
+    except KeyError:
+        sys.stderr.write('%s(%s)[%s]: stat does not exist\n' % (func, var, par))
+        return
+    except ZeroDivisionError:
+        return
+
     if d > threshold:
-        if tl1[par] > tl2[par]:
+        if v1 > v2:
             ind = '+++'
         else:
             ind = '---'
         print('%s %s(%s)[%s]: (%.2lf%%) from %g to %g' %
-                (ind, func, var, par, d, tl1[par], tl2[par]))
+                (ind, func, var, par, d, v1, v2))
 
 
-def compare_runs(pts1, pts2, threshold):
+def compare_runs(pts1, pts2, threshold, stats):
     """Compare two benchmark runs
 
     Args:
@@ -70,14 +79,14 @@ def compare_runs(pts1, pts2, threshold):
 
             # Compare the consolidated numbers
             # do_compare(func, var, tl1, tl2, 'max', threshold)
-            do_compare(func, var, tl1, tl2, 'min', threshold)
-            do_compare(func, var, tl1, tl2, 'mean', threshold)
+            for stat in stats.split():
+                do_compare(func, var, tl1, tl2, stat, threshold)
 
             # Skip over to the next variant or function if there is no detailed
             # timing info for the function variant.
             if 'timings' not in pts1['functions'][func][var].keys() or \
                 'timings' not in pts2['functions'][func][var].keys():
-                    return
+                continue
 
             # If two lists do not have the same length then it is likely that
             # the performance characteristics of the function have changed.
@@ -125,7 +134,7 @@ def plot_graphs(bench1, bench2):
             # No point trying to print a graph if there are no detailed
             # timings.
             if u'timings' not in bench1['functions'][func][var].keys():
-                print('Skipping graph for %s(%s)' % (func, var))
+                sys.stderr.write('Skipping graph for %s(%s)\n' % (func, var))
                 continue
 
             pylab.clf()
@@ -149,10 +158,10 @@ def plot_graphs(bench1, bench2):
                 filename = "%s-%s.png" % (func, var)
             else:
                 filename = "%s.png" % func
-            print('Writing out %s' % filename)
+            sys.stderr.write('Writing out %s' % filename)
             pylab.savefig(filename)
 
-def main(bench1, bench2, schema, threshold):
+def main(bench1, bench2, schema, threshold, stats):
     bench1 = bench.parse_bench(bench1, schema)
     bench2 = bench.parse_bench(bench2, schema)
 
@@ -161,7 +170,7 @@ def main(bench1, bench2, schema, threshold):
     bench.compress_timings(bench1)
     bench.compress_timings(bench2)
 
-    compare_runs(bench1, bench2, threshold)
+    compare_runs(bench1, bench2, threshold, stats)
 
 
 if __name__ == '__main__':
@@ -175,8 +184,9 @@ if __name__ == '__main__':
     parser.add_argument('--schema',
                         default=os.path.join(os.path.dirname(os.path.realpath(__file__)),'benchout.schema.json'),
                         help='JSON file to validate source/dest files (default: %(default)s)')
-    parser.add_argument('--threshold', default=10.0, help='Only print those with equal or higher threshold (default: %(default)s)')
+    parser.add_argument('--threshold', default=10.0, type=float, help='Only print those with equal or higher threshold (default: %(default)s)')
+    parser.add_argument('--stats', default='min mean', type=str, help='Only consider values from the statistics specified as a space separated list (default: %(default)s)')
 
     args = parser.parse_args()
 
-    main(args.bench1, args.bench2, args.schema, args.threshold)
+    main(args.bench1, args.bench2, args.schema, args.threshold, args.stats)

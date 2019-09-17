@@ -75,6 +75,7 @@ use-default-link = @use_default_link@
 output-format = @libc_cv_output_format@
 have-cxx-thread_local = @libc_cv_cxx_thread_local@
 have-loop-to-function = @libc_cv_cc_loop_to_function@
+have-textrel_ifunc = @libc_cv_textrel_ifunc@
 
 multi-arch = @multi_arch@
 
@@ -110,6 +111,7 @@ BUILD_CC = @BUILD_CC@
 CFLAGS = @CFLAGS@
 CPPFLAGS-config = @CPPFLAGS@
 CPPUNDEFS = @CPPUNDEFS@
+extra-nonshared-cflags = @extra_nonshared_cflags@
 ASFLAGS-config = @ASFLAGS_config@
 AR = @AR@
 NM = @NM@

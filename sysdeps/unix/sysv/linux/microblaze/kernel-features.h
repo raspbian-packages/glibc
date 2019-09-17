@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -15,9 +15,6 @@
    License along with the GNU C Library.  If not, see
    <http://www.gnu.org/licenses/>.  */
 
-
-/* MicroBlaze uses socketcall.  */
-#define __ASSUME_SOCKETCALL	1
 
 /* All supported kernel versions for MicroBlaze have these syscalls.  */
 #define __ASSUME_SOCKET_SYSCALL		1
@@ -58,9 +55,9 @@
 # undef __ASSUME_EXECVEAT
 #endif
 
-/* Support for the copy_file_range syscall was added in 4.10.  */
-#if __LINUX_KERNEL_VERSION < 0x040A00
-# undef __ASSUME_COPY_FILE_RANGE
+/* Support for the mlock2 syscall was added in 4.7.  */
+#if __LINUX_KERNEL_VERSION < 0x040700
+# undef __ASSUME_MLOCK2
 #endif
 
 /* Support for statx was added in kernel 4.12.  */

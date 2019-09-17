@@ -1,5 +1,5 @@
 /* Test for access to file, relative to open directory.  Hurd version.
-   Copyright (C) 2006-2018 Free Software Foundation, Inc.
+   Copyright (C) 2006-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -60,7 +60,9 @@ __faccessat_common (int fd, const char *file, int type, int at_flags,
          usual effective permissions.  */
 
       int hurd_flags = 0;
-      __hurd_at_flags (&at_flags, &hurd_flags);
+      err = __hurd_at_flags (&at_flags, &hurd_flags);
+      if (err)
+	return errfunc (err);
 
       error_t reauthenticate_cwdir_at (file_t *result)
 	{

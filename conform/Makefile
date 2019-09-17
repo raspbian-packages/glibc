@@ -1,4 +1,4 @@
-# Copyright (C) 1999-2018 Free Software Foundation, Inc.
+# Copyright (C) 1999-2019 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -172,20 +172,19 @@ else
 conformtest-cross = --cross
 endif
 $(conformtest-header-tests): $(objpfx)%/conform.out: \
-			     conformtest.pl $(conformtest-headers-data)
+			     conformtest.py $(conformtest-headers-data)
 	(set -e; std_hdr=$*; std=$${std_hdr%%/*}; hdr=$${std_hdr#*/}; \
-	 mkdir -p $(@D)/scratch; \
-	 $(PERL) -I. conformtest.pl --tmpdir=$(@D)/scratch --cc='$(CC)' \
-		 --flags='$(conformtest-cc-flags)' --standard=$$std \
-		 --headers=$$hdr $(conformtest-xfail) $(conformtest-cross) \
-		 > $@); \
+	 mkdir -p $(@D); \
+	 $(PYTHON) $< --cc='$(CC)' --flags='$(conformtest-cc-flags)' \
+		   --standard=$$std --header=$$hdr $(conformtest-xfail) \
+		   $(conformtest-cross) \
+		   > $@ 2>&1); \
 	$(evaluate-test)
 
-$(linknamespace-symlists-tests): $(objpfx)symlist-%: list-header-symbols.pl
-	$(PERL) -I. -w $< --tmpdir=$(objpfx) --cc='$(CC)' \
-		--flags='$(conformtest-cc-flags)' --standard=$* \
-		--headers="$(strip $(conformtest-headers-$*))" \
-		> $@ 2> $@.err; \
+$(linknamespace-symlists-tests): $(objpfx)symlist-%: list-header-symbols.py
+	$(PYTHON) $< --cc='$(CC)' --flags='$(conformtest-cc-flags)' \
+		  --standard=$* --headers="$(strip $(conformtest-headers-$*))" \
+		  > $@ 2> $@.err; \
 	$(evaluate-test)
 
 linknamespace-libs-isoc = $(common-objpfx)libc.a $(common-objpfx)math/libm.a
@@ -219,17 +218,16 @@ $(linknamespace-symlist-stdlibs-tests): $(objpfx)symlist-stdlibs-%: \
 	$(evaluate-test)
 
 $(linknamespace-header-tests): $(objpfx)%/linknamespace.out: \
-			       linknamespace.pl \
+			       linknamespace.py \
 			       $(linknamespace-symlists-tests) \
 			       $(linknamespace-symlist-stdlibs-tests)
 	(set -e; std_hdr=$*; std=$${std_hdr%%/*}; hdr=$${std_hdr#*/}; \
-	 mkdir -p $(@D)/scratch; \
-	 $(PERL) -I. -w $< --tmpdir=$(@D)/scratch --cc='$(CC)' \
-		 --flags='$(conformtest-cc-flags)' --standard=$$std \
-		 --stdsyms=$(objpfx)symlist-$$std --header=$$hdr \
-		 --libsyms=$(objpfx)symlist-stdlibs-$$std \
-		 --readelf='$(READELF)' \
-		 > $@ 2>&1); \
+	 mkdir -p $(@D); \
+	 $(PYTHON) $< --cc='$(CC)' --flags='$(conformtest-cc-flags)' \
+		   --standard=$$std --stdsyms=$(objpfx)symlist-$$std \
+		   --header=$$hdr --libsyms=$(objpfx)symlist-stdlibs-$$std \
+		   --readelf='$(READELF)' \
+		   > $@ 2>&1); \
 	$(evaluate-test)
 
 # Pre-standard C feature no longer supported by GCC (obsoleted in

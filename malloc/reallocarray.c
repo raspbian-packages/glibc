@@ -1,5 +1,5 @@
 /* Change the size of an allocated block.
-   Copyright (C) 2017-2018 Free Software Foundation, Inc.
+   Copyright (C) 2017-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -18,19 +18,17 @@
 
 #include <errno.h>
 #include <malloc.h>
-#include <malloc/malloc-internal.h>
 
 void *
 __libc_reallocarray (void *optr, size_t nmemb, size_t elem_size)
 {
   size_t bytes;
-  if (check_mul_overflow_size_t (nmemb, elem_size, &bytes))
+  if (__builtin_mul_overflow (nmemb, elem_size, &bytes))
     {
       __set_errno (ENOMEM);
       return 0;
     }
-  else
-    return realloc (optr, bytes);
+  return realloc (optr, bytes);
 }
 libc_hidden_def (__libc_reallocarray)
 

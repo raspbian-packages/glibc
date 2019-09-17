@@ -1,4 +1,4 @@
-/* Copyright (C) 1996-2018 Free Software Foundation, Inc.
+/* Copyright (C) 1996-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1996.
 
@@ -73,6 +73,4 @@ __pselect (int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
 }
 #ifndef __pselect
 weak_alias (__pselect, pselect)
-/* __select handles cancellation.  */
-LIBC_CANCEL_HANDLED ();
 #endif

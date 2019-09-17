@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2003-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2003.
 
@@ -41,7 +41,6 @@ static pthread_t th[N];
 
 static int do_test (void);
 
-#define TIMEOUT 5
 #define TEST_FUNCTION do_test ()
 #include "../test-skeleton.c"
 

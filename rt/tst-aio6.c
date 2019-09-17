@@ -1,5 +1,5 @@
 /* Test for timeout handling.
-   Copyright (C) 2000-2018 Free Software Foundation, Inc.
+   Copyright (C) 2000-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -21,10 +21,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/time.h>
-
-
-/* We expect to wait for 3 seconds so we have to increase the timeout.  */
-#define TIMEOUT 10 /* sec */
 
 
 #define TEST_FUNCTION do_test ()

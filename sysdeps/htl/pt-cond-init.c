@@ -1,5 +1,5 @@
 /* pthread_cond_init.  Generic version.
-   Copyright (C) 2002-2018 Free Software Foundation, Inc.
+   Copyright (C) 2002-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -28,7 +28,7 @@ __pthread_cond_init (pthread_cond_t *cond, const pthread_condattr_t * attr)
   *cond = (pthread_cond_t) __PTHREAD_COND_INITIALIZER;
 
   if (attr == NULL
-      || memcmp (attr, &__pthread_default_condattr, sizeof (*attr) == 0))
+      || memcmp (attr, &__pthread_default_condattr, sizeof (*attr)) == 0)
     /* Use the default attributes.  */
     return 0;
 

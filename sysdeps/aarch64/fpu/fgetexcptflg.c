@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2001-2019 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -17,7 +17,7 @@
    <http://www.gnu.org/licenses/>.  */
 
 #include <fenv.h>
-#include <math_private.h>
+#include <fenv_private.h>
 
 int
 fegetexceptflag (fexcept_t *flagp, int excepts)

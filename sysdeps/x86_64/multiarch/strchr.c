@@ -1,6 +1,6 @@
 /* Multiple versions of strchr.
    All versions must be listed in ifunc-impl-list.c.
-   Copyright (C) 2009-2018 Free Software Foundation, Inc.
+   Copyright (C) 2009-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -50,6 +50,6 @@ libc_ifunc_redirected (__redirect_strchr, strchr, IFUNC_SELECTOR ());
 weak_alias (strchr, index)
 # ifdef SHARED
 __hidden_ver1 (strchr, __GI_strchr, __redirect_strchr)
-  __attribute__((visibility ("hidden")));
+  __attribute__((visibility ("hidden"))) __attribute_copy__ (strchr);
 # endif
 #endif

@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2018 Free Software Foundation, Inc.
+# Copyright (C) 1991-2019 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -47,6 +47,8 @@ routines	:= signal raise killpg \
 
 tests		:= tst-signal tst-sigset tst-sigsimple tst-raise tst-sigset2 \
 		   tst-sigwait-eintr tst-sigaction \
+		   tst-minsigstksz-1 tst-minsigstksz-2 tst-minsigstksz-3 \
+		   tst-minsigstksz-3a tst-minsigstksz-4 \
 
 include ../Rules
 
@@ -57,3 +59,11 @@ CFLAGS-sigwait.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-sigwaitinfo.c += -fexceptions -fasynchronous-unwind-tables
 
 CFLAGS-sigreturn.c += $(no-stack-protector)
+
+# We don't want to test the lazy resolution stack usage, just the
+# execution of the handler and the functions.
+LDFLAGS-tst-minsigstksz-1 = -Wl,-z,now
+LDFLAGS-tst-minsigstksz-2 = -Wl,-z,now
+LDFLAGS-tst-minsigstksz-3 = -Wl,-z,now
+LDFLAGS-tst-minsigstksz-3a = -Wl,-z,now
+LDFLAGS-tst-minsigstksz-4 = -Wl,-z,now

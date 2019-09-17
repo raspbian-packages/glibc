@@ -1,5 +1,5 @@
 /* Initialize a rwlock.  Generic version.
-   Copyright (C) 2002-2018 Free Software Foundation, Inc.
+   Copyright (C) 2002-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -27,7 +27,7 @@ _pthread_rwlock_init (pthread_rwlock_t *rwlock,
   *rwlock = (pthread_rwlock_t) __PTHREAD_RWLOCK_INITIALIZER;
 
   if (attr == NULL
-      || memcmp (attr, &__pthread_default_rwlockattr, sizeof (*attr) == 0))
+      || memcmp (attr, &__pthread_default_rwlockattr, sizeof (*attr)) == 0)
     /* Use the default attributes.  */
     return 0;
 

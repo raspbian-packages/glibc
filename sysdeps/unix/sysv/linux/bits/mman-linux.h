@@ -1,5 +1,5 @@
 /* Definitions for POSIX memory map interface.  Linux generic version.
-   Copyright (C) 2001-2018 Free Software Foundation, Inc.
+   Copyright (C) 2001-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -66,12 +66,6 @@
 #define MS_ASYNC	1		/* Sync memory asynchronously.  */
 #define MS_SYNC		4		/* Synchronous memory sync.  */
 #define MS_INVALIDATE	2		/* Invalidate the caches.  */
-
-/* Flags for `mremap'.  */
-#ifdef __USE_GNU
-# define MREMAP_MAYMOVE	1
-# define MREMAP_FIXED	2
-#endif
 
 /* Advice to `madvise'.  */
 #ifdef __USE_MISC

@@ -1,7 +1,7 @@
 /*
  * IBM Accurate Mathematical Library
  * written by International Business Machines Corp.
- * Copyright (C) 2001-2018 Free Software Foundation, Inc.
+ * Copyright (C) 2001-2019 Free Software Foundation, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -35,6 +35,7 @@
 #include "MathLib.h"
 #include <math.h>
 #include <math_private.h>
+#include <fenv_private.h>
 
 /**************************************************************************/
 /* An ultimate remainder routine. Given two IEEE double machine numbers x */

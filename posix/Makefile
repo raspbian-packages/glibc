@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2018 Free Software Foundation, Inc.
+# Copyright (C) 1991-2019 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -55,6 +55,7 @@ routines :=								      \
 	pread pwrite pread64 pwrite64					      \
 	spawn_faction_init spawn_faction_destroy spawn_faction_addclose	      \
 	spawn_faction_addopen spawn_faction_adddup2 spawn_valid_fd	      \
+	spawn_faction_addchdir spawn_faction_addfchdir			      \
 	spawnattr_init spawnattr_destroy				      \
 	spawnattr_getdefault spawnattr_setdefault			      \
 	spawnattr_getflags spawnattr_setflags				      \
@@ -96,7 +97,7 @@ tests		:= test-errno tstgetopt testfnm runtests runptests \
 		   tst-posix_fadvise tst-posix_fadvise64 \
 		   tst-sysconf-empty-chroot tst-glob_symlinks tst-fexecve \
 		   tst-glob-tilde test-ssize-max tst-spawn4 bug-regex37 \
-		   bug-regex38 tst-regcomp-truncated
+		   bug-regex38 tst-regcomp-truncated tst-spawn-chdir
 tests-internal	:= bug-regex5 bug-regex20 bug-regex33 \
 		   tst-rfc3484 tst-rfc3484-2 tst-rfc3484-3 \
 		   tst-glob_lstat_compat tst-spawn4-compat
@@ -114,7 +115,7 @@ others		:= getconf
 install-bin	:= getconf
 install-others-programs	:= $(inst_libexecdir)/getconf
 
-before-compile	+= testcases.h ptestcases.h $(objpfx)posix-conf-vars-def.h
+before-compile	+= $(objpfx)posix-conf-vars-def.h
 
 # So they get cleaned up.
 generated += $(addprefix wordexp-test-result, 1 2 3 4 5 6 7 8 9 10) \
@@ -128,7 +129,8 @@ generated += $(addprefix wordexp-test-result, 1 2 3 4 5 6 7 8 9 10) \
 	     tst-boost.mtrace bug-ga2.mtrace bug-ga2-mem.out \
 	     bug-glob2.mtrace bug-glob2-mem.out tst-vfork3-mem.out \
 	     tst-vfork3.mtrace getconf.speclist tst-fnmatch-mem.out \
-	     tst-fnmatch.mtrace bug-regex36.mtrace
+	     tst-fnmatch.mtrace bug-regex36.mtrace \
+	     testcases.h ptestcases.h
 
 ifeq ($(run-built-tests),yes)
 ifeq (yes,$(build-shared))
@@ -260,13 +262,15 @@ bug-glob1-ARGS = "$(objpfx)"
 tst-execvp3-ARGS = --test-dir=$(objpfx)
 CFLAGS-tst-spawn3.c += -DOBJPFX=\"$(objpfx)\"
 
-testcases.h: TESTS TESTS2C.sed
+$(objpfx)testcases.h: TESTS TESTS2C.sed
 	LC_ALL=C sed -f TESTS2C.sed < $< > $@T
-	mv -f $@T $@
+	mv $@T $@
+$(objpfx)runtests.o: $(objpfx)testcases.h
 
-ptestcases.h: PTESTS PTESTS2C.sed
+$(objpfx)ptestcases.h: PTESTS PTESTS2C.sed
 	LC_ALL=C sed -f PTESTS2C.sed < $< > $@T
-	mv -f $@T $@
+	mv $@T $@
+$(objpfx)runptests.o: $(objpfx)ptestcases.h
 
 $(objpfx)tst-getopt-cancel: $(shared-thread-library)
 

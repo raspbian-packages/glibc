@@ -1,5 +1,5 @@
 /* Query filename corresponding to an open FD.  Generic version.
-   Copyright (C) 2001-2018 Free Software Foundation, Inc.
+   Copyright (C) 2001-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,10 +16,12 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#define FD_TO_FILENAME_SIZE 0
+
 /* In general there is no generic way to query filename for an open
    file descriptor.  */
 static inline const char *
-fd_to_filename (int fd)
+fd_to_filename (int fd, char *buf)
 {
   return NULL;
 }

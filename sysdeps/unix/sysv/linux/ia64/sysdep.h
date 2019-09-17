@@ -1,4 +1,4 @@
-/* Copyright (C) 1999-2018 Free Software Foundation, Inc.
+/* Copyright (C) 1999-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Written by Jes Sorensen, <Jes.Sorensen@cern.ch>, April 1999.
    Based on code originally written by David Mosberger-Tang
@@ -346,7 +346,7 @@
 #define ASM_CLOBBERS_5	ASM_CLOBBERS_6, "out5"
 #define ASM_CLOBBERS_6_COMMON	, "out6", "out7",			\
   /* Non-stacked integer registers, minus r8, r10, r15.  */		\
-  "r2", "r3", "r9", "r11", "r12", "r13", "r14", "r16", "r17", "r18",	\
+  "r2", "r3", "r9", "r11", "r13", "r14", "r16", "r17", "r18",		\
   "r19", "r20", "r21", "r22", "r23", "r24", "r25", "r26", "r27",	\
   "r28", "r29", "r30", "r31",						\
   /* Predicate registers.  */						\

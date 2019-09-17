@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2018 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -70,6 +70,3 @@ __xpg_sigpause (int sig)
   return __sigpause (sig, 1);
 }
 strong_alias (__xpg_sigpause, __libc___xpg_sigpause)
-
-/* __sigsuspend handles cancellation.  */
-LIBC_CANCEL_HANDLED ();

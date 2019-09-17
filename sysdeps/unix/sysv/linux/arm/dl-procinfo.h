@@ -1,5 +1,5 @@
 /* Linux/ARM version of processor capability information handling macros.
-   Copyright (C) 2001-2018 Free Software Foundation, Inc.
+   Copyright (C) 2001-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Philip Blundell <philb@gnu.org>, 2001.
 
@@ -67,7 +67,7 @@ _dl_procinfo (unsigned int type, unsigned long int word)
 	break;
       }
     default:
-      /* This should not happen.  */
+      /* Fallback to generic output mechanism.  */
       return -1;
     }
   _dl_printf ("\n");

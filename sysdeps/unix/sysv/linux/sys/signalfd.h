@@ -1,4 +1,4 @@
-/* Copyright (C) 2007-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2007-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -42,7 +42,12 @@ struct signalfd_siginfo
   uint64_t ssi_utime;
   uint64_t ssi_stime;
   uint64_t ssi_addr;
-  uint8_t __pad[48];
+  uint16_t ssi_addr_lsb;
+  uint16_t __pad2;
+  int32_t ssi_syscall;
+  uint64_t ssi_call_addr;
+  uint32_t ssi_arch;
+  uint8_t __pad[28];
 };
 
 __BEGIN_DECLS

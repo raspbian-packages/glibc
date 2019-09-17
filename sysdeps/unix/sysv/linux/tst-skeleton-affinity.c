@@ -1,5 +1,5 @@
 /* Generic test case for CPU affinity functions.
-   Copyright (C) 2015-2018 Free Software Foundation, Inc.
+   Copyright (C) 2015-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -187,6 +187,18 @@ test_size (const struct conf *conf, size_t size)
       if (active_cpu != cpu)
 	{
 	  printf ("error: Unexpected CPU %d, expected %d\n", active_cpu, cpu);
+	  return false;
+	}
+      unsigned int numa_cpu, numa_node;
+      if (getcpu (&numa_cpu, &numa_node) != 0)
+	{
+	  printf ("error: getcpu: %m\n");
+	  return false;
+	}
+      if ((unsigned int) active_cpu != numa_cpu)
+	{
+	  printf ("error: Unexpected CPU %d, expected %d\n",
+		  active_cpu, numa_cpu);
 	  return false;
 	}
       if (getaffinity (kernel_size, set2) < 0)

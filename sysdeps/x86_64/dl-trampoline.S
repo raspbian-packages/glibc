@@ -1,5 +1,5 @@
 /* PLT trampolines.  x86-64 version.
-   Copyright (C) 2004-2018 Free Software Foundation, Inc.
+   Copyright (C) 2004-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -18,7 +18,7 @@
 
 #include <config.h>
 #include <sysdep.h>
-#include <cpu-features.h>
+#include <cpu-features-offsets.h>
 #include <link-defines.h>
 
 #ifndef DL_STACK_ALIGNMENT

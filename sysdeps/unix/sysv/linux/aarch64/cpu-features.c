@@ -1,6 +1,6 @@
 /* Initialize CPU feature data.  AArch64 version.
    This file is part of the GNU C Library.
-   Copyright (C) 2017-2018 Free Software Foundation, Inc.
+   Copyright (C) 2017-2019 Free Software Foundation, Inc.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -36,6 +36,7 @@ static struct cpu_list cpu_list[] = {
       {"thunderx2t99",   0x431F0AF0},
       {"thunderx2t99p1", 0x420F5160},
       {"phecda",	 0x680F0000},
+      {"ares",		 0x411FD0C0},
       {"generic", 	 0x0}
 };
 
@@ -57,7 +58,7 @@ init_cpu_features (struct cpu_features *cpu_features)
 
 #if HAVE_TUNABLES
   /* Get the tunable override.  */
-  const char *mcpu = TUNABLE_GET (glibc, tune, cpu, const char *, NULL);
+  const char *mcpu = TUNABLE_GET (glibc, cpu, name, const char *, NULL);
   if (mcpu != NULL)
     midr = get_midr_from_mcpu (mcpu);
 #endif

@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2001-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -17,6 +17,9 @@
 
 #ifndef _LINUX_X86_64_SYSDEP_H
 #define _LINUX_X86_64_SYSDEP_H 1
+
+/* Always enable vsyscalls on x86_64 */
+#define ALWAYS_USE_VSYSCALL 1
 
 /* There is some commonality.  */
 #include <sysdeps/unix/sysv/linux/sysdep.h>

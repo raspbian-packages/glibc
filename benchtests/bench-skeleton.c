@@ -1,5 +1,5 @@
 /* Skeleton for benchmark programs.
-   Copyright (C) 2013-2018 Free Software Foundation, Inc.
+   Copyright (C) 2013-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -144,6 +144,8 @@ main (int argc, char **argv)
 
       if (is_bench)
 	{
+	  json_attr_double (&json_ctx, "duration", throughput + latency);
+	  json_attr_double (&json_ctx, "iterations", 2 * d_total_i);
 	  json_attr_double (&json_ctx, "reciprocal-throughput",
 			    throughput / d_total_i);
 	  json_attr_double (&json_ctx, "latency", latency / d_total_i);

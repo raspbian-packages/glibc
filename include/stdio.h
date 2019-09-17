@@ -14,9 +14,6 @@ extern int __snprintf (char *__restrict __s, size_t __maxlen,
 		       const char *__restrict __format, ...)
      __attribute__ ((__format__ (__printf__, 3, 4)));
 libc_hidden_proto (__snprintf)
-extern int __vsnprintf (char *__restrict __s, size_t __maxlen,
-			const char *__restrict __format, __gnuc_va_list __arg)
-     __attribute__ ((__format__ (__printf__, 3, 0)));
 extern int __vfscanf (FILE *__restrict __s,
 		      const char *__restrict __format,
 		      __gnuc_va_list __arg)
@@ -67,8 +64,18 @@ extern int __isoc99_vscanf (const char *__restrict __format,
 extern int __isoc99_vsscanf (const char *__restrict __s,
 			     const char *__restrict __format,
 			     __gnuc_va_list __arg) __THROW;
+libc_hidden_proto (__isoc99_sscanf)
 libc_hidden_proto (__isoc99_vsscanf)
 libc_hidden_proto (__isoc99_vfscanf)
+
+/* Internal uses of sscanf should call the C99-compliant version.
+   Unfortunately, symbol redirection is not transitive, so the
+   __REDIRECT in the public header does not link up with the above
+   libc_hidden_proto.  Bridge the gap with a macro.  */
+#  if !__GLIBC_USE (DEPRECATED_SCANF)
+#   undef sscanf
+#   define sscanf __isoc99_sscanf
+#  endif
 
 /* Prototypes for compatibility functions.  */
 extern FILE *__new_tmpfile (void);
@@ -127,6 +134,8 @@ extern int __fxprintf (FILE *__fp, const char *__fmt, ...)
      __attribute__ ((__format__ (__printf__, 2, 3))) attribute_hidden;
 extern int __fxprintf_nocancel (FILE *__fp, const char *__fmt, ...)
      __attribute__ ((__format__ (__printf__, 2, 3))) attribute_hidden;
+int __vfxprintf (FILE *__fp, const char *__fmt, __gnuc_va_list)
+  attribute_hidden;
 
 /* Read the next line from FP into BUFFER, of LENGTH bytes.  LINE will
    include the line terminator and a NUL terminator.  On success,
@@ -172,7 +181,6 @@ libc_hidden_proto (__dprintf)
 libc_hidden_proto (fprintf)
 libc_hidden_proto (vfprintf)
 libc_hidden_proto (sprintf)
-libc_hidden_proto (sscanf)
 libc_hidden_proto (fwrite)
 libc_hidden_proto (perror)
 libc_hidden_proto (remove)
@@ -217,11 +225,6 @@ libc_hidden_proto (__open_memstream)
 libc_hidden_proto (__libc_fatal)
 rtld_hidden_proto (__libc_fatal)
 libc_hidden_proto (__vsprintf_chk)
-libc_hidden_proto (__vsnprintf_chk)
-libc_hidden_proto (__vfprintf_chk)
-libc_hidden_proto (__vasprintf_chk)
-libc_hidden_proto (__vdprintf_chk)
-libc_hidden_proto (__obstack_vprintf_chk)
 
 extern FILE * __fmemopen (void *buf, size_t len, const char *mode);
 libc_hidden_proto (__fmemopen)

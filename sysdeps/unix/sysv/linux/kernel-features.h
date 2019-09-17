@@ -1,6 +1,6 @@
 /* Set flags signalling availability of kernel features based on given
    kernel version number.
-   Copyright (C) 1999-2018 Free Software Foundation, Inc.
+   Copyright (C) 1999-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -36,14 +36,6 @@
    recording the correct versions in which the features were
    introduced.  If somebody cares these values can afterwards be
    corrected.  */
-
-/* Some architectures use the socketcall multiplexer for some or all
-   socket-related operations instead of separate syscalls.
-   __ASSUME_SOCKETCALL is defined for such architectures.  */
-
-/* The changed st_ino field appeared in 2.4.0-test6.  However, SH is lame,
-   and still does not have a 64-bit inode field.  */
-#define __ASSUME_ST_INO_64_BIT		1
 
 /* The statfs64 syscalls are available in 2.5.74 (but not for alpha).  */
 #define __ASSUME_STATFS64	1
@@ -109,10 +101,6 @@
 
 #if __LINUX_KERNEL_VERSION >= 0x040400
 # define __ASSUME_MLOCK2 1
-#endif
-
-#if __LINUX_KERNEL_VERSION >= 0x040500
-# define __ASSUME_COPY_FILE_RANGE 1
 #endif
 
 /* Support for statx was added in kernel 4.11.  */

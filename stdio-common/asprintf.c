@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2018 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,11 +16,7 @@
    <http://www.gnu.org/licenses/>.  */
 
 #include <stdarg.h>
-#include <stdio.h>
-
 #include <libioP.h>
-#define vasprintf(s, f, a) _IO_vasprintf (s, f, a)
-#undef __asprintf
 
 /* Write formatted output from FORMAT to a string which is
    allocated with malloc and stored in *STRING_PTR.  */
@@ -32,7 +28,7 @@ ___asprintf (char **string_ptr, const char *format, ...)
   int done;
 
   va_start (arg, format);
-  done = vasprintf (string_ptr, format, arg);
+  done = __vasprintf_internal (string_ptr, format, arg, 0);
   va_end (arg);
 
   return done;

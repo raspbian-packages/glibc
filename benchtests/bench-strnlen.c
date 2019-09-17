@@ -1,5 +1,5 @@
 /* Measure strlen functions.
-   Copyright (C) 2013-2018 Free Software Foundation, Inc.
+   Copyright (C) 2013-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,17 +24,12 @@
 #endif /* WIDE */
 #include "bench-string.h"
 
+#define BIG_CHAR MAX_CHAR
+
 #ifndef WIDE
-# define STRNLEN strnlen
-# define CHAR char
-# define BIG_CHAR CHAR_MAX
 # define MIDDLE_CHAR 127
 # define SIMPLE_STRNLEN simple_strnlen
 #else
-# include <wchar.h>
-# define STRNLEN wcsnlen
-# define CHAR wchar_t
-# define BIG_CHAR WCHAR_MAX
 # define MIDDLE_CHAR 1121
 # define SIMPLE_STRNLEN simple_wcsnlen
 #endif /* WIDE */

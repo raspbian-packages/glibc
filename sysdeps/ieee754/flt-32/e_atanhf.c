@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@gmail.com>, 2011.
 
@@ -71,6 +71,6 @@ __ieee754_atanhf (float x)
       return x / 0.0f;
     }
 
-  return __copysignf (t, x);
+  return copysignf (t, x);
 }
 strong_alias (__ieee754_atanhf, __atanhf_finite)

@@ -1,6 +1,6 @@
 /* Test backtrace and backtrace_symbols for signal frames, where a
    system call was interrupted by a signal.
-   Copyright (C) 2011-2018 Free Software Foundation, Inc.
+   Copyright (C) 2011-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -69,17 +69,18 @@ handle_signal (int signum)
       FAIL ();
       return;
     }
-  /* Do not check name for signal trampoline.  */
-  i = 2;
-  if (!match (symbols[i++], "read"))
+
+  /* Do not check name for signal trampoline or cancellable syscall
+     wrappers (__syscall_cancel*).  */
+  for (; i < n - 1; i++)
+    if (match (symbols[i], "read"))
+      break;
+  if (i == n - 1)
     {
-      /* Perhaps symbols[2] is __kernel_vsyscall?  */
-      if (!match (symbols[i++], "read"))
-	{
-	  FAIL ();
-	  return;
-	}
+      FAIL ();
+      return;
     }
+
   for (; i < n - 1; i++)
     if (!match (symbols[i], "fn"))
       {
