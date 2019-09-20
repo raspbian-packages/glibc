@@ -2919,6 +2919,8 @@ typedef struct tcache_perthread_struct
   tcache_entry *entries[TCACHE_MAX_BINS];
 } tcache_perthread_struct;
 
+#define MAX_TCACHE_COUNT 127	/* Maximum value of counts[] entries.  */
+
 static __thread bool tcache_shutting_down = false;
 static __thread tcache_perthread_struct *tcache = NULL;
 
@@ -3876,10 +3878,14 @@ _int_malloc (mstate av, size_t bytes)
                         {
                           victim->fd_nextsize = fwd;
                           victim->bk_nextsize = fwd->bk_nextsize;
+                          if (__glibc_unlikely (fwd->bk_nextsize->fd_nextsize != fwd))
+                            malloc_printerr ("malloc(): largebin double linked list corrupted (nextsize)");
                           fwd->bk_nextsize = victim;
                           victim->bk_nextsize->fd_nextsize = victim;
                         }
                       bck = fwd->bk;
+                      if (bck->fd != fwd)
+                        malloc_printerr ("malloc(): largebin double linked list corrupted (bk)");
                     }
                 }
               else
@@ -5120,8 +5126,11 @@ static inline int
 __always_inline
 do_set_tcache_count (size_t value)
 {
-  LIBC_PROBE (memory_tunable_tcache_count, 2, value, mp_.tcache_count);
-  mp_.tcache_count = value;
+  if (value <= MAX_TCACHE_COUNT)
+    {
+      LIBC_PROBE (memory_tunable_tcache_count, 2, value, mp_.tcache_count);
+      mp_.tcache_count = value;
+    }
   return 1;
 }
 
