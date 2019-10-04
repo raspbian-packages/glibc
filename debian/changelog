@@ -1,9 +1,28 @@
-glibc (2.29-1+rpi1) bullseye-staging; urgency=medium
+glibc (2.29-2+rpi1) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Tue, 17 Sep 2019 01:28:57 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Fri, 04 Oct 2019 01:23:58 +0000
+
+glibc (2.29-2) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/control.in/main: drop the <!nocheck> profile from the
+    python3:native build-depends.  Closes: #939871.
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix getegid, geteuid and getppid on alpha with < 5.1 kernels.
+      Closes: #939898.
+
+  [ Sven Joachim ]
+  * debian/script.in/nsscheck.sh: Do not restart services of different
+    architecture than libc.  Closes: #700472.
+
+  [ Samuel Thibault ]
+  * patches/hurd-i386/submitted-anon-mmap-shared.diff: Re-disable, actually
+    makes some tests fail.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Fri, 20 Sep 2019 21:39:03 +0200
 
 glibc (2.29-1) unstable; urgency=medium
 
