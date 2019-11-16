@@ -1,9 +1,25 @@
-glibc (2.29-2+rpi1) bullseye-staging; urgency=medium
+glibc (2.29-3+rpi1) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Fri, 04 Oct 2019 01:23:58 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Sat, 16 Nov 2019 08:06:13 +0000
+
+glibc (2.29-3) unstable; urgency=medium
+
+  [ Svante Signell ]
+  * patches/hurd-i386/git-rlock.diff: New patch to add support for record
+    locking.
+
+  [ Samuel Thibault ]
+  * patches/hurd-i386/tg-locarchive.diff,tg-WRLCK-upgrade.diff: Remove, now
+    useless.
+  * control: Bump hurd-dev dependency to get record locking RPC.
+  * libc0.3.symbols.hurd-i386: Update accordingly.
+  * patches/arm/unsubmitted-ldso-abi-check.diff: Remove obsolete patch.
+    Closes: #943798.
+
+ -- Samuel Thibault <sthibault@debian.org>  Thu, 31 Oct 2019 23:31:12 +0100
 
 glibc (2.29-2) unstable; urgency=medium
 
