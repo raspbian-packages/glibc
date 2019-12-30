@@ -1,3 +1,327 @@
+2019-09-20  Joseph Myers  <joseph@codesourcery.com>
+
+	* sysdeps/unix/sysv/linux/riscv/vfork.S: Do not include
+	<linux/sched.h>.
+	(CLONE_VM): New macro.
+	(CLONE_VFORK): Likewise.
+
+2019-09-14  Aurelien Jarno  <aurelien@aurel32.net>
+
+	[BZ #24986]
+        * sysdeps/unix/alpha/getegid.S: Move to ...
+	* sysdeps/unix/sysv/linux/alpha/getegid.S: ... here.
+        * sysdeps/unix/alpha/geteuid.S: Move to ...
+	* sysdeps/unix/sysv/linux/alpha/geteuid.S: ... here.
+        * sysdeps/unix/alpha/getppid.S: Move to ...
+	* sysdeps/unix/sysv/linux/alpha/getppid.S: ... here
+
+2019-09-13  Wilco Dijkstra  <wdijkstr@arm.com>
+
+	* string/memmem.c (__memmem): Rewrite to improve performance.
+
+2019-06-12  Wilco Dijkstra  <wdijkstr@arm.com>
+
+	* string/str-two-way.h (two_way_short_needle): Add inline to avoid
+	warning.
+	(two_way_long_needle): Block inlining.
+	* string/strstr.c (strstr2): Add new function.
+	(strstr3): Likewise.
+	(STRSTR): Completely rewrite strstr to improve performance.
+
+2019-09-03  Aurelien Jarno  <aurelien@aurel32.net>
+
+	* sysdeps/alpha/fpu/libm-test-ulps: Regenerated using GCC 9.2.
+
+2019-08-18  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	* sysdeps/hppa/fpu/libm-test-ulps: Update.
+
+2019-08-15  Richard Henderson  <rth@twiddle.net>
+
+	* sysdeps/unix/sysv/linux/alpha/kernel-features.h (__NR_shmat):
+	Do not redefine.
+	* sysdeps/unix/sysv/linux/alpha/sysdep.h (__NR_osf_shmat):
+	Do not redefine.
+
+2019-07-15  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	[BZ #24699]
+	* posix/tst-mmap-offset.c: Mention BZ #24699.
+	(do_test_bz21270): Rename to do_test_large_offset and use
+	mmap64_maximum_offset to check for maximum expected offset value.
+	* sysdeps/generic/mmap_info.h: New file.
+	* sysdeps/unix/sysv/linux/mips/mmap_info.h: Likewise.
+	* sysdeps/unix/sysv/linux/mmap64.c (MMAP_OFF_HIGH_MASK): Define iff
+	__NR_mmap2 is used.
+
+2019-07-12  Szabolcs Nagy  <szabolcs.nagy@arm.com>
+
+	* sysdeps/aarch64/dl-machine.h (elf_machine_lazy_rel): Check
+	STO_AARCH64_VARIANT_PCS and bind such symbols at load time.
+
+2019-06-13  Szabolcs Nagy  <szabolcs.nagy@arm.com>
+
+	* elf/elf.h (STO_AARCH64_VARIANT_PCS): Define.
+	(DT_AARCH64_VARIANT_PCS): Define.
+
+2019-06-28  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #24744]
+	io: Remove the copy_file_range emulation.
+	* sysdeps/unix/sysv/linux/copy_file_range.c (copy_file_range): Do
+	not define and call copy_file_range_compat.
+	* io/Makefile (tests-static, tests-internal): Do not add
+	tst-copy_file_range-compat.
+	* io/copy_file_range-compat.c: Remove file.
+	* io/copy_file_range.c (copy_file_range): Define as stub.
+	* io/tst-copy_file_range-compat.c: Remove file.
+	* io/tst-copy_file_range.c (xdevfile): Remove variable.
+	(typical_sizes): Update comment.  Remove 16K sizes.
+	(maximum_offset, maximum_offset_errno, maximum_offset_hard_limit):
+	Remove variables.
+	(find_maximum_offset, pipe_as_source, pipe_as_destination)
+	(delayed_write_failure_beginning, delayed_write_failure_end)
+	(cross_device_failure, enospc_failure_1, enospc_failure)
+	(oappend_failure): Remove functions.
+	(tests): Adjust test case list.
+	(do_test): Remove file system search code.  Check for ENOSYS from
+	copy_file_range.  Do not free xdevfile.
+	* manual/llio.texi (Copying File Data): Document ENOSYS error from
+	copy_file_range.  Do not document the EXDEV error, which future
+	kernels may not report.  Update the wording to reflect that
+	further errors are possible.
+	* sysdeps/unix/sysv/linux/alpha/kernel-features.h
+	[__LINUX_KERNEL_VERSION < 0x040D00] (__ASSUME_COPY_FILE_RANGE): Do
+	not undefine.
+	* sysdeps/unix/sysv/linux/arm/kernel-features.h
+	[__LINUX_KERNEL_VERSION < 0x040700] (__ASSUME_COPY_FILE_RANGE):
+	Likewise.
+	* sysdeps/unix/sysv/linux/kernel-features.h
+	[__LINUX_KERNEL_VERSION >= 0x040500] (__ASSUME_COPY_FILE_RANGE):
+	Remove definition.
+	* sysdeps/unix/sysv/linux/microblaze/kernel-features.h
+	[__LINUX_KERNEL_VERSION < 0x040A00] (__ASSUME_COPY_FILE_RANGE): Do
+	not undefine.
+	* sysdeps/unix/sysv/linux/sh/kernel-features.h
+	[__LINUX_KERNEL_VERSION < 0x040800] (__ASSUME_COPY_FILE_RANGE):
+	Likewise.
+
+2019-06-20  Dmitry V. Levin  <ldv@altlinux.org>
+	    Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #24228]
+	* libio/genops.c (_IO_unbuffer_all)
+	[SHLIB_COMPAT (libc, GLIBC_2_0, GLIBC_2_1)]: Do not attempt to free wide
+	buffers and access _IO_FILE_complete members of legacy libio streams.
+	* libio/tst-bz24228.c: New file.
+	* libio/tst-bz24228.map: Likewise.
+	* libio/Makefile [build-shared] (tests): Add tst-bz24228.
+	[build-shared] (generated): Add tst-bz24228.mtrace and
+	tst-bz24228.check.
+	[run-built-tests && build-shared] (tests-special): Add
+	$(objpfx)tst-bz24228-mem.out.
+	(LDFLAGS-tst-bz24228, tst-bz24228-ENV): New variables.
+	($(objpfx)tst-bz24228-mem.out): New rule.
+
+2019-03-13  Zack Weinberg  <zackw@panix.com>
+
+	* scripts/check-obsolete-constructs.py: New test script.
+	* scripts/check-installed-headers.sh: Remove tests for
+	obsolete typedefs, superseded by check-obsolete-constructs.py.
+	* Rules: Run scripts/check-obsolete-constructs.py over $(headers)
+	as a special test.  Update commentary.
+	* posix/bits/types.h (__SQUAD_TYPE, __S64_TYPE): Define as __int64_t.
+	(__UQUAD_TYPE, __U64_TYPE): Define as __uint64_t.
+	Update commentary.
+	* posix/sys/types.h (__u_intN_t): Remove.
+	(u_int8_t): Typedef using __uint8_t.
+	(u_int16_t): Typedef using __uint16_t.
+	(u_int32_t): Typedef using __uint32_t.
+	(u_int64_t): Typedef using __uint64_t.
+
+2019-04-18  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	* malloc/tst-memalign.c (do_test): Disable
+	-Walloc-size-larger-than= around tests of malloc with negative
+	sizes.
+	* malloc/tst-malloc-too-large.c (do_test): Likewise.
+
+2019-05-22  Wilco Dijkstra  <wdijkstr@arm.com>
+
+	[BZ #24531]
+	* malloc/malloc.c (MAX_TCACHE_COUNT): New define.
+	(do_set_tcache_count): Only update if count is small enough.
+	* manual/tunables.texi (glibc.malloc.tcache_count): Document max value.
+
+2019-05-15  Mark Wielaard  <mark@klomp.org>
+
+	[BZ#24476]
+	* dlfcn/dlerror.c (__dlerror_main_freeres): Guard using
+	__libc_once_get (once) and static_buf == NULL.
+	(__dlerror): Check we have a valid key, set result to static_buf
+	otherwise.
+
+2019-05-15  Andreas Schwab  <schwab@suse.de>
+
+	[BZ #20568]
+	* libio/wfileops.c (_IO_wfile_sync): Correct last argument to
+	__codecvt_do_length.
+	* libio/Makefile (tests): Add tst-wfile-sync.
+	($(objpfx)tst-wfile-sync.out): Depend on $(gen-locales).
+	* libio/tst-wfile-sync.c: New file.
+	* libio/tst-wfile-sync.input: New file.
+
+2019-04-23  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	[BZ #18035]
+	* elf/Makefile (tests-container): Add tst-pldd.
+	* elf/pldd-xx.c: Use _Static_assert in of pldd_assert.
+	(E(find_maps)): Avoid use alloca, use default read file operations
+	instead of explicit LFS names, and fix infinite loop.
+	* elf/pldd.c: Explicit set _FILE_OFFSET_BITS, cleanup headers.
+	(get_process_info): Use _Static_assert instead of assert, use default
+	directory operations instead of explicit LFS names, and free some
+	leadek pointers.
+	* elf/tst-pldd.c: New file.
+
+2019-04-17  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	* support/Makefile (libsupport-routines): Add support_subprocess,
+	xposix_spawn, xposix_spawn_file_actions_addclose, and
+	xposix_spawn_file_actions_adddup2.
+	(tst-support_capture_subprocess-ARGS): New rule.
+	* support/capture_subprocess.h (support_capture_subprogram): New
+	prototype.
+	* support/support_capture_subprocess.c (support_capture_subprocess):
+	Refactor to use support_subprocess and support_capture_poll.
+	(support_capture_subprogram): New function.
+	* support/tst-support_capture_subprocess.c (write_mode_to_str,
+	str_to_write_mode, test_common, parse_int, handle_restart,
+	do_subprocess, do_subprogram, do_multiple_tests): New functions.
+	(do_test): Add support_capture_subprogram tests.
+	* support/subprocess.h: New file.
+	* support/support_subprocess.c: Likewise.
+	* support/xposix_spawn.c: Likewise.
+	* support/xposix_spawn_file_actions_addclose.c: Likewise.
+	* support/xposix_spawn_file_actions_adddup2.c: Likewise.
+	* support/xspawn.h: Likewise.
+
+2019-04-09  Carlos O'Donell  <carlos@redhat.com>
+	    Kwok Cheung Yeung  <kcy@codesourcery.com>
+
+	[BZ #16573]
+	* malloc/mtrace.c: Define prototypes for all hooks.
+	(set_default_hooks): New function.
+	(set_trace_hooks): Likewise.
+	(save_default_hooks): Likewise.
+	(tr_freehook): Use new s*_hooks functions.
+	(tr_mallochook): Likewise.
+	(tr_reallochook): Likewise.
+	(tr_memalignhook): Likewise.
+	(mtrace): Likewise.
+	(muntrace): Likewise.
+
+2019-04-02  TAMUKI Shoichi  <tamuki@linet.gr.jp>
+
+	[BZ #22964]
+	* localedata/locales/ja_JP (LC_TIME): Add entry for the new Japanese
+	era.
+
+2019-03-02  TAMUKI Shoichi  <tamuki@linet.gr.jp>
+
+	[BZ #24162]
+	* localedata/locales/ja_JP (LC_TIME): Change the offset for Taisho
+	gan-nen from 2 to 1.  Problem reported by Morimitsu, Junji.
+
+2019-03-21  Stefan Liebler  <stli@linux.ibm.com>
+
+	* sysdeps/s390/dl-procinfo.h (HWCAP_IMPORTANT):
+	Add HWCAP_S390_VX and HWCAP_S390_VXE.
+
+2019-01-31  Paul Eggert  <eggert@cs.ucla.edu>
+
+	CVE-2019-9169
+	regex: fix read overrun [BZ #24114]
+	Problem found by AddressSanitizer, reported by Hongxu Chen in:
+	https://debbugs.gnu.org/34140
+	* posix/regexec.c (proceed_next_node):
+	Do not read past end of input buffer.
+
+2019-03-13  Stefan Liebler  <stli@linux.ibm.com>
+
+	* elf/dl-sysdep.c (_dl_show_auxv): Remove condition and always
+	call _dl_procinfo.
+	* sysdeps/unix/sysv/linux/s390/dl-procinfo.h (_dl_procinfo):
+	Ignore types other than AT_HWCAP.
+	* sysdeps/sparc/dl-procinfo.h (_dl_procinfo): Likewise.
+	* sysdeps/unix/sysv/linux/i386/dl-procinfo.h (_dl_procinfo):
+	Likewise.
+	* sysdeps/powerpc/dl-procinfo.h (_dl_procinfo): Adjust comment
+	in the case of falling back to generic output mechanism.
+	* sysdeps/unix/sysv/linux/arm/dl-procinfo.h (_dl_procinfo):
+	Likewise.
+
+2019-02-15  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #24211]
+	* nptl/pthread_join_common.c (__pthread_timedjoin_ex): Do not read
+	pd->result after the thread descriptor has been freed.
+
+2019-02-08  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #24161]
+	* sysdeps/nptl/fork.h (__run_fork_handlers): Add multiple_threads
+	argument.
+	* nptl/register-atfork.c (__run_fork_handlers): Only perform
+	locking if the new do_locking argument is true.
+	* sysdeps/nptl/fork.c (__libc_fork): Pass multiple_threads to
+	__run_fork_handlers.
+
+2019-02-07  Stefan Liebler  <stli@linux.ibm.com>
+
+	[BZ #24180]
+	* nptl/pthread_mutex_trylock.c (__pthread_mutex_trylock):
+	Add compiler barriers and comments.
+
+2019-02-05  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #24164]
+	arm: Use "nr" constraint for Systemtap probes, to avoid the
+	compiler using memory operands for constants, due to the "o"
+	alternative in the default "nor" constraint.
+	* include/stap-probe.h [USE_STAP_PROBE]: Include
+	<stap-probe-machine.h>
+	* sysdeps/generic/stap-probe-machine.h: New file.
+	* sysdeps/arm/stap-probe-machine.h: Likewise.
+
+2019-02-04  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #24155]
+	CVE-2019-7309
+	* NEWS: Updated for CVE-2019-7309.
+	* sysdeps/x86_64/memcmp.S: Use RDX_LP for size.  Clear the
+	upper 32 bits of RDX register for x32.  Use unsigned Jcc
+	instructions, instead of signed.
+	* sysdeps/x86_64/x32/Makefile (tests): Add tst-size_t-memcmp-2.
+	* sysdeps/x86_64/x32/tst-size_t-memcmp-2.c: New test.
+
+2019-01-31  Carlos O'Donell  <carlos@redhat.com>
+	    Torvald Riegel  <triegel@redhat.com>
+	    Rik Prohaska  <prohaska7@gmail.com>
+
+	[BZ# 23844]
+	* nptl/Makefile (tests): Add tst-rwlock-tryrdlock-stall, and
+	tst-rwlock-trywrlock-stall.
+	* nptl/pthread_rwlock_tryrdlock.c (__pthread_rwlock_tryrdlock):
+	Wake waiters if PTHREAD_RWLOCK_FUTEX_USED is set.
+	* nptl/pthread_rwlock_trywrlock.c (__pthread_rwlock_trywrlock):
+	Set __wrphase_fute to 1 only if we started the write phase.
+	* nptl/tst-rwlock-tryrdlock-stall.c: New file.
+	* nptl/tst-rwlock-trywrlock-stall.c: New file.
+	* support/Makefile (libsupport-routines): Add xpthread_rwlock_destroy.
+	* support/xpthread_rwlock_destroy.c: New file.
+	* support/xthread.h: Declare xpthread_rwlock_destroy.
+
 2019-01-31  Siddhesh Poyarekar  <siddhesh@sourceware.org>
 
 	* version.h (RELEASE): Set to "stable".
