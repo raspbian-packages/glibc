@@ -1,5 +1,4 @@
-/* Stub for getrandom.
-   Copyright (C) 2016-2019 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,20 +13,18 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
-#include <sys/random.h>
 #include <errno.h>
+#include <unistd.h>
+#include <hurd.h>
+#include <hurd/fd.h>
+#include <not-cancel.h>
 
-/* Write up to LENGTH bytes of randomness starting at BUFFER.
-   Return the number of bytes written, or -1 on error.  */
-ssize_t
-__getrandom (void *buffer, size_t length, unsigned int flags)
+/* Close the file descriptor FD.  */
+void
+__close_nocancel_nostatus (int fd)
 {
-  __set_errno (ENOSYS);
-  return -1;
+  HURD_FD_USE (fd, _hurd_fd_close (descriptor));
 }
-stub_warning (getrandom)
-
-libc_hidden_def (__getrandom)
-weak_alias (__getrandom, getrandom)
+libc_hidden_def (__close_nocancel_nostatus)
