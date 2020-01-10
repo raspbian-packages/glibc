@@ -63,6 +63,7 @@ libsupport-routines = \
   support_record_failure \
   support_run_diff \
   support_shared_allocate \
+  support_subprocess \
   support_test_compare_blob \
   support_test_compare_failure \
   support_test_compare_string \
@@ -99,10 +100,12 @@ libsupport-routines = \
   xopen \
   xpipe \
   xpoll \
+  xposix_memalign \
   xpthread_attr_destroy \
   xpthread_attr_init \
   xpthread_attr_setdetachstate \
   xpthread_attr_setguardsize \
+  xpthread_attr_setstack \
   xpthread_attr_setstacksize \
   xpthread_barrier_destroy \
   xpthread_barrier_init \
@@ -129,6 +132,7 @@ libsupport-routines = \
   xpthread_mutexattr_settype \
   xpthread_once \
   xpthread_rwlock_init \
+  xpthread_rwlock_destroy \
   xpthread_rwlock_rdlock \
   xpthread_rwlock_unlock \
   xpthread_rwlock_wrlock \
@@ -147,6 +151,9 @@ libsupport-routines = \
   xsignal \
   xsigstack \
   xsocket \
+  xposix_spawn \
+  xposix_spawn_file_actions_addclose \
+  xposix_spawn_file_actions_adddup2 \
   xstrdup \
   xstrndup \
   xsymlink \
@@ -167,7 +174,8 @@ CFLAGS-support_paths.c = \
 		-DOBJDIR_PATH=\"`cd $(objpfx)/..; pwd`\" \
 		-DOBJDIR_ELF_LDSO_PATH=\"`cd $(objpfx)/..; pwd`/elf/$(rtld-installed-name)\" \
 		-DINSTDIR_PATH=\"$(prefix)\" \
-		-DLIBDIR_PATH=\"$(libdir)\"
+		-DLIBDIR_PATH=\"$(libdir)\" \
+		-DBINDIR_PATH=\"$(bindir)\"
 
 ifeq (,$(CXX))
 LINKS_DSO_PROGRAM = links-dso-program-c
@@ -175,6 +183,11 @@ else
 LINKS_DSO_PROGRAM = links-dso-program
 LDLIBS-links-dso-program = -lstdc++ -lgcc -lgcc_s $(libunwind)
 endif
+
+ifeq (yes,$(have-selinux))
+LDLIBS-$(LINKS_DSO_PROGRAM) += -lselinux
+endif
+
 
 LDLIBS-test-container = $(libsupport)
 
@@ -221,5 +234,7 @@ $(objpfx)tst-support_record_failure-2.out: tst-support_record_failure-2.sh \
 endif
 
 $(objpfx)tst-support_format_dns_packet: $(common-objpfx)resolv/libresolv.so
+
+tst-support_capture_subprocess-ARGS = -- $(host-test-program-cmd)
 
 include ../Rules
