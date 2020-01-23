@@ -4430,7 +4430,7 @@ index 8e7beffd82..63bc8d4fa6 100644
          done
      done
 diff --git a/scripts/check-obsolete-constructs.py b/scripts/check-obsolete-constructs.py
-new file mode 100755
+new file mode 100644
 index 0000000000..ce5c72251f
 --- /dev/null
 +++ b/scripts/check-obsolete-constructs.py

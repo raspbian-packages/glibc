@@ -3,7 +3,13 @@ glibc (2.29-9+rpi1) bullseye-staging; urgency=medium
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Thu, 23 Jan 2020 12:37:02 +0000
+  [changes introduced in 2.29-9+rpi1 by Peter Michale Green]
+  * Change mode on scripts/check-obsolete-constructs.py to 644, 
+    dgit does not like mode 755 files created by patches and the
+    script does not seem to be used for anything in the Debian
+    package.
+
+ -- Peter Micheal Green <plugwash@raspbian.org>  Thu, 23 Jan 2020 14:03:14 +0000
 
 glibc (2.29-9) unstable; urgency=medium
 
