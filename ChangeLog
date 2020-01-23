@@ -1,3 +1,155 @@
+2019-07-24  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #24532]
+	Linux: Use in-tree copy of SO_ constants for !__USE_MISC.
+	* sysdeps/unix/sysv/linux/Makefile [$(subdir) == socket]
+	(sysdep_headers): Add bits/socket-constants.h.
+	(tests-special): Add tst-socket-consts.out.
+	(tst-socket-consts.out): New target.
+	* sysdeps/unix/sysv/linux/bits/socket.h: Remove macro tracking
+	around <asm/unistd.h>.
+	[__USE_MISC]: Include <bits/types/time_t.h> before <asm/socket.h>.
+	[!__USE_MISC]: Include <sys/socket-constants.h> instead of
+	<asm/socket.h>.
+	* sysdeps/unix/sysv/linux/bits/tst-socket-consts.py: New file.
+	* sysdeps/unix/sysv/linux/bits/socket-constants.h: Likewise.
+	* sysdeps/unix/sysv/linux/alpha/bits/socket-constants.h: Likewise.
+	* sysdeps/unix/sysv/linux/hppa/bits/socket-constants.h: Likewise.
+	* sysdeps/unix/sysv/linux/mips/bits/socket-constants.h: Likewise.
+	* sysdeps/unix/sysv/linux/powerpc/bits/socket-constants.h:
+	Likewise.
+	* sysdeps/unix/sysv/linux/sparc/bits/socket-constants.h: Likewise.
+
+2019-08-15  Florian Weimer  <fweimer@redhat.com>
+
+	* malloc/Makefile (tests): Only add tst-mxfast for
+	$(have-tunables).
+	* malloc/tst-mxfast.c: Fix copyright year.
+	(do_test): Fix GNU style issues.  Use TEST_COMPARE instead of
+	assert for checks.
+
+2019-08-09  DJ Delorie  <dj@redhat.com>
+
+	* elf/dl-tunables.list: Add glibc.malloc.mxfast.
+	* manual/tunables.texi: Document it.
+	* malloc/malloc.c (do_set_mxfast): New.
+	(__libc_mallopt): Call it.
+	* malloc/arena.c: Add mxfast tunable.
+	* malloc/tst-mxfast.c: New.
+	* malloc/Makefile: Add it.
+
+2019-08-08  Niklas Hambüchen  <mail@nh2.me>
+	    Carlos O'Donell  <carlos@redhat.com>
+
+	[BZ #24026]
+	* malloc/malloc.c (__malloc_info): Account for top chunk.
+
+2019-08-01  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #24867]
+	* malloc/malloc.c (__malloc_info): Remove unwanted leading
+	whitespace.
+
+2019-05-17  Wilco Dijkstra  <wdijkstr@arm.com>
+
+	* malloc/malloc.c (MAX_TCACHE_COUNT): Increase to UINT16_MAX.
+	(tcache_put): Remove redundant assert.
+	(tcache_get): Remove redundant asserts.
+	(__libc_malloc): Check tcache count is not zero.
+	* manual/tunables.texi (glibc.malloc.tcache_count): Update maximum.
+
+2019-02-04  Joseph Myers  <joseph@codesourcery.com>
+
+	* malloc/malloc.c (tcache_get): Compare tcache->counts[tc_idx]
+	with 0, not tcache->entries[tc_idx].
+
+2019-02-06  Stefan Liebler  <stli@linux.ibm.com>
+
+	[BZ #23403]
+	* nptl/allocatestack.c (allocate_stack): Align pointer pd for
+	TLS_TCB_AT_TP tls variant.
+	* nptl/tst-tls1.c: Migrate to support/test-driver.c.
+	Add alignment checks.
+	* support/Makefile (libsupport-routines): Add xposix_memalign and
+	xpthread_setstack.
+	* support/support.h: Add xposix_memalign.
+	* support/xthread.h: Add xpthread_attr_setstack.
+	* support/xposix_memalign.c: New File.
+	* support/xpthread_attr_setstack.c: Likewise.
+
+2019-07-10  DJ Delorie  <dj@redhat.com>
+	    Sergei Trofimovich <slyfox@inbox.ru>
+
+	[BZ #24696]
+	[BZ #24695]
+	* nss/nss_db/db-open.c (internal_endent): Protect against NULL
+	mappings.
+	* nss/tst-nss-db-endgrent.c: New.
+	* nss/tst-nss-db-endgrent.root: New.
+	* nss/tst-nss-db-endpwent.c: New.
+	* nss/tst-nss-db-endpwent.root: New.
+	* nss/Makefile: Add new tests.
+	* support/links-dso-program-c.c: Add selinux dependency.
+	* support/links-dso-program.cc: Add selinux dependency.
+	* support/Makefile: Build those with -lselinux if enabled.
+
+2019-05-14  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	* support/Makefile (CFLAGS-support_paths.c): Add -DBINDIR_PATH.
+	* support/support.h (support_bindir_prefix): New variable.
+	* support/support_paths.c [BINDIR_PATH] (support_bindir_prefix):
+
+	* config.make.in (bindir): New variable.
+
+2019-07-01  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #24259]
+	* elf/dl-open.c (dl_open_worker): Call _dl_open_check after
+	relocation.
+	* sysdeps/x86/Makefile (tests): Add tst-cet-legacy-5a,
+	tst-cet-legacy-5b, tst-cet-legacy-6a and tst-cet-legacy-6b.
+	(modules-names): Add tst-cet-legacy-mod-5a, tst-cet-legacy-mod-5b,
+	tst-cet-legacy-mod-5c, tst-cet-legacy-mod-6a, tst-cet-legacy-mod-6b
+	and tst-cet-legacy-mod-6c.
+	(CFLAGS-tst-cet-legacy-5a.c): New.
+	(CFLAGS-tst-cet-legacy-5b.c): Likewise.
+	(CFLAGS-tst-cet-legacy-mod-5a.c): Likewise.
+	(CFLAGS-tst-cet-legacy-mod-5b.c): Likewise.
+	(CFLAGS-tst-cet-legacy-mod-5c.c): Likewise.
+	(CFLAGS-tst-cet-legacy-6a.c): Likewise.
+	(CFLAGS-tst-cet-legacy-6b.c): Likewise.
+	(CFLAGS-tst-cet-legacy-mod-6a.c): Likewise.
+	(CFLAGS-tst-cet-legacy-mod-6b.c): Likewise.
+	(CFLAGS-tst-cet-legacy-mod-6c.c): Likewise.
+	($(objpfx)tst-cet-legacy-5a): Likewise.
+	($(objpfx)tst-cet-legacy-5a.out): Likewise.
+	($(objpfx)tst-cet-legacy-mod-5a.so): Likewise.
+	($(objpfx)tst-cet-legacy-mod-5b.so): Likewise.
+	($(objpfx)tst-cet-legacy-5b): Likewise.
+	($(objpfx)tst-cet-legacy-5b.out): Likewise.
+	(tst-cet-legacy-5b-ENV): Likewise.
+	($(objpfx)tst-cet-legacy-6a): Likewise.
+	($(objpfx)tst-cet-legacy-6a.out): Likewise.
+	($(objpfx)tst-cet-legacy-mod-6a.so): Likewise.
+	($(objpfx)tst-cet-legacy-mod-6b.so): Likewise.
+	($(objpfx)tst-cet-legacy-6b): Likewise.
+	($(objpfx)tst-cet-legacy-6b.out): Likewise.
+	(tst-cet-legacy-6b-ENV): Likewise.
+	* sysdeps/x86/tst-cet-legacy-5.c: New file.
+	* sysdeps/x86/tst-cet-legacy-5a.c: Likewise.
+	* sysdeps/x86/tst-cet-legacy-5b.c: Likewise.
+	* sysdeps/x86/tst-cet-legacy-6.c: Likewise.
+	* sysdeps/x86/tst-cet-legacy-6a.c: Likewise.
+	* sysdeps/x86/tst-cet-legacy-6b.c: Likewise.
+	* sysdeps/x86/tst-cet-legacy-mod-5.c: Likewise.
+	* sysdeps/x86/tst-cet-legacy-mod-5a.c: Likewise.
+	* sysdeps/x86/tst-cet-legacy-mod-5b.c: Likewise.
+	* sysdeps/x86/tst-cet-legacy-mod-5c.c: Likewise.
+	* sysdeps/x86/tst-cet-legacy-mod-6.c: Likewise.
+	* sysdeps/x86/tst-cet-legacy-mod-6a.c: Likewise.
+	* sysdeps/x86/tst-cet-legacy-mod-6b.c: Likewise.
+	* sysdeps/x86/tst-cet-legacy-mod-6c.c: Likewise.
+
 2019-09-20  Joseph Myers  <joseph@codesourcery.com>
 
 	* sysdeps/unix/sysv/linux/riscv/vfork.S: Do not include

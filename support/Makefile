@@ -100,10 +100,12 @@ libsupport-routines = \
   xopen \
   xpipe \
   xpoll \
+  xposix_memalign \
   xpthread_attr_destroy \
   xpthread_attr_init \
   xpthread_attr_setdetachstate \
   xpthread_attr_setguardsize \
+  xpthread_attr_setstack \
   xpthread_attr_setstacksize \
   xpthread_barrier_destroy \
   xpthread_barrier_init \
@@ -172,7 +174,8 @@ CFLAGS-support_paths.c = \
 		-DOBJDIR_PATH=\"`cd $(objpfx)/..; pwd`\" \
 		-DOBJDIR_ELF_LDSO_PATH=\"`cd $(objpfx)/..; pwd`/elf/$(rtld-installed-name)\" \
 		-DINSTDIR_PATH=\"$(prefix)\" \
-		-DLIBDIR_PATH=\"$(libdir)\"
+		-DLIBDIR_PATH=\"$(libdir)\" \
+		-DBINDIR_PATH=\"$(bindir)\"
 
 ifeq (,$(CXX))
 LINKS_DSO_PROGRAM = links-dso-program-c
@@ -180,6 +183,11 @@ else
 LINKS_DSO_PROGRAM = links-dso-program
 LDLIBS-links-dso-program = -lstdc++ -lgcc -lgcc_s $(libunwind)
 endif
+
+ifeq (yes,$(have-selinux))
+LDLIBS-$(LINKS_DSO_PROGRAM) += -lselinux
+endif
+
 
 LDLIBS-test-container = $(libsupport)
 

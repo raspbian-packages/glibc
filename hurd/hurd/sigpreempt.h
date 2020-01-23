@@ -50,9 +50,9 @@ struct hurd_signal_preemptor
     struct hurd_signal_preemptor *next;	/* List structure.  */
   };
 
-#define HURD_PREEMPT_SIGNAL_P(preemptor, signo, address) \
+#define HURD_PREEMPT_SIGNAL_P(preemptor, signo, sigcode) \
   (((preemptor)->signals & sigmask (signo)) && \
-   (address) >= (preemptor)->first && (address) <= (preemptor)->last)
+   (sigcode) >= (preemptor)->first && (sigcode) <= (preemptor)->last)
 
 
 /* Signal preemptors applying to all threads; locked by _hurd_siglock.  */

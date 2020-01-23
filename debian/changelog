@@ -1,9 +1,38 @@
-glibc (2.29-7+rpi1) bullseye-staging; urgency=medium
+glibc (2.29-9+rpi1) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Mon, 06 Jan 2020 22:42:21 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 23 Jan 2020 12:37:02 +0000
+
+glibc (2.29-9) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * patches/hurd-i386/local-fix-nss.diff: Refresh.
+  * patches/hurd-i386/tg-hurdsig-SA_SIGINFO.diff: Fix setitimer.
+
+  [ Aurelien Jarno ]
+  * debian/sysdeps/{amd64,x32}.mk: do not optimize for pentium4.  Closes:
+    #948396.
+  * debian/patches/any/local-revert-24323.diff: revert upstream change
+    preventing dlopening PIE executable, The patch is correct, but breaks
+    the autopkgtest for wcc and prevents the migration of glibc to testing.
+    Revert it temporarily until wcc is fixed. See #948613.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Fri, 10 Jan 2020 23:21:25 +0100
+
+glibc (2.29-8) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * patches/hurd-i386/posix_openpt.diff: Add posix_openpt support.
+  * patches/hurd-i386/git-errno_location.diff: Fix pthread link of protobuf.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fixes ASLR bypass for setuid programs (CVE-2019-19126).  Closes: #945250.
+    - debian/patches/any/git-socket-constants.diff: upstreamed.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 05 Jan 2020 13:03:42 +0100
 
 glibc (2.29-7) unstable; urgency=medium
 
