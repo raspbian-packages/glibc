@@ -1,4 +1,4 @@
-/* Implementation of the getrandom system call.
+/* Hurdish implementation of getrandom
    Copyright (C) 2016-2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -14,32 +14,37 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <sys/random.h>
-#include <errno.h>
+#include <fcntl.h>
 #include <unistd.h>
-#include <sysdep-cancel.h>
+#include <not-cancel.h>
 
-#ifdef __NR_getrandom
 /* Write up to LENGTH bytes of randomness starting at BUFFER.
    Return the number of bytes written, or -1 on error.  */
 ssize_t
 __getrandom (void *buffer, size_t length, unsigned int flags)
 {
-  return SYSCALL_CANCEL (getrandom, buffer, length, flags);
+  const char *random_source = "/dev/urandom";
+  int open_flags = O_RDONLY | O_CLOEXEC;
+  size_t amount_read;
+  int fd;
+
+  if (flags & GRND_RANDOM)
+    random_source = "/dev/random";
+
+  if (flags & GRND_NONBLOCK)
+    open_flags |= O_NONBLOCK;
+
+  fd = __open_nocancel(random_source, open_flags);
+  if (fd == -1)
+    return -1;
+
+  amount_read = __read_nocancel(fd, buffer, length);
+  __close_nocancel_nostatus(fd);
+  return amount_read;
 }
-#else
-/* Always provide a definition, even if the kernel headers lack the
-   system call number. */
-ssize_t
-__getrandom (void *buffer, size_t length, unsigned int flags)
-{
-  /* Ideally, we would add a cancellation point here, but we currently
-     cannot do so inside libc.  */
-  __set_errno (ENOSYS);
-  return -1;
-}
-#endif
+
 libc_hidden_def (__getrandom)
 weak_alias (__getrandom, getrandom)
