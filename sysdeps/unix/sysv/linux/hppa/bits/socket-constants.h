@@ -1,5 +1,5 @@
-/* Test the fallback implementation of copy_file_range.
-   Copyright (C) 2017-2019 Free Software Foundation, Inc.
+/* Socket constants which vary among Linux architectures.  Version for hppa.
+   Copyright (C) 2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,15 +16,23 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-/* Get the declaration of the official copy_of_range function.  */
-#include <unistd.h>
+#ifndef _SYS_SOCKET_H
+# error "Never include <bits/socket-constants.h> directly; use <sys/socket.h> instead."
+#endif
 
-/* Compile a local version of copy_file_range.  */
-#define COPY_FILE_RANGE_DECL static
-#define COPY_FILE_RANGE copy_file_range_compat
-#include <io/copy_file_range-compat.c>
-
-/* Re-use the test, but run it against copy_file_range_compat defined
-   above.  */
-#define copy_file_range copy_file_range_compat
-#include "tst-copy_file_range.c"
+#define SOL_SOCKET 65535
+#define SO_ACCEPTCONN 16412
+#define SO_BROADCAST 32
+#define SO_DONTROUTE 16
+#define SO_ERROR 4103
+#define SO_KEEPALIVE 8
+#define SO_LINGER 128
+#define SO_OOBINLINE 256
+#define SO_RCVBUF 4098
+#define SO_RCVLOWAT 4100
+#define SO_RCVTIMEO 4102
+#define SO_REUSEADDR 4
+#define SO_SNDBUF 4097
+#define SO_SNDLOWAT 4099
+#define SO_SNDTIMEO 4101
+#define SO_TYPE 4104
