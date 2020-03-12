@@ -161,6 +161,7 @@ _hurd_sigstate_delete (thread_t thread)
       free (ss);
     }
 }
+libc_hidden_def (_hurd_sigstate_delete)
 
 /* Make SS a global receiver, with pthread signal semantics.  */
 void
@@ -169,6 +170,7 @@ _hurd_sigstate_set_global_rcv (struct hurd_sigstate *ss)
   assert (ss->thread != MACH_PORT_NULL);
   ss->actions[0].sa_handler = SIG_IGN;
 }
+libc_hidden_def (_hurd_sigstate_set_global_rcv)
 
 /* Check whether SS is a global receiver.  */
 static int
@@ -194,6 +196,8 @@ _hurd_sigstate_unlock (struct hurd_sigstate *ss)
   if (sigstate_is_global_rcv (ss))
     __spin_unlock (&_hurd_global_sigstate->lock);
 }
+libc_hidden_def (_hurd_sigstate_lock)
+libc_hidden_def (_hurd_sigstate_unlock)
 
 /* Retreive a thread's full set of pending signals, including the global
    ones if appropriate.  SS must be locked.  */
@@ -205,6 +209,7 @@ _hurd_sigstate_pending (const struct hurd_sigstate *ss)
     __sigorset (&pending, &pending, &_hurd_global_sigstate->pending);
   return pending;
 }
+libc_hidden_def (_hurd_sigstate_pending)
 
 /* Clear a pending signal and return the associated detailed
    signal information. SS must be locked, and must have signal SIGNO
