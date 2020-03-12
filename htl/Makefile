@@ -135,6 +135,7 @@ libpthread-routines := pt-attr pt-attr-destroy pt-attr-getdetachstate	    \
 	shm-directory							    \
 									    \
 	cthreads-compat							    \
+	herrno								    \
 	$(SYSDEPS)
 
 libpthread-static-only-routines = pt-atfork
