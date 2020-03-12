@@ -1,5 +1,5 @@
-/* MIPS16 syscall wrappers.
-   Copyright (C) 2013-2019 Free Software Foundation, Inc.
+/* Linux pread64() syscall implementation -- non-cancellable.
+   Copyright (C) 2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,16 +16,17 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-#include <sysdep.h>
+#include <unistd.h>
+#include <sysdep-cancel.h>
+#include <not-cancel.h>
 
-#undef __mips16_syscall1
+#ifndef __NR_pread64
+# define __NR_pread64 __NR_pread
+#endif
 
-long long int __nomips16
-__mips16_syscall1 (long int a0,
-		   long int number)
+ssize_t
+__pread64_nocancel (int fd, void *buf, size_t count, off64_t offset)
 {
-  union __mips_syscall_return ret;
-  ret.reg.v0 = INTERNAL_SYSCALL_MIPS16 (number, ret.reg.v1, 1,
-					a0);
-  return ret.val;
+  return INLINE_SYSCALL_CALL (pread64, fd, buf, count, SYSCALL_LL64_PRW (offset));
 }
+hidden_def (__pread64_nocancel)
