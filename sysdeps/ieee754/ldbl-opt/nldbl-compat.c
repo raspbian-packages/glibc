@@ -22,6 +22,9 @@
 #undef __GLIBC_USE_DEPRECATED_SCANF
 #define __GLIBC_USE_DEPRECATED_SCANF 1
 
+#include <argp.h>
+#include <err.h>
+#include <error.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <libio/strfile.h>
@@ -988,6 +991,107 @@ __nldbl___isoc99_wscanf (const wchar_t *fmt, ...)
   va_end (ap);
 
   return ret;
+}
+
+void
+__nldbl_argp_error (const struct argp_state *state, const char *fmt, ...)
+{
+  va_list ap;
+  va_start (ap, fmt);
+  __argp_error_internal (state, fmt, ap, PRINTF_LDBL_IS_DBL);
+  va_end (ap);
+}
+
+void
+__nldbl_argp_failure (const struct argp_state *state, int status,
+			int errnum, const char *fmt, ...)
+{
+  va_list ap;
+  va_start (ap, fmt);
+  __argp_failure_internal (state, status, errnum, fmt, ap,
+			   PRINTF_LDBL_IS_DBL);
+  va_end (ap);
+}
+
+#define VA_CALL(call)							\
+{									\
+  va_list ap;								\
+  va_start (ap, format);						\
+  call (format, ap, PRINTF_LDBL_IS_DBL);				\
+  va_end (ap);								\
+}
+
+void
+__nldbl_err (int status, const char *format, ...)
+{
+  VA_CALL (__vwarn_internal)
+  exit (status);
+}
+
+void
+__nldbl_errx (int status, const char *format, ...)
+{
+  VA_CALL (__vwarnx_internal)
+  exit (status);
+}
+
+void
+__nldbl_verr (int status, const char *format, __gnuc_va_list ap)
+{
+  __vwarn_internal (format, ap, PRINTF_LDBL_IS_DBL);
+  exit (status);
+}
+
+void
+__nldbl_verrx (int status, const char *format, __gnuc_va_list ap)
+{
+  __vwarnx_internal (format, ap, PRINTF_LDBL_IS_DBL);
+  exit (status);
+}
+
+void
+__nldbl_warn (const char *format, ...)
+{
+  VA_CALL (__vwarn_internal)
+}
+
+void
+__nldbl_warnx (const char *format, ...)
+{
+  VA_CALL (__vwarnx_internal)
+}
+
+void
+__nldbl_vwarn (const char *format, __gnuc_va_list ap)
+{
+  __vwarn_internal (format, ap, PRINTF_LDBL_IS_DBL);
+}
+
+void
+__nldbl_vwarnx (const char *format, __gnuc_va_list ap)
+{
+  __vwarnx_internal (format, ap, PRINTF_LDBL_IS_DBL);
+}
+
+void
+__nldbl_error (int status, int errnum, const char *message, ...)
+{
+  va_list ap;
+  va_start (ap, message);
+  __error_internal (status, errnum, message, ap, PRINTF_LDBL_IS_DBL);
+  va_end (ap);
+}
+
+void
+__nldbl_error_at_line (int status, int errnum, const char *file_name,
+		       unsigned int line_number, const char *message,
+		       ...)
+{
+  va_list ap;
+  va_start (ap, message);
+  __error_at_line_internal (status, errnum, file_name, line_number,
+			    message, ap, PRINTF_LDBL_IS_DBL);
+  va_end (ap);
 }
 
 #if LONG_DOUBLE_COMPAT(libc, GLIBC_2_0)

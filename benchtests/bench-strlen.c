@@ -21,6 +21,8 @@
 # define TEST_NAME "strlen"
 #else
 # define TEST_NAME "wcslen"
+# define generic_strlen generic_wcslen
+# define memchr_strlen wcschr_wcslen
 #endif
 #include "bench-string.h"
 
@@ -34,15 +36,6 @@ size_t memchr_strlen (const CHAR *);
 IMPL (memchr_strlen, 0)
 IMPL (generic_strlen, 0)
 
-#ifndef WIDE
-size_t
-builtin_strlen (const CHAR *p)
-{
-  return __builtin_strlen (p);
-}
-IMPL (builtin_strlen, 0)
-#endif
-
 size_t
 memchr_strlen (const CHAR *p)
 {
@@ -55,7 +48,7 @@ IMPL (STRLEN, 1)
 static void
 do_one_test (json_ctx_t *json_ctx, impl_t *impl, const CHAR *s, size_t exp_len)
 {
-  size_t len = CALL (impl, s), i, iters = INNER_LOOP_ITERS;
+  size_t len = CALL (impl, s), i, iters = INNER_LOOP_ITERS_LARGE;
   timing_t start, stop, cur;
 
   if (len != exp_len)
@@ -84,7 +77,7 @@ do_test (json_ctx_t *json_ctx, size_t align, size_t len)
   size_t i;
 
   align &= 63;
-  if (align + sizeof(CHAR) * len >= page_size)
+  if (align + sizeof (CHAR) * len >= page_size)
     return;
 
   json_element_object_begin (json_ctx);
@@ -136,16 +129,16 @@ test_main (void)
 
   for (i = 1; i < 8; ++i)
   {
-    do_test (&json_ctx, sizeof(CHAR) * i, i);
+    do_test (&json_ctx, sizeof (CHAR) * i, i);
     do_test (&json_ctx, 0, i);
   }
 
   for (i = 2; i <= 12; ++i)
     {
       do_test (&json_ctx, 0, 1 << i);
-      do_test (&json_ctx, sizeof(CHAR) * 7, 1 << i);
-      do_test (&json_ctx, sizeof(CHAR) * i, 1 << i);
-      do_test (&json_ctx, sizeof(CHAR) * i, (size_t)((1 << i) / 1.5));
+      do_test (&json_ctx, sizeof (CHAR) * 7, 1 << i);
+      do_test (&json_ctx, sizeof (CHAR) * i, 1 << i);
+      do_test (&json_ctx, sizeof (CHAR) * i, (size_t)((1 << i) / 1.5));
     }
 
   json_array_end (&json_ctx);

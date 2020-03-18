@@ -27,7 +27,7 @@ headers := $(dist-headers) obstack.h mcheck.h
 tests := mallocbug tst-malloc tst-valloc tst-calloc tst-obstack \
 	 tst-mcheck tst-mallocfork tst-trim1 \
 	 tst-malloc-usable tst-realloc tst-reallocarray tst-posix_memalign \
-	 tst-pvalloc tst-memalign tst-mallopt \
+	 tst-pvalloc tst-pvalloc-fortify tst-memalign tst-mallopt \
 	 tst-malloc-backtrace tst-malloc-thread-exit \
 	 tst-malloc-thread-fail tst-malloc-fork-deadlock \
 	 tst-mallocfork2 \
@@ -131,6 +131,7 @@ ifneq ($(cross-compiling),yes)
 # If the gd library is available we build the `memusagestat' program.
 ifneq ($(LIBGD),no)
 others: $(objpfx)memusage
+others += memusagestat
 install-bin = memusagestat
 install-bin-script += memusage
 generated += memusagestat memusage
@@ -154,8 +155,7 @@ cpp-srcs-left := $(memusagestat-modules)
 lib := memusagestat
 include $(patsubst %,$(..)libof-iterator.mk,$(cpp-srcs-left))
 
-$(objpfx)memusagestat: $(memusagestat-modules:%=$(objpfx)%.o)
-	$(LINK.o) -o $@ $^ $(libgd-LDFLAGS) -lgd -lpng -lz -lm
+LDLIBS-memusagestat = $(libgd-LDFLAGS) -lgd -lpng -lz -lm
 
 ifeq ($(run-built-tests),yes)
 ifeq (yes,$(build-shared))
@@ -254,3 +254,4 @@ $(objpfx)tst-dynarray-fail-mem.out: $(objpfx)tst-dynarray-fail.out
 
 $(objpfx)tst-malloc-tcache-leak: $(shared-thread-library)
 $(objpfx)tst-malloc_info: $(shared-thread-library)
+$(objpfx)tst-mallocfork2: $(shared-thread-library)

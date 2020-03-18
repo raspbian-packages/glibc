@@ -29,7 +29,7 @@
 #include <lowlevellock.h>
 #include <pthreaddef.h>
 #include <dl-sysdep.h>
-#include "../nptl_db/thread_db.h"
+#include <thread_db.h>
 #include <tls.h>
 #include <unwind.h>
 #include <bits/types/res_state.h>
@@ -342,9 +342,8 @@ struct pthread
   /* Lock for synchronizing setxid calls.  */
   unsigned int setxid_futex;
 
-#if HP_TIMING_AVAIL
-  /* Offset of the CPU clock at start thread start time.  */
-  hp_timing_t cpuclock_offset;
+#if HP_TIMING_INLINE
+  hp_timing_t cpuclock_offset_ununsed;
 #endif
 
   /* If the thread waits to join another one the ID of the latter is

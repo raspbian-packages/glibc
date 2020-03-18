@@ -27,15 +27,12 @@
 #define RES_F_CONN      0x00000002 /* Socket is connected.  */
 #define RES_F_EDNS0ERR  0x00000004 /* EDNS0 caused errors.  */
 
-
-/* Internal version of RES_USE_INET6 which does not trigger a
-   deprecation warning.  */
-#define DEPRECATED_RES_USE_INET6 0x00002000
-
+/* Legacy function.  This needs to be removed once all NSS modules
+   have been adjusted.  */
 static inline bool
 res_use_inet6 (void)
 {
-  return _res.options & DEPRECATED_RES_USE_INET6;
+  return false;
 }
 
 enum
@@ -99,5 +96,11 @@ libc_hidden_proto (__inet_pton_length)
 
 /* Called as part of the thread shutdown sequence.  */
 void __res_thread_freeres (void) attribute_hidden;
+
+/* The Linux kernel does not enable all ICMP messages on a UDP socket
+   by default.  A call this function enables full error reporting for
+   the socket FD.  FAMILY must be AF_INET or AF_INET6.  Returns 0 on
+   success, -1 on failure.  */
+int __res_enable_icmp (int family, int fd) attribute_hidden;
 
 #endif  /* _RESOLV_INTERNAL_H */

@@ -36,5 +36,6 @@ sem_timedwait (sem_t *sem, const struct timespec *abstime)
   if (__new_sem_wait_fast ((struct new_sem *) sem, 0) == 0)
     return 0;
   else
-    return __new_sem_wait_slow((struct new_sem *) sem, abstime);
+    return __new_sem_wait_slow ((struct new_sem *) sem,
+				CLOCK_REALTIME, abstime);
 }

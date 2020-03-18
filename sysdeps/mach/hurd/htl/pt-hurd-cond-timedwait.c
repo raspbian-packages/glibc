@@ -22,8 +22,6 @@
 
 #include <pt-internal.h>
 
-#include <shlib-compat.h>
-
 extern int __pthread_hurd_cond_timedwait_internal (pthread_cond_t *cond,
 						   pthread_mutex_t *mutex,
 						   const struct timespec
@@ -36,18 +34,8 @@ __pthread_hurd_cond_timedwait_np (pthread_cond_t *cond,
 {
   return __pthread_hurd_cond_timedwait_internal (cond, mutex, abstime);
 }
-versioned_symbol (libpthread, __pthread_hurd_cond_timedwait_np, pthread_hurd_cond_timedwait_np, GLIBC_2_21);
 
-#if SHLIB_COMPAT (libpthread, GLIBC_2_13, GLIBC_2_21)
-int
-__pthread_hurd_cond_timedwait_np_2_13 (pthread_cond_t *cond,
-				  pthread_mutex_t *mutex,
-				  const struct timespec *abstime)
-{
-  return __pthread_hurd_cond_timedwait_internal (cond, mutex, abstime);
-}
-compat_symbol (libpthread, __pthread_hurd_cond_timedwait_np_2_13, pthread_hurd_cond_timedwait_np, GLIBC_2_13_DEBIAN_39);
-#endif
+strong_alias (__pthread_hurd_cond_timedwait_np, pthread_hurd_cond_timedwait_np);
 
 int
 __pthread_hurd_cond_timedwait_internal (pthread_cond_t *cond,

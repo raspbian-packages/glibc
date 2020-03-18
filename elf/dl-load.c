@@ -947,21 +947,6 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
   /* This is the ELF header.  We read it in `open_verify'.  */
   header = (void *) fbp->buf;
 
-#ifndef MAP_ANON
-# define MAP_ANON 0
-  if (_dl_zerofd == -1)
-    {
-      _dl_zerofd = _dl_sysdep_open_zero_fill ();
-      if (_dl_zerofd == -1)
-	{
-	  free (realname);
-	  __close_nocancel (fd);
-	  _dl_signal_error (errno, NULL, NULL,
-			    N_("cannot open zero fill device"));
-	}
-    }
-#endif
-
   /* Signal that we are going to add new objects.  */
   if (r->r_state == RT_CONSISTENT)
     {
@@ -1173,6 +1158,10 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 	goto call_lose;
       }
 
+    /* dlopen of an executable is not valid because it is not possible
+       to perform proper relocations, handle static TLS, or run the
+       ELF constructors.  For PIE, the check needs the dynamic
+       section, so there is another check below.  */
     if (__glibc_unlikely (type != ET_DYN)
 	&& __glibc_unlikely ((mode & __RTLD_OPENEXEC) == 0))
       {
@@ -1209,9 +1198,11 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
   elf_get_dynamic_info (l, NULL);
 
   /* Make sure we are not dlopen'ing an object that has the
-     DF_1_NOOPEN flag set.  */
-  if (__glibc_unlikely (l->l_flags_1 & DF_1_NOOPEN)
-      && (mode & __RTLD_DLOPEN))
+     DF_1_NOOPEN flag set, or a PIE object.  */
+  if ((__glibc_unlikely (l->l_flags_1 & DF_1_NOOPEN)
+       && (mode & __RTLD_DLOPEN))
+      || (__glibc_unlikely (l->l_flags_1 & DF_1_PIE)
+	  && __glibc_unlikely ((mode & __RTLD_OPENEXEC) == 0)))
     {
       /* We are not supposed to load this object.  Free all resources.  */
       _dl_unmap_segments (l);
@@ -1222,7 +1213,11 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
       if (l->l_phdr_allocated)
 	free ((void *) l->l_phdr);
 
-      errstring = N_("shared object cannot be dlopen()ed");
+      if (l->l_flags_1 & DF_1_PIE)
+	errstring
+	  = N_("cannot dynamically load position-independent executable");
+      else
+	errstring = N_("shared object cannot be dlopen()ed");
       goto call_lose;
     }
 
@@ -1581,15 +1576,15 @@ open_verify (const char *name, int fd,
 	  const Elf32_Word *magp = (const void *) ehdr->e_ident;
 	  if (*magp !=
 #if BYTE_ORDER == LITTLE_ENDIAN
-	      ((ELFMAG0 << (EI_MAG0 * 8)) |
-	       (ELFMAG1 << (EI_MAG1 * 8)) |
-	       (ELFMAG2 << (EI_MAG2 * 8)) |
-	       (ELFMAG3 << (EI_MAG3 * 8)))
+	      ((ELFMAG0 << (EI_MAG0 * 8))
+	       | (ELFMAG1 << (EI_MAG1 * 8))
+	       | (ELFMAG2 << (EI_MAG2 * 8))
+	       | (ELFMAG3 << (EI_MAG3 * 8)))
 #else
-	      ((ELFMAG0 << (EI_MAG3 * 8)) |
-	       (ELFMAG1 << (EI_MAG2 * 8)) |
-	       (ELFMAG2 << (EI_MAG1 * 8)) |
-	       (ELFMAG3 << (EI_MAG0 * 8)))
+	      ((ELFMAG0 << (EI_MAG3 * 8))
+	       | (ELFMAG1 << (EI_MAG2 * 8))
+	       | (ELFMAG2 << (EI_MAG1 * 8))
+	       | (ELFMAG3 << (EI_MAG0 * 8)))
 #endif
 	      )
 	    errstring = N_("invalid ELF header");

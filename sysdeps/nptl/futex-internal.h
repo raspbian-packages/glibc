@@ -49,10 +49,9 @@
    futex word.
 
    Both absolute and relative timeouts can be used.  An absolute timeout
-   expires when the given specific point in time on the CLOCK_REALTIME clock
+   expires when the given specific point in time on the specified clock
    passes, or when it already has passed.  A relative timeout expires when
-   the given duration of time on the CLOCK_MONOTONIC clock passes.  Relative
-   timeouts may be imprecise (see futex_supports_exact_relative_timeouts).
+   the given duration of time on the CLOCK_MONOTONIC clock passes.
 
    Due to POSIX requirements on when synchronization data structures such
    as mutexes or semaphores can be destroyed and due to the futex design
@@ -80,12 +79,6 @@
    ENOTSUP if not.  */
 static __always_inline int
 futex_supports_pshared (int pshared);
-
-/* Returns true if relative timeouts are robust to concurrent changes to the
-   system clock.  If this returns false, relative timeouts can still be used
-   but might be effectively longer or shorter than requested.  */
-static __always_inline bool
-futex_supports_exact_relative_timeouts (void);
 
 /* Atomically wrt other futex operations on the same futex, this blocks iff
    the value *FUTEX_WORD matches the expected value.  This is
@@ -159,16 +152,23 @@ futex_reltimed_wait_cancelable (unsigned int* futex_word,
 				unsigned int expected,
 			        const struct timespec* reltime, int private);
 
+/* Check whether the specified clockid is supported by
+   futex_abstimed_wait and futex_abstimed_wait_cancelable.  */
+static __always_inline int
+futex_abstimed_supported_clockid (clockid_t clockid);
+
 /* Like futex_reltimed_wait, but the provided timeout (ABSTIME) is an
    absolute point in time; a call will time out after this point in time.  */
 static __always_inline int
 futex_abstimed_wait (unsigned int* futex_word, unsigned int expected,
+		     clockid_t clockid,
 		     const struct timespec* abstime, int private);
 
 /* Like futex_reltimed_wait but is a POSIX cancellation point.  */
 static __always_inline int
 futex_abstimed_wait_cancelable (unsigned int* futex_word,
 				unsigned int expected,
+				clockid_t clockid,
 			        const struct timespec* abstime, int private);
 
 /* Atomically wrt other futex operations on the same futex, this unblocks the

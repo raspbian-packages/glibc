@@ -108,9 +108,14 @@
   (IO_validate_vtable                                                   \
    (*(struct _IO_jump_t **) ((void *) &_IO_JUMPS_FILE_plus (THIS)	\
 			     + (THIS)->_vtable_offset)))
+# define _IO_JUMPS_FUNC_UPDATE(THIS, VTABLE)				\
+  (*(const struct _IO_jump_t **) ((void *) &_IO_JUMPS_FILE_plus (THIS)	\
+				  + (THIS)->_vtable_offset) = (VTABLE))
 # define _IO_vtable_offset(THIS) (THIS)->_vtable_offset
 #else
 # define _IO_JUMPS_FUNC(THIS) (IO_validate_vtable (_IO_JUMPS_FILE_plus (THIS)))
+# define _IO_JUMPS_FUNC_UPDATE(THIS, VTABLE) \
+  (_IO_JUMPS_FILE_plus (THIS) = (VTABLE))
 # define _IO_vtable_offset(THIS) 0
 #endif
 #define _IO_WIDE_JUMPS_FUNC(THIS) _IO_WIDE_JUMPS(THIS)
@@ -476,7 +481,6 @@ extern const struct _IO_jump_t _IO_streambuf_jumps;
 extern const struct _IO_jump_t _IO_old_proc_jumps attribute_hidden;
 extern const struct _IO_jump_t _IO_str_jumps attribute_hidden;
 extern const struct _IO_jump_t _IO_wstr_jumps attribute_hidden;
-extern const struct _IO_codecvt __libio_codecvt attribute_hidden;
 extern int _IO_do_write (FILE *, const char *, size_t);
 libc_hidden_proto (_IO_do_write)
 extern int _IO_new_do_write (FILE *, const char *, size_t);
@@ -708,10 +712,22 @@ extern int __vswprintf_internal (wchar_t *string, size_t maxlen,
    defined to 1 or 2.  Otherwise, such checks are ignored.
 
    PRINTF_CHK indicates, to the internal function being called, that the
-   call is originated from one of the __*printf_chk functions.  */
-#define PRINTF_LDBL_IS_DBL 0x0001
-#define PRINTF_FORTIFY     0x0002
-#define PRINTF_CHK	   0x0004
+   call is originated from one of the __*printf_chk functions.
+
+   PRINTF_LDBL_USES_FLOAT128 is used on platforms where the long double
+   format used to be different from the IEC 60559 double format *and*
+   also different from the Quadruple 128-bits IEC 60559 format (such as
+   the IBM Extended Precision format on powerpc or the 80-bits IEC 60559
+   format on x86), but was later converted to the Quadruple 128-bits IEC
+   60559 format, which is the same format that the _Float128 always has
+   (hence the `USES_FLOAT128' suffix in the name of the flag).  When set
+   to one, this macro indicates that long double values are to be
+   handled as having this new format.  Otherwise, they should be handled
+   as the previous format on that platform.  */
+#define PRINTF_LDBL_IS_DBL		0x0001
+#define PRINTF_FORTIFY			0x0002
+#define PRINTF_CHK			0x0004
+#define PRINTF_LDBL_USES_FLOAT128	0x0008
 
 extern size_t _IO_getline (FILE *,char *, size_t, int, int);
 libc_hidden_proto (_IO_getline)
@@ -817,16 +833,44 @@ extern int _IO_vscanf (const char *, va_list) __THROW;
 # endif
 #endif
 
-extern struct _IO_fake_stdiobuf _IO_stdin_buf, _IO_stdout_buf, _IO_stderr_buf;
+#if SHLIB_COMPAT (libc, GLIBC_2_0, GLIBC_2_1)
+/* See oldstdfiles.c.  These are the old stream variables.  */
+extern struct _IO_FILE_plus _IO_stdin_;
+extern struct _IO_FILE_plus _IO_stdout_;
+extern struct _IO_FILE_plus _IO_stderr_;
+
+static inline bool
+_IO_legacy_file (FILE *fp)
+{
+  return fp == (FILE *) &_IO_stdin_ || fp == (FILE *) &_IO_stdout_
+    || fp == (FILE *) &_IO_stderr_;
+}
+#endif
+
+/* Deallocate a stream if it is heap-allocated.  Preallocated
+   stdin/stdout/stderr streams are not deallocated. */
+static inline void
+_IO_deallocate_file (FILE *fp)
+{
+  /* The current stream variables.  */
+  if (fp == (FILE *) &_IO_2_1_stdin_ || fp == (FILE *) &_IO_2_1_stdout_
+      || fp == (FILE *) &_IO_2_1_stderr_)
+    return;
+#if SHLIB_COMPAT (libc, GLIBC_2_0, GLIBC_2_1)
+  if (_IO_legacy_file (fp))
+    return;
+#endif
+  free (fp);
+}
 
 #ifdef IO_DEBUG
-# define CHECK_FILE(FILE, RET) do {			\
-    if ((FILE) == NULL ||				\
-	((FILE)->_flags & _IO_MAGIC_MASK) != _IO_MAGIC) \
-      {							\
-	__set_errno (EINVAL);				\
-	return RET;					\
-      }							\
+# define CHECK_FILE(FILE, RET) do {				\
+    if ((FILE) == NULL						\
+	|| ((FILE)->_flags & _IO_MAGIC_MASK) != _IO_MAGIC)	\
+      {								\
+	__set_errno (EINVAL);					\
+	return RET;						\
+      }								\
   } while (0)
 #else
 # define CHECK_FILE(FILE, RET) do { } while (0)
@@ -903,5 +947,33 @@ IO_validate_vtable (const struct _IO_jump_t *vtable)
     _IO_vtable_check ();
   return vtable;
 }
+
+/* Character set conversion.  */
+
+enum __codecvt_result
+{
+  __codecvt_ok,
+  __codecvt_partial,
+  __codecvt_error,
+  __codecvt_noconv
+};
+
+enum __codecvt_result __libio_codecvt_out (struct _IO_codecvt *,
+					   __mbstate_t *,
+					   const wchar_t *,
+					   const wchar_t *,
+					   const wchar_t **, char *,
+					   char *, char **)
+  attribute_hidden;
+enum __codecvt_result __libio_codecvt_in (struct _IO_codecvt *,
+					  __mbstate_t *,
+					  const char *, const char *,
+					  const char **, wchar_t *,
+					  wchar_t *, wchar_t **)
+  attribute_hidden;
+int __libio_codecvt_encoding (struct _IO_codecvt *) attribute_hidden;
+int __libio_codecvt_length (struct _IO_codecvt *, __mbstate_t *,
+			    const char *, const char *, size_t)
+  attribute_hidden;
 
 #endif /* libioP.h.  */

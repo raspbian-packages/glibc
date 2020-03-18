@@ -4035,7 +4035,7 @@ if ${CC-cc} $CFLAGS $CPPFLAGS $LDFLAGS \
 	    -o conftest conftest.S 1>&5 2>&5; then
   # Do a link to see if the backend supports IFUNC relocs.
   $READELF -r conftest 1>&5
-  LC_ALL=C $READELF -r conftest | grep 'no relocations' >/dev/null || {
+  LC_ALL=C $READELF -Wr conftest | grep -q 'IRELATIVE\|R_SPARC_JMP_IREL' && {
     libc_cv_ld_gnu_indirect_function=yes
   }
 fi
@@ -5142,7 +5142,7 @@ int
 main ()
 {
 
-#if !defined __GNUC__ || __GNUC__ < 5
+#if !defined __GNUC__ || __GNUC__ < 6 || (__GNUC__ == 6 && __GNUC_MINOR__ < 2)
 #error insufficient compiler
 #endif
   ;
@@ -6817,6 +6817,8 @@ if test x"$libc_cv_ld_gnu_indirect_function" = xyes; then
   $as_echo "#define HAVE_IFUNC 1" >>confdefs.h
 
 fi
+config_vars="$config_vars
+have-ifunc = $libc_cv_ld_gnu_indirect_function"
 
 if test x"$libc_cv_gcc_indirect_function" = xyes; then
   $as_echo "#define HAVE_GCC_IFUNC 1" >>confdefs.h

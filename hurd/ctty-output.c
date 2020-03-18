@@ -41,8 +41,8 @@ _hurd_ctty_output (io_t port, io_t ctty, error_t (*rpc) (io_t))
 	     the signal handler changed the state.  */
 	  _hurd_sigstate_lock (ss);
 	  actions = _hurd_sigstate_actions (ss);
-	  if (__sigismember (&ss->blocked, SIGTTOU) ||
-	      actions[SIGTTOU].sa_handler == SIG_IGN)
+	  if (__sigismember (&ss->blocked, SIGTTOU)
+	      || actions[SIGTTOU].sa_handler == SIG_IGN)
 	    err = EIO;
 	  else
 	    err = 0;

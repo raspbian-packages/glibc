@@ -17,34 +17,16 @@
    <http://www.gnu.org/licenses/>.  */
 
 #define TEST_MAIN
-#ifdef TEST_BCOPY
-# define TEST_NAME "bcopy"
-#else
-# define TEST_NAME "memmove"
-#endif
+#define TEST_NAME "memmove"
 #include "bench-string.h"
 #include "json-lib.h"
 
 char *simple_memmove (char *, const char *, size_t);
 
-#ifdef TEST_BCOPY
-typedef void (*proto_t) (const char *, char *, size_t);
-void simple_bcopy (const char *, char *, size_t);
-
-IMPL (simple_bcopy, 0)
-IMPL (bcopy, 1)
-
-void
-simple_bcopy (const char *src, char *dst, size_t n)
-{
-  simple_memmove (dst, src, n);
-}
-#else
 typedef char *(*proto_t) (char *, const char *, size_t);
 
-IMPL (simple_memmove, 0)
 IMPL (memmove, 1)
-#endif
+IMPL (simple_memmove, 0)
 
 char *
 inhibit_loop_to_libcall
@@ -65,8 +47,8 @@ simple_memmove (char *dst, const char *src, size_t n)
 }
 
 static void
-do_one_test (json_ctx_t *json_ctx, impl_t *impl, char *dst, char *src, const
-	     char *orig_src, size_t len)
+do_one_test (json_ctx_t *json_ctx, impl_t *impl, char *dst, char *src,
+	     size_t len)
 {
   size_t i, iters = INNER_LOOP_ITERS;
   timing_t start, stop, cur;
@@ -74,11 +56,7 @@ do_one_test (json_ctx_t *json_ctx, impl_t *impl, char *dst, char *src, const
   TIMING_NOW (start);
   for (i = 0; i < iters; ++i)
     {
-#ifdef TEST_BCOPY
-      CALL (impl, src, dst, len);
-#else
       CALL (impl, dst, src, len);
-#endif
     }
   TIMING_NOW (stop);
 
@@ -101,7 +79,7 @@ do_test (json_ctx_t *json_ctx, size_t align1, size_t align2, size_t len)
   if (align2 + len >= page_size)
     return;
 
-  s1 = (char *) (buf1 + align1);
+  s1 = (char *) (buf2 + align1);
   s2 = (char *) (buf2 + align2);
 
   for (i = 0, j = 1; i < len; i++, j += 23)
@@ -114,7 +92,7 @@ do_test (json_ctx_t *json_ctx, size_t align1, size_t align2, size_t len)
   json_array_begin (json_ctx, "timings");
 
   FOR_EACH_IMPL (impl, 0)
-    do_one_test (json_ctx, impl, s2, (char *) (buf2 + align1), s1, len);
+    do_one_test (json_ctx, impl, s2, s1, len);
 
   json_array_end (json_ctx);
   json_element_object_end (json_ctx);

@@ -495,8 +495,8 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp,
 		}
 	      else
 		{
-		  if (s.decided == not &&
-		      strcmp (_NL_CURRENT (LC_TIME, D_T_FMT), HERE_D_T_FMT))
+		  if (s.decided == not
+		      && strcmp (_NL_CURRENT (LC_TIME, D_T_FMT), HERE_D_T_FMT))
 		    s.decided = loc;
 		  s.want_xday = 1;
 		  break;
@@ -641,9 +641,9 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp,
 		}
 	      else
 		{
-		  if (s.decided == not &&
-		      strcmp (_NL_CURRENT (LC_TIME, T_FMT_AMPM),
-			      HERE_T_FMT_AMPM))
+		  if (s.decided == not
+		      && strcmp (_NL_CURRENT (LC_TIME, T_FMT_AMPM),
+				 HERE_T_FMT_AMPM))
 		    s.decided = loc;
 		  break;
 		}
@@ -907,10 +907,15 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp,
 			{
 			  int delta = ((tm->tm_year - era->offset)
 				       * era->absolute_direction);
+			  /* The difference between two sets of years
+			     does not include the final year itself,
+			     therefore add 1 to the difference to
+			     account for that final year.  */
 			  match = (delta >= 0
 				   && delta < (((int64_t) era->stop_date[0]
 						- (int64_t) era->start_date[0])
-					       * era->absolute_direction));
+					       * era->absolute_direction
+					       + 1));
 			}
 		      if (! match)
 			return NULL;
@@ -928,10 +933,12 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp,
 			{
 			  int delta = ((tm->tm_year - era->offset)
 				       * era->absolute_direction);
+			  /* See comment above about year difference + 1.  */
 			  if (delta >= 0
 			      && delta < (((int64_t) era->stop_date[0]
 					   - (int64_t) era->start_date[0])
-					  * era->absolute_direction))
+					  * era->absolute_direction
+					  + 1))
 			    {
 			      s.decided = loc;
 			      break;

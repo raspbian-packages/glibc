@@ -76,7 +76,9 @@ libpthread-routines = nptl-init nptlfreeres vars events version pt-interp \
 		      pthread_mutexattr_gettype pthread_mutexattr_settype \
 		      pthread_rwlock_init pthread_rwlock_destroy \
 		      pthread_rwlock_rdlock pthread_rwlock_timedrdlock \
+		      pthread_rwlock_clockrdlock \
 		      pthread_rwlock_wrlock pthread_rwlock_timedwrlock \
+		      pthread_rwlock_clockwrlock \
 		      pthread_rwlock_tryrdlock pthread_rwlock_trywrlock \
 		      pthread_rwlock_unlock \
 		      pthread_rwlockattr_init pthread_rwlockattr_destroy \
@@ -109,19 +111,18 @@ libpthread-routines = nptl-init nptlfreeres vars events version pt-interp \
 		      pthread_once \
 		      old_pthread_atfork \
 		      pthread_getcpuclockid \
-		      pthread_clock_gettime pthread_clock_settime \
 		      shm-directory \
 		      sem_init sem_destroy \
 		      sem_open sem_close sem_unlink \
 		      sem_getvalue \
-		      sem_wait sem_timedwait sem_post \
+		      sem_wait sem_timedwait sem_clockwait sem_post \
 		      cleanup cleanup_defer cleanup_compat \
 		      cleanup_defer_compat unwind \
 		      pt-longjmp pt-cleanup\
 		      cancellation \
 		      lowlevellock \
-		      lll_timedlock_wait lll_timedwait_tid \
-		      pt-fork pt-vfork pt-fcntl \
+		      lll_timedlock_wait \
+		      pt-fork pt-fcntl \
 		      $(pthread-compat-wrappers) \
 		      pt-raise pt-system \
 		      flockfile ftrylockfile funlockfile \
@@ -145,7 +146,8 @@ libpthread-routines = nptl-init nptlfreeres vars events version pt-interp \
 		      mtx_destroy mtx_init mtx_lock mtx_timedlock \
 		      mtx_trylock mtx_unlock call_once cnd_broadcast \
 		      cnd_destroy cnd_init cnd_signal cnd_timedwait cnd_wait \
-		      tss_create tss_delete tss_get tss_set pthread_mutex_conf
+		      tss_create tss_delete tss_get tss_set pthread_mutex_conf \
+		      libpthread-compat
 #		      pthread_setuid pthread_seteuid pthread_setreuid \
 #		      pthread_setresuid \
 #		      pthread_setgid pthread_setegid pthread_setregid \
@@ -194,6 +196,7 @@ CFLAGS-pthread_once.c += $(uses-callbacks) -fexceptions \
 CFLAGS-pthread_cond_wait.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-sem_wait.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-sem_timedwait.c += -fexceptions -fasynchronous-unwind-tables
+CFLAGS-sem_clockwait.c = -fexceptions -fasynchronous-unwind-tables
 
 # These are the function wrappers we have to duplicate here.
 CFLAGS-fcntl.c += -fexceptions -fasynchronous-unwind-tables
@@ -241,7 +244,7 @@ LDLIBS-tst-minstack-throw = -lstdc++
 
 tests = tst-attr1 tst-attr2 tst-attr3 tst-default-attr \
 	tst-mutex1 tst-mutex2 tst-mutex3 tst-mutex4 tst-mutex5 tst-mutex6 \
-	tst-mutex7 tst-mutex9 tst-mutex10 tst-mutex5a tst-mutex7a \
+	tst-mutex7 tst-mutex9 tst-mutex10 tst-mutex11 tst-mutex5a tst-mutex7a \
 	tst-mutex7robust tst-mutexpi1 tst-mutexpi2 tst-mutexpi3 tst-mutexpi4 \
 	tst-mutexpi5 tst-mutexpi5a tst-mutexpi6 tst-mutexpi7 tst-mutexpi7a \
 	tst-mutexpi9 \
@@ -250,6 +253,7 @@ tests = tst-attr1 tst-attr2 tst-attr3 tst-default-attr \
 	tst-cond8 tst-cond9 tst-cond10 tst-cond11 tst-cond12 tst-cond13 \
 	tst-cond14 tst-cond15 tst-cond16 tst-cond17 tst-cond18 tst-cond19 \
 	tst-cond20 tst-cond21 tst-cond22 tst-cond23 tst-cond24 tst-cond25 \
+	tst-cond26 tst-cond27 \
 	tst-cond-except \
 	tst-robust1 tst-robust2 tst-robust3 tst-robust4 tst-robust5 \
 	tst-robust6 tst-robust7 tst-robust8 tst-robust9 \
@@ -263,7 +267,7 @@ tests = tst-attr1 tst-attr2 tst-attr3 tst-default-attr \
 	tst-key1 tst-key2 tst-key3 tst-key4 \
 	tst-sem1 tst-sem2 tst-sem3 tst-sem4 tst-sem5 tst-sem6 tst-sem7 \
 	tst-sem8 tst-sem9 tst-sem10 tst-sem14 \
-	tst-sem15 tst-sem16 \
+	tst-sem15 tst-sem16 tst-sem17 \
 	tst-barrier1 tst-barrier2 tst-barrier3 tst-barrier4 \
 	tst-align tst-align3 \
 	tst-basic1 tst-basic2 tst-basic3 tst-basic4 tst-basic5 tst-basic6 \
@@ -271,8 +275,9 @@ tests = tst-attr1 tst-attr2 tst-attr3 tst-default-attr \
 	tst-kill1 tst-kill2 tst-kill3 tst-kill4 tst-kill5 tst-kill6 \
 	tst-raise1 \
 	tst-join1 tst-join2 tst-join3 tst-join4 tst-join5 tst-join6 tst-join7 \
+	tst-join8 tst-join9 \
 	tst-detach1 \
-	tst-eintr1 tst-eintr2 tst-eintr3 tst-eintr4 tst-eintr5 \
+	tst-eintr2 tst-eintr3 tst-eintr4 tst-eintr5 \
 	tst-tsd1 tst-tsd2 tst-tsd3 tst-tsd4 tst-tsd5 tst-tsd6 \
 	tst-tls1 tst-tls2 \
 	tst-fork1 tst-fork2 tst-fork3 tst-fork4 \
@@ -320,7 +325,8 @@ tests = tst-attr1 tst-attr2 tst-attr3 tst-default-attr \
 	tst-cnd-timedwait tst-thrd-detach tst-mtx-basic tst-thrd-sleep \
 	tst-mtx-recursive tst-tss-basic tst-call-once tst-mtx-timedlock \
 	tst-rwlock-pwn \
-	tst-rwlock-tryrdlock-stall tst-rwlock-trywrlock-stall
+	tst-rwlock-tryrdlock-stall tst-rwlock-trywrlock-stall \
+	tst-unwind-thread
 
 tests-internal := tst-rwlock19 tst-rwlock20 \
 		  tst-sem11 tst-sem12 tst-sem13 \
@@ -329,6 +335,11 @@ tests-internal := tst-rwlock19 tst-rwlock20 \
 
 xtests = tst-setuid1 tst-setuid1-static tst-setuid2 \
 	tst-mutexpp1 tst-mutexpp6 tst-mutexpp10
+
+# This test can run into task limits because of a linux kernel bug
+# and then cause the make process to fail too, see bug 24537.
+xtests += tst-eintr1
+
 test-srcs = tst-oddstacklimit
 
 # Test expected to fail on most targets (except x86_64) due to bug
@@ -709,6 +720,8 @@ LDFLAGS-tst-audit-threads = -Wl,-z,lazy
 $(objpfx)tst-audit-threads: $(objpfx)tst-audit-threads-mod2.so
 $(objpfx)tst-audit-threads.out: $(objpfx)tst-audit-threads-mod1.so
 tst-audit-threads-ENV = LD_AUDIT=$(objpfx)tst-audit-threads-mod1.so
+
+CFLAGS-tst-unwind-thread.c += -funwind-tables
 
 # The tests here better do not run in parallel
 ifneq ($(filter %tests,$(MAKECMDGOALS)),)

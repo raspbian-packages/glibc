@@ -1,4 +1,4 @@
-glibc (2.29-10+rpi1) bullseye-staging; urgency=medium
+glibc (2.30-2+rpi1) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -9,7 +9,133 @@ glibc (2.29-10+rpi1) bullseye-staging; urgency=medium
     script does not seem to be used for anything in the Debian
     package.
 
- -- Raspbian forward porter <root@raspbian.org>  Mon, 17 Feb 2020 21:00:29 +0000
+ -- Peter Michael Green <plugwash@raspbian.org>  Wed, 18 Mar 2020 19:27:53 +0000
+
+glibc (2.30-2) unstable; urgency=medium
+
+  * debian/rules.d/debhelper.mk: depends on libgcc-sN instead of libgccN.
+    Closes: #953657.
+  * debian/rules.d/build.mk: do not install <finclude/math-vector-fortran.h>
+    for now as it is not multiarch safe.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Thu, 12 Mar 2020 23:47:03 +0100
+
+glibc (2.30-1) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * testsuite-xfail-debian.mk: Update non-regressions.
+  * debian/patches/hurd-i386/git-fork-pthread_exit.diff: New patch to fix
+    pthread_exit after fork.
+  * debian/patches/hurd-i386/git-spin_lock.diff: New patch to fix
+    pthread_spin_lock behavior for shared memory.
+  * debian/patches/hurd-i386/git-barrier-1.diff: New patch to fix
+    pthread_barrier_wait with one thread.
+  * debian/patches/hurd-i386/git-sem-intr.diff: New patch to make
+    sem_wait/timedwait interruptible.
+  * debian/patches/hurd-i386/local-atfork-link.diff: New patch to fix
+    libpthread link.
+  * debian/patches/hurd-i386/git-register-atfork.diff: Fix linking with static
+    libpthread.
+  * debian/patches/hurd-i386/git-pthread_self.diff: New patch to improve
+    libpthread performance.
+
+  [ Aurelien Jarno ]
+  * debian/patches/any/local-revert-24323.diff: drop, obsolete.
+  * debian/control.in/libc: add a Breaks: against wcc (<< 0.0.2+dfsg-3).
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix argument passing for inlined syscalls on mips* and riscv64.
+      Closes: #951237.
+    - Fix stack corruption in trigonometric functions when passing a
+      pseudo-zero argument on x86 (CVE-2020-10029).  Closes: #953108.
+    - debian/patches/any/submitted-stt-gnu-ifunc-detection.patch: upstreamed.
+  * debian/sysdeps/*.mk: stop building libcrypt for multilib packages.
+    Closes: #951880.
+  * debian/debhelper.in/libc.postinst: drop upstart support.
+  * debian/patches/any/local-revert-glibc_has_include.diff: partial revert
+    of upstream commit bfa864e1645e until gcc stops providing fix-includes.
+    Closes: #953083.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Wed, 11 Mar 2020 22:02:51 +0100
+
+glibc (2.30-0experimental2) experimental; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+  * debian/patches/any/submitted-stt-gnu-ifunc-detection.patch: fix
+    STT_GNU_IFUNC assembler and linker detection for toolchains defaulting to
+    PIE.
+  * debian/sysdeps/mips*.mk: drop -no-pie.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Wed, 05 Feb 2020 23:01:35 +0100
+
+glibc (2.30-0experimental1) experimental; urgency=medium
+
+  [ Samuel Thibault ]
+  * patches/hurd-i386/tg-sendmsg-SCM_RIGHTS.diff: Rename to
+    git-sendmsg-SCM_RIGHTS.diff.
+  * patches/hurd-i386/tg-context_functions.diff: Rename to
+    git-context_functions.diff.
+  * patches/hurd-i386/tg-hurdsig-fixes.diff: Rename to git-hurdsig-fixes.diff.
+  * patches/hurd-i386/tg-hurdsig-global-dispositions.diff: Rename to
+    git-hurdsig-global-dispositions.diff, refresh.
+  * patches/hurd-i386/local-hurdsig-globaldisp-version.diff: Rename to
+    git-hurdsig-globaldisp-version.diff.
+  * patches/hurd-i386/tg-hurdsig-fixes-2.diff: Rename to
+    git-hurdsig-fixes-2.diff.
+  * patches/hurd-i386/tg-hurdsig-boot-fix.diff: Rename to
+    git-hurdsig-boot-fix.diff.
+  * patches/hurd-i386/libpthread_sigs.diff: Rename to libpthread_sigs.diff.
+  * patches/hurd-i386/local-hurd_sigstate-PLT.diff: Rename to
+    git-hurd_sigstate-PLT.diff.
+  * patches/hurd-i386/tg-hurdsig-SA_SIGINFO.diff: Refresh.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Thu, 02 Jan 2020 12:16:20 +0100
+
+glibc (2.30-0experimental0) experimental; urgency=medium
+
+  [ Adam Conrad ]
+  * New upstream release 2.30, with git updates up to 2019-09-08:
+    - debian/symbols.wildcard: Add 2.30, and debian/control: Regenerate.
+    - debian/patches/any/git-libio-stdout-putc.diff: Upstreamed.
+    - debian/patches/any/git-pexpect-pretty-printers.diff: Upstreamed.
+    - debian/patches/any/git-socket-constants.diff: Upstreamed.
+    - debian/patches/any/local-tst-eintr1-eagain.diff: Obsolete.
+    - debian/patches/hurd-i386/git-renameat2.diff: Upstreamed.
+    - debian/patches/any/submitted-resolv-unaligned.diff: Rebased.
+    - debian/patches/hurd-i386/tg-hurdsig-SA_SIGINFO.diff: Rebased.
+    - debian/patches/hurd-i386/tg-hurdsig-fixes-2.diff: Rebased.
+    - debian/patches/hurd-i386/tg-hurdsig-fixes.diff: Rebased.
+    - debian/patches/hurd-i386/tg-hurdsig-global-dispositions.diff: Rebased.
+    - debian/patches/hurd-i386/tg-io_select_timeout.diff: Rebased.
+    - debian/patches/hurd-i386/tg-thread-cancel.diff: Rebased.
+    - debian/patches/kfreebsd/submitted-auxv.diff: Rebased.
+    - debian/patches/locale/locale-print-LANGUAGE.diff: Update for new test.
+  * debian/patches/any/local-test-install.diff: Use install_root rather than
+    DESTDIR when installing container root, since we override install_root.
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/local-fix-nss.diff: Rebased.
+  * debian/patches/hurd-i386/{tg-single-select-timeout.diff,tg-setitimer.diff,
+    tg-remap_getcwd.diff,tg-io_select_timeout.diff,tg-poll_errors_fixes.diff,
+    submitted-anon-mmap-shared.diff,tg-ONSTACK.diff}: Rename to git-foo,
+    committed upstream for 2.31.
+  * debian/testsuite-xfail-debian.mk: Update with new failing tests and fixed
+    tests.
+  * debian/patches/hurd-i386/git-ONSTACK.diff: Move earlier in the queue,
+    since was applied upstream.
+  * debian/patches/hurd-i386/tg-hurdsig-global-dispositions.diff: Rebase
+    accordingly.
+  * debian/patches/hurd-i386/libpthread_version.diff: Remove, now useless.
+  * debian/patches/hurd-i386/local-hurdsig-globaldisp-version.diff: Remove
+    version compatibility symbols, now useless.
+  * debian/libc0.3.symbols.hurd-i386: Update accordingly.
+  * debian/patches/hurd-i386/tg-sysvshm.diff: Fix warning.
+  * debian/patches/hurd-i386/local-versionshack.diff: Remove, now useless.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Fri, 06 Dec 2019 23:18:04 +0100
 
 glibc (2.29-10) unstable; urgency=medium
 

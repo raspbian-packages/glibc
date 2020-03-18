@@ -21,7 +21,7 @@
 
 #ifndef __ASSEMBLER__
 #include <sysdep.h>
-#include <tls.h>
+#include <sysdep-cancel.h>
 #include <kernel-features.h>
 #endif
 
@@ -82,12 +82,32 @@
 		     __lll_private_flag (FUTEX_WAIT, private),  \
 		     val, timeout)
 
-#define lll_futex_timed_wait_bitset(futexp, val, timeout, clockbit, private) \
-  lll_futex_syscall (6, futexp,                                         \
-		     __lll_private_flag (FUTEX_WAIT_BITSET | (clockbit), \
-					 private),                      \
-		     val, timeout, NULL /* Unused.  */,                 \
-		     FUTEX_BITSET_MATCH_ANY)
+/* Verify whether the supplied clockid is supported by
+   lll_futex_clock_wait_bitset.  */
+#define lll_futex_supported_clockid(clockid)			\
+  ((clockid) == CLOCK_REALTIME || (clockid) == CLOCK_MONOTONIC)
+
+/* The kernel currently only supports CLOCK_MONOTONIC or
+   CLOCK_REALTIME timeouts for FUTEX_WAIT_BITSET.  We could attempt to
+   convert others here but currently do not.  */
+#define lll_futex_clock_wait_bitset(futexp, val, clockid, timeout, private) \
+  ({									\
+    long int __ret;							\
+    if (lll_futex_supported_clockid (clockid))                          \
+      {                                                                 \
+        const unsigned int clockbit =                                   \
+          (clockid == CLOCK_REALTIME) ? FUTEX_CLOCK_REALTIME : 0;       \
+        const int op =                                                  \
+          __lll_private_flag (FUTEX_WAIT_BITSET | clockbit, private);   \
+                                                                        \
+        __ret = lll_futex_syscall (6, futexp, op, val,                  \
+                                   timeout, NULL /* Unused.  */,	\
+                                   FUTEX_BITSET_MATCH_ANY);		\
+      }                                                                 \
+    else                                                                \
+      __ret = -EINVAL;							\
+    __ret;								\
+  })
 
 #define lll_futex_wake(futexp, nr, private)                             \
   lll_futex_syscall (4, futexp,                                         \
@@ -135,6 +155,13 @@
     __err;							       \
   })
 
+#define lll_futex_timed_wait_cancel(futexp, val, timeout, private)	   \
+  ({									   \
+    int __oldtype = CANCEL_ASYNC ();				       	   \
+    long int __err = lll_futex_timed_wait (futexp, val, timeout, private); \
+    CANCEL_RESET (__oldtype);						   \
+    __err;								   \
+  })
 
 #endif  /* !__ASSEMBLER__  */
 

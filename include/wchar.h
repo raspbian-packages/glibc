@@ -143,6 +143,8 @@ libc_hidden_proto (wmemchr)
 libc_hidden_proto (__wmemchr)
 libc_hidden_proto (wmemset)
 libc_hidden_proto (__wmemset)
+extern int __wmemcmp (const wchar_t *__s1, const wchar_t *__s2, size_t __n)
+     __THROW __attribute_pure__;
 
 /* Now define the internal interfaces.  */
 extern int __wcscasecmp (const wchar_t *__s1, const wchar_t *__s2)
@@ -180,6 +182,10 @@ extern size_t __wcsnrtombs (char *__restrict __dst,
 			    size_t __nwc, size_t __len,
 			    __mbstate_t *__restrict __ps)
      attribute_hidden;
+extern wchar_t *__wcscpy (wchar_t *__restrict __dest,
+			  const wchar_t *__restrict __src)
+			  attribute_hidden __nonnull ((1, 2));
+libc_hidden_proto (__wcscpy)
 extern wchar_t *__wcsncpy (wchar_t *__restrict __dest,
 			   const wchar_t *__restrict __src, size_t __n);
 extern wchar_t *__wcpcpy (wchar_t *__dest, const wchar_t *__src);

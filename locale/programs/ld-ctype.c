@@ -1396,7 +1396,8 @@ charclass_symbolic_ellipsis (struct linereader *ldfile,
 		   (int) (now->val.str.lenmb - (cp - last_str)),
 		   from);
 
-	  get_character (now, charmap, repertoire, &seq, &wch);
+	  if (get_character (now, charmap, repertoire, &seq, &wch))
+	    goto invalid_range;
 
 	  if (seq != NULL && seq->nbytes == 1)
 	    /* Yep, we can store information about this byte sequence.  */
@@ -3148,11 +3149,12 @@ set_class_defaults (struct locale_ctype_t *ctype,
         the keywords `upper', `lower', `alpha', `digit', `xdigit' and `punct',
 	shall belong to this character class."  [P1003.2, 2.5.2.1]  */
     {
-      unsigned long int mask = BIT (tok_upper) | BIT (tok_lower) |
-	BIT (tok_alpha) | BIT (tok_digit) | BIT (tok_xdigit) | BIT (tok_punct);
-      unsigned long int maskw = BITw (tok_upper) | BITw (tok_lower) |
-	BITw (tok_alpha) | BITw (tok_digit) | BITw (tok_xdigit) |
-	BITw (tok_punct);
+      unsigned long int mask = BIT (tok_upper) | BIT (tok_lower)
+	| BIT (tok_alpha) | BIT (tok_digit) | BIT (tok_xdigit)
+	| BIT (tok_punct);
+      unsigned long int maskw = BITw (tok_upper) | BITw (tok_lower)
+	| BITw (tok_alpha) | BITw (tok_digit) | BITw (tok_xdigit)
+	| BITw (tok_punct);
 
       for (size_t cnt = 0; cnt < ctype->class_collection_act; ++cnt)
 	if ((ctype->class_collection[cnt] & maskw) != 0)
@@ -3169,11 +3171,12 @@ set_class_defaults (struct locale_ctype_t *ctype,
 	and the <space> character shall belong to this character class."
 	[P1003.2, 2.5.2.1]  */
     {
-      unsigned long int mask = BIT (tok_upper) | BIT (tok_lower) |
-	BIT (tok_alpha) | BIT (tok_digit) | BIT (tok_xdigit) | BIT (tok_punct);
-      unsigned long int maskw = BITw (tok_upper) | BITw (tok_lower) |
-	BITw (tok_alpha) | BITw (tok_digit) | BITw (tok_xdigit) |
-	BITw (tok_punct);
+      unsigned long int mask = BIT (tok_upper) | BIT (tok_lower)
+	| BIT (tok_alpha) | BIT (tok_digit) | BIT (tok_xdigit)
+	| BIT (tok_punct);
+      unsigned long int maskw = BITw (tok_upper) | BITw (tok_lower)
+	| BITw (tok_alpha) | BITw (tok_digit) | BITw (tok_xdigit)
+	| BITw (tok_punct);
       struct charseq *seq;
 
       for (size_t cnt = 0; cnt < ctype->class_collection_act; ++cnt)

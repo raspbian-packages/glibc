@@ -33,26 +33,19 @@
 #  define TEST_NAME "strcpy"
 # else
 #  define TEST_NAME "wcscpy"
+#  define generic_strcpy generic_wcscpy
 # endif
-# include "bench-string.h"
-# ifndef WIDE
-#  define SIMPLE_STRCPY simple_strcpy
-# else
-#  define SIMPLE_STRCPY simple_wcscpy
-# endif
-
-CHAR *SIMPLE_STRCPY (CHAR *, const CHAR *);
-
-IMPL (SIMPLE_STRCPY, 0)
-IMPL (STRCPY, 1)
+#include "bench-string.h"
 
 CHAR *
-SIMPLE_STRCPY (CHAR *dst, const CHAR *src)
+generic_strcpy (CHAR *dst, const CHAR *src)
 {
-  CHAR *ret = dst;
-  while ((*dst++ = *src++) != '\0');
-  return ret;
+  return MEMCPY (dst, src, STRLEN (src) + 1);
 }
+
+IMPL (STRCPY, 1)
+IMPL (generic_strcpy, 0)
+
 #endif
 
 typedef CHAR *(*proto_t) (CHAR *, const CHAR *);
@@ -102,11 +95,11 @@ do_test (size_t align1, size_t align2, size_t len, int max_char)
    but in wchar_ts, in bytes it will equal to align * (sizeof (wchar_t))
    len for wcschr here isn't in bytes but it's number of wchar_t symbols.  */
   align1 &= 7;
-  if ((align1 + len) * sizeof(CHAR) >= page_size)
+  if ((align1 + len) * sizeof (CHAR) >= page_size)
     return;
 
   align2 &= 7;
-  if ((align2 + len) * sizeof(CHAR) >= page_size)
+  if ((align2 + len) * sizeof (CHAR) >= page_size)
     return;
 
   s1 = (CHAR *) (buf1) + align1;
@@ -116,7 +109,8 @@ do_test (size_t align1, size_t align2, size_t len, int max_char)
     s1[i] = 32 + 23 * i % (max_char - 32);
   s1[len] = 0;
 
-  printf ("Length %4zd, alignments in bytes %2zd/%2zd:", len, align1 * sizeof(CHAR), align2 * sizeof(CHAR));
+  printf ("Length %4zd, alignments in bytes %2zd/%2zd:", len,
+	  align1 * sizeof (CHAR), align2 * sizeof (CHAR));
 
   FOR_EACH_IMPL (impl, 0)
     do_one_test (impl, s2, s1, len);

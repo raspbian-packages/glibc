@@ -111,8 +111,8 @@ get_common_indices (struct cpu_features *cpu_features,
       unsigned int xcrhigh;
       asm ("xgetbv" : "=a" (xcrlow), "=d" (xcrhigh) : "c" (0));
       /* Is YMM and XMM state usable?  */
-      if ((xcrlow & (bit_YMM_state | bit_XMM_state)) ==
-	  (bit_YMM_state | bit_XMM_state))
+      if ((xcrlow & (bit_YMM_state | bit_XMM_state))
+	  == (bit_YMM_state | bit_XMM_state))
 	{
 	  /* Determine if AVX is usable.  */
 	  if (CPU_FEATURES_CPU_P (cpu_features, AVX))
@@ -152,8 +152,8 @@ get_common_indices (struct cpu_features *cpu_features,
 	  /* Check if OPMASK state, upper 256-bit of ZMM0-ZMM15 and
 	     ZMM16-ZMM31 state are enabled.  */
 	  if ((xcrlow & (bit_Opmask_state | bit_ZMM0_15_state
-			 | bit_ZMM16_31_state)) ==
-	      (bit_Opmask_state | bit_ZMM0_15_state | bit_ZMM16_31_state))
+			 | bit_ZMM16_31_state))
+	      == (bit_Opmask_state | bit_ZMM0_15_state | bit_ZMM16_31_state))
 	    {
 	      /* Determine if AVX512F is usable.  */
 	      if (CPU_FEATURES_CPU_P (cpu_features, AVX512F))
@@ -375,6 +375,7 @@ init_cpu_features (struct cpu_features *cpu_features)
 		 of Core i3/i5/i7 processors if AVX is available.  */
 	      if (!CPU_FEATURES_CPU_P (cpu_features, AVX))
 		break;
+	      /* Fall through.  */
 
 	    case 0x1a:
 	    case 0x1e:
@@ -402,6 +403,7 @@ init_cpu_features (struct cpu_features *cpu_features)
 	      /* Xeon E7 v3 with stepping >= 4 has working TSX.  */
 	      if (stepping >= 4)
 		break;
+	      /* Fall through.  */
 	    case 0x3c:
 	    case 0x45:
 	    case 0x46:

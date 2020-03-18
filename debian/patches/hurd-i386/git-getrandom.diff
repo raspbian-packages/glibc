@@ -308,11 +308,11 @@ Date:   Tue Dec 17 18:29:29 2019 +0000
 +  HURD_FD_USE (fd, _hurd_fd_close (descriptor));
 +}
 +libc_hidden_def (__close_nocancel_nostatus)
---- /dev/null
+--- a/include/sys/random.h
 +++ b/include/sys/random.h
-@@ -0,0 +1,11 @@
+@@ -1,1 +1,11 @@
 +#ifndef _SYS_RANDOM_H
-+#include <stdlib/sys/random.h>
+ #include <stdlib/sys/random.h>
 +
 +# ifndef _ISOMAC
 +

@@ -116,40 +116,8 @@ struct _IO_marker {
   int _pos;
 };
 
-/* This is the structure from the libstdc++ codecvt class.  */
-enum __codecvt_result
-{
-  __codecvt_ok,
-  __codecvt_partial,
-  __codecvt_error,
-  __codecvt_noconv
-};
-
-/* The order of the elements in the following struct must match the order
-   of the virtual functions in the libstdc++ codecvt class.  */
 struct _IO_codecvt
 {
-  void (*__codecvt_destr) (struct _IO_codecvt *);
-  enum __codecvt_result (*__codecvt_do_out) (struct _IO_codecvt *,
-					     __mbstate_t *,
-					     const wchar_t *,
-					     const wchar_t *,
-					     const wchar_t **, char *,
-					     char *, char **);
-  enum __codecvt_result (*__codecvt_do_unshift) (struct _IO_codecvt *,
-						 __mbstate_t *, char *,
-						 char *, char **);
-  enum __codecvt_result (*__codecvt_do_in) (struct _IO_codecvt *,
-					    __mbstate_t *,
-					    const char *, const char *,
-					    const char **, wchar_t *,
-					    wchar_t *, wchar_t **);
-  int (*__codecvt_do_encoding) (struct _IO_codecvt *);
-  int (*__codecvt_do_always_noconv) (struct _IO_codecvt *);
-  int (*__codecvt_do_length) (struct _IO_codecvt *, __mbstate_t *,
-			      const char *, const char *, size_t);
-  int (*__codecvt_do_max_length) (struct _IO_codecvt *);
-
   _IO_iconv_t __cd_in;
   _IO_iconv_t __cd_out;
 };
@@ -185,9 +153,6 @@ struct _IO_FILE_plus;
 extern struct _IO_FILE_plus _IO_2_1_stdin_;
 extern struct _IO_FILE_plus _IO_2_1_stdout_;
 extern struct _IO_FILE_plus _IO_2_1_stderr_;
-extern FILE *_IO_stdin attribute_hidden;
-extern FILE *_IO_stdout attribute_hidden;
-extern FILE *_IO_stderr attribute_hidden;
 
 struct _IO_cookie_file;
 
@@ -240,7 +205,7 @@ extern int _IO_ftrylockfile (FILE *) __THROW;
 
 #define _IO_peekc(_fp) _IO_peekc_unlocked (_fp)
 #define _IO_flockfile(_fp) /**/
-#define _IO_funlockfile(_fp) /**/
+#define _IO_funlockfile(_fp) ((void) 0)
 #define _IO_ftrylockfile(_fp) /**/
 #ifndef _IO_cleanup_region_start
 #define _IO_cleanup_region_start(_fct, _fp) /**/

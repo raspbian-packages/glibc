@@ -285,8 +285,8 @@ parse_tilde (char **word, size_t *word_length, size_t *max_length,
 
   for (i = 1 + *offset; words[i]; i++)
     {
-      if (words[i] == ':' || words[i] == '/' || words[i] == ' ' ||
-	  words[i] == '\t' || words[i] == 0 )
+      if (words[i] == ':' || words[i] == '/' || words[i] == ' '
+	  || words[i] == '\t' || words[i] == 0 )
 	break;
 
       if (words[i] == '\\')
@@ -799,6 +799,7 @@ parse_arith (char **word, size_t *word_length, size_t *max_length,
 
 	case '(':
 	  ++paren_depth;
+	  /* Fall through.  */
 	default:
 	  expr = w_addchar (expr, &expr_length, &expr_maxlen, words[*offset]);
 	  if (expr == NULL)
@@ -1069,8 +1070,8 @@ exec_comm (char *comm, char **word, size_t *word_length, size_t *max_length,
   /* Chop off trailing newlines (required by POSIX.2)  */
   /* Ensure we don't go back further than the beginning of the
      substitution (i.e. remove maxnewlines bytes at most) */
-  while (maxnewlines-- != 0 &&
-	 *word_length > 0 && (*word)[*word_length - 1] == '\n')
+  while (maxnewlines-- != 0
+	 && *word_length > 0 && (*word)[*word_length - 1] == '\n')
     {
       (*word)[--*word_length] = '\0';
 
@@ -2127,6 +2128,7 @@ parse_backtick (char **word, size_t *word_length, size_t *max_length,
 
 	case '\'':
 	  squoting = 1 - squoting;
+	  /* Fall through.  */
 	default:
 	  comm = w_addchar (comm, &comm_length, &comm_maxlen, words[*offset]);
 	  if (comm == NULL)

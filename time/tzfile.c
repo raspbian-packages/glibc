@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <stdint.h>
+#include <alloc_buffer.h>
 
 #include <timezone/tzfile.h>
 
@@ -35,7 +36,7 @@ static time_t tzfile_mtime;
 
 struct ttinfo
   {
-    long int offset;		/* Seconds east of GMT.  */
+    int offset;			/* Seconds east of GMT.  */
     unsigned char isdst;	/* Used to set tm_isdst.  */
     unsigned char idx;		/* Index into `zone_names'.  */
     unsigned char isstd;	/* Transition times are in standard time.  */
@@ -105,12 +106,8 @@ __tzfile_read (const char *file, size_t extra, char **extrap)
   struct tzhead tzhead;
   size_t chars;
   size_t i;
-  size_t total_size;
-  size_t types_idx;
-  size_t leaps_idx;
   int was_using_tzfile = __use_tzfile;
   int trans_width = 4;
-  size_t tzspec_len;
   char *new = NULL;
 
   _Static_assert (sizeof (__time64_t) == 8,
@@ -215,32 +212,9 @@ __tzfile_read (const char *file, size_t extra, char **extrap)
       goto read_again;
     }
 
-  if (__builtin_expect (num_transitions
-			> ((SIZE_MAX - (__alignof__ (struct ttinfo) - 1))
-			   / (sizeof (__time64_t) + 1)), 0))
-    goto lose;
-  total_size = num_transitions * (sizeof (__time64_t) + 1);
-  total_size = ((total_size + __alignof__ (struct ttinfo) - 1)
-		& ~(__alignof__ (struct ttinfo) - 1));
-  types_idx = total_size;
-  if (__builtin_expect (num_types
-			> (SIZE_MAX - total_size) / sizeof (struct ttinfo), 0))
-    goto lose;
-  total_size += num_types * sizeof (struct ttinfo);
-  if (__glibc_unlikely (chars > SIZE_MAX - total_size))
-    goto lose;
-  total_size += chars;
-  if (__builtin_expect (__alignof__ (struct leap) - 1
-			> SIZE_MAX - total_size, 0))
-    goto lose;
-  total_size = ((total_size + __alignof__ (struct leap) - 1)
-		& ~(__alignof__ (struct leap) - 1));
-  leaps_idx = total_size;
-  if (__builtin_expect (num_leaps
-			> (SIZE_MAX - total_size) / sizeof (struct leap), 0))
-    goto lose;
-  total_size += num_leaps * sizeof (struct leap);
-  tzspec_len = 0;
+  /* Compute the size of the POSIX time zone specification in the
+     file.  */
+  size_t tzspec_len;
   if (trans_width == 8)
     {
       off_t rem = st.st_size - __ftello (f);
@@ -262,47 +236,70 @@ __tzfile_read (const char *file, size_t extra, char **extrap)
       if (__glibc_unlikely (tzspec_len == 0 || tzspec_len - 1 < num_isgmt))
 	goto lose;
       tzspec_len -= num_isgmt + 1;
-      if (__glibc_unlikely (tzspec_len == 0
-			    || SIZE_MAX - total_size < tzspec_len))
+      if (tzspec_len == 0)
 	goto lose;
     }
-  if (__glibc_unlikely (SIZE_MAX - total_size - tzspec_len < extra))
-    goto lose;
+  else
+    tzspec_len = 0;
 
-  /* Allocate enough memory including the extra block requested by the
-     caller.  */
-  transitions = malloc (total_size + tzspec_len + extra);
-  if (transitions == NULL)
-    goto lose;
+  /* The file is parsed into a single heap allocation, comprising of
+     the following arrays:
 
-  type_idxs = (unsigned char *) transitions + (num_transitions
-					       * sizeof (__time64_t));
-  types = (struct ttinfo *) ((char *) transitions + types_idx);
-  zone_names = (char *) types + num_types * sizeof (struct ttinfo);
-  leaps = (struct leap *) ((char *) transitions + leaps_idx);
+     __time64_t transitions[num_transitions];
+     struct leap leaps[num_leaps];
+     struct ttinfo types[num_types];
+     unsigned char type_idxs[num_types];
+     char zone_names[chars];
+     char tzspec[tzspec_len];
+     char extra_array[extra]; // Stored into *pextras if requested.
+
+     The piece-wise allocations from buf below verify that no
+     overflow/wraparound occurred in these computations.
+
+     The order of the suballocations is important for alignment
+     purposes.  __time64_t outside a struct may require more alignment
+     then inside a struct on some architectures, so it must come
+     first. */
+  _Static_assert (__alignof (__time64_t) >= __alignof (struct leap),
+		  "alignment of __time64_t");
+  _Static_assert (__alignof (struct leap) >= __alignof (struct ttinfo),
+		  "alignment of struct leap");
+  struct alloc_buffer buf;
+  {
+    size_t total_size = (num_transitions * sizeof (__time64_t)
+			 + num_leaps * sizeof (struct leap)
+			 + num_types * sizeof (struct ttinfo)
+			 + num_transitions /* type_idxs */
+			 + chars /* zone_names */
+			 + tzspec_len + extra);
+    transitions = malloc (total_size);
+    if (transitions == NULL)
+      goto lose;
+    buf = alloc_buffer_create (transitions, total_size);
+  }
+
+  /* The address of the first allocation is already stored in the
+     pointer transitions.  */
+  (void) alloc_buffer_alloc_array (&buf, __time64_t, num_transitions);
+  leaps = alloc_buffer_alloc_array (&buf, struct leap, num_leaps);
+  types = alloc_buffer_alloc_array (&buf, struct ttinfo, num_types);
+  type_idxs = alloc_buffer_alloc_array (&buf, unsigned char, num_transitions);
+  zone_names = alloc_buffer_alloc_array (&buf, char, chars);
   if (trans_width == 8)
-    tzspec = (char *) leaps + num_leaps * sizeof (struct leap) + extra;
+    tzspec = alloc_buffer_alloc_array (&buf, char, tzspec_len);
   else
     tzspec = NULL;
   if (extra > 0)
-    *extrap = (char *) &leaps[num_leaps];
+    *extrap = alloc_buffer_alloc_array (&buf, char, extra);
+  if (alloc_buffer_has_failed (&buf))
+    goto lose;
 
-  if (__builtin_expect (trans_width == 8, 1))
-    {
-      if (__builtin_expect (__fread_unlocked (transitions, trans_width + 1,
-					      num_transitions, f)
-			    != num_transitions, 0))
+  if (__glibc_unlikely (__fread_unlocked (transitions, trans_width,
+					  num_transitions, f)
+			!= num_transitions)
+      || __glibc_unlikely (__fread_unlocked (type_idxs, 1, num_transitions, f)
+			   != num_transitions))
 	goto lose;
-    }
-  else
-    {
-      if (__builtin_expect (__fread_unlocked (transitions, 4,
-					      num_transitions, f)
-			    != num_transitions, 0)
-	  || __builtin_expect (__fread_unlocked (type_idxs, 1, num_transitions,
-						 f) != num_transitions, 0))
-	goto lose;
-    }
 
   /* Check for bogus indices in the data file, so we can hereafter
      safely use type_idxs[T] as indices into `types' and never crash.  */
@@ -345,7 +342,7 @@ __tzfile_read (const char *file, size_t extra, char **extrap)
 	/* Bogus index in data file.  */
 	goto lose;
       types[i].idx = c;
-      types[i].offset = (long int) decode (x);
+      types[i].offset = decode (x);
     }
 
   if (__glibc_unlikely (__fread_unlocked (zone_names, 1, chars, f) != chars))
@@ -390,6 +387,7 @@ __tzfile_read (const char *file, size_t extra, char **extrap)
   /* Read the POSIX TZ-style information if possible.  */
   if (tzspec != NULL)
     {
+      assert (tzspec_len > 0);
       /* Skip over the newline first.  */
       if (__getc_unlocked (f) != '\n'
 	  || (__fread_unlocked (tzspec, 1, tzspec_len - 1, f)
@@ -491,7 +489,7 @@ __tzfile_read (const char *file, size_t extra, char **extrap)
 
 void
 __tzfile_default (const char *std, const char *dst,
-		  long int stdoff, long int dstoff)
+		  int stdoff, int dstoff)
 {
   size_t stdlen = strlen (std) + 1;
   size_t dstlen = strlen (dst) + 1;
@@ -766,9 +764,9 @@ __tzfile_compute (__time64_t timer, int use_localtime,
   /* Apply its correction.  */
   *leap_correct = leaps[i].change;
 
-  if (timer == leaps[i].transition && /* Exactly at the transition time.  */
-      ((i == 0 && leaps[i].change > 0) ||
-       leaps[i].change > leaps[i - 1].change))
+  if (timer == leaps[i].transition /* Exactly at the transition time.  */
+      && ((i == 0 && leaps[i].change > 0)
+	  || leaps[i].change > leaps[i - 1].change))
     {
       *leap_hit = 1;
       while (i > 0

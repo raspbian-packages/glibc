@@ -88,7 +88,7 @@ static bool in_blacklist (const char *, int, ent_t *);
 static void
 init_nss_interface (void)
 {
-  if (__nss_database_lookup ("passwd_compat", NULL, "nis", &ni) >= 0)
+  if (__nss_database_lookup2 ("passwd_compat", NULL, "nis", &ni) >= 0)
     {
       nss_setpwent = __nss_lookup_function (ni, "setpwent");
       nss_getpwnam_r = __nss_lookup_function (ni, "getpwnam_r");
@@ -138,8 +138,8 @@ copy_pwd_changes (struct passwd *dest, struct passwd *src,
     {
       if (buffer == NULL)
 	dest->pw_passwd = strdup (src->pw_passwd);
-      else if (dest->pw_passwd &&
-	       strlen (dest->pw_passwd) >= strlen (src->pw_passwd))
+      else if (dest->pw_passwd
+	       && strlen (dest->pw_passwd) >= strlen (src->pw_passwd))
 	strcpy (dest->pw_passwd, src->pw_passwd);
       else
 	{
@@ -154,8 +154,8 @@ copy_pwd_changes (struct passwd *dest, struct passwd *src,
     {
       if (buffer == NULL)
 	dest->pw_gecos = strdup (src->pw_gecos);
-      else if (dest->pw_gecos &&
-	       strlen (dest->pw_gecos) >= strlen (src->pw_gecos))
+      else if (dest->pw_gecos
+	       && strlen (dest->pw_gecos) >= strlen (src->pw_gecos))
 	strcpy (dest->pw_gecos, src->pw_gecos);
       else
 	{
@@ -184,8 +184,8 @@ copy_pwd_changes (struct passwd *dest, struct passwd *src,
     {
       if (buffer == NULL)
 	dest->pw_shell = strdup (src->pw_shell);
-      else if (dest->pw_shell &&
-	       strlen (dest->pw_shell) >= strlen (src->pw_shell))
+      else if (dest->pw_shell
+	       && strlen (dest->pw_shell) >= strlen (src->pw_shell))
 	strcpy (dest->pw_shell, src->pw_shell);
       else
 	{
@@ -370,8 +370,8 @@ getpwent_next_nss_netgr (const char *name, struct passwd *result, ent_t *ent,
       p2 = buffer + (buflen - p2len);
       buflen -= p2len;
 
-      if (nss_getpwnam_r (user, result, buffer, buflen, errnop) !=
-	  NSS_STATUS_SUCCESS)
+      if (nss_getpwnam_r (user, result, buffer, buflen, errnop)
+	  != NSS_STATUS_SUCCESS)
 	continue;
 
       if (!in_blacklist (result->pw_name, strlen (result->pw_name), ent))
@@ -418,8 +418,8 @@ getpwent_next_nss (struct passwd *result, ent_t *ent, char *buffer,
 
   do
     {
-      if ((status = nss_getpwent_r (result, buffer, buflen, errnop)) !=
-	  NSS_STATUS_SUCCESS)
+      if ((status = nss_getpwent_r (result, buffer, buflen, errnop))
+	  != NSS_STATUS_SUCCESS)
 	return status;
     }
   while (in_blacklist (result->pw_name, strlen (result->pw_name), ent));
@@ -506,11 +506,11 @@ getpwent_next_file (struct passwd *result, ent_t *ent,
 	  while (isspace (*p))
 	    ++p;
 	}
-      while (*p == '\0' || *p == '#' ||	/* Ignore empty and comment lines.  */
+      while (*p == '\0' || *p == '#' /* Ignore empty and comment lines.  */
 	     /* Parse the line.  If it is invalid, loop to
 	        get the next line of the file to parse.  */
-	     !(parse_res = _nss_files_parse_pwent (p, result, data, buflen,
-						   errnop)));
+	     || !(parse_res = _nss_files_parse_pwent (p, result, data, buflen,
+						      errnop)));
 
       if (__glibc_unlikely (parse_res == -1))
 	/* The parser ran out of space.  */
@@ -706,11 +706,11 @@ internal_getpwnam_r (const char *name, struct passwd *result, ent_t *ent,
 	  while (isspace (*p))
 	    ++p;
 	}
-      while (*p == '\0' || *p == '#' ||	/* Ignore empty and comment lines.  */
+      while (*p == '\0' || *p == '#' /* Ignore empty and comment lines.  */
 	     /* Parse the line.  If it is invalid, loop to
 	        get the next line of the file to parse.  */
-	     !(parse_res = _nss_files_parse_pwent (p, result, data, buflen,
-						   errnop)));
+	     || !(parse_res = _nss_files_parse_pwent (p, result, data, buflen,
+						      errnop)));
 
       if (__glibc_unlikely (parse_res == -1))
 	/* The parser ran out of space.  */
@@ -912,11 +912,11 @@ internal_getpwuid_r (uid_t uid, struct passwd *result, ent_t *ent,
 	  while (isspace (*p))
 	    ++p;
 	}
-      while (*p == '\0' || *p == '#' ||	/* Ignore empty and comment lines.  */
+      while (*p == '\0' || *p == '#' /* Ignore empty and comment lines.  */
 	     /* Parse the line.  If it is invalid, loop to
 	        get the next line of the file to parse.  */
-	     !(parse_res = _nss_files_parse_pwent (p, result, data, buflen,
-						   errnop)));
+	     || !(parse_res = _nss_files_parse_pwent (p, result, data, buflen,
+						      errnop)));
 
       if (__glibc_unlikely (parse_res == -1))
 	/* The parser ran out of space.  */
@@ -943,8 +943,8 @@ internal_getpwuid_r (uid_t uid, struct passwd *result, ent_t *ent,
 	  memcpy (buf, &result->pw_name[2], len);
 
 	  status = getpwuid_plususer (uid, result, buffer, buflen, errnop);
-	  if (status == NSS_STATUS_SUCCESS &&
-	      innetgr (buf, NULL, result->pw_name, NULL))
+	  if (status == NSS_STATUS_SUCCESS
+	      && innetgr (buf, NULL, result->pw_name, NULL))
 	    return NSS_STATUS_NOTFOUND;
 
 	  continue;
@@ -990,8 +990,8 @@ internal_getpwuid_r (uid_t uid, struct passwd *result, ent_t *ent,
 	  memcpy (buf, &result->pw_name[1], len);
 
 	  status = getpwuid_plususer (uid, result, buffer, buflen, errnop);
-	  if (status == NSS_STATUS_SUCCESS &&
-	      innetgr (buf, NULL, result->pw_name, NULL))
+	  if (status == NSS_STATUS_SUCCESS
+	      && innetgr (buf, NULL, result->pw_name, NULL))
 	    return NSS_STATUS_NOTFOUND;
 	  continue;
 	}

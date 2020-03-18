@@ -265,6 +265,16 @@ do_test (void)
       test_large_aligned_allocations (SIZE_MAX - i);
     }
 
+  /* Allocation larger than PTRDIFF_MAX does play well with C standard,
+     since pointer subtraction within the object might overflow ptrdiff_t
+     resulting in undefined behavior.  To prevent it malloc function fail
+     for such allocations.  */
+  for (size_t i = 1; i <= FOURTEEN_ON_BITS; i++)
+    {
+      test_large_allocations (PTRDIFF_MAX + i);
+      test_large_aligned_allocations (PTRDIFF_MAX + i);
+    }
+
 #if __WORDSIZE >= 64
   /* On 64-bit targets, we need to test a much wider range of too-large
      sizes, so we test at intervals of (1 << 50) that allocation sizes

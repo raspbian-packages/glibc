@@ -38,7 +38,8 @@ struct La_riscv_retval;
 				       struct La_riscv_retval *,	\
 				       const char *);
 
-/* The RISC-V ABI specifies that the dynamic section has to be read-only.  */
+/* Although the RISC-V ABI does not specify that the dynamic section has
+   to be read-only, it needs to be kept for ABI compatibility.  */
 
 #define DL_RO_DYN_SECTION 1
 

@@ -25,6 +25,7 @@
 
 #include <pt-internal.h>
 #include <pthreadP.h>
+#include <dso_handle.h>
 
 __thread struct __pthread *___pthread_self;
 
@@ -34,6 +35,13 @@ static void *init_routine (void);
 /* OK, the name of this variable isn't really appropriate, but I don't
    want to change it yet.  */
 void *(*_cthread_init_routine) (void) = &init_routine;
+
+static void
+reset_pthread_total (void)
+{
+  /* Only current thread remains */
+  __pthread_total = 1;
+}
 
 /* This function is called from the Hurd-specific startup code.  It
    should return a new stack pointer for the main thread.  The caller
@@ -77,6 +85,8 @@ _init_routine (void *stack)
      signal thread (which will be created by the glibc startup code
      when we return from here) shouldn't be seen as a user thread.  */
   __pthread_total--;
+
+  __register_atfork (NULL, NULL, reset_pthread_total, __dso_handle);
 
   /* Make MiG code thread aware.  */
   __mig_init (thread->stackaddr);

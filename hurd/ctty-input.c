@@ -47,8 +47,8 @@ _hurd_ctty_input (io_t port, io_t ctty, error_t (*rpc) (io_t))
 
 	      _hurd_sigstate_lock (ss);
 	      actions = _hurd_sigstate_actions (ss);
-	      if (__sigismember (&ss->blocked, SIGTTIN) ||
-		  actions[SIGTTIN].sa_handler == SIG_IGN)
+	      if (__sigismember (&ss->blocked, SIGTTIN)
+		  || actions[SIGTTIN].sa_handler == SIG_IGN)
 		/* We are blocking or ignoring SIGTTIN.  Just fail.  */
 		err = EIO;
 	      _hurd_sigstate_unlock (ss);

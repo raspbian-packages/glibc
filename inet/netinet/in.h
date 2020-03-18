@@ -204,6 +204,7 @@ enum
 #define INADDR_UNSPEC_GROUP	((in_addr_t) 0xe0000000) /* 224.0.0.0 */
 #define INADDR_ALLHOSTS_GROUP	((in_addr_t) 0xe0000001) /* 224.0.0.1 */
 #define INADDR_ALLRTRS_GROUP    ((in_addr_t) 0xe0000002) /* 224.0.0.2 */
+#define INADDR_ALLSNOOPERS_GROUP ((in_addr_t) 0xe000006a) /* 224.0.0.106 */
 #define INADDR_MAX_LOCAL_GROUP  ((in_addr_t) 0xe00000ff) /* 224.0.0.255 */
 
 #if !__USE_KERNEL_IPV6_DEFS
@@ -241,10 +242,10 @@ struct sockaddr_in
     struct in_addr sin_addr;		/* Internet address.  */
 
     /* Pad to size of `struct sockaddr'.  */
-    unsigned char sin_zero[sizeof (struct sockaddr) -
-			   __SOCKADDR_COMMON_SIZE -
-			   sizeof (in_port_t) -
-			   sizeof (struct in_addr)];
+    unsigned char sin_zero[sizeof (struct sockaddr)
+			   - __SOCKADDR_COMMON_SIZE
+			   - sizeof (in_port_t)
+			   - sizeof (struct in_addr)];
   };
 
 #if !__USE_KERNEL_IPV6_DEFS

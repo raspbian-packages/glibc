@@ -109,6 +109,8 @@ libpthread-routines := pt-attr pt-attr-destroy pt-attr-getdetachstate	    \
 									    \
 	pt-block							    \
 	pt-timedblock							    \
+	pt-block-intr							    \
+	pt-timedblock-intr						    \
 	pt-wakeup							    \
 	pt-docancel							    \
 	pt-sysdep							    \
@@ -167,7 +169,7 @@ headers :=				\
 
 distribute :=
 
-routines := forward libc_pthread_init alloca_cutoff
+routines := forward libc_pthread_init alloca_cutoff register-atfork
 shared-only-routines = forward
 
 extra-libs := libpthread

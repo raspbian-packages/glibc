@@ -53,9 +53,9 @@ sysdep_headers += sys/mount.h sys/acct.h sys/sysctl.h \
 tests += tst-clone tst-clone2 tst-clone3 tst-fanotify tst-personality \
 	 tst-quota tst-sync_file_range tst-sysconf-iov_max tst-ttyname \
 	 test-errno-linux tst-memfd_create tst-mlock2 tst-pkey \
-	 tst-rlimit-infinity tst-ofdlocks
+	 tst-rlimit-infinity tst-ofdlocks tst-gettid tst-gettid-kill \
+	 tst-tgkill
 tests-internal += tst-ofdlocks-compat
-
 
 # Generate the list of SYS_* macros for the system calls (__NR_*
 # macros).  The file syscall-names.list contains all possible system
@@ -113,6 +113,10 @@ $(objpfx)tst-mman-consts.out: ../sysdeps/unix/sysv/linux/tst-mman-consts.py
 					  -DMODULE_NAME=testsuite, \
 					  $(CPPFLAGS))" \
 	< /dev/null > $@ 2>&1; $(evaluate-test)
+
+$(objpfx)tst-gettid: $(shared-thread-library)
+$(objpfx)tst-gettid-kill: $(shared-thread-library)
+$(objpfx)tst-tgkill: $(shared-thread-library)
 
 endif # $(subdir) == misc
 
@@ -194,6 +198,7 @@ inhibit-glue = yes
 
 ifeq ($(subdir),dirent)
 sysdep_routines += getdirentries getdirentries64
+tests += tst-getdents64
 tests-internal += tst-readdir64-compat
 endif
 
@@ -207,8 +212,8 @@ sysdep_routines += xstatconv internal_statvfs internal_statvfs64 \
 		   close_nocancel fcntl_nocancel nanosleep_nocancel \
 		   open_nocancel open64_nocancel \
 		   openat_nocancel openat64_nocancel \
-		   pause_nocancel read_nocancel waitpid_nocancel \
-		   write_nocancel statx_cp
+		   pause_nocancel read_nocancel pread64_nocancel \
+		   waitpid_nocancel write_nocancel statx_cp
 
 sysdep_headers += bits/fcntl-linux.h
 

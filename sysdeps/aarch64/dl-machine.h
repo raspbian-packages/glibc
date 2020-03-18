@@ -27,6 +27,9 @@
 #include <dl-irel.h>
 #include <cpu-features.c>
 
+/* Translate a processor specific dynamic tag to the index in l_info array.  */
+#define DT_AARCH64(x) (DT_AARCH64_##x - DT_LOPROC + DT_NUM)
+
 /* Return nonzero iff ELF header is compatible with the running host.  */
 static inline int __attribute__ ((unused))
 elf_machine_matches_host (const ElfW(Ehdr) *ehdr)
@@ -395,7 +398,7 @@ elf_machine_lazy_rel (struct link_map *map,
 	  return;
 	}
 
-      if (1) /* DT_AARCH64_VARIANT_PCS is not available, so always check.  */
+      if (__glibc_unlikely (map->l_info[DT_AARCH64 (VARIANT_PCS)] != NULL))
 	{
 	  /* Check the symbol table for variant PCS symbols.  */
 	  const Elf_Symndx symndx = ELFW (R_SYM) (reloc->r_info);

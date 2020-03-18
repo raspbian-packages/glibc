@@ -29,9 +29,9 @@
 #include "bench-util.c"
 
 #define TIMESPEC_AFTER(a, b) \
-  (((a).tv_sec == (b).tv_sec) ?						      \
-     ((a).tv_nsec > (b).tv_nsec) :					      \
-	((a).tv_sec > (b).tv_sec))
+  (((a).tv_sec == (b).tv_sec)						      \
+   ? ((a).tv_nsec > (b).tv_nsec)					      \
+   : ((a).tv_sec > (b).tv_sec))
 int
 main (int argc, char **argv)
 {
@@ -48,14 +48,11 @@ main (int argc, char **argv)
 
   memset (&runtime, 0, sizeof (runtime));
 
-  unsigned long iters, res;
+  unsigned long iters = 1000;
 
 #ifdef BENCH_INIT
   BENCH_INIT ();
 #endif
-  TIMING_INIT (res);
-
-  iters = 1000 * res;
 
   json_init (&json_ctx, 2, stdout);
 

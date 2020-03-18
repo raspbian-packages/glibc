@@ -26,9 +26,7 @@
    the biggest one---the inode number---is affected by this.  */
 
 key_t
-ftok (pathname, proj_id)
-     const char *pathname;
-     int proj_id;
+ftok (const char *pathname, int proj_id)
 {
   struct stat64 st;
   key_t key;

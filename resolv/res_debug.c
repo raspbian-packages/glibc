@@ -604,10 +604,7 @@ p_option(u_long option) {
 	case RES_DEFNAMES:	return "defnam";
 	case RES_STAYOPEN:	return "styopn";
 	case RES_DNSRCH:	return "dnsrch";
-	case RES_INSECURE1:	return "insecure1";
-	case RES_INSECURE2:	return "insecure2";
 	case RES_NOALIASES:	return "noaliases";
-	case DEPRECATED_RES_USE_INET6:	return "inet6";
 	case RES_ROTATE:	return "rotate";
 	case RES_USE_EDNS0:	return "edns0";
 	case RES_SNGLKUP:	return "single-request";

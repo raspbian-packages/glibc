@@ -353,11 +353,6 @@ struct rtld_global
   /* The object to be initialized first.  */
   EXTERN struct link_map *_dl_initfirst;
 
-#if HP_SMALL_TIMING_AVAIL
-  /* Start time on CPU clock.  */
-  EXTERN hp_timing_t _dl_cpuclock_offset;
-#endif
-
   /* Map of shared object to be profiled.  */
   EXTERN struct link_map *_dl_profile_map;
 
@@ -689,10 +684,6 @@ rtld_hidden_proto (_dl_starting_up)
 
 /* Random data provided by the kernel.  */
 extern void *_dl_random attribute_hidden attribute_relro;
-
-/* OS-dependent function to open the zero-fill device.  */
-extern int _dl_sysdep_open_zero_fill (void); /* dl-sysdep.c */
-
 
 /* Write message on the debug file descriptor.  The parameters are
    interpreted as for a `printf' call.  All the lines start with a

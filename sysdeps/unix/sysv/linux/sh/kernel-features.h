@@ -51,7 +51,9 @@
 # undef __ASSUME_MLOCK2
 #endif
 
-/* sh does not support the statx system call.  */
-#undef __ASSUME_STATX
+/* sh does not support the statx system call before 5.1.  */
+#if __LINUX_KERNEL_VERSION < 0x050100
+# undef __ASSUME_STATX
+#endif
 
 #endif

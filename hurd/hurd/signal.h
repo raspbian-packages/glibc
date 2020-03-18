@@ -196,7 +196,12 @@ extern int _hurd_core_limit;
    A critical section is a section of code which cannot safely be interrupted
    to run a signal handler; for example, code that holds any lock cannot be
    interrupted lest the signal handler try to take the same lock and
-   deadlock result.  */
+   deadlock result.
+
+   As a consequence, a critical section will see its RPCs return EINTR, even if
+   SA_RESTART is set!  In that case, the critical section should be left, so
+   that the handler can run, and the whole critical section be tried again, to
+   avoid unexpectingly exposing EINTR to the application.  */
 
 extern void *_hurd_critical_section_lock (void);
 
@@ -415,8 +420,8 @@ extern mach_msg_timeout_t _hurd_interrupted_rpc_timeout;
 	__mach_port_deallocate (__mach_task_self (), msgport);		      \
 	if ((dealloc_refport) && refport != MACH_PORT_NULL)		      \
 	  __mach_port_deallocate (__mach_task_self (), refport);    	      \
-      } while (__err == MACH_SEND_INVALID_DEST ||			      \
-	       __err == MIG_SERVER_DIED);				      \
+      } while (__err == MACH_SEND_INVALID_DEST				      \
+	       || __err == MIG_SERVER_DIED);				      \
     __err;								      \
 })
 

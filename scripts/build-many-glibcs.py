@@ -158,7 +158,9 @@ class Context(object):
         self.add_config(arch='alpha',
                         os_name='linux-gnu')
         self.add_config(arch='arm',
-                        os_name='linux-gnueabi')
+                        os_name='linux-gnueabi',
+                        extra_glibcs=[{'variant': 'v4t',
+                                       'ccopts': '-march=armv4t'}])
         self.add_config(arch='armeb',
                         os_name='linux-gnueabi')
         self.add_config(arch='armeb',
@@ -318,15 +320,6 @@ class Context(object):
         self.add_config(arch='powerpc64le',
                         os_name='linux-gnu',
                         gcc_cfg=['--disable-multilib', '--enable-secureplt'])
-        self.add_config(arch='powerpc',
-                        os_name='linux-gnuspe',
-                        gcc_cfg=['--disable-multilib', '--enable-secureplt',
-                                 '--enable-e500-double', '--enable-obsolete'])
-        self.add_config(arch='powerpc',
-                        os_name='linux-gnuspe',
-                        variant='e500v1',
-                        gcc_cfg=['--disable-multilib', '--enable-secureplt',
-                                 '--enable-obsolete'])
         self.add_config(arch='riscv64',
                         os_name='linux-gnu',
                         variant='rv64imac-lp64',
@@ -711,12 +704,12 @@ class Context(object):
     def checkout(self, versions):
         """Check out the desired component versions."""
         default_versions = {'binutils': 'vcs-2.32',
-                            'gcc': 'vcs-8',
+                            'gcc': 'vcs-9',
                             'glibc': 'vcs-mainline',
                             'gmp': '6.1.2',
-                            'linux': '4.20',
+                            'linux': '5.2',
                             'mpc': '1.1.0',
-                            'mpfr': '4.0.1',
+                            'mpfr': '4.0.2',
                             'mig': 'vcs-mainline',
                             'gnumach': 'vcs-mainline',
                             'hurd': 'vcs-mainline'}
@@ -889,7 +882,7 @@ class Context(object):
         url_map = {'binutils': 'https://ftp.gnu.org/gnu/binutils/binutils-%(version)s.tar.bz2',
                    'gcc': 'https://ftp.gnu.org/gnu/gcc/gcc-%(version)s/gcc-%(version)s.tar.gz',
                    'gmp': 'https://ftp.gnu.org/gnu/gmp/gmp-%(version)s.tar.xz',
-                   'linux': 'https://www.kernel.org/pub/linux/kernel/v4.x/linux-%(version)s.tar.xz',
+                   'linux': 'https://www.kernel.org/pub/linux/kernel/v%(major)s.x/linux-%(version)s.tar.xz',
                    'mpc': 'https://ftp.gnu.org/gnu/mpc/mpc-%(version)s.tar.gz',
                    'mpfr': 'https://ftp.gnu.org/gnu/mpfr/mpfr-%(version)s.tar.xz',
                    'mig': 'https://ftp.gnu.org/gnu/mig/mig-%(version)s.tar.bz2',
@@ -898,7 +891,8 @@ class Context(object):
         if component not in url_map:
             print('error: component %s coming from tarball' % component)
             exit(1)
-        url = url_map[component] % {'version': version}
+        version_major = version.split('.')[0]
+        url = url_map[component] % {'version': version, 'major': version_major}
         filename = os.path.join(self.srcdir, url.split('/')[-1])
         response = urllib.request.urlopen(url)
         data = response.read()

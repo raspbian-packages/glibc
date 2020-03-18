@@ -288,6 +288,14 @@ tests-unsupported += test-lfs
 #test-xfail-test-lfs = yes
 test-xfail-tst-tzset = yes
 
+# TODO: should be succeeding again with gnumach >= 2019-12-01
+test-xfail-test-fpucw = yes
+test-xfail-test-fpucw-ieee = yes
+test-xfail-test-fpucw-ieee-static = yes
+test-xfail-test-fpucw-static = yes
+test-xfail-test-fenv-x87 = yes
+test-xfail-tst-wcstod-round = yes
+
 # new in 2.21
 test-xfail-test-misc = yes
 test-xfail-tst-ptsname = yes
@@ -298,20 +306,13 @@ test-xfail-tst-audit3 = yes
 test-xfail-tst-prelink = yes
 test-xfail-tst-tls-atexit = yes
 
-# changed in 2.22, tests were run directly, now using threads
-# TODO: should be succeeding again with gnumach >= 2016-03-06
-test-xfail-test-fpucw = yes
-test-xfail-test-fpucw-ieee = yes
-test-xfail-test-fpucw-ieee-static = yes
-test-xfail-test-fpucw-static = yes
-test-xfail-test-static = yes
-
 # new in 2.23
-test-xfail-test-fenv-sse-2 = yes
-test-xfail-test-fenv-x87 = yes
 test-xfail-tst-audit11 = yes
 test-xfail-tst-audit12 = yes
+
+# need get_cpu_features
 test-xfail-tst-get-cpu-features = yes
+test-xfail-test-fenv-sse-2 = yes
 
 # new in 2.24
 test-xfail-tst-execvpe5 = yes
@@ -333,11 +334,9 @@ test-xfail-tst-secure-getenv = yes
 
 # new in 2.25
 test-xfail-tst-posix_fallocate64 = yes
-test-xfail-test-fesetexcept-traps = yes
 test-xfail-tst-posix_fadvise = yes
 test-xfail-tst-posix_fadvise64 = yes
 test-xfail-tst-vfork3 = yes
-test-xfail-tst-wcstod-round = yes
 test-xfail-tst-env-setuid = yes
 test-xfail-tst-env-setuid-tunables = yes
 
@@ -366,10 +365,14 @@ test-xfail-tst-copy_file_range-compat = yes
 # new in 2.28
 test-xfail-tst-fgetc-after-eof = yes
 test-xfail-tst-fgetwc-after-eof = yes
-test-xfail-test-as-const-jmp_buf-ssp = yes
 test-xfail-tst-malloc-stats-cancellation = yes
+
+# want /proc/self/fd
 test-xfail-tst-if_index-long = yes
 test-xfail-tst-support_descriptors = yes
+
+# new in 2.30
+test-xfail-tst-nss-files-hosts-long = yes
 
 # This redirects realloc with dlsym
 # Problem is: that creates a loop: realloc() calls dlsym() which calls
@@ -379,6 +382,28 @@ test-xfail-tst-res_hconf_reorder = yes
 
 test-xfail-ISO11/threads.h/conform = yes
 test-xfail-ISO11/threads.h/linknamespace = yes
+
+# wants pthread_barrierattr_setpshared
+test-xfail-tst-pututxline-cache = yes
+test-xfail-tst-pututxline-lockfail = yes
+
+# wants /proc/self/fd
+test-xfail-tst-updwtmpx = yes
+
+# new in 2.31
+#test-xfail-tst-auditmany = yes
+#test-xfail-tst-dlopenfail = yes
+
+# actually never succeded
+#test-xfail-tst-create_format1 = yes
+#test-xfail-tst-getcwd-abspath = yes
+test-xfail-test-fesetexcept-traps = yes
+# Assumes that self-locks are exclusive
+#test-xfail-tst-lockf = yes
+
+# assumes that all st_mode flags (32bit) can exist in stx_mode flags (16bit)
+#test-xfail-tst-statx = yes
+
 endif
 
 

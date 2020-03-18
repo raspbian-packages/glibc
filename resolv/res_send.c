@@ -109,7 +109,7 @@
 #include <unistd.h>
 #include <kernel-features.h>
 #include <libc-diag.h>
-#include <hp-timing.h>
+#include <random-bits.h>
 
 /* The structure HEADER is normally aligned to a word boundary and its
    fields are accessed using word loads and stores.  We need to access 
@@ -318,15 +318,7 @@ nameserver_offset (struct __res_state *statp)
   if ((offset & 1) == 0)
     {
       /* Initialization is required.  */
-#if HP_TIMING_AVAIL
-      uint64_t ticks;
-      HP_TIMING_NOW (ticks);
-      offset = ticks;
-#else
-      struct timeval tv;
-      __gettimeofday (&tv, NULL);
-      offset = ((tv.tv_sec << 8) ^ tv.tv_usec);
-#endif
+      offset = random_bits ();
       /* The lowest bit is the most random.  Preserve it.  */
       offset <<= 1;
 
@@ -418,7 +410,18 @@ __res_context_send (struct resolv_context *ctx,
 		    int *nansp2, int *resplen2, int *ansp2_malloced)
 {
 	struct __res_state *statp = ctx->resp;
-	int gotsomewhere, terrno, try, v_circuit, resplen, n;
+	int gotsomewhere, terrno, try, v_circuit, resplen;
+	/* On some architectures send_vc is inlined and the compiler might emit
+	   a warning indicating 'resplen' may be used uninitialized.  Note that
+	   the warning belongs to resplen in send_vc which is used as return
+	   value!  There the maybe-uninitialized warning is already ignored as
+	   it is a false-positive - see comment in send_vc.
+	   Here the variable n is set to the return value of send_vc.
+	   See below.  */
+	DIAG_PUSH_NEEDS_COMMENT;
+	DIAG_IGNORE_NEEDS_COMMENT (9, "-Wmaybe-uninitialized");
+	int n;
+	DIAG_POP_NEEDS_COMMENT;
 
 	if (statp->nscount == 0) {
 		__set_errno (ESRCH);
@@ -512,8 +515,12 @@ __res_context_send (struct resolv_context *ctx,
 				    ansp2_malloced);
 			if (n < 0)
 				return (-1);
+			/* See comment at the declaration of n.  */
+			DIAG_PUSH_NEEDS_COMMENT;
+			DIAG_IGNORE_NEEDS_COMMENT (9, "-Wmaybe-uninitialized");
 			if (n == 0 && (buf2 == NULL || *resplen2 == 0))
 				goto next_ns;
+			DIAG_POP_NEEDS_COMMENT;
 		} else {
 			/* Use datagrams. */
 			n = send_dg(statp, buf, buflen, buf2, buflen2,
@@ -952,6 +959,18 @@ reopen (res_state statp, int *terrno, int ns)
 			return (-1);
 		}
 
+		/* Enable full ICMP error reporting for this
+		   socket.  */
+		if (__res_enable_icmp (nsap->sa_family,
+				       EXT (statp).nssocks[ns]) < 0)
+		  {
+		    int saved_errno = errno;
+		    __res_iclose (statp, false);
+		    __set_errno (saved_errno);
+		    *terrno = saved_errno;
+		    return -1;
+		  }
+
 		/*
 		 * On a 4.3BSD+ machine (client and server,
 		 * actually), sending to a nameserver datagram
@@ -1321,31 +1340,25 @@ send_dg(res_state statp,
 			 */
 			goto wait;
 		}
-		if (!(statp->options & RES_INSECURE1) &&
-		    !res_ourserver_p(statp, &from)) {
-			/*
-			 * response from wrong server? ignore it.
-			 * XXX - potential security hazard could
-			 *	 be detected here.
-			 */
-			goto wait;
-		}
-		if (!(statp->options & RES_INSECURE2)
-		    && (recvresp1 || !res_queriesmatch(buf, buf + buflen,
+
+		/* Paranoia check.  Due to the connected UDP socket,
+		   the kernel has already filtered invalid addresses
+		   for us.  */
+		if (!res_ourserver_p(statp, &from))
+		  goto wait;
+
+		/* Check for the correct header layout and a matching
+		   question.  */
+		if ((recvresp1 || !res_queriesmatch(buf, buf + buflen,
 						       *thisansp,
 						       *thisansp
 						       + *thisanssizp))
 		    && (recvresp2 || !res_queriesmatch(buf2, buf2 + buflen2,
 						       *thisansp,
 						       *thisansp
-						       + *thisanssizp))) {
-			/*
-			 * response contains wrong query? ignore it.
-			 * XXX - potential security hazard could
-			 *	 be detected here.
-			 */
-			goto wait;
-		}
+						       + *thisanssizp)))
+		  goto wait;
+
 		if (anhp->rcode == SERVFAIL ||
 		    anhp->rcode == NOTIMP ||
 		    anhp->rcode == REFUSED) {

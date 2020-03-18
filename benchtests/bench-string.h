@@ -124,7 +124,11 @@ extern impl_t __start_impls[], __stop_impls[];
 # define OPT_RANDOM 10001
 # define OPT_SEED 10002
 
-# define INNER_LOOP_ITERS 64
+# define INNER_LOOP_ITERS 8192
+# define INNER_LOOP_ITERS8 32768
+# define INNER_LOOP_ITERS_LARGE 131072
+# define INNER_LOOP_ITERS_MEDIUM 2048
+# define INNER_LOOP_ITERS_SMALL 256
 
 int ret, do_srandom;
 unsigned int seed;
@@ -156,7 +160,7 @@ cmdline_process_function (int c)
       case OPT_RANDOM:
 	{
 	  int fdr = open ("/dev/urandom", O_RDONLY);
-	  if (fdr < 0 || read (fdr, &seed, sizeof(seed)) != sizeof (seed))
+	  if (fdr < 0 || read (fdr, &seed, sizeof (seed)) != sizeof (seed))
 	    seed = time (NULL);
 	  if (fdr >= 0)
 	    close (fdr);

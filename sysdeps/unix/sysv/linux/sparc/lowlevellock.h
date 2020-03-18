@@ -75,22 +75,23 @@ __lll_cond_lock (int *futex, int private)
 #define lll_cond_lock(futex, private) __lll_cond_lock (&(futex), private)
 
 
-extern int __lll_timedlock_wait (int *futex, const struct timespec *,
+extern int __lll_clocklock_wait (int *futex, clockid_t, const struct timespec *,
 				 int private) attribute_hidden;
 
 static inline int
 __attribute__ ((always_inline))
-__lll_timedlock (int *futex, const struct timespec *abstime, int private)
+__lll_clocklock (int *futex, clockid_t clockid,
+                 const struct timespec *abstime, int private)
 {
   int val = atomic_compare_and_exchange_val_24_acq (futex, 1, 0);
   int result = 0;
 
   if (__glibc_unlikely (val != 0))
-    result = __lll_timedlock_wait (futex, abstime, private);
+    result = __lll_clocklock_wait (futex, clockid, abstime, private);
   return result;
 }
-#define lll_timedlock(futex, abstime, private) \
-  __lll_timedlock (&(futex), abstime, private)
+#define lll_clocklock(futex, clockid, abstime, private)  \
+  __lll_clocklock (&(futex), clockid, abstime, private)
 
 #define lll_unlock(lock, private) \
   ((void) ({								      \
@@ -107,30 +108,5 @@ __lll_timedlock (int *futex, const struct timespec *abstime, int private)
 /* Initializers for lock.  */
 #define LLL_LOCK_INITIALIZER		(0)
 #define LLL_LOCK_INITIALIZER_LOCKED	(1)
-
-extern int __lll_timedwait_tid (int *, const struct timespec *)
-     attribute_hidden;
-
-/* The kernel notifies a process which uses CLONE_CHILD_CLEARTID via futex
-   wake-up when the clone terminates.  The memory location contains the
-   thread ID while the clone is running and is reset to zero by the kernel
-   afterwards.  The kernel up to version 3.16.3 does not use the private futex
-   operations for futex wake-up when the clone terminates.
-   If ABSTIME is not NULL, is used a timeout for futex call.  If the timeout
-   occurs then return ETIMEOUT, if ABSTIME is invalid, return EINVAL.
-   The futex operation are issues with cancellable versions.  */
-#define lll_wait_tid(tid, abstime)					\
-  ({									\
-    int __res = 0;							\
-    __typeof (tid) __tid;						\
-    if (abstime != NULL)						\
-      __res = __lll_timedwait_tid (&(tid), (abstime));			\
-    else								\
-      /* We need acquire MO here so that we synchronize with the 	\
-	 kernel's store to 0 when the clone terminates. (see above)  */	\
-      while ((__tid = atomic_load_acquire (&(tid))) != 0)		\
-        lll_futex_wait_cancel (&(tid), __tid, LLL_SHARED);		\
-    __res;								\
-  })
 
 #endif	/* lowlevellock.h */

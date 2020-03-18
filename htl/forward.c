@@ -24,42 +24,20 @@
 #include <libc-lock.h>
 #include <fork.h>
 
-#include <shlib-compat.h>
-
 /* Pointers to the libc functions.  */
 struct pthread_functions __libc_pthread_functions attribute_hidden;
 int __libc_pthread_functions_init attribute_hidden;
 
-#define FORWARD2_NOVERSION(name, rettype, decl, params, defaction) \
-rettype									      \
-__##name decl								      \
-{									      \
-  if (!__libc_pthread_functions_init)			      \
-    defaction;								      \
-									      \
-  return PTHFCT_CALL (ptr_##name, params);			      \
-} \
 
 #define FORWARD2(name, rettype, decl, params, defaction) \
-	FORWARD2_NOVERSION(name, rettype, decl, params, defaction) \
-versioned_symbol (libc, __##name, name, GLIBC_2_21); \
-
-#if SHLIB_COMPAT (libc, GLIBC_2_13, GLIBC_2_21)
-# define FORWARD2_NOCOMPAT(name, rettype, decl, params, defaction) \
 rettype									      \
-__##name##_2_13 decl							      \
+name decl								      \
 {									      \
   if (!__libc_pthread_functions_init)					      \
     defaction;								      \
 									      \
   return PTHFCT_CALL (ptr_##name, params);				      \
 }
-# define FORWARD2_COMPAT(name, rettype, decl, params, defaction) \
-	FORWARD2_NOCOMPAT(name, rettype, decl, params, defaction) \
-compat_symbol (libc, __##name##_2_13, name, GLIBC_2_13_DEBIAN_31);
-#else
-# define FORWARD2_COMPAT(name, rettype, decl, params, defaction)
-#endif
 
 /* Same as FORWARD2, only without return.  */
 #define FORWARD_NORETURN(name, rettype, decl, params, defaction) \
@@ -70,22 +48,10 @@ name decl								      \
     defaction;								      \
 									      \
   PTHFCT_CALL (ptr_##name, params);					      \
-} \
-rettype									      \
-name##_2_13 decl								      \
-{									      \
-  if (!__libc_pthread_functions_init)			      \
-    defaction;								      \
-									      \
-  PTHFCT_CALL (ptr_##name, params);			      \
 }
 
 #define FORWARD(name, decl, params, defretval) \
-  FORWARD2 (name, int, decl, params, return defretval) \
-  FORWARD2_COMPAT (name, int, decl, params, return defretval)
-#define FORWARD_NOVERSION(name, decl, params, defretval) \
-  FORWARD2_NOVERSION (name, int, decl, params, return defretval) \
-  FORWARD2_NOCOMPAT (name, int, decl, params, return defretval)
+  FORWARD2 (name, int, decl, params, return defretval)
 
 FORWARD (pthread_attr_destroy, (pthread_attr_t *attr), (attr), 0)
 
@@ -143,10 +109,7 @@ FORWARD (pthread_equal, (pthread_t thread1, pthread_t thread2),
 /* Use an alias to avoid warning, as pthread_exit is declared noreturn.  */
 FORWARD_NORETURN (__pthread_exit, void, (void *retval), (retval),
 		  exit (EXIT_SUCCESS))
-versioned_symbol (libc, __pthread_exit, pthread_exit, GLIBC_2_21);
-#if SHLIB_COMPAT (libc, GLIBC_2_13, GLIBC_2_21)
-compat_symbol (libc, __pthread_exit_2_13, pthread_exit, GLIBC_2_13_DEBIAN_31);
-#endif
+strong_alias (__pthread_exit, pthread_exit);
 
 
 FORWARD (pthread_getschedparam,
@@ -169,158 +132,14 @@ FORWARD (pthread_mutex_unlock, (pthread_mutex_t *mutex), (mutex), 0)
 
 
 FORWARD2 (pthread_self, pthread_t, (void), (), return 0)
-FORWARD2_COMPAT (pthread_self, pthread_t, (void), (), return 0)
 
 
-FORWARD_NOVERSION (__pthread_setcancelstate, (int state, int *oldstate),
+FORWARD (__pthread_setcancelstate, (int state, int *oldstate),
 	 (state, oldstate), 0)
-versioned_symbol (libc, ____pthread_setcancelstate, pthread_setcancelstate, GLIBC_2_21);
-#if SHLIB_COMPAT (libc, GLIBC_2_13, GLIBC_2_21)
-compat_symbol (libc, ____pthread_setcancelstate_2_13, pthread_setcancelstate, GLIBC_2_13_DEBIAN_31);
-#endif
+strong_alias (__pthread_setcancelstate, pthread_setcancelstate);
 
 FORWARD (pthread_setcanceltype, (int type, int *oldtype), (type, oldtype), 0)
 
 struct __pthread_cancelation_handler *dummy_list;
 FORWARD2 (__pthread_get_cleanup_stack, struct __pthread_cancelation_handler **,
 	  (void), (), return &dummy_list);
-FORWARD2_COMPAT (__pthread_get_cleanup_stack, struct __pthread_cancelation_handler **,
-	  (void), (), return &dummy_list);
-
-
-/* Fork interaction */
-
-struct atfork
-{
-  void (*prepare) (void);
-  void (*parent) (void);
-  void (*child) (void);
-  void *dso_handle;
-  struct atfork *prev;
-  struct atfork *next;
-};
-
-/* TODO: better locking */
-__libc_lock_define_initialized (static, atfork_lock);
-static struct atfork *fork_handlers, *fork_last_handler;
-
-static void
-atfork_pthread_prepare (void)
-{
-  struct atfork *handlers, *last_handler;
-
-  __libc_lock_lock (atfork_lock);
-  handlers = fork_handlers;
-  last_handler = fork_last_handler;
-  __libc_lock_unlock (atfork_lock);
-
-  if (last_handler == NULL)
-    return;
-
-  while (1)
-    {
-      if (last_handler->prepare != NULL)
-	last_handler->prepare ();
-      if (last_handler == handlers)
-	break;
-      last_handler = last_handler->prev;
-    }
-}
-text_set_element (_hurd_atfork_prepare_hook, atfork_pthread_prepare);
-
-static void
-atfork_pthread_parent (void)
-{
-  struct atfork *handlers;
-
-  __libc_lock_lock (atfork_lock);
-  handlers = fork_handlers;
-  __libc_lock_unlock (atfork_lock);
-
-  while (handlers != NULL)
-    {
-      if (handlers->parent != NULL)
-	handlers->parent ();
-      handlers = handlers->next;
-    }
-}
-text_set_element (_hurd_atfork_parent_hook, atfork_pthread_parent);
-
-static void
-atfork_pthread_child (void)
-{
-  struct atfork *handlers;
-
-  __libc_lock_lock (atfork_lock);
-  handlers = fork_handlers;
-  __libc_lock_unlock (atfork_lock);
-
-  while (handlers != NULL)
-    {
-      if (handlers->child != NULL)
-	handlers->child ();
-      handlers = handlers->next;
-    }
-}
-text_set_element (_hurd_atfork_child_hook, atfork_pthread_child);
-
-int
-__register_atfork (void (*prepare) (void),
-		   void (*parent) (void),
-		   void (*child) (void),
-		   void *dso_handle)
-{
-  struct atfork *new = malloc (sizeof (*new));
-  if (new == NULL)
-    return errno;
-
-  new->prepare = prepare;
-  new->parent = parent;
-  new->child = child;
-  new->dso_handle = dso_handle;
-  new->prev = NULL;
-
-  __libc_lock_lock (atfork_lock);
-  new->next = fork_handlers;
-  if (fork_handlers != NULL)
-    fork_handlers->prev = new;
-  fork_handlers = new;
-  if (fork_last_handler == NULL)
-    fork_last_handler = new;
-  __libc_lock_unlock (atfork_lock);
-
-  return 0;
-}
-libc_hidden_def (__register_atfork)
-
-void
-__unregister_atfork (void *dso_handle)
-{
-  struct atfork **handlers, *prev = NULL, *next;
-  __libc_lock_lock (atfork_lock);
-  handlers = &fork_handlers;
-  while (*handlers != NULL)
-    {
-      if ((*handlers)->dso_handle == dso_handle)
-	{
-	  /* Drop this handler from the list.  */
-	  if (*handlers == fork_last_handler)
-	    {
-	      /* Was last, new last is prev, if any.  */
-	      fork_last_handler = prev;
-	    }
-
-	  next = (*handlers)->next;
-	  if (next != NULL)
-	    next->prev = prev;
-	  *handlers = next;
-	}
-      else
-	{
-	  /* Just proceed to next handler.  */
-	  prev = *handlers;
-	  handlers = &prev->next;
-	}
-    }
-  __libc_lock_unlock (atfork_lock);
-}

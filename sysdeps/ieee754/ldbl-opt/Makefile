@@ -179,3 +179,29 @@ CFLAGS-test-nldbl-redirect.c += -mlong-double-64
 $(objpfx)test-nldbl-redirect: $(objpfx)libnldbl_nonshared.a
 
 endif
+
+# Tests for argp.h functions (reusing the relevant tests from argp/)
+ifeq ($(subdir),argp)
+tests-internal += tst-nldbl-argp
+
+$(objpfx)tst-nldbl-argp.c: tst-ldbl-argp.c
+	cp $< $@
+
+CFLAGS-tst-nldbl-argp.c += -mlong-double-64
+endif
+
+# Tests for err.h and error.h functions (reusing the relevant tests from
+# misc/).
+ifeq ($(subdir), misc)
+tests-internal += tst-nldbl-warn
+tests-internal += tst-nldbl-error
+
+$(objpfx)tst-nldbl-warn.c: tst-ldbl-warn.c
+	cp $< $@
+
+$(objpfx)tst-nldbl-error.c: tst-ldbl-error.c
+	cp $< $@
+
+CFLAGS-tst-nldbl-warn.c += -mlong-double-64
+CFLAGS-tst-nldbl-error.c += -mlong-double-64
+endif

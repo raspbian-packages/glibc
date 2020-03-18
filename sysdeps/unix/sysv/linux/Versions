@@ -174,11 +174,15 @@ libc {
   GLIBC_2.29 {
     getcpu;
   }
+  GLIBC_2.30 {
+    getdents64; gettid; tgkill;
+  }
   GLIBC_PRIVATE {
     # functions used in other libraries
     __syscall_rt_sigqueueinfo;
     __open_nocancel;
     __read_nocancel;
+    __pread64_nocancel;
     __close_nocancel;
     __sigtimedwait;
     # functions used by nscd

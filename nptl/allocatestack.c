@@ -379,8 +379,7 @@ setup_stack_prot (char *mem, size_t size, char *guard, size_t guardsize,
 
 /* Mark the memory of the stack as usable to the kernel.  It frees everything
    except for the space used for the TCB itself.  */
-static inline void
-__always_inline
+static __always_inline void
 advise_stack_range (void *mem, size_t size, uintptr_t pd, size_t guardsize)
 {
   uintptr_t sp = (uintptr_t) CURRENT_STACK_FRAME;
@@ -962,54 +961,6 @@ __reclaim_stacks (void)
   stack_cache_lock = LLL_LOCK_INITIALIZER;
   __default_pthread_attr_lock = LLL_LOCK_INITIALIZER;
 }
-
-
-#if HP_TIMING_AVAIL
-# undef __find_thread_by_id
-/* Find a thread given the thread ID.  */
-attribute_hidden
-struct pthread *
-__find_thread_by_id (pid_t tid)
-{
-  struct pthread *result = NULL;
-
-  lll_lock (stack_cache_lock, LLL_PRIVATE);
-
-  /* Iterate over the list with system-allocated threads first.  */
-  list_t *runp;
-  list_for_each (runp, &stack_used)
-    {
-      struct pthread *curp;
-
-      curp = list_entry (runp, struct pthread, list);
-
-      if (curp->tid == tid)
-	{
-	  result = curp;
-	  goto out;
-	}
-    }
-
-  /* Now the list with threads using user-allocated stacks.  */
-  list_for_each (runp, &__stack_user)
-    {
-      struct pthread *curp;
-
-      curp = list_entry (runp, struct pthread, list);
-
-      if (curp->tid == tid)
-	{
-	  result = curp;
-	  goto out;
-	}
-    }
-
- out:
-  lll_unlock (stack_cache_lock, LLL_PRIVATE);
-
-  return result;
-}
-#endif
 
 
 #ifdef SIGSETXID

@@ -19,68 +19,132 @@
    <http://www.gnu.org/licenses/>.  */
 
 #include <array_length.h>
+#include <stdbool.h>
+#include <support/check.h>
+#include <stdlib.h>
 #include <locale.h>
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
 
-static const char *locales[] = { "ja_JP.UTF-8", "lo_LA.UTF-8", "th_TH.UTF-8" };
+static const char *locales[] =
+{
+  "ja_JP.UTF-8", "lo_LA.UTF-8", "th_TH.UTF-8",
+  "zh_TW.UTF-8", "cmn_TW.UTF-8", "hak_TW.UTF-8",
+  "nan_TW.UTF-8", "lzh_TW.UTF-8"
+};
+
+/* Must match locale index into locales array.  */
+enum
+{
+  ja_JP, lo_LA, th_TH,
+  zh_TW, cmn_TW, hak_TW, nan_TW, lzh_TW
+};
 
 static const char *formats[] = { "%EY", "%_EY", "%-EY" };
 
-static const struct
+typedef struct
 {
   const int d, m, y;
-} dates[] =
-  {
-    { 1, 3, 88 },
-    { 7, 0, 89 },
-    { 8, 0, 89 },
-    { 1, 3, 90 },
-    { 1, 3, 97 },
-    { 1, 3, 98 }
-  };
+} date_t;
 
-static char ref[3][3][6][100];
+static const date_t dates[] =
+{
+  {  1,  4, 1910 },
+  { 31, 12, 1911 },
+  {  1,  1, 1912 },
+  {  1,  4, 1913 },
+  {  1,  4, 1988 },
+  {  7,  1, 1989 },
+  {  8,  1, 1989 },
+  {  1,  4, 1990 },
+  {  1,  4, 1997 },
+  {  1,  4, 1998 },
+  {  1,  4, 2010 },
+  {  1,  4, 2011 },
+  { 30,  4, 2019 },
+  {  1,  5, 2019 }
+};
+
+static char ref[array_length (locales)][array_length (formats)]
+	       [array_length (dates)][100];
+
+static bool
+is_before (const int i, const int d, const int m, const int y)
+{
+  if (dates[i].y < y)
+    return true;
+  else if (dates[i].y > y)
+    return false;
+  else if (dates[i].m < m)
+    return true;
+  else if (dates[i].m > m)
+    return false;
+  else
+    return dates[i].d < d;
+}
 
 static void
 mkreftable (void)
 {
-  int i, j, k;
-  char era[10];
-  static const int yrj[] = { 63, 64, 1, 2, 9, 10 };
-  static const int yrb[] = { 2531, 2532, 2532, 2533, 2540, 2541 };
+  int i, j, k, yr;
+  const char *era, *sfx;
+  /* Japanese era year to be checked.  */
+  static const int yrj[] =
+  {
+    43, 44, 45, 2,
+    63, 64, 1, 2, 9, 10, 22, 23, 31, 1
+  };
+  /* Buddhist calendar year to be checked.  */
+  static const int yrb[] =
+  {
+    2453, 2454, 2455, 2456,
+    2531, 2532, 2532, 2533, 2540, 2541, 2553, 2554, 2562, 2562
+  };
+  /* R.O.C. calendar year to be checked.  Negative number is prior to
+     Minguo counting up.  */
+  static const int yrc[] =
+  {
+    -2, -1, 1, 2,
+    77, 78, 78, 79, 86, 87, 99, 100, 108, 108
+  };
 
   for (i = 0; i < array_length (locales); i++)
     for (j = 0; j < array_length (formats); j++)
       for (k = 0; k < array_length (dates); k++)
 	{
-	  if (i == 0)
+	  if (i == ja_JP)
 	    {
-	      sprintf (era, "%s", (k < 2) ? "\xe6\x98\xad\xe5\x92\x8c"
-					  : "\xe5\xb9\xb3\xe6\x88\x90");
-	      if (yrj[k] == 1)
-		sprintf (ref[i][j][k], "%s\xe5\x85\x83\xe5\xb9\xb4", era);
-	      else
-		{
-		  if (j == 0)
-		    sprintf (ref[i][j][k], "%s%02d\xe5\xb9\xb4", era, yrj[k]);
-		  else if (j == 1)
-		    sprintf (ref[i][j][k], "%s%2d\xe5\xb9\xb4", era, yrj[k]);
-		  else
-		    sprintf (ref[i][j][k], "%s%d\xe5\xb9\xb4", era, yrj[k]);
-		}
+	      era = (is_before (k, 30,  7, 1912)) ? "\u660e\u6cbb"
+		  : (is_before (k, 25, 12, 1926)) ? "\u5927\u6b63"
+		  : (is_before (k,  8,  1, 1989)) ? "\u662d\u548c"
+		  : (is_before (k,  1,  5, 2019)) ? "\u5e73\u6210"
+						  : "\u4ee4\u548c";
+	      yr = yrj[k], sfx = "\u5e74";
 	    }
-	  else if (i == 1)
+	  else if (i == lo_LA)
+	    era = "\u0e9e.\u0eaa. ", yr = yrb[k], sfx = "";
+	  else if (i == th_TH)
+	    era = "\u0e1e.\u0e28. ", yr = yrb[k], sfx = "";
+	  else if (i == zh_TW || i == cmn_TW || i == hak_TW
+		   || i == nan_TW || i == lzh_TW)
 	    {
-	      sprintf (era, "\xe0\xba\x9e\x2e\xe0\xba\xaa\x2e ");
-	      sprintf (ref[i][j][k], "%s%d", era, yrb[k]);
+	      era = (is_before (k, 1, 1, 1912)) ? "\u6c11\u524d"
+						: "\u6c11\u570b";
+	      yr = yrc[k], sfx = "\u5e74";
 	    }
 	  else
-	    {
-	      sprintf (era, "\xe0\xb8\x9e\x2e\xe0\xb8\xa8\x2e ");
-	      sprintf (ref[i][j][k], "%s%d", era, yrb[k]);
-	    }
+	    FAIL_EXIT1 ("Invalid table index!");
+	  if (yr == 1)
+	    sprintf (ref[i][j][k], "%s\u5143%s", era, sfx);
+	  else if (j == 0)
+	    sprintf (ref[i][j][k], "%s%02d%s", era, abs (yr), sfx);
+	  else if (j == 1)
+	    sprintf (ref[i][j][k], "%s%2d%s", era, abs (yr), sfx);
+	  else if (j == 2)
+	    sprintf (ref[i][j][k], "%s%d%s", era, abs (yr), sfx);
+	  else
+	    FAIL_EXIT1 ("Invalid table index!");
 	}
 }
 
@@ -106,8 +170,8 @@ do_test (void)
 	  for (k = 0; k < array_length (dates); k++)
 	    {
 	      ttm.tm_mday = dates[k].d;
-	      ttm.tm_mon  = dates[k].m;
-	      ttm.tm_year = dates[k].y;
+	      ttm.tm_mon  = dates[k].m - 1;
+	      ttm.tm_year = dates[k].y - 1900;
 	      strftime (date, sizeof (date), "%F", &ttm);
 	      r = strftime (buf, sizeof (buf), formats[j], &ttm);
 	      e = strlen (ref[i][j][k]);

@@ -31,7 +31,7 @@
 #include "json-lib.h"
 
 /* Benchmark duration in seconds.  */
-#define BENCHMARK_DURATION	60
+#define BENCHMARK_DURATION	10
 #define RAND_SEED		88
 
 #ifndef NUM_THREADS
@@ -225,7 +225,6 @@ main (int argc, char **argv)
 {
   timing_t cur;
   size_t iters = 0, num_threads = 1;
-  unsigned long res;
   json_ctx_t json_ctx;
   double d_total_s, d_total_i;
   struct sigaction act;
@@ -260,10 +259,6 @@ main (int argc, char **argv)
   json_attr_object_begin (&json_ctx, "malloc");
 
   json_attr_object_begin (&json_ctx, "");
-
-  TIMING_INIT (res);
-
-  (void) res;
 
   memset (&act, 0, sizeof (act));
   act.sa_handler = &alarm_handler;

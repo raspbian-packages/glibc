@@ -311,34 +311,6 @@ __do_cancel (void)
 }
 
 
-/* Set cancellation mode to asynchronous.  */
-#define CANCEL_ASYNC() \
-  __pthread_enable_asynccancel ()
-/* Reset to previous cancellation mode.  */
-#define CANCEL_RESET(oldtype) \
-  __pthread_disable_asynccancel (oldtype)
-
-#if IS_IN (libc)
-/* Same as CANCEL_ASYNC, but for use in libc.so.  */
-# define LIBC_CANCEL_ASYNC() \
-  __libc_enable_asynccancel ()
-/* Same as CANCEL_RESET, but for use in libc.so.  */
-# define LIBC_CANCEL_RESET(oldtype) \
-  __libc_disable_asynccancel (oldtype)
-#elif IS_IN (libpthread)
-# define LIBC_CANCEL_ASYNC() CANCEL_ASYNC ()
-# define LIBC_CANCEL_RESET(val) CANCEL_RESET (val)
-#elif IS_IN (librt)
-# define LIBC_CANCEL_ASYNC() \
-  __librt_enable_asynccancel ()
-# define LIBC_CANCEL_RESET(val) \
-  __librt_disable_asynccancel (val)
-#else
-# define LIBC_CANCEL_ASYNC()	0 /* Just a dummy value.  */
-# define LIBC_CANCEL_RESET(val)	((void)(val)) /* Nothing, but evaluate it.  */
-#endif
-
-
 /* Internal prototypes.  */
 
 /* Thread list handling.  */
@@ -399,16 +371,6 @@ extern int *__libc_pthread_init (unsigned long int *ptr,
 extern int __pthread_multiple_threads attribute_hidden;
 /* Pointer to the corresponding variable in libc.  */
 extern int *__libc_multiple_threads_ptr attribute_hidden;
-#endif
-
-/* Find a thread given its TID.  */
-extern struct pthread *__find_thread_by_id (pid_t tid) attribute_hidden
-#ifdef SHARED
-;
-#else
-weak_function;
-#define __find_thread_by_id(tid) \
-  (__find_thread_by_id ? (__find_thread_by_id) (tid) : (struct pthread *) NULL)
 #endif
 
 extern void __pthread_init_static_tls (struct link_map *) attribute_hidden;
@@ -487,6 +449,11 @@ extern int __pthread_cond_wait (pthread_cond_t *cond, pthread_mutex_t *mutex);
 extern int __pthread_cond_timedwait (pthread_cond_t *cond,
 				     pthread_mutex_t *mutex,
 				     const struct timespec *abstime);
+extern int __pthread_cond_clockwait (pthread_cond_t *cond,
+				     pthread_mutex_t *mutex,
+				     clockid_t clockid,
+				     const struct timespec *abstime)
+  __nonnull ((1, 2, 4));
 extern int __pthread_condattr_destroy (pthread_condattr_t *attr);
 extern int __pthread_condattr_init (pthread_condattr_t *attr);
 extern int __pthread_key_create (pthread_key_t *key, void (*destr) (void *));
@@ -544,15 +511,6 @@ extern int __pthread_cond_wait_2_0 (pthread_cond_2_0_t *cond,
 
 extern int __pthread_getaffinity_np (pthread_t th, size_t cpusetsize,
 				     cpu_set_t *cpuset);
-
-/* The two functions are in libc.so and not exported.  */
-extern int __libc_enable_asynccancel (void) attribute_hidden;
-extern void __libc_disable_asynccancel (int oldtype) attribute_hidden;
-
-
-/* The two functions are in librt.so and not exported.  */
-extern int __librt_enable_asynccancel (void) attribute_hidden;
-extern void __librt_disable_asynccancel (int oldtype) attribute_hidden;
 
 #if IS_IN (libpthread)
 /* Special versions which use non-exported functions.  */

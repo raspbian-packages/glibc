@@ -32,8 +32,30 @@ extern const fenv_t *__fe_mask_env (void) attribute_hidden;
 
 /* Equivalent to fegetenv, but returns a fenv_t instead of taking a
    pointer.  */
-#define fegetenv_register() \
-        ({ fenv_t env; asm volatile ("mffs %0" : "=f" (env)); env; })
+#define fegetenv_register() __builtin_mffs()
+
+/* Equivalent to fegetenv_register, but only returns bits for
+   status, exception enables, and mode.  */
+
+#define fegetenv_status_ISA300()					\
+  ({register double __fr;						\
+    __asm__ __volatile__ (						\
+      ".machine push; .machine \"power9\"; mffsl %0; .machine pop"	\
+      : "=f" (__fr));							\
+    __fr;								\
+  })
+
+#ifdef _ARCH_PWR9
+# define fegetenv_status() fegetenv_status_ISA300()
+#elif defined __BUILTIN_CPU_SUPPORTS__
+# define fegetenv_status()						\
+  (__glibc_likely (__builtin_cpu_supports ("arch_3_00"))		\
+   ? fegetenv_status_ISA300()						\
+   : fegetenv_register()						\
+  )
+#else
+# define fegetenv_status() fegetenv_register ()
+#endif
 
 /* Equivalent to fesetenv, but takes a fenv_t instead of a pointer.  */
 #define fesetenv_register(env) \
@@ -45,7 +67,7 @@ extern const fenv_t *__fe_mask_env (void) attribute_hidden;
 			  "mtfsf 0xff,%0,1,0; " \
 			  ".machine pop" : : "f" (d)); \
 	  else \
-	    asm volatile ("mtfsf 0xff,%0" : : "f" (d)); \
+	    __builtin_mtfsf (0xff, d); \
 	} while(0)
 
 /* This very handy macro:
@@ -57,9 +79,9 @@ extern const fenv_t *__fe_mask_env (void) attribute_hidden;
 #define relax_fenv_state() \
 	do { \
 	   if (GLRO(dl_hwcap) & PPC_FEATURE_HAS_DFP) \
-	     asm (".machine push; .machine \"power6\"; " \
+	     asm volatile (".machine push; .machine \"power6\"; " \
 		  "mtfsfi 7,0,1; .machine pop"); \
-	   asm ("mtfsfi 7,0"); \
+	   asm volatile ("mtfsfi 7,0"); \
 	} while(0)
 
 /* Set/clear a particular FPSCR bit (for instance,
@@ -96,6 +118,14 @@ __fesetround_inline (int round)
     }
 
   return 0;
+}
+
+/* Same as __fesetround_inline, however without runtime check to use DFP
+   mtfsfi syntax (as relax_fenv_state) or if round value is valid.  */
+static inline void
+__fesetround_inline_nocheck (const int round)
+{
+  asm volatile ("mtfsfi 7,%0" : : "i" (round));
 }
 
 /* Definitions of all the FPSCR bit numbers */

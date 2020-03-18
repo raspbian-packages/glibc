@@ -317,14 +317,15 @@ __do_niscall3 (dir_binding *dbp, u_long prog, xdrproc_t xargs, caddr_t req,
 	  switch (prog)
 	    {
 	    case NIS_IBLIST:
-	      if ((((nis_result *)resp)->status == NIS_CBRESULTS) &&
-		  (cb != NULL))
+	      if ((((nis_result *)resp)->status == NIS_CBRESULTS)
+		  && (cb != NULL))
 		{
 		  __nis_do_callback (dbp, &((nis_result *) resp)->cookie, cb);
 		  break;
 		}
 	      /* Yes, the missing break is correct. If we doesn't have to
 		 start a callback, look if we have to search another server */
+	      /* Fall through.  */
 	    case NIS_LOOKUP:
 	    case NIS_ADD:
 	    case NIS_MODIFY:
@@ -502,7 +503,7 @@ rec_dirsearch (const_nis_name name, directory_obj *dir, nis_error *status)
 	    return dir;
 	  }
 	nis_free_directory (dir);
-	obj = calloc (1, sizeof(directory_obj));
+	obj = calloc (1, sizeof (directory_obj));
 	if (obj == NULL)
 	  {
 	    __free_fdresult (fd_res);

@@ -407,18 +407,18 @@ _hurd_select (int nfds,
 	    { MACH_MSG_TYPE_INTEGER_T, sizeof (integer_t) * 8, 1, 1, 0, 0 }
 	  };
 #endif
-	  if (msg.head.msgh_id == reply_msgid &&
-	      msg.head.msgh_size >= sizeof msg.error &&
-	      !(msg.head.msgh_bits & MACH_MSGH_BITS_COMPLEX) &&
+	  if (msg.head.msgh_id == reply_msgid
+	      && msg.head.msgh_size >= sizeof msg.error
+	      && !(msg.head.msgh_bits & MACH_MSGH_BITS_COMPLEX)
 #ifdef MACH_MSG_TYPE_BIT
-	      msg.error.err_type.word == inttype.word
+	      && msg.error.err_type.word == inttype.word
 #endif
 	      )
 	    {
 	      /* This is a properly formatted message so far.
 		 See if it is a success or a failure.  */
-	      if (msg.error.err == EINTR &&
-		  msg.head.msgh_size == sizeof msg.error)
+	      if (msg.error.err == EINTR
+		  && msg.head.msgh_size == sizeof msg.error)
 		{
 		  /* EINTR response; poll for further responses
 		     and then return quickly.  */
@@ -427,11 +427,11 @@ _hurd_select (int nfds,
 		}
 	      /* Keep in mind msg.success.result can be 0 if a timeout
 		 occurred.  */
-	      if (msg.error.err ||
+	      if (msg.error.err
 #ifdef MACH_MSG_TYPE_BIT
-		  msg.success.result_type.word != inttype.word ||
+		  || msg.success.result_type.word != inttype.word
 #endif
-		  msg.head.msgh_size != sizeof msg.success)
+		  || msg.head.msgh_size != sizeof msg.success)
 		{
 		  /* Error or bogus reply.  */
 		  if (!msg.error.err)

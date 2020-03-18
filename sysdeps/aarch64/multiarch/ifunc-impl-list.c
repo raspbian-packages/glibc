@@ -45,13 +45,18 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 	      IFUNC_IMPL_ADD (array, i, memcpy, 1, __memcpy_generic))
   IFUNC_IMPL (i, name, memmove,
 	      IFUNC_IMPL_ADD (array, i, memmove, 1, __memmove_thunderx)
+	      IFUNC_IMPL_ADD (array, i, memmove, 1, __memmove_thunderx2)
 	      IFUNC_IMPL_ADD (array, i, memmove, 1, __memmove_falkor)
 	      IFUNC_IMPL_ADD (array, i, memmove, 1, __memmove_generic))
   IFUNC_IMPL (i, name, memset,
 	      /* Enable this on non-falkor processors too so that other cores
 		 can do a comparative analysis with __memset_generic.  */
 	      IFUNC_IMPL_ADD (array, i, memset, (zva_size == 64), __memset_falkor)
+	      IFUNC_IMPL_ADD (array, i, memset, (zva_size == 64), __memset_emag)
 	      IFUNC_IMPL_ADD (array, i, memset, 1, __memset_generic))
+  IFUNC_IMPL (i, name, memchr,
+	      IFUNC_IMPL_ADD (array, i, memchr, 1, __memchr_nosimd)
+	      IFUNC_IMPL_ADD (array, i, memchr, 1, __memchr_generic))
 
   IFUNC_IMPL (i, name, strlen,
 	      IFUNC_IMPL_ADD (array, i, strlen, 1, __strlen_asimd)

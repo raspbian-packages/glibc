@@ -71,6 +71,9 @@ libsupport-routines = \
   support_test_main \
   support_test_verify_impl \
   temp_file \
+  timespec \
+  timespec-add \
+  timespec-sub \
   write_message \
   xaccept \
   xaccept4 \
@@ -78,10 +81,12 @@ libsupport-routines = \
   xbind \
   xcalloc \
   xchroot \
+  xclock_gettime \
   xclose \
   xconnect \
   xcopy_file_range \
   xdlfcn \
+  xdlmopen \
   xdup2 \
   xfclose \
   xfopen \
@@ -175,7 +180,9 @@ CFLAGS-support_paths.c = \
 		-DOBJDIR_ELF_LDSO_PATH=\"`cd $(objpfx)/..; pwd`/elf/$(rtld-installed-name)\" \
 		-DINSTDIR_PATH=\"$(prefix)\" \
 		-DLIBDIR_PATH=\"$(libdir)\" \
-		-DBINDIR_PATH=\"$(bindir)\"
+		-DBINDIR_PATH=\"$(bindir)\" \
+		-DSBINDIR_PATH=\"$(sbindir)\" \
+		-DROOTSBINDIR_PATH=\"$(rootsbindir)\"
 
 ifeq (,$(CXX))
 LINKS_DSO_PROGRAM = links-dso-program-c

@@ -28,8 +28,9 @@
 
 #include <stap-probe.h>
 
-#ifndef lll_timedlock_elision
-#define lll_timedlock_elision(a,dummy,b,c) lll_timedlock(a, b, c)
+#ifndef lll_clocklock_elision
+#define lll_clocklock_elision(futex, adapt_count, clockid, abstime, private) \
+  lll_clocklock (futex, clockid, abstime, private)
 #endif
 
 #ifndef lll_trylock_elision
@@ -41,14 +42,13 @@
 #endif
 
 int
-__pthread_mutex_timedlock (pthread_mutex_t *mutex,
-			   const struct timespec *abstime)
+__pthread_mutex_clocklock_common (pthread_mutex_t *mutex,
+				  clockid_t clockid,
+				  const struct timespec *abstime)
 {
   int oldval;
   pid_t id = THREAD_GETMEM (THREAD_SELF, tid);
   int result = 0;
-
-  LIBC_PROBE (mutex_timedlock_entry, 2, mutex, abstime);
 
   /* We must not check ABSTIME here.  If the thread does not block
      abstime must not be checked for a valid value.  */
@@ -75,7 +75,7 @@ __pthread_mutex_timedlock (pthread_mutex_t *mutex,
 	}
 
       /* We have to get the mutex.  */
-      result = lll_timedlock (mutex->__data.__lock, abstime,
+      result = lll_clocklock (mutex->__data.__lock, clockid, abstime,
 			      PTHREAD_MUTEX_PSHARED (mutex));
 
       if (result != 0)
@@ -98,16 +98,16 @@ __pthread_mutex_timedlock (pthread_mutex_t *mutex,
       FORCE_ELISION (mutex, goto elision);
     simple:
       /* Normal mutex.  */
-      result = lll_timedlock (mutex->__data.__lock, abstime,
+      result = lll_clocklock (mutex->__data.__lock, clockid, abstime,
 			      PTHREAD_MUTEX_PSHARED (mutex));
       break;
 
     case PTHREAD_MUTEX_TIMED_ELISION_NP:
     elision: __attribute__((unused))
       /* Don't record ownership */
-      return lll_timedlock_elision (mutex->__data.__lock,
+      return lll_clocklock_elision (mutex->__data.__lock,
 				    mutex->__data.__spins,
-				    abstime,
+				    clockid, abstime,
 				    PTHREAD_MUTEX_PSHARED (mutex));
 
 
@@ -124,7 +124,8 @@ __pthread_mutex_timedlock (pthread_mutex_t *mutex,
 	    {
 	      if (cnt++ >= max_cnt)
 		{
-		  result = lll_timedlock (mutex->__data.__lock, abstime,
+		  result = lll_clocklock (mutex->__data.__lock,
+					  clockid, abstime,
 					  PTHREAD_MUTEX_PSHARED (mutex));
 		  break;
 		}
@@ -240,27 +241,6 @@ __pthread_mutex_timedlock (pthread_mutex_t *mutex,
 	     values despite them being valid.  */
 	  if (__glibc_unlikely (abstime->tv_sec < 0))
 	    return ETIMEDOUT;
-#if (!defined __ASSUME_FUTEX_CLOCK_REALTIME \
-     || !defined lll_futex_timed_wait_bitset)
-	  struct timeval tv;
-	  struct timespec rt;
-
-	  /* Get the current time.  */
-	  (void) __gettimeofday (&tv, NULL);
-
-	  /* Compute relative timeout.  */
-	  rt.tv_sec = abstime->tv_sec - tv.tv_sec;
-	  rt.tv_nsec = abstime->tv_nsec - tv.tv_usec * 1000;
-	  if (rt.tv_nsec < 0)
-	    {
-	      rt.tv_nsec += 1000000000;
-	      --rt.tv_sec;
-	    }
-
-	  /* Already timed out?  */
-	  if (rt.tv_sec < 0)
-	    return ETIMEDOUT;
-#endif
 
 	  /* We cannot acquire the mutex nor has its owner died.  Thus, try
 	     to block using futexes.  Set FUTEX_WAITERS if necessary so that
@@ -287,18 +267,12 @@ __pthread_mutex_timedlock (pthread_mutex_t *mutex,
 	  assume_other_futex_waiters |= FUTEX_WAITERS;
 
 	  /* Block using the futex.  */
-#if (!defined __ASSUME_FUTEX_CLOCK_REALTIME \
-     || !defined lll_futex_timed_wait_bitset)
-	  lll_futex_timed_wait (&mutex->__data.__lock, oldval,
-				&rt, PTHREAD_ROBUST_MUTEX_PSHARED (mutex));
-#else
-	  int err = lll_futex_timed_wait_bitset (&mutex->__data.__lock,
-	      oldval, abstime, FUTEX_CLOCK_REALTIME,
+	  int err = lll_futex_clock_wait_bitset (&mutex->__data.__lock,
+	      oldval, clockid, abstime,
 	      PTHREAD_ROBUST_MUTEX_PSHARED (mutex));
 	  /* The futex call timed out.  */
 	  if (err == -ETIMEDOUT)
 	    return -err;
-#endif
 	  /* Reload current lock value.  */
 	  oldval = mutex->__data.__lock;
 	}
@@ -430,7 +404,7 @@ __pthread_mutex_timedlock (pthread_mutex_t *mutex,
 		    struct timespec reltime;
 		    struct timespec now;
 
-		    INTERNAL_SYSCALL (clock_gettime, __err, 2, CLOCK_REALTIME,
+		    INTERNAL_SYSCALL (clock_gettime, __err, 2, clockid,
 				      &now);
 		    reltime.tv_sec = abstime->tv_sec - now.tv_sec;
 		    reltime.tv_nsec = abstime->tv_nsec - now.tv_nsec;
@@ -647,5 +621,26 @@ __pthread_mutex_timedlock (pthread_mutex_t *mutex,
 
  out:
   return result;
+}
+
+int
+__pthread_mutex_clocklock (pthread_mutex_t *mutex,
+			   clockid_t clockid,
+			   const struct timespec *abstime)
+{
+  if (__glibc_unlikely (!lll_futex_supported_clockid (clockid)))
+    return EINVAL;
+
+  LIBC_PROBE (mutex_clocklock_entry, 3, mutex, clockid, abstime);
+  return __pthread_mutex_clocklock_common (mutex, clockid, abstime);
+}
+weak_alias (__pthread_mutex_clocklock, pthread_mutex_clocklock)
+
+int
+__pthread_mutex_timedlock (pthread_mutex_t *mutex,
+			   const struct timespec *abstime)
+{
+  LIBC_PROBE (mutex_timedlock_entry, 2, mutex, abstime);
+  return __pthread_mutex_clocklock_common (mutex, CLOCK_REALTIME, abstime);
 }
 weak_alias (__pthread_mutex_timedlock, pthread_mutex_timedlock)

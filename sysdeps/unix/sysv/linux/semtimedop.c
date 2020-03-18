@@ -30,7 +30,7 @@ semtimedop (int semid, struct sembuf *sops, size_t nsops,
 #ifdef __ASSUME_DIRECT_SYSVIPC_SYSCALLS
   return INLINE_SYSCALL_CALL (semtimedop, semid, sops, nsops, timeout);
 #else
-  return INLINE_SYSCALL_CALL (ipc, IPCOP_semtimedop, semid, nsops, 0, sops,
-			      timeout);
+  return INLINE_SYSCALL_CALL (ipc, IPCOP_semtimedop, semid,
+			      SEMTIMEDOP_IPC_ARGS (nsops, sops, timeout));
 #endif
 }

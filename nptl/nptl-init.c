@@ -58,15 +58,6 @@ int __set_robust_list_avail;
 # define set_robust_list_not_avail() do { } while (0)
 #endif
 
-#ifndef __ASSUME_FUTEX_CLOCK_REALTIME
-/* Nonzero if we do not have FUTEX_CLOCK_REALTIME.  */
-int __have_futex_clock_realtime;
-# define __set_futex_clock_realtime() \
-  __have_futex_clock_realtime = 1
-#else
-#define __set_futex_clock_realtime() do { } while (0)
-#endif
-
 /* Version of the library, used in libthread_db to detect mismatches.  */
 static const char nptl_version[] __attribute_used__ = VERSION;
 
@@ -274,11 +265,6 @@ __pthread_initialize_minimal_internal (void)
   __pthread_initialize_pids (pd);
   THREAD_SETMEM (pd, specific[0], &pd->specific_1stblock[0]);
   THREAD_SETMEM (pd, user_stack, true);
-  if (LLL_LOCK_INITIALIZER != 0)
-    THREAD_SETMEM (pd, lock, LLL_LOCK_INITIALIZER);
-#if HP_TIMING_AVAIL
-  THREAD_SETMEM (pd, cpuclock_offset, GL(dl_cpuclock_offset));
-#endif
 
   /* Initialize the robust mutex data.  */
   {
@@ -297,26 +283,6 @@ __pthread_initialize_minimal_internal (void)
 #endif
       set_robust_list_not_avail ();
   }
-
-#ifdef __NR_futex
-# ifndef __ASSUME_FUTEX_CLOCK_REALTIME
-    {
-      int word = 0;
-      /* NB: the syscall actually takes six parameters.  The last is the
-	 bit mask.  But since we will not actually wait at all the value
-	 is irrelevant.  Given that passing six parameters is difficult
-	 on some architectures we just pass whatever random value the
-	 calling convention calls for to the kernel.  It causes no harm.  */
-      INTERNAL_SYSCALL_DECL (err);
-      word = INTERNAL_SYSCALL (futex, err, 5, &word,
-			       FUTEX_WAIT_BITSET | FUTEX_CLOCK_REALTIME
-			       | FUTEX_PRIVATE_FLAG, 1, NULL, 0);
-      assert (INTERNAL_SYSCALL_ERROR_P (word, err));
-      if (INTERNAL_SYSCALL_ERRNO (word, err) != ENOSYS)
-	__set_futex_clock_realtime ();
-    }
-# endif
-#endif
 
   /* Set initial thread's stack block from 0 up to __libc_stack_end.
      It will be bigger than it actually is, but for unwind.c/pt-longjmp.c
@@ -441,6 +407,14 @@ strong_alias (__pthread_initialize_minimal_internal,
 	      __pthread_initialize_minimal)
 
 
+/* This function is internal (it has a GLIBC_PRIVATE) version, but it
+   is widely used (either via weak symbol, or dlsym) to obtain the
+   __static_tls_size value.  This value is then used to adjust the
+   value of the stack size attribute, so that applications receive the
+   full requested stack size, not diminished by the TCB and static TLS
+   allocation on the stack.  Once the TCB is separately allocated,
+   this function should be removed or renamed (if it is still
+   necessary at that point).  */
 size_t
 __pthread_get_minstack (const pthread_attr_t *attr)
 {

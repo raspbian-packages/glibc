@@ -31,7 +31,8 @@ headers	:= sys/utsname.h sys/times.h sys/wait.h sys/types.h unistd.h	      \
 	   bits/local_lim.h tar.h bits/utsname.h bits/confname.h	      \
 	   bits/waitflags.h bits/waitstatus.h sys/unistd.h sched.h	      \
 	   bits/sched.h bits/cpu-set.h re_comp.h wait.h bits/environments.h   \
-	   cpio.h spawn.h bits/unistd.h bits/types/struct_sched_param.h
+	   cpio.h spawn.h bits/unistd.h bits/types/struct_sched_param.h	      \
+	   bits/unistd_ext.h
 
 routines :=								      \
 	uname								      \
@@ -63,7 +64,8 @@ routines :=								      \
 	spawnattr_getsigmask spawnattr_getschedpolicy spawnattr_getschedparam \
 	spawnattr_setsigmask spawnattr_setschedpolicy spawnattr_setschedparam \
 	posix_madvise							      \
-	get_child_max sched_cpucount sched_cpualloc sched_cpufree
+	get_child_max sched_cpucount sched_cpualloc sched_cpufree \
+	streams-compat
 
 aux		:= init-posix environ
 tests		:= test-errno tstgetopt testfnm runtests runptests \
@@ -93,6 +95,7 @@ tests		:= test-errno tstgetopt testfnm runtests runptests \
 		   bug-getopt5 tst-getopt_long1 bug-regex34 bug-regex35 \
 		   tst-pathconf tst-rxspencer-no-utf8 \
 		   tst-fnmatch3 bug-regex36 \
+		   tst-fnmatch4 tst-fnmatch5 \
 		   tst-posix_spawn-fd tst-posix_spawn-setsid \
 		   tst-posix_fadvise tst-posix_fadvise64 \
 		   tst-sysconf-empty-chroot tst-glob_symlinks tst-fexecve \
@@ -168,7 +171,8 @@ $(objpfx)wordexp-tst.out: wordexp-tst.sh $(objpfx)wordexp-test
 endif
 
 LOCALES := cs_CZ.UTF-8 da_DK.ISO-8859-1 de_DE.ISO-8859-1 de_DE.UTF-8 \
-	   en_US.UTF-8 es_US.ISO-8859-1 es_US.UTF-8 ja_JP.EUC-JP tr_TR.UTF-8
+	   en_US.UTF-8 es_US.ISO-8859-1 es_US.UTF-8 ja_JP.EUC-JP tr_TR.UTF-8 \
+	   cs_CZ.ISO-8859-2
 include ../gen-locales.mk
 
 $(objpfx)bug-regex1.out: $(gen-locales)

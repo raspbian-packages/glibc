@@ -211,8 +211,8 @@ print_cache (const char *cache_name)
       cache_data = (const char *) &cache->libs[cache->nlibs];
 
       /* Check for a new cache embedded in the old format.  */
-      if (cache_size >
-	  (offset + sizeof (struct cache_file_new)))
+      if (cache_size
+	  > (offset + sizeof (struct cache_file_new)))
 	{
 
 	  cache_new = (struct cache_file_new *) ((void *)cache + offset);
@@ -712,9 +712,9 @@ load_aux_cache (const char *aux_cache_name)
   if (aux_cache == MAP_FAILED
       || aux_cache_size < sizeof (struct aux_cache_file)
       || memcmp (aux_cache->magic, AUX_CACHEMAGIC, sizeof AUX_CACHEMAGIC - 1)
-      || aux_cache_size != (sizeof(struct aux_cache_file) +
-			    aux_cache->nlibs * sizeof(struct aux_cache_file_entry) +
-			    aux_cache->len_strings))
+      || aux_cache_size != (sizeof (struct aux_cache_file)
+			    + aux_cache->nlibs * sizeof (struct aux_cache_file_entry)
+			    + aux_cache->len_strings))
     {
       close (fd);
       init_aux_cache ();

@@ -265,8 +265,8 @@ __spawni (pid_t *pid, const char *file,
     {
       error_t use_init_port (int which, error_t (*operate) (mach_port_t))
 	{
-	  return (which == INIT_PORT_CWDIR ? (*operate) (startdir) :
-		  child_init_port (which, operate));
+	  return (which == INIT_PORT_CWDIR ? (*operate) (startdir)
+		  : child_init_port (which, operate));
 	}
 
       return __hurd_file_name_lookup (&use_init_port, &child_fd, 0,
@@ -518,7 +518,7 @@ __spawni (pid_t *pid, const char *file,
     if (dtable_cells[i] != NULL)					      \
       _hurd_port_move (dtable_cells[i], &new_##x[i], &x[i]);		      \
     else								      \
-      memset(&new_##x[i], 0, sizeof(new_##x[i]));			      \
+      memset (&new_##x[i], 0, sizeof (new_##x[i]));			      \
   memset (&new_##x[dtablesize], 0, (newfd + 1 - dtablesize) * sizeof (x[0])); \
   x = new_##x; } while (0)
 

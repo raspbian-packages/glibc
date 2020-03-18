@@ -5,11 +5,91 @@ See the end for copying conditions.
 Please send GNU C library bug reports via <https://sourceware.org/bugzilla/>
 using `glibc' in the "product" field.
 
-Version 2.29.1
+Version 2.30.1
+
+Security related changes:
+
+CVE-2019-19126: ld.so failed to ignore the LD_PREFER_MAP_32BIT_EXEC
+  environment variable during program execution after a security
+  transition, allowing local attackers to restrict the possible mapping
+  addresses for loaded libraries and thus bypass ASLR for a setuid
+  program.  Reported by Marcin Kościelnicki.
+
+CVE-2020-10029: Trigonometric functions on x86 targets suffered from stack
+  corruption when they were passed a pseudo-zero argument.  Reported by Guido
+  Vranken / ForAllSecure Mayhem.
+
+The following bugs are resolved with this release:
+
+  [23518] login: Remove utmp backend jump tables
+  [24682] localedata: zh_CN first weekday should be Monday per GB/T
+    7408-2005
+  [24867] malloc: Remove unwanted leading whitespace in malloc_info
+  [24879] login: Disarm timer after utmp lock acquisition
+  [24880] login: Use struct flock64 in utmp
+  [24882] login: Acquire write lock early in pututline
+  [24986] alpha: new getegid, geteuid and getppid syscalls used
+    unconditionally
+  [24899] login: Add nonstring attributes to struct utmp, struct utmpx
+  [24902] login: pututxline could fail to overwrite existing entries
+  [25066] FAIL: nptl/tst-tls1 on hppa
+  [25189] Don't use a custom wrapper macro around __has_include
+  [25203] libio: Disable vtable validation for pre-2.1 interposed handles
+  [25204] Ignore LD_PREFER_MAP_32BIT_EXEC for SUID programs
+  [25225] ld.so fails to link on x86 if GCC defaults to -fcf-protection
+  [25232] No const correctness for strchr et al. for Clang++
+  [25401] Remove incorrect alloc_size attribute from pvalloc
+  [25487] sinl() stack corruption from crafted input (CVE-2020-10029)
+  [25523] MIPS/Linux inline syscall template is miscompiled
+
+
+Version 2.30
 
 Major new features:
 
+* Unicode 12.1.0 Support: Character encoding, character type info, and
+  transliteration tables are all updated to Unicode 12.1.0, using
+  generator scripts contributed by Mike FABIAN (Red Hat).
+
+* The dynamic linker accepts the --preload argument to preload shared
+  objects, in addition to the LD_PRELOAD environment variable.
+
+* The twalk_r function has been added.  It is similar to the existing
+  twalk function, but it passes an additional caller-supplied argument
+  to the callback function.
+
+* On Linux, the getdents64, gettid, and tgkill functions have been added.
+
+* Minguo (Republic of China) calendar support has been added as an
+  alternative calendar for the following locales: zh_TW, cmn_TW, hak_TW,
+  nan_TW, lzh_TW.
+
 * The entry for the new Japanese era has been added for ja_JP locale.
+
+* Memory allocation functions malloc, calloc, realloc, reallocarray, valloc,
+  pvalloc, memalign, and posix_memalign fail now with total object size
+  larger than PTRDIFF_MAX.  This is to avoid potential undefined behavior with
+  pointer subtraction within the allocated object, where results might
+  overflow the ptrdiff_t type.
+
+* The dynamic linker no longer refuses to load objects which reference
+  versioned symbols whose implementation has moved to a different soname
+  since the object has been linked.  The old error message, symbol
+  FUNCTION-NAME, version SYMBOL-VERSION not defined in file DSO-NAME with
+  link time reference, is gone.
+
+* Add new POSIX-proposed pthread_cond_clockwait, pthread_mutex_clocklock,
+  pthread_rwlock_clockrdlock, pthread_rwlock_clockwrlock and sem_clockwait
+  functions.  These behave similarly to their "timed" equivalents, but also
+  accept a clockid_t parameter to determine which clock their timeout should
+  be measured against.  All functions allow waiting against CLOCK_MONOTONIC
+  and CLOCK_REALTIME.  The decision of which clock to be used is made at the
+  time of the wait (unlike with pthread_condattr_setclock, which requires
+  the clock choice at initialization time).
+
+* On AArch64 the GNU IFUNC resolver call ABI changed: old resolvers still
+  work, new resolvers can use a second argument which can be extended in
+  the future, currently it contains the AT_HWCAP2 value.
 
 Deprecated and removed features, and other changes affecting compatibility:
 
@@ -17,28 +97,48 @@ Deprecated and removed features, and other changes affecting compatibility:
   support the system call of the same name.  Previously, user space
   emulation was performed, but its behavior did not match the kernel
   behavior, which was deemed too confusing.  Applications which use the
-  copy_file_range function will have to be run on kernels which implement
-  the copy_file_range system call.  Support for most architectures was added
-  in version 4.5 of the mainline Linux kernel.
+  copy_file_range function can no longer rely on glibc to provide a fallback
+  on kernels that do not support the copy_file_range system call, and if
+  this function returns ENOSYS, they will need to use their own fallback.
+  Support for copy_file_range for most architectures was added in version
+  4.5 of the mainline Linux kernel.
 
-The following bugs are resolved with this release:
+* The functions clock_gettime, clock_getres, clock_settime,
+  clock_getcpuclockid, clock_nanosleep were removed from the librt library
+  for new applications (on architectures which had them).  Instead, the
+  definitions in libc will be used automatically, which have been available
+  since glibc 2.17.
 
-  [16573] malloc: Set and reset all hooks for tracing
-  [18035] Fix pldd hang
-  [20568] Fix crash in _IO_wfile_sync
-  [24155] x32 memcmp can treat positive length as 0 (if sign bit in RDX is set) (CVE-2019-7309)
-  [24164] Systemtap probes need to use "nr" constraint on 32-bit Arm
-  [24161] __run_fork_handlers self-deadlocks in malloc/tst-mallocfork2
-  [24211] Use-after-free in Systemtap probe in pthread_join
-  [24228] old x86 applications that use legacy libio crash on exit
-  [24476] dlfcn: Guard __dlerror_main_freeres with __libc_once_get (once)
-  [24744] io: Remove the copy_file_range emulation
-  [24986] alpha: new getegid, geteuid and getppid syscalls used
-    unconditionally
-  [25203] libio: Disable vtable validation for pre-2.1 interposed handles
-  [25204] Ignore LD_PREFER_MAP_32BIT_EXEC for SUID programs
-  [25225] ld.so fails to link on x86 if GCC defaults to -fcf-protection
-  [25232] No const correctness for strchr et al. for Clang++
+* The obsolete and never-implemented XSI STREAMS header files <stropts.h>
+  and <sys/stropts.h> have been removed.
+
+* Support for the "inet6" option in /etc/resolv.conf and the RES_USE_INET6
+  resolver flag (deprecated in glibc 2.25) have been removed.
+
+* The obsolete RES_INSECURE1 and RES_INSECURE2 option flags for the DNS stub
+  resolver have been removed from <resolv.h>.
+
+* With --enable-bind-now, installed programs are now linked with the
+  BIND_NOW flag.
+
+* Support for the PowerPC SPE ISA extension (powerpc-*-*gnuspe*
+  configurations) has been removed, following the deprecation of this
+  subarchitecture in version 8 of GCC, and its removal in version 9.
+
+* On 32-bit Arm, support for the port-based I/O emulation and the <sys/io.h>
+  header have been removed.
+
+* The Linux-specific <sys/sysctl.h> header and the sysctl function have been
+  deprecated and will be removed from a future version of glibc.
+  Application should directly access /proc instead.  For obtaining random
+  bits, the getentropy function can be used.
+
+Changes to build and runtime requirements:
+
+* GCC 6.2 or later is required to build the GNU C Library.
+
+  Older GCC versions and non-GNU compilers are still supported when
+  compiling programs that use the GNU C Library.
 
 Security related changes:
 
@@ -54,11 +154,111 @@ Security related changes:
   via proceed_next_node in posix/regexec.c leads to heap-based buffer
   over-read.  Reported by Hongxu Chen.
 
-  CVE-2019-19126: ld.so failed to ignore the LD_PREFER_MAP_32BIT_EXEC
-  environment variable during program execution after a security
-  transition, allowing local attackers to restrict the possible mapping
-  addresses for loaded libraries and thus bypass ASLR for a setuid
-  program.  Reported by Marcin Kościelnicki.
+The following bugs are resolved with this release:
+
+  [2872] locale: Transliteration Cyrillic -> ASCII fails
+  [6399] libc: gettid() should have a wrapper
+  [16573] malloc: mtrace hangs when MALLOC_TRACE is defined
+  [16976] glob: fnmatch unbounded stack VLA for collating symbols
+  [17396] localedata: globbing for locale by [[.collating-element.]]
+  [18035] dynamic-link: pldd does no longer work, enters infinite loop
+  [18465] malloc: memusagestat is built using system C library
+  [18830] locale: iconv -c -f ascii with >buffer size worth of input before
+    invalid input drops valid char
+  [20188] nptl: libpthread IFUNC resolver for vfork can lead to crash
+  [20568] locale: Segfault with wide characters and setlocale/fgetwc/UTF-8
+  [21897] localedata: Afar locales: Fix mon, abmon, and abday
+  [22964] localedata: The Japanese Era name will be changed on May 1, 2019
+  [23352] malloc: __malloc_check_init still defined in public header
+    malloc.h.
+  [23403] nptl: Wrong alignment of TLS variables
+  [23501] libc: nftw() doesn't return dangling symlink's inode
+  [23733] malloc: Check the count before calling tcache_get()
+  [23741] malloc: Missing __attribute_alloc_size__ in many allocation
+    functions
+  [23831] localedata: nl_NL missing LC_NUMERIC thousands_sep
+  [23844] nptl: pthread_rwlock_trywrlock results in hang
+  [23983] argparse: Missing compat versions of argp_failure and argp_error
+    for long double = double
+  [23984] libc: Missing compat versions of err.h and error.h functions for
+    long double = double
+  [23996] localedata: Dutch salutations
+  [24040] libc: riscv64: unterminated call chain in __thread_start
+  [24047] network: libresolv should use IP_RECVERR/IPV6_RECVERR to avoid
+    long timeouts
+  [24051] stdio: puts and putchar ouput to _IO_stdout instead of stdout
+  [24059] nss: nss_files: get_next_alias calls fgets_unlocked without
+    checking for NULL.
+  [24114] regex: regexec buffer read overrun in "grep -i
+    '\(\(\)*.\)*\(\)\(\)\1'"
+  [24122] libc: Segfaults if 0 returned from la_version
+  [24153] stdio: Some input functions do not react to stdin assignment
+  [24155] string: x32 memcmp can treat positive length as 0 (if sign bit in
+    RDX is set) (CVE-2019-7309)
+  [24161] nptl: __run_fork_handlers self-deadlocks in malloc/tst-mallocfork2
+  [24164] libc: Systemtap probes need to use "nr" constraint on 32-bit Arm,
+    not the default "nor"
+  [24166] dynamic-link: Dl_serinfo.dls_serpath[1] in dlfcn.h causes UBSAN
+    false positives, change to modern flexible array
+  [24180] nptl: pthread_mutex_trylock does not use the correct order of
+    instructions while maintaining the robust mutex list due to missing
+    compiler barriers.
+  [24194] librt: Non-compatibility symbols for clock_gettime etc. cause
+    unnecessary librt dependencies
+  [24200] localedata: Revert first_weekday removal in en_IE locale
+  [24211] nptl: Use-after-free in Systemtap probe in pthread_join
+  [24215] nptl: pthread_timedjoin_np should be a cancellation point
+  [24216] malloc: Check for large bin list corruption when inserting
+    unsorted chunk
+  [24228] stdio: old x86 applications that use legacy libio crash on exit
+  [24231] dynamic-link: [sparc64] R_SPARC_H34 implementation falls through
+    to R_SPARC_H44
+  [24293] localedata: Missing Minguo calendar support for TW locales
+  [24296] localedata: Orthographic mistakes in 'day' and 'abday' sections in
+    tt_RU (Tatar) locale
+  [24307] localedata: Update locale data to Unicode 12.0.0
+  [24323] dynamic-link: dlopen should not be able open PIE objects
+  [24335] build: "Obsolete types detected" with Linux 5.0 headers
+  [24369] localedata: Orthographic mistakes in 'mon' and 'abmon' sections in
+    tt_RU (Tatar) locale
+  [24370] localedata: Add lang_name for tt_RU locale
+  [24372] locale: Binary locale files are not architecture independent
+  [24394] time: strptime %Ey mis-parses final year of era
+  [24476] dynamic-link: __libc_freeres triggers bad free in libdl if dlerror
+    was not used
+  [24506] dynamic-link: FAIL: elf/tst-pldd with --enable-hardcoded-path-in-
+    tests
+  [24531] malloc: Malloc tunables give tcache assertion failures
+  [24532] libc: conform/arpa/inet.h failures due to linux kernel 64-bit
+    time_t changes
+  [24535] localedata: Update locale data to Unicode 12.1.0
+  [24537] build: nptl/tst-eintr1 test case can hit task limits on some
+    kernels and break testing
+  [24544] build: elf/tst-pldd doesn't work if you install with a --prefix
+  [24556] build: [GCC 9] error: ‘%s’ directive argument is null
+    [-Werror=format-overflow=]
+  [24570] libc: alpha: compat msgctl uses __IPC_64
+  [24584] locale: Data race in __wcsmbs_clone_conv
+  [24588] stdio: Remove codecvt vtables from libio
+  [24603] math: sysdeps/ieee754/dbl-64/branred.c is slow when compiled with
+    -O3 -march=skylake
+  [24614] localedata: nl_NL LC_MONETARY doesn't match CLDR 35
+  [24632] stdio: Old binaries which use freopen with default stdio handles
+    crash
+  [24640] libc: __ppc_get_timebase_freq() always return 0 when using static
+    linked glibc
+  [24652] localedata: szl_PL spelling correction
+  [24695] nss: nss_db: calling getpwent after endpwent crashes
+  [24696] nss: endgrent() clobbers errno=ERRNO for 'group: db files' entry
+    in /etc/nsswitch.conf
+  [24699] libc: mmap64 with very large offset broken on MIPS64 n32
+  [24740] libc: getdents64 type confusion
+  [24741] dynamic-link: ld.so should not require that a versioned symbol is
+    always implemented in the same library
+  [24744] libc: Remove copy_file_range emulation
+  [24757] malloc: memusagestat is linked against system libpthread
+  [24794] libc: Partial test suite run builds corrupt test-in-container
+    testroot
 
 
 Version 2.29
