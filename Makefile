@@ -418,7 +418,7 @@ ifeq ($(run-built-tests),yes)
 	    $(test-wrapper) cp $$dso $(objpfx)testroot.pristine$$dso ;\
 	  done
 endif
-	$(MAKE) install DESTDIR=$(objpfx)testroot.pristine \
+	$(MAKE) install install_root=$(objpfx)testroot.pristine \
 	  subdirs='$(sorted-subdirs)'
 	touch $(objpfx)testroot.pristine/install.stamp
 
