@@ -3777,11 +3777,32 @@ else
 fi
 
 
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+#ifndef __CET__
+#error no CET compiler support
+#endif
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  libc_cv_compiler_default_cet=yes
+else
+  libc_cv_compiler_default_cet=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
 # Check whether --enable-cet was given.
 if test "${enable_cet+set}" = set; then :
   enableval=$enable_cet; enable_cet=$enableval
 else
-  enable_cet=no
+  enable_cet=$libc_cv_compiler_default_cet
 fi
 
 
@@ -4014,7 +4035,7 @@ if ${CC-cc} $CFLAGS $CPPFLAGS $LDFLAGS \
 	    -o conftest conftest.S 1>&5 2>&5; then
   # Do a link to see if the backend supports IFUNC relocs.
   $READELF -r conftest 1>&5
-  LC_ALL=C $READELF -r conftest | grep 'no relocations' >/dev/null || {
+  LC_ALL=C $READELF -Wr conftest | grep -q 'IRELATIVE\|R_SPARC_JMP_IREL' && {
     libc_cv_ld_gnu_indirect_function=yes
   }
 fi
