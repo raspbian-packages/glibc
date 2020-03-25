@@ -76,6 +76,8 @@ do_test (void)
 {
   TEST_VERIFY (system (NULL) != 0);
 
+/* Disabled at it depends on the running shell */
+#if 0
   {
     char cmd[namemax];
     memset (cmd, 'a', sizeof(cmd));
@@ -111,6 +113,7 @@ do_test (void)
     TEST_COMPARE_STRING (result.err.buffer, returnerr);
     free (returnerr);
   }
+#endif
 
   {
     struct support_capture_subprocess result;
