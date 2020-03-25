@@ -25,6 +25,7 @@
 
 #include <pt-internal.h>
 #include <pthreadP.h>
+#include <dso_handle.h>
 
 __thread struct __pthread *___pthread_self;
 
@@ -85,7 +86,7 @@ _init_routine (void *stack)
      when we return from here) shouldn't be seen as a user thread.  */
   __pthread_total--;
 
-  __pthread_atfork (NULL, NULL, reset_pthread_total);
+  __register_atfork (NULL, NULL, reset_pthread_total, __dso_handle);
 
   /* Make MiG code thread aware.  */
   __mig_init (thread->stackaddr);
