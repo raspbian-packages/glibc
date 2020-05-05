@@ -1,3 +1,214 @@
+2019-08-15  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #24899]
+	* sysdeps/gnu/bits/utmpx.h (struct utmpx): Add
+	__attribute_nonstring__ to ut_line, ut_id, ut_user, ut_host.
+	* sysdeps/unix/sysv/linux/s390/bits/utmpx.h (struct utmpx):
+	Likewise.
+	* sysdeps/gnu/bits/utmp.h (struct utmp): Add
+	__attribute_nonstring__ to ut_id.
+	* sysdeps/unix/sysv/linux/s390/bits/utmpx.h (struct utmp):
+	Likewise.
+
+2019-08-28  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #24902]
+	* login/Makefile (tests): Add tst-pututxline-lockfail.
+	(tst-pututxline-lockfail): Link with -lpthread.
+	* login/utmp_file.c (internal_getut_r): Remove buffer argument.
+	(__libc_getutid_r): Adjust.
+	(__libc_pututline): Likewise.  Check for file_offset == -1.
+	* login/tst-pututxline-lockfail.c: New file.
+
+2019-08-15  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #24880]
+	* login/utmp_file.c (file_locking_failed): Use struct flock64.
+	(file_locking_unlock): Likewise.
+
+2019-08-15  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #24879]
+	login: Disarm timer after utmp lock acquisition.
+	* login/utmp_file.c (struct file_locking): Remove.
+	(try_file_lock): Adjust.
+	(file_lock_restore): Remove function.
+	(__libc_getutent_r): .
+	(internal_getut_r): Likewise.
+	(__libc_getutline_r): Likewise.
+	(__libc_pututline): Likewise.
+	(__libc_updwtmp): Likewise.
+
+2019-08-15  Florian Weimer  <fweimer@redhat.com>
+
+	* login/utmp_file.c (__libc_updwtmp): Unlock the right file
+	descriptor.
+	* login/Makefile (tests): Add tst-updwtmpx.
+	* login/tst-updwtmpx.c: New file.
+
+2019-08-13  Florian Weimer  <fweimer@redhat.com>
+
+	* login/utmp_file.c (LOCK_FILE, LOCKING_FAILED, UNLOCK_FILE):
+	Remove macros.
+	(struct file_locking): New.
+	(try_file_lock, file_unlock, file_lock_restore): New functions.
+	(__libc_getutent_r): Use the new functions.
+	(internal_getut_r): Likewise.
+	(__libc_getutline_r): Likewise.
+	(__libc_pututline): Likewise.
+	(__libc_updwtmp): Likewise.
+
+2019-08-13  Florian Weimer  <fweimer@redhat.com>
+
+	* login/getutid_r.c (__getutid_r): _HAVE_UT_ID and _HAVE_UT_TYPE
+	are always true.
+	* login/getutmp.c (getutmp): _HAVE_UT_TYPE, _HAVE_UT_PID,
+	_HAVE_UT_ID, _HAVE_UT_HOST, _HAVE_UT_TV are always true.
+	* login/getutmpx.c (getutmpx): Likewise.
+	* login/login.c (login): _HAVE_UT_TYPE, _HAVE_UT_PID are always
+	true.
+	* login/logout.c (logout): _HAVE_UT_TYPE, _HAVE_UT_HOST,
+	_HAVE_UT_TV are always true.
+	* login/logwtmp.c (logwtmp): _HAVE_UT_PID, _HAVE_UT_TYPE,
+	_HAVE_UT_HOST, _HAVE_UT_TV are always true.
+	* login/tst-utmp.c: _HAVE_UT_TYPE, _HAVE_UT_TV are always true.
+	* login/utmp_file.c (__libc_setutent): _HAVE_UT_TYPE, _HAVE_UT_ID
+	are always true.
+	(internal_getut_r): _HAVE_UT_TYPE is always true.
+	(__libc_pututline): Likewise.
+	* login/programs/utmpdump.c (print_entry): Assume that
+	_HAVE_UT_TYPE, _HAVE_UT_PID, _HAVE_UT_ID, _HAVE_UT_HOST,
+	_HAVE_UT_TV are always true.
+	* sysdeps/generic/utmp-equal.h (__utmp_equal): _HAVE_UT_TYPE,
+	_HAVE_UT_ID are always true.
+	* sysdeps/gnu/bits/utmp.h: Move to ...
+	* bits/utmp.h: ... here, replacing the old file.
+
+2019-08-05  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #23518]
+	* login/uptmp-private.h (struct ufuncs): Remove definition.
+	(__libc_utmp_file_functions, __libc_utmp_unknown_functions)
+	(__libc_utmp_jump_table): Remove declarations.
+	(__libc_setutent, __libc_getutent_r, __libc_getutid_r)
+	(__libc_getutline_r, __libc_pututline, __libc_endutent)
+	(__libc_updwtmp): Declare.
+	* login/getutent_r.c (__libc_utmp_unknown_functions)
+	(__libc_utmp_jump_table, setutent_unknown, getutent_r_unknown)
+	(getutid_r_unknown, getutline_r_unknown, pututline_unknown)
+	(endutent_unknown): Remove definitions.
+	(__setutent): Call __libc_setutent.
+	(__getutent_r): Call __libc_getutent_r.
+	(__pututline): Call __libc_pututline.
+	(__endutent): Call __libc_endutent.
+	* login/getutid_r.c (__getutid_r): Call __libc_getutid_r.
+	* login/getutline_r.c (__getutline_r): Call __libc_getutline_r.
+	* login/updwtmp.c (__updwtmp): Call __libc_updwtmp.
+	* login/utmp_file.c (__libc_utmp_file_functions): Remove definition
+	(__libc_setutent): Rename from stetutent_file.  Drop static.
+	(maybe_setutent): New function.
+	(__libc_getutent_r): Rename from getutent_r_file.  Drop static.
+	Check for initialization.
+	(__libc_getutid_r): Rename from getutid_r_file.  Drop static.
+	Check for initialization.
+	(__libc_getutline_r): Rename from getutline_r_file.  Drop static.
+	Check for initialization.
+	(__libc_pututline): Rename from pututline_file.  Drop static.
+	Check for initialization.
+	(__libc_endutent): Rename from endutent_file.  Drop static.  Check
+	for initialization.
+	(__libc_updwtmp): Rename from updwtmp_file.  Drop static.
+	* login/utmpname.c (__utmpname): Call __libc_endutent.
+	* sysdeps/unix/getlogin_r (__getlogin_r): Call __libc_setutent,
+	__libc_getutlien_r, __libc_endutent.
+	* manual/users.texi (Who Logged In, Manipulating the Database):
+	Adjust.
+
+2019-08-15  Florian Weimer  <fweimer@redhat.com>
+
+	* malloc/Makefile (tests): Only add tst-mxfast for
+	$(have-tunables).
+	* malloc/tst-mxfast.c: Fix copyright year.
+	(do_test): Fix GNU style issues.  Use TEST_COMPARE instead of
+	assert for checks.
+
+2019-08-09  DJ Delorie  <dj@redhat.com>
+
+	* elf/dl-tunables.list: Add glibc.malloc.mxfast.
+	* manual/tunables.texi: Document it.
+	* malloc/malloc.c (do_set_mxfast): New.
+	(__libc_mallopt): Call it.
+	* malloc/arena.c: Add mxfast tunable.
+	* malloc/tst-mxfast.c: New.
+	* malloc/Makefile: Add it.
+
+2019-08-08  Niklas Hambüchen  <mail@nh2.me>
+	    Carlos O'Donell  <carlos@redhat.com>
+
+	[BZ #24026]
+	* malloc/malloc.c (__malloc_info): Account for top chunk.
+
+2019-11-01  Dragan Mladjenovic  <dmladjenovic@wavecomp.com>
+
+	* sysdeps/unix/sysv/linux/mips/Makefile
+	(test-xfail-check-execstack):
+	Move under mips-has-gnustack != yes.
+	(CFLAGS-.o*, ASFLAGS-.o*): New rules.
+	Apply -Wa,-execstack if mips-force-execstack == yes.
+	* sysdeps/unix/sysv/linux/mips/configure: Regenerated.
+	* sysdeps/unix/sysv/linux/mips/configure.ac
+	(mips-force-execstack): New var.
+	Set to yes for hard-float builds with minimum_kernel < 4.8.0
+	or minimum_kernel not set at all.
+	(mips-has-gnustack): New var.
+	Use value of libc_cv_as_noexecstack
+	if mips-force-execstack != yes, otherwise set to no.
+
+2019-10-08  Gabriel F. T. Gomes  <gabrielftg@linux.ibm.com>
+
+	* Makefile: Fix locale dependency for a couple of tests.
+	($(objpfx)tst-strftime2.out): New rule.
+	($(objpfx)tst-strftime3.out): Likewise.
+
+2019-09-20  Joseph Myers  <joseph@codesourcery.com>
+
+	* sysdeps/unix/sysv/linux/riscv/vfork.S: Do not include
+	<linux/sched.h>.
+	(CLONE_VM): New macro.
+	(CLONE_VFORK): Likewise.
+
+2019-09-14  Aurelien Jarno  <aurelien@aurel32.net>
+
+	[BZ #24986]
+        * sysdeps/unix/alpha/getegid.S: Move to ...
+	* sysdeps/unix/sysv/linux/alpha/getegid.S: ... here.
+        * sysdeps/unix/alpha/geteuid.S: Move to ...
+	* sysdeps/unix/sysv/linux/alpha/geteuid.S: ... here.
+        * sysdeps/unix/alpha/getppid.S: Move to ...
+	* sysdeps/unix/sysv/linux/alpha/getppid.S: ... here
+
+2019-09-08  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	* sysdeps/hppa/fpu/libm-test-ulps: Update.
+
+2019-09-03  Aurelien Jarno  <aurelien@aurel32.net>
+
+	* sysdeps/alpha/fpu/libm-test-ulps: Regenerated using GCC 9.2.
+
+2019-08-28  Rafal Luzynski  <digitalfreak@lingonborough.com>
+
+	[BZ #24682]
+	* NEWS: Mention this bug fixed.
+	* localedata/locales/bo_CN (first_weekday): Add, set to 2 (Monday).
+	* localedata/locales/ug_CN (first_weekday): Likewise.
+	* localedata/locales/zh_CN (first_weekday): Likewise.
+
+2019-08-01  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #24867]
+	* malloc/malloc.c (__malloc_info): Remove unwanted leading
+	whitespace.
+
 2019-08-01  Carlos O'Donell <carlos@redhat.com>
 
 	* version.h (RELEASE): Set to "stable".
