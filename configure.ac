@@ -472,11 +472,18 @@ AC_ARG_ENABLE([mathvec],
 	      [build_mathvec=$enableval],
 	      [build_mathvec=notset])
 
+AC_TRY_COMPILE([], [
+#ifndef __CET__
+# error no CET compiler support
+#endif],
+	       [libc_cv_compiler_default_cet=yes],
+	       [libc_cv_compiler_default_cet=no])
+
 AC_ARG_ENABLE([cet],
 	      AC_HELP_STRING([--enable-cet],
 			     [enable Intel Control-flow Enforcement Technology (CET), x86 only]),
 	      [enable_cet=$enableval],
-	      [enable_cet=no])
+	      [enable_cet=$libc_cv_compiler_default_cet])
 
 # We keep the original values in `$config_*' and never modify them, so we
 # can write them unchanged into config.make.  Everything else uses
@@ -641,7 +648,7 @@ if ${CC-cc} $CFLAGS $CPPFLAGS $LDFLAGS \
 	    -o conftest conftest.S 1>&AS_MESSAGE_LOG_FD 2>&AS_MESSAGE_LOG_FD; then
   # Do a link to see if the backend supports IFUNC relocs.
   $READELF -r conftest 1>&AS_MESSAGE_LOG_FD
-  LC_ALL=C $READELF -r conftest | grep 'no relocations' >/dev/null || {
+  LC_ALL=C $READELF -Wr conftest | grep -q 'IRELATIVE\|R_SPARC_JMP_IREL' && {
     libc_cv_ld_gnu_indirect_function=yes
   }
 fi
