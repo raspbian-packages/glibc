@@ -1,4 +1,4 @@
-glibc (2.30-7+rpi1) bullseye-staging; urgency=medium
+glibc (2.30-8+rpi1) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -9,7 +9,19 @@ glibc (2.30-7+rpi1) bullseye-staging; urgency=medium
     script does not seem to be used for anything in the Debian
     package.
 
- -- Raspbian forward porter <root@raspbian.org>  Mon, 11 May 2020 14:43:31 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Tue, 19 May 2020 05:21:28 +0000
+
+glibc (2.30-8) unstable; urgency=medium
+
+  * sysdeps/hurd.mk: Move ld.so link creation to hurd-i386.mk since it is
+    32bit-specific.
+  * sysdeps/hurd-i386.mk: Move i386-specific mach headers to multiarch
+    directory, so they get accessible from the "machine" symlink of the
+    gnumach-dev package.
+  * patches/hurd-i386/git-ss_init.diff: Add missing ss initialization. Fixes
+    Xorg startup error, and possibly a lot other bugs with threads.
+
+ -- Samuel Thibault <sthibault@debian.org>  Mon, 11 May 2020 02:04:03 +0200
 
 glibc (2.30-7) unstable; urgency=medium
 
