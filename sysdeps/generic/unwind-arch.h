@@ -1,5 +1,5 @@
-/* MIPS16 syscall wrappers.
-   Copyright (C) 2013-2020 Free Software Foundation, Inc.
+/* Return backtrace of current program state.  Arch-specific bits.
+   Copyright (C) 2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,16 +16,15 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <sysdep.h>
+#ifndef _UNWIND_ARCH_H
+#define _UNWIND_ARCH_H
 
-#undef __mips16_syscall3
+#include <unwind.h>
 
-long long int __nomips16
-__mips16_syscall3 (long int a0, long int a1, long int a2,
-		   long int number)
+static inline void *
+unwind_arch_adjustment (void *prev, void *addr)
 {
-  union __mips_syscall_return ret;
-  ret.reg.v0 = INTERNAL_SYSCALL_MIPS16 (number, ret.reg.v1, 3,
-					a0, a1, a2);
-  return ret.val;
+  return addr;
 }
+
+#endif
