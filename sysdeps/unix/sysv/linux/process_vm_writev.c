@@ -1,5 +1,5 @@
-/* MIPS16 syscall wrappers.
-   Copyright (C) 2013-2020 Free Software Foundation, Inc.
+/* process_vm_writev - Linux specific syscall.
+   Copyright (C) 2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,16 +16,17 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
+#include <unistd.h>
 #include <sysdep.h>
+#include <errno.h>
+#include <sys/uio.h>
 
-#undef __mips16_syscall3
-
-long long int __nomips16
-__mips16_syscall3 (long int a0, long int a1, long int a2,
-		   long int number)
+ssize_t
+process_vm_writev (pid_t pid, const struct iovec *local_iov,
+		   unsigned long int liovcnt,
+		   const struct iovec *remote_iov,
+		   unsigned long int riovcnt, unsigned long int flags)
 {
-  union __mips_syscall_return ret;
-  ret.reg.v0 = INTERNAL_SYSCALL_MIPS16 (number, ret.reg.v1, 3,
-					a0, a1, a2);
-  return ret.val;
+  return INLINE_SYSCALL_CALL (process_vm_writev, pid, local_iov,
+			      liovcnt, remote_iov, riovcnt, flags);
 }

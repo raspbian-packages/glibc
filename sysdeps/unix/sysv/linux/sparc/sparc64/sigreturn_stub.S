@@ -1,5 +1,5 @@
-/* MIPS16 syscall wrappers.
-   Copyright (C) 2013-2020 Free Software Foundation, Inc.
+/* Sigreturn stub function used on sa_restore field.
+   Copyright (C) 2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -18,14 +18,12 @@
 
 #include <sysdep.h>
 
-#undef __mips16_syscall3
+/* This function must not change the register window or the stack
+   pointer [1].
 
-long long int __nomips16
-__mips16_syscall3 (long int a0, long int a1, long int a2,
-		   long int number)
-{
-  union __mips_syscall_return ret;
-  ret.reg.v0 = INTERNAL_SYSCALL_MIPS16 (number, ret.reg.v1, 3,
-					a0, a1, a2);
-  return ret.val;
-}
+   [1] https://lkml.org/lkml/2016/5/27/465  */
+
+ENTRY (__rt_sigreturn_stub)
+	mov	__NR_rt_sigreturn, %g1
+	ta	0x6d
+END (__rt_sigreturn_stub)
