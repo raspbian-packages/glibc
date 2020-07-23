@@ -1,5 +1,5 @@
 /* Configuration for math routines.
-   Copyright (C) 2017-2019 Free Software Foundation, Inc.
+   Copyright (C) 2017-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #ifndef _MATH_CONFIG_H
 #define _MATH_CONFIG_H
@@ -99,15 +99,6 @@ asdouble (uint64_t i)
     double f;
   } u = {i};
   return u.f;
-}
-
-static inline int
-issignalingf_inline (float x)
-{
-  uint32_t ix = asuint (x);
-  if (HIGH_ORDER_BIT_IS_SET_FOR_SNAN)
-    return (ix & 0x7fc00000) == 0x7fc00000;
-  return 2 * (ix ^ 0x00400000) > 2u * 0x7fc00000;
 }
 
 #define NOINLINE __attribute__ ((noinline))

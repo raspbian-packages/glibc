@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2019 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -13,7 +13,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -165,7 +165,6 @@ _hurd_sigstate_delete (thread_t thread)
       free (ss);
     }
 }
-libc_hidden_def (_hurd_sigstate_delete)
 
 /* Make SS a global receiver, with pthread signal semantics.  */
 void
@@ -174,7 +173,6 @@ _hurd_sigstate_set_global_rcv (struct hurd_sigstate *ss)
   assert (ss->thread != MACH_PORT_NULL);
   ss->actions[0].sa_handler = SIG_IGN;
 }
-libc_hidden_def (_hurd_sigstate_set_global_rcv)
 
 /* Check whether SS is a global receiver.  */
 static int
@@ -183,6 +181,7 @@ sigstate_is_global_rcv (const struct hurd_sigstate *ss)
   return (_hurd_global_sigstate != NULL)
 	 && (ss->actions[0].sa_handler == SIG_IGN);
 }
+libc_hidden_def (_hurd_sigstate_delete)
 
 /* Lock/unlock a hurd_sigstate structure.  If the accessors below require
    it, the global sigstate will be locked as well.  */
@@ -200,8 +199,7 @@ _hurd_sigstate_unlock (struct hurd_sigstate *ss)
   if (sigstate_is_global_rcv (ss))
     __spin_unlock (&_hurd_global_sigstate->lock);
 }
-libc_hidden_def (_hurd_sigstate_lock)
-libc_hidden_def (_hurd_sigstate_unlock)
+libc_hidden_def (_hurd_sigstate_set_global_rcv)
 
 /* Retreive a thread's full set of pending signals, including the global
    ones if appropriate.  SS must be locked.  */
@@ -213,7 +211,6 @@ _hurd_sigstate_pending (const struct hurd_sigstate *ss)
     __sigorset (&pending, &pending, &_hurd_global_sigstate->pending);
   return pending;
 }
-libc_hidden_def (_hurd_sigstate_pending)
 
 /* Clear a pending signal and return the associated detailed
    signal information. SS must be locked, and must have signal SIGNO
@@ -232,6 +229,8 @@ sigstate_clear_pending (struct hurd_sigstate *ss, int signo)
   __sigdelset (&ss->pending, signo);
   return ss->pending_data[signo];
 }
+libc_hidden_def (_hurd_sigstate_lock)
+libc_hidden_def (_hurd_sigstate_unlock)
 
 /* Retreive a thread's action vector.  SS must be locked.  */
 struct sigaction *
@@ -242,6 +241,7 @@ _hurd_sigstate_actions (struct hurd_sigstate *ss)
   else
     return ss->actions;
 }
+libc_hidden_def (_hurd_sigstate_pending)
 
 
 /* Signal delivery itself is on this page.  */
@@ -575,8 +575,8 @@ abort_all_rpcs (int signo, struct machine_thread_all_state *state, int live)
       }
 }
 
-/* Wake up any sigsuspend call that is blocking SS->thread.  SS must be
-   locked.  */
+/* Wake up any sigsuspend or pselect call that is blocking SS->thread.  SS must
+   be locked.  */
 static void
 wake_sigsuspend (struct hurd_sigstate *ss)
 {

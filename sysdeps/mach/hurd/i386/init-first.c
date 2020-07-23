@@ -1,5 +1,5 @@
 /* Initialization code run first thing by the ELF startup code.  For i386/Hurd.
-   Copyright (C) 1995-2019 Free Software Foundation, Inc.
+   Copyright (C) 1995-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <assert.h>
 #include <ctype.h>
@@ -30,6 +30,7 @@
 
 #include <ldsodefs.h>
 #include <fpu_control.h>
+#include <libc-diag.h>
 
 extern void __mach_init (void);
 extern void __init_misc (int, char **, char **);
@@ -144,6 +145,12 @@ init1 (int argc, char *arg0, ...)
 static inline void
 init (int *data)
 {
+  /* data is the address of the argc parameter to _dl_init_first or
+     doinit1 in _hurd_stack_setup, so the array subscripts are
+     undefined.  */
+  DIAG_PUSH_NEEDS_COMMENT;
+  DIAG_IGNORE_NEEDS_COMMENT (10, "-Warray-bounds");
+
   int argc = *data;
   char **argv = (void *) (data + 1);
   char **envp = &argv[argc + 1];
@@ -265,6 +272,8 @@ init (int *data)
 	 restored by function return.  */
       asm volatile ("# a %0 c %1" : : "a" (usercode), "c" (&init1));
     }
+
+  DIAG_POP_NEEDS_COMMENT;	/* -Warray-bounds.  */
 }
 
 /* These bits of inline assembler used to be located inside `init'.

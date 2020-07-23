@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2019 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -13,7 +13,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #if !_LIBC
 # include <config.h>
@@ -50,7 +50,7 @@
 #include <string.h>
 
 #include <fcntl.h>
-#include <sys/time.h>
+#include <time.h>
 #include <stdint.h>
 #include <unistd.h>
 
@@ -63,7 +63,6 @@
 # define struct_stat64 struct stat
 # define __gen_tempname gen_tempname
 # define __getpid getpid
-# define __gettimeofday gettimeofday
 # define __mkdir mkdir
 # define __open open
 # define __lxstat64(version, file, buf) lstat (file, buf)
@@ -76,9 +75,9 @@
 # else
 # define RANDOM_BITS(Var) \
     {                                                                         \
-      struct timeval tv;                                                      \
-      __gettimeofday (&tv, NULL);                                             \
-      (Var) = ((uint64_t) tv.tv_usec << 16) ^ tv.tv_sec;                      \
+      struct timespec ts;                                                     \
+      clock_gettime (CLOCK_REALTIME, &ts);                                    \
+      (Var) = ((uint64_t) tv.tv_nsec << 16) ^ tv.tv_sec;                      \
     }
 #endif
 
@@ -186,7 +185,6 @@ __gen_tempname (char *tmpl, int suffixlen, int flags, int kind)
 {
   int len;
   char *XXXXXX;
-  uint64_t value;
   unsigned int count;
   int fd = -1;
   int save_errno = errno;
@@ -218,13 +216,13 @@ __gen_tempname (char *tmpl, int suffixlen, int flags, int kind)
   /* This is where the Xs start.  */
   XXXXXX = &tmpl[len - 6 - suffixlen];
 
-  /* Get some more or less random data.  */
-  RANDOM_BITS (value);
-  value ^= (uint64_t)__getpid () << 32;
-
-  for (count = 0; count < attempts; value += 7777, ++count)
+  uint64_t pid = (uint64_t) __getpid () << 32;
+  for (count = 0; count < attempts; ++count)
     {
-      uint64_t v = value;
+      uint64_t v;
+      /* Get some more or less random data.  */
+      RANDOM_BITS (v);
+      v ^= pid;
 
       /* Fill in the random bits.  */
       XXXXXX[0] = letters[v % 62];

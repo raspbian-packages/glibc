@@ -1,5 +1,5 @@
 /* Test getaddrinfo and getnameinfo with AI_IDN, NI_IDN (Latin-1).
-   Copyright (C) 2018-2019 Free Software Foundation, Inc.
+   Copyright (C) 2018-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 
 #define TEST_USE_UTF8 0
@@ -29,6 +29,11 @@ do_test (void)
   void *handle = dlopen (LIBIDN2_SONAME, RTLD_LAZY);
   if (handle == NULL)
     FAIL_UNSUPPORTED ("libidn2 not installed");
+  void *check_ver_sym = xdlsym (handle, "idn2_check_version");
+  const char *check_res
+    = ((const char *(*) (const char *)) check_ver_sym) ("2.0.5");
+  if (check_res == NULL)
+    FAIL_UNSUPPORTED ("libidn2 too old");
 
   if (setlocale (LC_CTYPE, "en_US.ISO-8859-1") == NULL)
     FAIL_EXIT1 ("setlocale: %m");

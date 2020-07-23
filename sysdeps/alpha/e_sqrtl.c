@@ -1,5 +1,5 @@
 /* long double square root in software floating-point emulation.
-   Copyright (C) 1997-2019 Free Software Foundation, Inc.
+   Copyright (C) 1997-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Richard Henderson (rth@cygnus.com) and
 		  Jakub Jelinek (jj@ultra.linux.cz).
@@ -16,7 +16,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library.  If not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <stdlib.h>
 #include <soft-fp.h>
@@ -43,7 +43,5 @@ __ieee754_sqrtl (const long double a)
    straight-forward as just adding the alias, since a generic Versions file
    includes the 2.15 version and the linker uses the first one it sees.  */
 #if SHLIB_COMPAT (libm, GLIBC_2_15, GLIBC_2_18)
-versioned_symbol (libm, __ieee754_sqrtl, __sqrtl_finite, GLIBC_2_18);
-#else
-strong_alias(__ieee754_sqrtl, __sqrtl_finite)
+compat_symbol (libm, __ieee754_sqrtl, __sqrtl_finite, GLIBC_2_18);
 #endif

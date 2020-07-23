@@ -1,5 +1,5 @@
 /* Test for file system hole support.
-   Copyright (C) 2018-2019 Free Software Foundation, Inc.
+   Copyright (C) 2018-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <stdbool.h>
 #include <support.h>
@@ -34,8 +34,10 @@ support_descriptor_supports_holes (int fd)
       write_offset = 16 * 1024 * 1024,
 
       /* Our write may add this number of additional blocks (see
-         block_limit below).  */
-      block_headroom = 8,
+         block_limit below): writing at offset 16M can require two data block
+         indirections, each of which can be as large as 8KB on ext2, thus 32
+         512B sectors.  */
+      block_headroom = 32,
     };
 
   struct stat64 st;

@@ -1,5 +1,5 @@
 /* Common definition for pthread_{timed,try}join{_np}.
-   Copyright (C) 2017-2019 Free Software Foundation, Inc.
+   Copyright (C) 2017-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,11 +14,12 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include "pthreadP.h"
 #include <atomic.h>
 #include <stap-probe.h>
+#include <time.h>
 
 static void
 cleanup (void *arg)
@@ -36,25 +37,26 @@ cleanup (void *arg)
    afterwards.  The kernel up to version 3.16.3 does not use the private futex
    operations for futex wake-up when the clone terminates.  */
 static int
-timedwait_tid (pid_t *tidp, const struct timespec *abstime)
+clockwait_tid (pid_t *tidp, clockid_t clockid, const struct timespec *abstime)
 {
   pid_t tid;
 
-  if (abstime->tv_nsec < 0 || abstime->tv_nsec >= 1000000000)
+  if (! valid_nanoseconds (abstime->tv_nsec))
     return EINVAL;
 
   /* Repeat until thread terminated.  */
   while ((tid = *tidp) != 0)
     {
-      struct timeval tv;
       struct timespec rt;
 
-      /* Get the current time.  */
-      __gettimeofday (&tv, NULL);
+      /* Get the current time. This can only fail if clockid is
+         invalid. */
+      if (__glibc_unlikely (__clock_gettime (clockid, &rt)))
+        return EINVAL;
 
       /* Compute relative timeout.  */
-      rt.tv_sec = abstime->tv_sec - tv.tv_sec;
-      rt.tv_nsec = abstime->tv_nsec - tv.tv_usec * 1000;
+      rt.tv_sec = abstime->tv_sec - rt.tv_sec;
+      rt.tv_nsec = abstime->tv_nsec - rt.tv_nsec;
       if (rt.tv_nsec < 0)
         {
           rt.tv_nsec += 1000000000;
@@ -77,7 +79,8 @@ timedwait_tid (pid_t *tidp, const struct timespec *abstime)
 }
 
 int
-__pthread_timedjoin_ex (pthread_t threadid, void **thread_return,
+__pthread_clockjoin_ex (pthread_t threadid, void **thread_return,
+			clockid_t clockid,
 			const struct timespec *abstime, bool block)
 {
   struct pthread *pd = (struct pthread *) threadid;
@@ -122,7 +125,7 @@ __pthread_timedjoin_ex (pthread_t threadid, void **thread_return,
 
   /* BLOCK waits either indefinitely or based on an absolute time.  POSIX also
      states a cancellation point shall occur for pthread_join, and we use the
-     same rationale for posix_timedjoin_np.  Both timedwait_tid and the futex
+     same rationale for posix_timedjoin_np.  Both clockwait_tid and the futex
      call use the cancellable variant.  */
   if (block)
     {
@@ -132,7 +135,7 @@ __pthread_timedjoin_ex (pthread_t threadid, void **thread_return,
       pthread_cleanup_push (cleanup, &pd->joinid);
 
       if (abstime != NULL)
-	result = timedwait_tid (&pd->tid, abstime);
+	result = clockwait_tid (&pd->tid, clockid, abstime);
       else
 	{
 	  pid_t tid;
@@ -165,4 +168,3 @@ __pthread_timedjoin_ex (pthread_t threadid, void **thread_return,
 
   return result;
 }
-hidden_def (__pthread_timedjoin_ex)

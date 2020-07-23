@@ -1,5 +1,5 @@
 /* Common extra functions.
-   Copyright (C) 2016-2019 Free Software Foundation, Inc.
+   Copyright (C) 2016-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 /* This header file should only contain definitions compatible with
    C90.  (Using __attribute__ is fine because <features.h> provides a
@@ -91,6 +91,7 @@ char *xasprintf (const char *format, ...)
   __attribute__ ((format (printf, 1, 2), malloc));
 char *xstrdup (const char *);
 char *xstrndup (const char *, size_t);
+char *xsetlocale (int category, const char *locale);
 
 /* These point to the TOP of the source/build tree, not your (or
    support's) subdirectory.  */

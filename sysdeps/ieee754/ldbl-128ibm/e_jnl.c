@@ -28,7 +28,7 @@
 
     You should have received a copy of the GNU Lesser General Public
     License along with this library; if not, see
-    <http://www.gnu.org/licenses/>.  */
+    <https://www.gnu.org/licenses/>.  */
 
 /*
  * __ieee754_jn(n, x), __ieee754_yn(n, x)
@@ -62,6 +62,7 @@
 #include <math_private.h>
 #include <fenv_private.h>
 #include <math-underflow.h>
+#include <libm-alias-finite.h>
 
 static const long double
   invsqrtpi = 5.6418958354775628694807945156077258584405E-1L,
@@ -308,7 +309,7 @@ __ieee754_jnl (int n, long double x)
     math_check_force_underflow (ret);
   return ret;
 }
-strong_alias (__ieee754_jnl, __jnl_finite)
+libm_alias_finite (__ieee754_jnl, __jnl)
 
 long double
 __ieee754_ynl (int n, long double x)
@@ -424,4 +425,4 @@ __ieee754_ynl (int n, long double x)
     ret = copysignl (LDBL_MAX, ret) * LDBL_MAX;
   return ret;
 }
-strong_alias (__ieee754_ynl, __ynl_finite)
+libm_alias_finite (__ieee754_ynl, __ynl)

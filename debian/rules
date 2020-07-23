@@ -95,7 +95,7 @@ crypt = no
 BASE_CC = gcc
 BASE_CXX = g++
 BASE_MIG = mig
-DEB_GCC_VERSION ?= -9
+DEB_GCC_VERSION ?= -10
 
 RUN_TESTSUITE = no
 TIMEOUTFACTOR = 25
@@ -135,7 +135,7 @@ ifneq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
     DEB_BUILD_OPTIONS+=nocheck
   endif
 else
-  DEB_ARCH_REGULAR_PACKAGES = $(libc) $(libc)-dev $(libc)-dbg $(libc)-pic libc-bin libc-dev-bin
+  DEB_ARCH_REGULAR_PACKAGES = $(libc) $(libc)-dev $(libc)-dbg libc-bin libc-dev-bin
   DEB_INDEP_REGULAR_PACKAGES = glibc-doc glibc-source libc-l10n locales
   ifneq ($(filter noudeb,$(DEB_BUILD_PROFILES)),)
     DEB_UDEB_PACKAGES =
@@ -193,7 +193,7 @@ clean:: unpatch
 	rm -rf debian/include
 	rm -f debian/control.in/libc0.1 debian/control.in/libc0.3 \
 		debian/control.in/libc6 debian/control.in/libc6.1 \
-		debian/*.preinst.*
+		debian/*.preinst.* debian/*.links.*
 
 # Required Debian targets
 build-arch: $(stamp)info \
@@ -204,7 +204,7 @@ build-arch: $(stamp)build_C.UTF-8 \
 	$(stamp)build_locales-all
 endif
 
-build-indep: $(stamp)source
+build-indep: $(stamp)source $(stamp)build_libc
 
 build: build-arch build-indep
 

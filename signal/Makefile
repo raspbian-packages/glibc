@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2019 Free Software Foundation, Inc.
+# Copyright (C) 1991-2020 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -13,7 +13,7 @@
 
 # You should have received a copy of the GNU Lesser General Public
 # License along with the GNU C Library; if not, see
-# <http://www.gnu.org/licenses/>.
+# <https://www.gnu.org/licenses/>.
 
 #
 #	Makefile for signal routines.
@@ -52,6 +52,7 @@ tests		:= tst-signal tst-sigset tst-sigsimple tst-raise tst-sigset2 \
 
 include ../Rules
 
+CFLAGS-raise.c += -fasynchronous-unwind-tables
 CFLAGS-sigpause.c += -fexceptions
 CFLAGS-sigsuspend.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-sigtimedwait.c += -fexceptions -fasynchronous-unwind-tables

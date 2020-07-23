@@ -1,5 +1,5 @@
 /* Add two struct timespec values.
-   Copyright (C) 2011-2019 Free Software Foundation, Inc.
+   Copyright (C) 2011-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library and is also part of gnulib.
    Patches to this file should be submitted to both projects.
 
@@ -15,7 +15,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 /* Return the sum of two timespec values A and B.  On overflow, return
    an extremal value.  This assumes 0 <= tv_nsec < TIMESPEC_HZ.  */
@@ -33,36 +33,30 @@ timespec_add (struct timespec a, struct timespec b)
   int ns = a.tv_nsec + b.tv_nsec;
   int nsd = ns - TIMESPEC_HZ;
   int rns = ns;
-  time_t tmin = TYPE_MINIMUM (time_t);
-  time_t tmax = TYPE_MAXIMUM (time_t);
 
   if (0 <= nsd)
     {
       rns = nsd;
-      if (bs < tmax)
-        bs++;
+      time_t bs1;
+      if (!INT_ADD_WRAPV (bs, 1, &bs1))
+        bs = bs1;
       else if (rs < 0)
         rs++;
       else
         goto high_overflow;
     }
 
-  /* INT_ADD_WRAPV is not appropriate since time_t might be unsigned.
-     In theory time_t might be narrower than int, so plain
-     INT_ADD_OVERFLOW does not suffice.  */
-  if (! INT_ADD_OVERFLOW (rs, bs) && tmin <= rs + bs && rs + bs <= tmax)
-    rs += bs;
-  else
+  if (INT_ADD_WRAPV (rs, bs, &rs))
     {
-      if (rs < 0)
+      if (bs < 0)
         {
-          rs = tmin;
+          rs = TYPE_MINIMUM (time_t);
           rns = 0;
         }
       else
         {
         high_overflow:
-          rs = tmax;
+          rs = TYPE_MAXIMUM (time_t);
           rns = TIMESPEC_HZ - 1;
         }
     }

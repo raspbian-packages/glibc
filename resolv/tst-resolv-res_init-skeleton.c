@@ -1,5 +1,5 @@
 /* Test parsing of /etc/resolv.conf.  Genric version.
-   Copyright (C) 2017-2019 Free Software Foundation, Inc.
+   Copyright (C) 2017-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 /* Before including this file, TEST_THREAD has to be defined to 0 or
    1, depending on whether the threading tests should be compiled
@@ -127,6 +127,7 @@ print_resp (FILE *fp, res_state resp)
                            "single-request-reopen");
         print_option_flag (fp, &options, RES_NOTLDQUERY, "no-tld-query");
         print_option_flag (fp, &options, RES_NORELOAD, "no-reload");
+        print_option_flag (fp, &options, RES_TRUSTAD, "trust-ad");
         fputc ('\n', fp);
         if (options != 0)
           fprintf (fp, "; error: unresolved option bits: 0x%x\n", options);
@@ -708,6 +709,15 @@ struct test_case test_cases[] =
      "; search[2]: " H63 "." D63 ".example.net\n"
 #undef H63
 #undef D63
+     "nameserver 192.0.2.1\n"
+     "; nameserver[0]: [192.0.2.1]:53\n"
+    },
+    {.name = "trust-ad flag",
+     .conf = "options trust-ad\n"
+     "nameserver 192.0.2.1\n",
+     .expected = "options trust-ad\n"
+     "search example.com\n"
+     "; search[0]: example.com\n"
      "nameserver 192.0.2.1\n"
      "; nameserver[0]: [192.0.2.1]:53\n"
     },

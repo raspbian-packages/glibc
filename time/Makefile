@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2019 Free Software Foundation, Inc.
+# Copyright (C) 1991-2020 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -13,7 +13,7 @@
 
 # You should have received a copy of the GNU Lesser General Public
 # License along with the GNU C Library; if not, see
-# <http://www.gnu.org/licenses/>.
+# <https://www.gnu.org/licenses/>.
 
 #
 #	Makefile for time routines
@@ -31,19 +31,23 @@ headers := time.h sys/time.h sys/timeb.h bits/time.h			\
 
 routines := offtime asctime clock ctime ctime_r difftime \
 	    gmtime localtime mktime time		 \
-	    gettimeofday settimeofday adjtime tzset	 \
-	    tzfile getitimer setitimer			 \
+	    gettimeofday settimeofday settimezone	 \
+	    adjtime tzset tzfile getitimer setitimer	 \
 	    stime dysize timegm ftime			 \
 	    getdate strptime strptime_l			 \
 	    strftime wcsftime strftime_l wcsftime_l	 \
-	    timespec_get
+	    timespec_get				 \
+	    clock_getcpuclockid clock_getres		 \
+	    clock_gettime clock_settime clock_nanosleep
+
 aux :=	    era alt_digit lc-time-cleanup
 
 tests	:= test_time clocktest tst-posixtz tst-strptime tst_wcsftime \
 	   tst-getdate tst-mktime tst-mktime2 tst-ftime_l tst-strftime \
 	   tst-mktime3 tst-strptime2 bug-asctime bug-asctime_r bug-mktime1 \
 	   tst-strptime3 bug-getdate1 tst-strptime-whitespace tst-ftime \
-	   tst-tzname tst-y2039 bug-mktime4 tst-strftime2 tst-strftime3
+	   tst-tzname tst-y2039 bug-mktime4 tst-strftime2 tst-strftime3 \
+	   tst-clock tst-clock2 tst-clock_nanosleep tst-cpuclock1
 
 include ../Rules
 
@@ -68,6 +72,8 @@ tz-cflags = -DTZDIR='"$(zonedir)"' \
 CFLAGS-tzfile.c += $(tz-cflags)
 CFLAGS-tzset.c += $(tz-cflags)
 CFLAGS-getdate.c += -fexceptions
+CFLAGS-clock_nanosleep.c += -fexceptions -fasynchronous-unwind-tables
+CFLAGS-nanosleep.c += -fexceptions -fasynchronous-unwind-tables
 
 # Don't warn about Y2k problem in strftime format string.
 CFLAGS-test_time.c += -Wno-format

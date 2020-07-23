@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2019 Free Software Foundation, Inc.
+/* Copyright (C) 2001-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -13,7 +13,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; see the file COPYING.LIB.  If
-   not, see <http://www.gnu.org/licenses/>.  */
+   not, see <https://www.gnu.org/licenses/>.  */
 
 #include <errno.h>
 #include <string.h>
@@ -110,7 +110,7 @@ __libc_sendmsg (int fd, const struct msghdr *message, int flags)
 
   /* Allocate enough room for ports.  */
   cmsg = CMSG_FIRSTHDR (message);
-  for (; cmsg; cmsg = CMSG_NXTHDR (message, cmsg))
+  for (; cmsg; cmsg = CMSG_NXTHDR ((struct msghdr *) message, cmsg))
     if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS)
       nports += (cmsg->cmsg_len - CMSG_ALIGN (sizeof (struct cmsghdr)))
 		/ sizeof (int);
@@ -123,7 +123,7 @@ __libc_sendmsg (int fd, const struct msghdr *message, int flags)
   nports = 0;
   for (cmsg = CMSG_FIRSTHDR (message);
        cmsg;
-       cmsg = CMSG_NXTHDR (message, cmsg))
+       cmsg = CMSG_NXTHDR ((struct msghdr *) message, cmsg))
     {
       if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS)
 	{

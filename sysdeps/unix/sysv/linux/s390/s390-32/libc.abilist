@@ -1829,6 +1829,11 @@ GLIBC_2.2 _flushlbf F
 GLIBC_2.2 _res_hconf D 0x30
 GLIBC_2.2 alphasort64 F
 GLIBC_2.2 bind_textdomain_codeset F
+GLIBC_2.2 clock_getcpuclockid F
+GLIBC_2.2 clock_getres F
+GLIBC_2.2 clock_gettime F
+GLIBC_2.2 clock_nanosleep F
+GLIBC_2.2 clock_settime F
 GLIBC_2.2 dcngettext F
 GLIBC_2.2 dngettext F
 GLIBC_2.2 fgetpos F
@@ -2175,6 +2180,9 @@ GLIBC_2.30 getdents64 F
 GLIBC_2.30 gettid F
 GLIBC_2.30 tgkill F
 GLIBC_2.30 twalk_r F
+GLIBC_2.31 msgctl F
+GLIBC_2.31 semctl F
+GLIBC_2.31 shmctl F
 GLIBC_2.4 _IO_fprintf F
 GLIBC_2.4 _IO_printf F
 GLIBC_2.4 _IO_sprintf F

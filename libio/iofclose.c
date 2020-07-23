@@ -1,4 +1,4 @@
-/* Copyright (C) 1993-2019 Free Software Foundation, Inc.
+/* Copyright (C) 1993-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -13,7 +13,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.
+   <https://www.gnu.org/licenses/>.
 
    As a special exception, if you link the code in this file with
    files compiled with a GNU compiler to produce an executable,
@@ -62,8 +62,8 @@ _IO_new_fclose (FILE *fp)
       struct _IO_codecvt *cc = fp->_codecvt;
 
       __libc_lock_lock (__gconv_lock);
-      __gconv_release_step (cc->__cd_in.__cd.__steps);
-      __gconv_release_step (cc->__cd_out.__cd.__steps);
+      __gconv_release_step (cc->__cd_in.step);
+      __gconv_release_step (cc->__cd_out.step);
       __libc_lock_unlock (__gconv_lock);
     }
   else

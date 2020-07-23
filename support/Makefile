@@ -1,5 +1,5 @@
 # Makefile for support library, used only at build and test time
-# Copyright (C) 2016-2019 Free Software Foundation, Inc.
+# Copyright (C) 2016-2020 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
 # You should have received a copy of the GNU Lesser General Public
 # License along with the GNU C Library; if not, see
-# <http://www.gnu.org/licenses/>.
+# <https://www.gnu.org/licenses/>.
 
 subdir := support
 
@@ -56,13 +56,16 @@ libsupport-routines = \
   support_format_hostent \
   support_format_netent \
   support_isolate_in_subprocess \
+  support_ptrace \
   support_openpty \
   support_paths \
   support_quote_blob \
   support_quote_string \
   support_record_failure \
   support_run_diff \
+  support_set_small_thread_stack_size \
   support_shared_allocate \
+  support_small_stack_thread_attribute \
   support_subprocess \
   support_test_compare_blob \
   support_test_compare_failure \
@@ -151,6 +154,7 @@ libsupport-routines = \
   xrealloc \
   xrecvfrom \
   xsendto \
+  xsetlocale \
   xsetsockopt \
   xsigaction \
   xsignal \

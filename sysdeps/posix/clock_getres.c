@@ -1,5 +1,5 @@
 /* clock_getres -- Get the resolution of a POSIX clockid_t.
-   Copyright (C) 1999-2019 Free Software Foundation, Inc.
+   Copyright (C) 1999-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <errno.h>
 #include <stdint.h>
@@ -22,7 +22,7 @@
 #include <unistd.h>
 #include <sys/param.h>
 #include <libc-internal.h>
-
+#include <shlib-compat.h>
 
 static inline int
 realtime_getres (struct timespec *res)
@@ -62,4 +62,11 @@ __clock_getres (clockid_t clock_id, struct timespec *res)
 
   return retval;
 }
-weak_alias (__clock_getres, clock_getres)
+
+versioned_symbol (libc, __clock_getres, clock_getres, GLIBC_2_17);
+/* clock_getres moved to libc in version 2.17;
+   old binaries may expect the symbol version it had in librt.  */
+#if SHLIB_COMPAT (libc, GLIBC_2_2, GLIBC_2_17)
+strong_alias (__clock_getres, __clock_getres_2);
+compat_symbol (libc, __clock_getres_2, clock_getres, GLIBC_2_2);
+#endif

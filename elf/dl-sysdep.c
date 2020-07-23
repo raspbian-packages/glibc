@@ -1,5 +1,5 @@
 /* Operating system support for run-time dynamic linker.  Generic Unix version.
-   Copyright (C) 1995-2019 Free Software Foundation, Inc.
+   Copyright (C) 1995-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 /* We conditionalize the whole of this file rather than simply eliding it
    from the static build, because other sysdeps/ versions of this file
@@ -45,6 +45,7 @@
 #include <tls.h>
 
 #include <dl-tunables.h>
+#include <dl-auxv.h>
 
 extern char **_environ attribute_hidden;
 extern char _end[] attribute_hidden;
@@ -180,9 +181,7 @@ _dl_sysdep_start (void **start_argptr,
       case AT_RANDOM:
 	_dl_random = (void *) av->a_un.a_val;
 	break;
-#ifdef DL_PLATFORM_AUXV
       DL_PLATFORM_AUXV
-#endif
       }
 
 #ifndef HAVE_AUX_SECURE

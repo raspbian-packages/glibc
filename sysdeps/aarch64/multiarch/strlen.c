@@ -1,5 +1,5 @@
 /* Multiple versions of strlen. AARCH64 version.
-   Copyright (C) 2018-2019 Free Software Foundation, Inc.
+   Copyright (C) 2018-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 /* Define multiple versions only for the definition in libc.  */
 
@@ -34,7 +34,9 @@ extern __typeof (__redirect_strlen) __strlen_generic attribute_hidden;
 extern __typeof (__redirect_strlen) __strlen_asimd attribute_hidden;
 
 libc_ifunc (__strlen,
-	    (USE_ASIMD_STRLEN () ? __strlen_asimd : __strlen_generic));
+	    (USE_ASIMD_STRLEN () || IS_KUNPENG920 (midr)
+	    ? __strlen_asimd
+	    :__strlen_generic));
 
 # undef strlen
 strong_alias (__strlen, strlen);

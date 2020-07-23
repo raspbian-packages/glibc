@@ -1,6 +1,6 @@
 #!/bin/sh
 # Test --preload argument ld.so.
-# Copyright (C) 2019 Free Software Foundation, Inc.
+# Copyright (C) 2019-2020 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 #
 # The GNU C Library is free software; you can redistribute it and/or
@@ -15,23 +15,22 @@
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with the GNU C Library; if not, see
-# <http://www.gnu.org/licenses/>.
+# <https://www.gnu.org/licenses/>.
 
 set -e
 
 rtld=$1
 test_program=$2
-test_wrapper=$3
-test_wrapper_env=$4
-run_program_env=$5
-library_path=$6
-preload=$7
+test_wrapper_env=$3
+run_program_env=$4
+library_path=$5
+preload=$6
 
-echo "# [${test_wrapper}] [$rtld] [--library-path] [$library_path]" \
-     "[--preload] [$preload] [$test_program]"
+echo "# [${test_wrapper_env}] [${run_program_env}] [$rtld] [--library-path]" \
+     "[$library_path] [--preload] [$preload] [$test_program]"
 ${test_wrapper_env} \
 ${run_program_env} \
-${test_wrapper} $rtld --library-path "$library_path" \
+$rtld --library-path "$library_path" \
   --preload "$preload" $test_program 2>&1 && rc=0 || rc=$?
 echo "# exit status $rc"
 

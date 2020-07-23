@@ -1,5 +1,5 @@
 /* pthread_hurd_cond_timedwait_np.  Hurd-specific wait on a condition.
-   Copyright (C) 2012-2019 Free Software Foundation, Inc.
+   Copyright (C) 2012-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,11 +14,12 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library;  if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <pthread.h>
 #include <assert.h>
 #include <hurd/signal.h>
+#include <time.h>
 
 #include <pt-internal.h>
 
@@ -69,7 +70,7 @@ __pthread_hurd_cond_timedwait_internal (pthread_cond_t *cond,
 
   assert (ss->intr_port == MACH_PORT_NULL);	/* Sanity check for signal bugs. */
 
-  if (abstime != NULL && (abstime->tv_nsec < 0 || abstime->tv_nsec >= 1000000000))
+  if (abstime != NULL && ! valid_nanoseconds (abstime->tv_nsec))
     return EINVAL;
 
   /* Atomically enqueue our thread on the condition variable's queue of
@@ -110,6 +111,10 @@ __pthread_hurd_cond_timedwait_internal (pthread_cond_t *cond,
       /* Release MUTEX before blocking.  */
       __pthread_mutex_unlock (mutex);
 
+  /* Increase the waiter reference count.  Relaxed MO is sufficient because
+     we only need to synchronize when decrementing the reference count.  */
+  atomic_fetch_add_relaxed (&cond->__wrefs, 2);
+
       /* Block the thread.  */
       if (abstime != NULL)
 	err = __pthread_timedblock (self, abstime, clock_id);
@@ -142,6 +147,13 @@ __pthread_hurd_cond_timedwait_internal (pthread_cond_t *cond,
       if (drain)
 	__pthread_block (self);
     }
+
+  /* If destruction is pending (i.e., the wake-request flag is nonzero) and we
+     are the last waiter (prior value of __wrefs was 1 << 1), then wake any
+     threads waiting in pthread_cond_destroy.  Release MO to synchronize with
+     these threads.  Don't bother clearing the wake-up request flag.  */
+  if ((atomic_fetch_add_release (&cond->__wrefs, -2)) == 3)
+    __gsync_wake (__mach_task_self (), (vm_offset_t) &cond->__wrefs, 0, 0);
 
   /* Clear the hook, now that we are done blocking.  */
   ss->cancel_hook = NULL;

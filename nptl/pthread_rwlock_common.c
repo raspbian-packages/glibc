@@ -1,5 +1,5 @@
 /* POSIX reader--writer lock: core parts.
-   Copyright (C) 2016-2019 Free Software Foundation, Inc.
+   Copyright (C) 2016-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <errno.h>
 #include <sysdep.h>
@@ -24,6 +24,7 @@
 #include <stap-probe.h>
 #include <atomic.h>
 #include <futex-internal.h>
+#include <time.h>
 
 
 /* A reader--writer lock that fulfills the POSIX requirements (but operations
@@ -290,8 +291,7 @@ __pthread_rwlock_rdlock_full (pthread_rwlock_t *rwlock,
      if the lock can be immediately acquired" (i.e., we need not but may check
      it).  */
   if (abstime && __glibc_unlikely (!futex_abstimed_supported_clockid (clockid)
-      || abstime->tv_nsec >= 1000000000
-      || abstime->tv_nsec < 0))
+      || ! valid_nanoseconds (abstime->tv_nsec)))
     return EINVAL;
 
   /* Make sure we are not holding the rwlock as a writer.  This is a deadlock
@@ -596,8 +596,7 @@ __pthread_rwlock_wrlock_full (pthread_rwlock_t *rwlock,
      if the lock can be immediately acquired" (i.e., we need not but may check
      it).  */
   if (abstime && __glibc_unlikely (!futex_abstimed_supported_clockid (clockid)
-      || abstime->tv_nsec >= 1000000000
-      || abstime->tv_nsec < 0))
+      || ! valid_nanoseconds (abstime->tv_nsec)))
     return EINVAL;
 
   /* Make sure we are not holding the rwlock as a writer.  This is a deadlock

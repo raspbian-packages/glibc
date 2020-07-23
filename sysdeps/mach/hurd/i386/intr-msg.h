@@ -1,5 +1,5 @@
 /* Machine-dependent details of interruptible RPC messaging.  i386 version.
-   Copyright (C) 1995-2019 Free Software Foundation, Inc.
+   Copyright (C) 1995-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 
 /* Note that we must mark OPTION and TIMEOUT as outputs of this operation,
@@ -37,10 +37,12 @@
        "				movl %6, %%eax\n"		      \
        "				jmp _hurd_intr_rpc_msg_sp_restored\n" \
        "_hurd_intr_rpc_msg_do:		movl %%esp, %%ecx\n"		      \
+       "				.cfi_def_cfa_register %%ecx\n"	      \
        "				leal %4, %%esp\n"		      \
        "_hurd_intr_rpc_msg_cx_sp:	movl $-25, %%eax\n"		      \
        "_hurd_intr_rpc_msg_do_trap:	lcall $7, $0 # status in %0\n"	      \
        "_hurd_intr_rpc_msg_in_trap:	movl %%ecx, %%esp\n"		      \
+       "				.cfi_def_cfa_register %%esp\n"	      \
        "_hurd_intr_rpc_msg_sp_restored:"				      \
        : "=a" (err), "+m" (option), "+m" (timeout), "=m" (*intr_port_p)	      \
        : "m" ((&msg)[-1]), "m" (*cancel_p), "i" (EINTR)			      \

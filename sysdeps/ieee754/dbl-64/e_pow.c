@@ -1,5 +1,5 @@
 /* Double-precision x^y function.
-   Copyright (C) 2018-2019 Free Software Foundation, Inc.
+   Copyright (C) 2018-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,14 +14,14 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <math.h>
 #include <stdint.h>
 #include <math-barriers.h>
 #include <math-narrow-eval.h>
 #include <math-svid-compat.h>
-#include <shlib-compat.h>
+#include <libm-alias-finite.h>
 #include <libm-alias-double.h>
 #include "math_config.h"
 
@@ -380,7 +380,7 @@ __pow (double x, double y)
 }
 #ifndef __pow
 strong_alias (__pow, __ieee754_pow)
-strong_alias (__pow, __pow_finite)
+libm_alias_finite (__ieee754_pow, __pow)
 # if LIBM_SVID_COMPAT
 versioned_symbol (libm, __pow, pow, GLIBC_2_29);
 libm_alias_double_other (__pow, pow)

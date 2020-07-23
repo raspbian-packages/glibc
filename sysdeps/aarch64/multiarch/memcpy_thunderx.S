@@ -1,5 +1,5 @@
 /* A Thunderx Optimized memcpy implementation for AARCH64.
-   Copyright (C) 2017-2019 Free Software Foundation, Inc.
+   Copyright (C) 2017-2020 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -15,7 +15,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 /* The actual code in this memcpy and memmove should be identical to the
    generic version except for the code under '#ifdef THUNDERX'.  This is

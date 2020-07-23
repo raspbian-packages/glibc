@@ -1,5 +1,5 @@
 /* Inline functions for dynamic linking.
-   Copyright (C) 1995-2019 Free Software Foundation, Inc.
+   Copyright (C) 1995-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 /* This macro is used as a callback from elf_machine_rel{a,} when a
    static TLS reloc is about to be performed.  Since (in dl-load.c) we
@@ -40,9 +40,10 @@
     (__builtin_expect ((sym_map)->l_tls_offset				\
 		       != FORCED_DYNAMIC_TLS_OFFSET, 1)			\
      && (__builtin_expect ((sym_map)->l_tls_offset != NO_TLS_OFFSET, 1)	\
-	 || _dl_try_allocate_static_tls (sym_map) == 0))
+	 || _dl_try_allocate_static_tls (sym_map, true) == 0))
 
-int _dl_try_allocate_static_tls (struct link_map *map) attribute_hidden;
+int _dl_try_allocate_static_tls (struct link_map *map, bool optional)
+  attribute_hidden;
 
 #include <elf.h>
 

@@ -1,5 +1,5 @@
 /* Machine-dependent ELF dynamic relocation inline functions.  Sparc64 version.
-   Copyright (C) 1997-2019 Free Software Foundation, Inc.
+   Copyright (C) 1997-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #ifndef dl_machine_h
 #define dl_machine_h
@@ -450,11 +450,13 @@ elf_machine_rela (struct link_map *map, const Elf64_Rela *reloc,
       *reloc_addr = value;
       break;
     case R_SPARC_IRELATIVE:
-      value = ((Elf64_Addr (*) (int)) value) (GLRO(dl_hwcap));
+      if (__glibc_likely (!skip_ifunc))
+	value = ((Elf64_Addr (*) (int)) value) (GLRO(dl_hwcap));
       *reloc_addr = value;
       break;
     case R_SPARC_JMP_IREL:
-      value = ((Elf64_Addr (*) (int)) value) (GLRO(dl_hwcap));
+      if (__glibc_likely (!skip_ifunc))
+	value = ((Elf64_Addr (*) (int)) value) (GLRO(dl_hwcap));
       /* 'high' is always zero, for large PLT entries the linker
 	 emits an R_SPARC_IRELATIVE.  */
 #ifdef RESOLVE_CONFLICT_FIND_MAP

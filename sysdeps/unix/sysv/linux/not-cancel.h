@@ -1,5 +1,5 @@
 /* Uncancelable versions of cancelable interfaces.  Linux/NPTL version.
-   Copyright (C) 2003-2019 Free Software Foundation, Inc.
+   Copyright (C) 2003-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2003.
 
@@ -15,7 +15,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #ifndef NOT_CANCEL_H
 # define NOT_CANCEL_H
@@ -69,15 +69,6 @@ __writev_nocancel_nostatus (int fd, const struct iovec *iov, int iovcnt)
   INTERNAL_SYSCALL_CALL (writev, err, fd, iov, iovcnt);
 }
 
-/* Uncancelable waitpid.  */
-__typeof (waitpid) __waitpid_nocancel;
-
-/* Uncancelable pause.  */
-__typeof (pause) __pause_nocancel;
-
-/* Uncancelable nanosleep.  */
-__typeof (__nanosleep) __nanosleep_nocancel;
-
 /* Uncancelable fcntl.  */
 __typeof (__fcntl) __fcntl64_nocancel;
 
@@ -90,9 +81,6 @@ hidden_proto (__read_nocancel)
 hidden_proto (__pread64_nocancel)
 hidden_proto (__write_nocancel)
 hidden_proto (__close_nocancel)
-hidden_proto (__waitpid_nocancel)
-hidden_proto (__pause_nocancel)
-hidden_proto (__nanosleep_nocancel)
 hidden_proto (__fcntl64_nocancel)
 #endif
 

@@ -1,4 +1,4 @@
-glibc (2.30-8+rpi1) bullseye-staging; urgency=medium
+glibc (2.31-1+rpi1) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -9,7 +9,143 @@ glibc (2.30-8+rpi1) bullseye-staging; urgency=medium
     script does not seem to be used for anything in the Debian
     package.
 
- -- Raspbian forward porter <root@raspbian.org>  Tue, 19 May 2020 05:21:28 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 23 Jul 2020 20:52:08 +0000
+
+glibc (2.31-1) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/control: Build-depend on gcc-10 version that defaults to i686 on
+    hurd-i386.
+  * debian/control: Build-depend on mig-for-host instead of mig.
+  * debian/sysdeps/hurd-i386.mk: Drop adding -march=i686.
+  * debian/hurd-i386/git-pselect.diff: Fix pselect atomicity.
+  * debian/hurd-i386/git-fexecve.diff: Fix fexecve.
+  * debian/hurd-i386/git-cond_destroy.diff: Fix cond_destroy synchronization
+    with woken threads.
+  * debian/hurd-i386/git-holes.diff: Fix detecting support for file holes.
+  * debian/hurd-i386/local-clock_gettime_MONOTONIC.diff: Also fix clock_getres
+    with CLOCK_MONOTONIC.
+  * debian/hurd-i386/git-longjmp-onstack.diff: Fix longjmp-ing from altstack.
+  * debian/hurd-i386/git-register-atfork2.diff: Fix register-atfork ordering.
+  * debian/hurd-i386/git-intr-msg-unwind.diff: Fix unwinding over interruptible
+    RPC.
+  * debian/hurd-i386/git-strtol-test.diff: Fix testing strtol errors.
+  * debian/testsuite-xfail-debian.mk: Update.
+  * debian/debhelper.in/libc-udeb.install.hurd-i386: Add missing
+    libmachuser/libhurduser.
+  * debian/rules.d/debhelper.mk: Add dh_link pass to libc-udeb binaryinst.
+  * debian/debhelper.in/libc-udeb.links.hurd-i386: Add missing ld.so link.
+  * debian/rules: Clean links file.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+  * debian/patches/any/git-surplus-tls-accounting.diff: backport TLS surplus
+    accounting from upstream.  Closes: #964141.
+  * debian/control.in/main: update breaks on cross-toolchain-base* as they
+    will need changes to build with glibc 2.31.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Mon, 13 Jul 2020 21:34:17 +0200
+
+glibc (2.31-0experimental2) experimental; urgency=medium
+
+  [ Aurelien Jarno ]
+  * Add an explicit dependency on $(stamp)build_libc for the build-indep
+    target. Currently the build is made during the binary-indep target
+    instead.
+  * debian/control.in/main: build-depends on gcc-10 (>= 10-20200431) on arm64
+    to ensure that -moutline-atomics is enabled by default.  Closes: #956418.
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+  * debian/debhelper.in/libc.NEWS: add an entry explaining the new trust-ad
+    option in resolv.conf.
+  * debian/patches/riscv64/local-asin-acos-raise-invalid.diff: new patch to
+    workaround a GCC 10 bug on riscv64.
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/git-tst-udp.diff: New patch to fix
+    sunrpc/tst-udp-* failures.
+  * debian/sysdeps/hurd-i386.mk: Add -march=i686 to fix math issues until gcc
+    is fixed to switch to i686 as was actually expected already.
+  * debian/testsuite-xfail-debian.mk: Update hurd-i386 results.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Tue, 19 May 2020 00:19:13 +0200
+
+glibc (2.31-0experimental1) experimental; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/testsuite-xfail-debian.mk: Update hurd-i386 results.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Add clone3 syscall to arm64 version of arch-syscall.h.
+  * debian/debhelper.in/libc-udeb.install, debian/rules.d/debhelper.mk: use
+    the multiarch path in the udeb package.
+  * debian/control.in/libc, debian/debhelper.in/libc-pic.install,
+    debian/rules, debian/rules.d/debhelper.mk,
+    debian/patches/any/local-libpic.diff: stop building the libc6-pic package.
+  * debian/control.in/main, debian/rules: build with GCC 10.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Tue, 12 May 2020 13:12:35 +0200
+
+glibc (2.31-0experimental0) experimental; urgency=medium
+
+  [ Aurelien Jarno ]
+  * New upstream release:
+    - Adds GNU hash support on MIPS (closes: #943538).
+    - debian/symbols.wildcard: add 2.31.
+    - debian/debhelper.in/libc-dev{,-alt}.install: drop libmvec_nonshared.a.
+    - debian/patches/localedata/locales/ku_TR: rebased.
+    - debian/patches/localedata/fo_FO-date_fmt.diff: rebased.
+    - debian/patches/localedata/locales-fr.diff: rebased.
+    - debian/patches/localedata/locale-zh_TW.diff: rebased.
+    - debian/patches/localedata/submitted-bz9725-locale-sv_SE.diff:
+      upstreamed.
+    - debian/patches/localedata/submitted-en_AU-date_fmt.diff: upstreamed.
+    - debian/patches/alpha/local-string-functions.diff: rebased.
+    - debian/patches/hurd-i386/git-ONSTACK.diff: upstreamed.
+    - debian/patches/hurd-i386/git-getrandom.diff: upstreamed.
+    - debian/patches/hurd-i386/git-altstack-RPC.diff: upstreamed.
+    - debian/patches/hurd-i386/local-enable-ldconfig.diff: rebased.
+    - debian/patches/hurd-i386/git-context_functions.diff: upstreamed.
+    - debian/patches/hurd-i386/tg-thread-cancel.diff: rebased.
+    - debian/patches/hurd-i386/git-sendmsg-SCM_RIGHTS.diff: upstreamed.
+    - debian/patches/hurd-i386/git-hurdsig-fixes.diff: upstreamed.
+    - debian/patches/hurd-i386/git-hurdsig-global-dispositions.diff:
+      upstreamed.
+    - debian/patches/hurd-i386/git-hurdsig-globaldisp-version.diff: upstreamed.
+    - debian/patches/hurd-i386/tg-hurdsig-SA_SIGINFO.diff: rebased.
+    - debian/patches/hurd-i386/git-hurdsig-fixes-2.diff: upstreamed.
+    - debian/patches/hurd-i386/git-hurdsig-boot-fix.diff: upstreamed.
+    - debian/patches/hurd-i386/git-single-select-timeout.diff: upstreamed.
+    - debian/patches/hurd-i386/git-setitimer.diff: upstreamed.
+    - debian/patches/hurd-i386/git-remap_getcwd.diff: upstreamed.
+    - debian/patches/hurd-i386/git-io_select_timeout.diff: upstreamed.
+    - debian/patches/hurd-i386/git-poll_errors_fixes.diff: upstreamed.
+    - debian/patches/hurd-i386/local-mach_print.diff: rebased.
+    - debian/patches/hurd-i386/local-exec_filename.diff: rebased.
+    - debian/patches/hurd-i386/git-libpthread_sigs.diff: upstreamed.
+    - debian/patches/hurd-i386/git-hurd_sigstate-PLT.diff: upstreamed.
+    - debian/patches/hurd-i386/git-rlock.diff: upstreamed.
+    - debian/patches/hurd-i386/git-errno_location.diff: upstreamed.
+    - debian/patches/powerpc/local-powerpc8xx-dcbz.diff: rebased.
+    - debian/patches/sh4/local-fpscr_values.diff: rebased.
+    - debian/patches/any/local-ldconfig.diff: upstreamed.
+    - debian/patches/any/submitted-bits-fcntl_h-at.diff: rebased.
+    - debian/patches/any/unsubmitted-dlopen-static-crash.diff: obsolete.
+    - debian/patches/any/local-test-install.diff: rebased.
+  * debian/control.in/libc: add a Breaks on openssh-server (<< 1:8.1p1-5) on
+    32-bit architectures with seccomp support, to the allow clock_gettime64
+    syscall.
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/local-clock_gettime_MONOTONIC.diff: Refresh.
+  * debian/patches/hurd-i386/submitted-net.diff: Refresh.
+  * debian/testsuite-xfail-debian.mk: Update hurd-i386 results.
+  * debian/debhelper.in/libc-dev.install.hurd-i386: Do not install
+    libpthread_nonshared, removed upstream.
+  * debian/patches/hurd-i386/local-atfork-link.diff: Remove, now useless.
+  * debian/patches/hurd-i386/tg-hurdsig-SA_SIGINFO.diff: Fix build.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Thu, 12 Mar 2020 07:10:01 +0100
 
 glibc (2.30-8) unstable; urgency=medium
 

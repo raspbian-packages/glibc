@@ -1,5 +1,5 @@
 /* Wait on a condition.  Generic version.
-   Copyright (C) 2000-2019 Free Software Foundation, Inc.
+   Copyright (C) 2000-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,12 +14,13 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library;  if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <pthread.h>
 
 #include <pt-internal.h>
 #include <pthreadP.h>
+#include <time.h>
 
 extern int __pthread_cond_timedwait_internal (pthread_cond_t *cond,
 					      pthread_mutex_t *mutex,
@@ -74,7 +75,7 @@ __pthread_cond_timedwait_internal (pthread_cond_t *cond,
   int cancelled, oldtype, drain;
   clockid_t clock_id = __pthread_default_condattr.__clock;
 
-  if (abstime && (abstime->tv_nsec < 0 || abstime->tv_nsec >= 1000000000))
+  if (abstime && ! valid_nanoseconds (abstime->tv_nsec))
     return EINVAL;
 
   struct __pthread *self = _pthread_self ();
@@ -121,6 +122,10 @@ __pthread_cond_timedwait_internal (pthread_cond_t *cond,
   /* Release MUTEX before blocking.  */
   __pthread_mutex_unlock (mutex);
 
+  /* Increase the waiter reference count.  Relaxed MO is sufficient because
+     we only need to synchronize when decrementing the reference count.  */
+  atomic_fetch_add_relaxed (&cond->__wrefs, 2);
+
   /* Block the thread.  */
   if (abstime != NULL)
     err = __pthread_timedblock (self, abstime, clock_id);
@@ -154,6 +159,13 @@ __pthread_cond_timedwait_internal (pthread_cond_t *cond,
       drain = 0;
     }
   __pthread_spin_unlock (&cond->__lock);
+
+  /* If destruction is pending (i.e., the wake-request flag is nonzero) and we
+     are the last waiter (prior value of __wrefs was 1 << 1), then wake any
+     threads waiting in pthread_cond_destroy.  Release MO to synchronize with
+     these threads.  Don't bother clearing the wake-up request flag.  */
+  if ((atomic_fetch_add_release (&cond->__wrefs, -2)) == 3)
+    __gsync_wake (__mach_task_self (), (vm_offset_t) &cond->__wrefs, 0, 0);
 
   if (drain)
     __pthread_block (self);

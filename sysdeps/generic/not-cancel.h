@@ -1,5 +1,5 @@
 /* Uncancelable versions of cancelable interfaces.  Generic version.
-   Copyright (C) 2003-2019 Free Software Foundation, Inc.
+   Copyright (C) 2003-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2003.
 
@@ -15,7 +15,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #ifndef NOT_CANCEL_H
 # define NOT_CANCEL_H
@@ -47,12 +47,6 @@
   __write (fd, buf, n)
 #define __writev_nocancel_nostatus(fd, iov, n) \
   (void) __writev (fd, iov, n)
-# define __waitpid_nocancel(pid, stat_loc, options) \
-  __waitpid (pid, stat_loc, options)
-#define __pause_nocancel() \
-  __pause ()
-#define __nanosleep_nocancel(requested_time, remaining) \
-  __nanosleep (requested_time, remaining)
 #define __fcntl64_nocancel(fd, cmd, ...) \
   __fcntl64 (fd, cmd, __VA_ARGS__)
 

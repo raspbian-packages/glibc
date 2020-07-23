@@ -1,5 +1,5 @@
 /* Look up a symbol in the loaded objects.
-   Copyright (C) 1995-2019 Free Software Foundation, Inc.
+   Copyright (C) 1995-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <alloca.h>
 #include <libintl.h>
@@ -187,14 +187,37 @@ enter_unique_sym (struct unique_sym *table, size_t size,
   table[idx].map = map;
 }
 
+/* Mark MAP as NODELETE according to the lookup mode in FLAGS.  During
+   initial relocation, NODELETE state is pending only.  */
+static void
+mark_nodelete (struct link_map *map, int flags)
+{
+  if (flags & DL_LOOKUP_FOR_RELOCATE)
+    map->l_nodelete_pending = true;
+  else
+    map->l_nodelete_active = true;
+}
+
+/* Return true if MAP is marked as NODELETE according to the lookup
+   mode in FLAGS> */
+static bool
+is_nodelete (struct link_map *map, int flags)
+{
+  /* Non-pending NODELETE always counts.  Pending NODELETE only counts
+     during initial relocation processing.  */
+  return map->l_nodelete_active
+    || ((flags & DL_LOOKUP_FOR_RELOCATE) && map->l_nodelete_pending);
+}
+
 /* Utility function for do_lookup_x. Lookup an STB_GNU_UNIQUE symbol
    in the unique symbol table, creating a new entry if necessary.
    Return the matching symbol in RESULT.  */
 static void
 do_lookup_unique (const char *undef_name, uint_fast32_t new_hash,
-		  const struct link_map *map, struct sym_val *result,
+		  struct link_map *map, struct sym_val *result,
 		  int type_class, const ElfW(Sym) *sym, const char *strtab,
-		  const ElfW(Sym) *ref, const struct link_map *undef_map)
+		  const ElfW(Sym) *ref, const struct link_map *undef_map,
+		  int flags)
 {
   /* We have to determine whether we already found a symbol with this
      name before.  If not then we have to add it to the search table.
@@ -222,7 +245,7 @@ do_lookup_unique (const char *undef_name, uint_fast32_t new_hash,
 		     copy from the copy addressed through the
 		     relocation.  */
 		  result->s = sym;
-		  result->m = (struct link_map *) map;
+		  result->m = map;
 		}
 	      else
 		{
@@ -310,10 +333,16 @@ do_lookup_unique (const char *undef_name, uint_fast32_t new_hash,
       enter_unique_sym (entries, size,
                         new_hash, strtab + sym->st_name, sym, map);
 
-      if (map->l_type == lt_loaded)
-	/* Make sure we don't unload this object by
-	   setting the appropriate flag.  */
-	((struct link_map *) map)->l_flags_1 |= DF_1_NODELETE;
+      if (map->l_type == lt_loaded && !is_nodelete (map, flags))
+	{
+	  /* Make sure we don't unload this object by
+	     setting the appropriate flag.  */
+	  if (__glibc_unlikely (GLRO (dl_debug_mask) & DL_DEBUG_BINDINGS))
+	    _dl_debug_printf ("\
+marking %s [%lu] as NODELETE due to unique symbol\n",
+			      map->l_name, map->l_ns);
+	  mark_nodelete (map, flags);
+	}
     }
   ++tab->n_elements;
 
@@ -403,7 +432,7 @@ do_lookup_x (const char *undef_name, uint_fast32_t new_hash,
 		  do
 		    if (((*hasharr ^ new_hash) >> 1) == 0)
 		      {
-			symidx = hasharr - map->l_gnu_chain_zero;
+			symidx = ELF_MACHINE_HASH_SYMIDX (map, hasharr);
 			sym = check_match (undef_name, ref, version, flags,
 					   type_class, &symtab[symidx], symidx,
 					   strtab, map, &versioned_sym,
@@ -525,8 +554,9 @@ do_lookup_x (const char *undef_name, uint_fast32_t new_hash,
 	      return 1;
 
 	    case STB_GNU_UNIQUE:;
-	      do_lookup_unique (undef_name, new_hash, map, result, type_class,
-				sym, strtab, ref, undef_map);
+	      do_lookup_unique (undef_name, new_hash, (struct link_map *) map,
+				result, type_class, sym, strtab, ref,
+				undef_map, flags);
 	      return 1;
 
 	    default:
@@ -568,9 +598,13 @@ add_dependency (struct link_map *undef_map, struct link_map *map, int flags)
   if (undef_map == map)
     return 0;
 
-  /* Avoid references to objects which cannot be unloaded anyway.  */
+  /* Avoid references to objects which cannot be unloaded anyway.  We
+     do not need to record dependencies if this object goes away
+     during dlopen failure, either.  IFUNC resolvers with relocation
+     dependencies may pick an dependency which can be dlclose'd, but
+     such IFUNC resolvers are undefined anyway.  */
   assert (map->l_type == lt_loaded);
-  if ((map->l_flags_1 & DF_1_NODELETE) != 0)
+  if (is_nodelete (map, flags))
     return 0;
 
   struct link_map_reldeps *l_reldeps
@@ -678,16 +712,28 @@ add_dependency (struct link_map *undef_map, struct link_map *map, int flags)
 
       /* Redo the NODELETE check, as when dl_load_lock wasn't held
 	 yet this could have changed.  */
-      if ((map->l_flags_1 & DF_1_NODELETE) != 0)
+      if (is_nodelete (map, flags))
 	goto out;
 
       /* If the object with the undefined reference cannot be removed ever
 	 just make sure the same is true for the object which contains the
 	 definition.  */
-      if (undef_map->l_type != lt_loaded
-	  || (undef_map->l_flags_1 & DF_1_NODELETE) != 0)
+      if (undef_map->l_type != lt_loaded || is_nodelete (map, flags))
 	{
-	  map->l_flags_1 |= DF_1_NODELETE;
+	  if (__glibc_unlikely (GLRO (dl_debug_mask) & DL_DEBUG_BINDINGS)
+	      && !is_nodelete (map, flags))
+	    {
+	      if (undef_map->l_name[0] == '\0')
+		_dl_debug_printf ("\
+marking %s [%lu] as NODELETE due to reference to main program\n",
+				  map->l_name, map->l_ns);
+	      else
+		_dl_debug_printf ("\
+marking %s [%lu] as NODELETE due to reference to %s [%lu]\n",
+				  map->l_name, map->l_ns,
+				  undef_map->l_name, undef_map->l_ns);
+	    }
+	  mark_nodelete (map, flags);
 	  goto out;
 	}
 
@@ -712,7 +758,15 @@ add_dependency (struct link_map *undef_map, struct link_map *map, int flags)
 		 no fatal problem.  We simply make sure the referenced object
 		 cannot be unloaded.  This is semantically the correct
 		 behavior.  */
-	      map->l_flags_1 |= DF_1_NODELETE;
+	      if (__glibc_unlikely (GLRO (dl_debug_mask) & DL_DEBUG_BINDINGS)
+		  && !is_nodelete (map, flags))
+		_dl_debug_printf ("\
+marking %s [%lu] as NODELETE due to memory allocation failure\n",
+				  map->l_name, map->l_ns);
+	      /* In case of non-lazy binding, we could actually report
+		 the memory allocation error, but for now, we use the
+		 conservative approximation as well.  */
+	      mark_nodelete (map, flags);
 	      goto out;
 	    }
 	  else
@@ -792,11 +846,9 @@ _dl_lookup_symbol_x (const char *undef_name, struct link_map *undef_map,
 
   bump_num_relocations ();
 
-  /* No other flag than DL_LOOKUP_ADD_DEPENDENCY or DL_LOOKUP_GSCOPE_LOCK
-     is allowed if we look up a versioned symbol.  */
-  assert (version == NULL
-	  || (flags & ~(DL_LOOKUP_ADD_DEPENDENCY | DL_LOOKUP_GSCOPE_LOCK))
-	     == 0);
+  /* DL_LOOKUP_RETURN_NEWEST does not make sense for versioned
+     lookups.  */
+  assert (version == NULL || !(flags & DL_LOOKUP_RETURN_NEWEST));
 
   size_t i = 0;
   if (__glibc_unlikely (skip_map != NULL))
@@ -909,10 +961,10 @@ _dl_setup_hash (struct link_map *map)
 {
   Elf_Symndx *hash;
 
-  if (__glibc_likely (map->l_info[ADDRIDX (DT_GNU_HASH)] != NULL))
+  if (__glibc_likely (map->l_info[ELF_MACHINE_GNU_HASH_ADDRIDX] != NULL))
     {
       Elf32_Word *hash32
-	= (void *) D_PTR (map, l_info[ADDRIDX (DT_GNU_HASH)]);
+	= (void *) D_PTR (map, l_info[ELF_MACHINE_GNU_HASH_ADDRIDX]);
       map->l_nbuckets = *hash32++;
       Elf32_Word symbias = *hash32++;
       Elf32_Word bitmask_nwords = *hash32++;
@@ -927,6 +979,10 @@ _dl_setup_hash (struct link_map *map)
       map->l_gnu_buckets = hash32;
       hash32 += map->l_nbuckets;
       map->l_gnu_chain_zero = hash32 - symbias;
+
+      /* Initialize MIPS xhash translation table.  */
+      ELF_MACHINE_XHASH_SETUP (hash32, symbias, map);
+
       return;
     }
 

@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2019 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <assert.h>
 #include <errno.h>
@@ -72,17 +72,6 @@ void __nptl_set_robust (struct pthread *);
 #ifdef SHARED
 static const struct pthread_functions pthread_functions =
   {
-    .ptr_pthread_attr_destroy = __pthread_attr_destroy,
-# if SHLIB_COMPAT(libpthread, GLIBC_2_0, GLIBC_2_1)
-    .ptr___pthread_attr_init_2_0 = __pthread_attr_init_2_0,
-# endif
-    .ptr___pthread_attr_init_2_1 = __pthread_attr_init_2_1,
-    .ptr_pthread_attr_getdetachstate = __pthread_attr_getdetachstate,
-    .ptr_pthread_attr_setdetachstate = __pthread_attr_setdetachstate,
-    .ptr_pthread_attr_getinheritsched = __pthread_attr_getinheritsched,
-    .ptr_pthread_attr_setinheritsched = __pthread_attr_setinheritsched,
-    .ptr_pthread_attr_getschedparam = __pthread_attr_getschedparam,
-    .ptr_pthread_attr_setschedparam = __pthread_attr_setschedparam,
     .ptr_pthread_attr_getschedpolicy = __pthread_attr_getschedpolicy,
     .ptr_pthread_attr_setschedpolicy = __pthread_attr_setschedpolicy,
     .ptr_pthread_attr_getscope = __pthread_attr_getscope,
@@ -103,7 +92,6 @@ static const struct pthread_functions pthread_functions =
     .ptr___pthread_cond_wait_2_0 = __pthread_cond_wait_2_0,
     .ptr___pthread_cond_timedwait_2_0 = __pthread_cond_timedwait_2_0,
 # endif
-    .ptr_pthread_equal = __pthread_equal,
     .ptr___pthread_exit = __pthread_exit,
     .ptr_pthread_getschedparam = __pthread_getschedparam,
     .ptr_pthread_setschedparam = __pthread_setschedparam,
@@ -126,9 +114,7 @@ static const struct pthread_functions pthread_functions =
     .ptr_nthreads = &__nptl_nthreads,
     .ptr___pthread_unwind = &__pthread_unwind,
     .ptr__nptl_deallocate_tsd = __nptl_deallocate_tsd,
-# ifdef SIGSETXID
     .ptr__nptl_setxid = __nptl_setxid,
-# endif
     .ptr_set_robust = __nptl_set_robust
   };
 # define ptr_pthread_functions &pthread_functions
@@ -151,7 +137,6 @@ __nptl_set_robust (struct pthread *self)
 }
 
 
-#ifdef SIGCANCEL
 /* For asynchronous cancellation we use a signal.  This is the handler.  */
 static void
 sigcancel_handler (int sig, siginfo_t *si, void *ctx)
@@ -197,10 +182,8 @@ sigcancel_handler (int sig, siginfo_t *si, void *ctx)
       oldval = curval;
     }
 }
-#endif
 
 
-#ifdef SIGSETXID
 struct xid_command *__xidcmd attribute_hidden;
 
 /* We use the SIGSETXID signal in the setuid, setgid, etc. implementations to
@@ -246,7 +229,6 @@ sighandler_setxid (int sig, siginfo_t *si, void *ctx)
   if (atomic_decrement_val (&__xidcmd->cntr) == 0)
     futex_wake ((unsigned int *) &__xidcmd->cntr, 1, FUTEX_PRIVATE);
 }
-#endif
 
 
 /* When using __thread for this, we do it in libc so as not
@@ -297,41 +279,31 @@ __pthread_initialize_minimal_internal (void)
      had to set __nptl_initial_report_events.  Propagate its setting.  */
   THREAD_SETMEM (pd, report_events, __nptl_initial_report_events);
 
-#if defined SIGCANCEL || defined SIGSETXID
   struct sigaction sa;
   __sigemptyset (&sa.sa_mask);
 
-# ifdef SIGCANCEL
   /* Install the cancellation signal handler.  If for some reason we
      cannot install the handler we do not abort.  Maybe we should, but
      it is only asynchronous cancellation which is affected.  */
   sa.sa_sigaction = sigcancel_handler;
   sa.sa_flags = SA_SIGINFO;
   (void) __libc_sigaction (SIGCANCEL, &sa, NULL);
-# endif
 
-# ifdef SIGSETXID
   /* Install the handle to change the threads' uid/gid.  */
   sa.sa_sigaction = sighandler_setxid;
   sa.sa_flags = SA_SIGINFO | SA_RESTART;
   (void) __libc_sigaction (SIGSETXID, &sa, NULL);
-# endif
 
   /* The parent process might have left the signals blocked.  Just in
      case, unblock it.  We reuse the signal mask in the sigaction
      structure.  It is already cleared.  */
-# ifdef SIGCANCEL
   __sigaddset (&sa.sa_mask, SIGCANCEL);
-# endif
-# ifdef SIGSETXID
   __sigaddset (&sa.sa_mask, SIGSETXID);
-# endif
   {
     INTERNAL_SYSCALL_DECL (err);
     (void) INTERNAL_SYSCALL (rt_sigprocmask, err, 4, SIG_UNBLOCK, &sa.sa_mask,
 			     NULL, _NSIG / 8);
   }
-#endif
 
   /* Get the size of the static and alignment requirements for the TLS
      block.  */

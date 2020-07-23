@@ -1,5 +1,5 @@
 #  Makefile for SPARC 64-bit.
-#  Copyright (C) 1997-2019 Free Software Foundation, Inc.
+#  Copyright (C) 1997-2020 Free Software Foundation, Inc.
 #  This file is part of the GNU C Library.
 #  Contributed by Jakub Jelinek (jj@ultra.linux.cz).
 #
@@ -16,7 +16,7 @@
 
 # You should have received a copy of the GNU Lesser General Public
 # License along with the GNU C Library; if not, see
-# <http://www.gnu.org/licenses/>.
+# <https://www.gnu.org/licenses/>.
 
 sysdep-CFLAGS += -Wa,-Av9a -mvis
 
@@ -28,15 +28,6 @@ ASFLAGS-.o += -Wa,-Av9d
 ASFLAGS-.os += -Wa,-Av9d
 ASFLAGS-.op += -Wa,-Av9d
 ASFLAGS-.oS += -Wa,-Av9d
-
-# nscd uses atomic_spin_nop which in turn requires cpu_relax
-ifeq ($(subdir),nscd)
-routines += cpu_relax
-endif
-
-ifeq ($(subdir),nptl)
-libpthread-routines += cpu_relax
-endif
 
 ifeq ($(subdir),soft-fp)
 sparc64-quad-routines := qp_add qp_cmp qp_cmpe qp_div qp_dtoq qp_feq qp_fge \

@@ -1,5 +1,5 @@
 /* pthread_cond_destroy.  Generic version.
-   Copyright (C) 2002-2019 Free Software Foundation, Inc.
+   Copyright (C) 2002-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library;  if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <pthread.h>
 #include <pt-internal.h>
@@ -22,6 +22,25 @@
 int
 __pthread_cond_destroy (pthread_cond_t *cond)
 {
+  /* Set the wake request flag. */
+  unsigned int wrefs = atomic_fetch_or_acquire (&cond->__wrefs, 1);
+
+  __pthread_spin_lock (&cond->__lock);
+  if (cond->__queue)
+    {
+      __pthread_spin_unlock (&cond->__lock);
+      return EBUSY;
+    }
+  __pthread_spin_unlock (&cond->__lock);
+
+  while (wrefs >> 1 != 0)
+    {
+      __gsync_wait (__mach_task_self (), (vm_offset_t) &cond->__wrefs, wrefs,
+		  0, 0, 0);
+      wrefs = atomic_load_acquire (&cond->__wrefs);
+    }
+  /* The memory the condvar occupies can now be reused.  */
+
   return 0;
 }
 

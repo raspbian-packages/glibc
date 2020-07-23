@@ -1,5 +1,5 @@
 /* Save current context and install the given one.
-   Copyright (C) 2001-2015 Free Software Foundation, Inc.
+   Copyright (C) 2001-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2001.
 
@@ -15,7 +15,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <sysdep.h>
 
@@ -62,7 +62,7 @@ ENTRY(__swapcontext)
 	leal	oSIGMASK(%ecx), %eax
 	movl	%eax, 4(%esp)
 	movl	$SIG_SETMASK, (%esp)
-	call	JUMPTARGET (__sigprocmask)
+	call	HIDDEN_JUMPTARGET (__sigprocmask)
 	addl	$12, %esp
 	cfi_adjust_cfa_offset (-12)
 	testl	%eax, %eax

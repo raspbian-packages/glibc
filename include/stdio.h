@@ -13,7 +13,9 @@ extern int __fcloseall (void) attribute_hidden;
 extern int __snprintf (char *__restrict __s, size_t __maxlen,
 		       const char *__restrict __format, ...)
      __attribute__ ((__format__ (__printf__, 3, 4)));
+#  if __LONG_DOUBLE_USES_FLOAT128 == 0
 libc_hidden_proto (__snprintf)
+#  endif
 extern int __vfscanf (FILE *__restrict __s,
 		      const char *__restrict __format,
 		      __gnuc_va_list __arg)
@@ -72,7 +74,8 @@ libc_hidden_proto (__isoc99_vfscanf)
    Unfortunately, symbol redirection is not transitive, so the
    __REDIRECT in the public header does not link up with the above
    libc_hidden_proto.  Bridge the gap with a macro.  */
-#  if !__GLIBC_USE (DEPRECATED_SCANF)
+#  if !__GLIBC_USE (DEPRECATED_SCANF) \
+      && __LONG_DOUBLE_USES_FLOAT128 == 0
 #   undef sscanf
 #   define sscanf __isoc99_sscanf
 #  endif
@@ -102,7 +105,6 @@ enum __libc_message_action
 {
   do_message	= 0,		/* Print message.  */
   do_abort	= 1 << 0,	/* Abort.  */
-  do_backtrace	= 1 << 1	/* Backtrace.  */
 };
 
 /* Print out MESSAGE (which should end with a newline) on the error output
@@ -112,10 +114,7 @@ extern void __libc_fatal (const char *__message)
 extern void __libc_message (enum __libc_message_action action,
 			    const char *__fnt, ...) attribute_hidden;
 extern void __fortify_fail (const char *msg) __attribute__ ((__noreturn__));
-extern void __fortify_fail_abort (_Bool, const char *msg)
-  __attribute__ ((__noreturn__)) attribute_hidden;
 libc_hidden_proto (__fortify_fail)
-libc_hidden_proto (__fortify_fail_abort)
 
 /* Acquire ownership of STREAM.  */
 extern void __flockfile (FILE *__stream) attribute_hidden;
@@ -154,7 +153,9 @@ libc_hidden_proto (__libc_readline_unlocked);
 extern const char *const _sys_errlist_internal[] attribute_hidden;
 extern int _sys_nerr_internal attribute_hidden;
 
+#if __LONG_DOUBLE_USES_FLOAT128 == 0
 libc_hidden_proto (__asprintf)
+#endif
 #  if IS_IN (libc)
 extern FILE *_IO_new_fopen (const char*, const char*);
 #   define fopen(fname, mode) _IO_new_fopen (fname, mode)
@@ -175,13 +176,15 @@ extern int _IO_new_fgetpos (FILE *, __fpos_t *);
 #   define fgetpos(fp, posp) _IO_new_fgetpos (fp, posp)
 #  endif
 
-libc_hidden_proto (dprintf)
 extern __typeof (dprintf) __dprintf
      __attribute__ ((__format__ (__printf__, 2, 3)));
 libc_hidden_proto (__dprintf)
+#if __LONG_DOUBLE_USES_FLOAT128 == 0
+libc_hidden_proto (dprintf)
 libc_hidden_proto (fprintf)
 libc_hidden_proto (vfprintf)
 libc_hidden_proto (sprintf)
+#endif
 libc_hidden_proto (fwrite)
 libc_hidden_proto (perror)
 libc_hidden_proto (remove)

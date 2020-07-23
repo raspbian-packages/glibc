@@ -1,5 +1,5 @@
 /* Run a test case in an isolated namespace.
-   Copyright (C) 2018-2019 Free Software Foundation, Inc.
+   Copyright (C) 2018-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #define _FILE_OFFSET_BITS 64
 
@@ -676,6 +676,9 @@ main (int argc, char **argv)
   char *so_base;
   int do_postclean = 0;
 
+  int pipes[2];
+  char pid_buf[20];
+
   uid_t original_uid;
   gid_t original_gid;
   /* If set, the test runs as root instead of the user running the testsuite.  */
@@ -899,7 +902,9 @@ main (int argc, char **argv)
 	    else if (nt == 3 && strcmp (the_words[0], "chmod") == 0)
 	      {
 		long int m;
+		errno = 0;
 		m = strtol (the_words[1], NULL, 0);
+		TEST_COMPARE (errno, 0);
 		if (chmod (the_words[2], m) < 0)
 		    FAIL_EXIT1 ("chmod %s: %s\n",
 				the_words[2], strerror (errno));
@@ -999,6 +1004,11 @@ main (int argc, char **argv)
   if (chdir (new_cwd_path) < 0)
     FAIL_EXIT1 ("Can't cd to new %s - ", new_cwd_path);
 
+  /* This is to pass the "outside" PID to the child, which will be PID
+     1.  */
+  if (pipe2 (pipes, O_CLOEXEC) < 0)
+    FAIL_EXIT1 ("Can't create pid pipe");
+
   /* To complete the containerization, we need to fork () at least
      once.  We can't exec, nor can we somehow link the new child to
      our parent.  So we run the child and propogate it's exit status
@@ -1010,6 +1020,12 @@ main (int argc, char **argv)
     {
       /* Parent.  */
       int status;
+
+      /* Send the child's "outside" pid to it.  */
+      write (pipes[1], &child, sizeof(child));
+      close (pipes[0]);
+      close (pipes[1]);
+
       waitpid (child, &status, 0);
 
       if (WIFEXITED (status))
@@ -1027,6 +1043,14 @@ main (int argc, char **argv)
 
   /* The rest is the child process, which is now PID 1 and "in" the
      new root.  */
+
+  /* Get our "outside" pid from our parent.  We use this to help with
+     debugging from outside the container.  */
+  read (pipes[0], &child, sizeof(child));
+  close (pipes[0]);
+  close (pipes[1]);
+  sprintf (pid_buf, "%lu", (long unsigned)child);
+  setenv ("PID_OUTSIDE_CONTAINER", pid_buf, 0);
 
   maybe_xmkdir ("/tmp", 0755);
 

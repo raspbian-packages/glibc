@@ -1,6 +1,6 @@
 #!/bin/sh
 # Test that locale prints LOCPATH on failure.
-# Copyright (C) 2019 Free Software Foundation, Inc.
+# Copyright (C) 2019-2020 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -15,7 +15,7 @@
 
 # You should have received a copy of the GNU Lesser General Public
 # License along with the GNU C Library; if not, see
-# <http://www.gnu.org/licenses/>.
+# <https://www.gnu.org/licenses/>.
 
 set -ex
 
@@ -34,10 +34,8 @@ trap cleanup 0
 rm -rf "$testroot"
 mkdir -p $testroot
 
-unset LANG
-
 ${test_wrapper_env} \
-${run_program_env} LC_ALL=invalid-locale LOCPATH=does-not-exist \
+${run_program_env} LANG= LC_ALL=invalid-locale LOCPATH=does-not-exist \
 ${common_objpfx}elf/ld.so --library-path "$LIBPATH" \
   "${common_objpfx}locale/locale" \
   > "$testroot/stdout" 2> "$testroot/stderr"

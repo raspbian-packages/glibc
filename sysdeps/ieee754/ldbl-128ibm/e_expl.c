@@ -1,5 +1,5 @@
 /* Quad-precision floating point e^x.
-   Copyright (C) 1999-2019 Free Software Foundation, Inc.
+   Copyright (C) 1999-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Jakub Jelinek <jj@ultra.linux.cz>
    Partly based on double-precision code
@@ -17,7 +17,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 /* The basic design here is from
    Abraham Ziv, "Fast Evaluation of Elementary Mathematical Functions with
@@ -66,7 +66,7 @@
 #include <inttypes.h>
 #include <math_private.h>
 #include <fenv_private.h>
-
+#include <libm-alias-finite.h>
 
 #include "t_expl.h"
 
@@ -257,4 +257,4 @@ __ieee754_expl (long double x)
     return result;
   return result * scale_u.ld;
 }
-strong_alias (__ieee754_expl, __expl_finite)
+libm_alias_finite (__ieee754_expl, __expl)

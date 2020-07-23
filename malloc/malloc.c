@@ -1,5 +1,5 @@
 /* Malloc implementation for multiple threads without lock contention.
-   Copyright (C) 1996-2019 Free Software Foundation, Inc.
+   Copyright (C) 1996-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Wolfram Gloger <wg@malloc.de>
    and Doug Lea <dl@cs.oswego.edu>, 2001.
@@ -16,7 +16,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; see the file COPYING.LIB.  If
-   not, see <http://www.gnu.org/licenses/>.  */
+   not, see <https://www.gnu.org/licenses/>.  */
 
 /*
   This is a version (aka ptmalloc2) of malloc/free/realloc written by
@@ -5086,13 +5086,14 @@ do_set_arena_max (size_t value)
 static __always_inline int
 do_set_tcache_max (size_t value)
 {
-  if (value >= 0 && value <= MAX_TCACHE_SIZE)
+  if (value <= MAX_TCACHE_SIZE)
     {
       LIBC_PROBE (memory_tunable_tcache_max_bytes, 2, value, mp_.tcache_max_bytes);
       mp_.tcache_max_bytes = value;
       mp_.tcache_bins = csize2tidx (request2size(value)) + 1;
+      return 1;
     }
-  return 1;
+  return 0;
 }
 
 static __always_inline int
@@ -5102,8 +5103,9 @@ do_set_tcache_count (size_t value)
     {
       LIBC_PROBE (memory_tunable_tcache_count, 2, value, mp_.tcache_count);
       mp_.tcache_count = value;
+      return 1;
     }
-  return 1;
+  return 0;
 }
 
 static __always_inline int
@@ -5119,7 +5121,7 @@ static inline int
 __always_inline
 do_set_mxfast (size_t value)
 {
-  if (value >= 0 && value <= MAX_FAST_SIZE)
+  if (value <= MAX_FAST_SIZE)
     {
       LIBC_PROBE (memory_mallopt_mxfast, 2, value, get_max_fast ());
       set_max_fast (value);
@@ -5144,18 +5146,24 @@ __libc_mallopt (int param_number, int value)
      (see definition of set_max_fast).  */
   malloc_consolidate (av);
 
+  /* Many of these helper functions take a size_t.  We do not worry
+     about overflow here, because negative int values will wrap to
+     very large size_t values and the helpers have sufficient range
+     checking for such conversions.  Many of these helpers are also
+     used by the tunables macros in arena.c.  */
+
   switch (param_number)
     {
     case M_MXFAST:
-      do_set_mxfast (value);
+      res = do_set_mxfast (value);
       break;
 
     case M_TRIM_THRESHOLD:
-      do_set_trim_threshold (value);
+      res = do_set_trim_threshold (value);
       break;
 
     case M_TOP_PAD:
-      do_set_top_pad (value);
+      res = do_set_top_pad (value);
       break;
 
     case M_MMAP_THRESHOLD:
@@ -5163,25 +5171,25 @@ __libc_mallopt (int param_number, int value)
       break;
 
     case M_MMAP_MAX:
-      do_set_mmaps_max (value);
+      res = do_set_mmaps_max (value);
       break;
 
     case M_CHECK_ACTION:
-      do_set_mallopt_check (value);
+      res = do_set_mallopt_check (value);
       break;
 
     case M_PERTURB:
-      do_set_perturb_byte (value);
+      res = do_set_perturb_byte (value);
       break;
 
     case M_ARENA_TEST:
       if (value > 0)
-	do_set_arena_test (value);
+	res = do_set_arena_test (value);
       break;
 
     case M_ARENA_MAX:
       if (value > 0)
-	do_set_arena_max (value);
+	res = do_set_arena_max (value);
       break;
     }
   __libc_lock_unlock (av->mutex);

@@ -1,5 +1,5 @@
 /* Map in a shared object's segments from the file.
-   Copyright (C) 1995-2019 Free Software Foundation, Inc.
+   Copyright (C) 1995-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <elf.h>
 #include <errno.h>
@@ -876,33 +876,43 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
   struct r_debug *r = _dl_debug_initialize (0, nsid);
   bool make_consistent = false;
 
-  /* Get file information.  */
+  /* Get file information.  To match the kernel behavior, do not fill
+     in this information for the executable in case of an explicit
+     loader invocation.  */
   struct r_file_id id;
-  if (__glibc_unlikely (!_dl_get_file_id (fd, &id)))
+  if (mode & __RTLD_OPENEXEC)
     {
-      errstring = N_("cannot stat shared object");
-    call_lose_errno:
-      errval = errno;
-    call_lose:
-      lose (errval, fd, name, realname, l, errstring,
-	    make_consistent ? r : NULL, nsid);
+      assert (nsid == LM_ID_BASE);
+      memset (&id, 0, sizeof (id));
     }
+  else
+    {
+      if (__glibc_unlikely (!_dl_get_file_id (fd, &id)))
+	{
+	  errstring = N_("cannot stat shared object");
+	call_lose_errno:
+	  errval = errno;
+	call_lose:
+	  lose (errval, fd, name, realname, l, errstring,
+		make_consistent ? r : NULL, nsid);
+	}
 
-  /* Look again to see if the real name matched another already loaded.  */
-  for (l = GL(dl_ns)[nsid]._ns_loaded; l != NULL; l = l->l_next)
-    if (!l->l_removed && _dl_file_id_match_p (&l->l_file_id, &id))
-      {
-	/* The object is already loaded.
-	   Just bump its reference count and return it.  */
-	__close_nocancel (fd);
+      /* Look again to see if the real name matched another already loaded.  */
+      for (l = GL(dl_ns)[nsid]._ns_loaded; l != NULL; l = l->l_next)
+	if (!l->l_removed && _dl_file_id_match_p (&l->l_file_id, &id))
+	  {
+	    /* The object is already loaded.
+	       Just bump its reference count and return it.  */
+	    __close_nocancel (fd);
 
-	/* If the name is not in the list of names for this object add
-	   it.  */
-	free (realname);
-	add_name_to_object (l, name);
+	    /* If the name is not in the list of names for this object add
+	       it.  */
+	    free (realname);
+	    add_name_to_object (l, name);
 
-	return l;
-      }
+	    return l;
+	  }
+    }
 
 #ifdef SHARED
   /* When loading into a namespace other than the base one we must
@@ -963,7 +973,8 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 	      for (unsigned int cnt = 0; cnt < GLRO(dl_naudit); ++cnt)
 		{
 		  if (afct->activity != NULL)
-		    afct->activity (&head->l_audit[cnt].cookie, LA_ACT_ADD);
+		    afct->activity (&link_map_audit_state (head, cnt)->cookie,
+				    LA_ACT_ADD);
 
 		  afct = afct->next;
 		}
@@ -1005,8 +1016,8 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
   else
     {
       phdr = alloca (maplength);
-      __lseek (fd, header->e_phoff, SEEK_SET);
-      if ((size_t) __read_nocancel (fd, (void *) phdr, maplength) != maplength)
+      if ((size_t) __pread64_nocancel (fd, (void *) phdr, maplength,
+				       header->e_phoff) != maplength)
 	{
 	  errstring = N_("cannot read file data");
 	  goto call_lose_errno;
@@ -1108,27 +1119,21 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 	     offset.  We will adjust it later.  */
 	  l->l_tls_initimage = (void *) ph->p_vaddr;
 
-	  /* If not loading the initial set of shared libraries,
-	     check whether we should permit loading a TLS segment.  */
-	  if (__glibc_likely (l->l_type == lt_library)
-	      /* If GL(dl_tls_dtv_slotinfo_list) == NULL, then rtld.c did
-		 not set up TLS data structures, so don't use them now.  */
-	      || __glibc_likely (GL(dl_tls_dtv_slotinfo_list) != NULL))
-	    {
-	      /* Assign the next available module ID.  */
-	      l->l_tls_modid = _dl_next_tls_modid ();
-	      break;
-	    }
+	  /* l->l_tls_modid is assigned below, once there is no
+	     possibility for failure.  */
 
+	  if (l->l_type != lt_library
+	      && GL(dl_tls_dtv_slotinfo_list) == NULL)
+	    {
 #ifdef SHARED
-	  /* We are loading the executable itself when the dynamic
-	     linker was executed directly.  The setup will happen
-	     later.  Otherwise, the TLS data structures are already
-	     initialized, and we assigned a TLS modid above.  */
-	  assert (l->l_prev == NULL || (mode & __RTLD_AUDIT) != 0);
+	      /* We are loading the executable itself when the dynamic
+		 linker was executed directly.  The setup will happen
+		 later.  */
+	      assert (l->l_prev == NULL || (mode & __RTLD_AUDIT) != 0);
 #else
-	  assert (false && "TLS not initialized in static application");
+	      assert (false && "TLS not initialized in static application");
 #endif
+	    }
 	  break;
 
 	case PT_GNU_STACK:
@@ -1369,6 +1374,18 @@ cannot enable executable stack as shared object requires");
     add_name_to_object (l, ((const char *) D_PTR (l, l_info[DT_STRTAB])
 			    + l->l_info[DT_SONAME]->d_un.d_val));
 
+  /* _dl_close can only eventually undo the module ID assignment (via
+     remove_slotinfo) if this function returns a pointer to a link
+     map.  Therefore, delay this step until all possibilities for
+     failure have been excluded.  */
+  if (l->l_tls_blocksize > 0
+      && (__glibc_likely (l->l_type == lt_library)
+	  /* If GL(dl_tls_dtv_slotinfo_list) == NULL, then rtld.c did
+	     not set up TLS data structures, so don't use them now.  */
+	  || __glibc_likely (GL(dl_tls_dtv_slotinfo_list) != NULL)))
+    /* Assign the next available module ID.  */
+    l->l_tls_modid = _dl_next_tls_modid ();
+
 #ifdef DL_AFTER_LOAD
   DL_AFTER_LOAD (l);
 #endif
@@ -1386,10 +1403,9 @@ cannot enable executable stack as shared object requires");
 	{
 	  if (afct->objopen != NULL)
 	    {
-	      l->l_audit[cnt].bindflags
-		= afct->objopen (l, nsid, &l->l_audit[cnt].cookie);
-
-	      l->l_audit_any_plt |= l->l_audit[cnt].bindflags != 0;
+	      struct auditstate *state = link_map_audit_state (l, cnt);
+	      state->bindflags = afct->objopen (l, nsid, &state->cookie);
+	      l->l_audit_any_plt |= state->bindflags != 0;
 	    }
 
 	  afct = afct->next;
@@ -1495,8 +1511,8 @@ open_verify (const char *name, int fd,
 	{
 	  if (afct->objsearch != NULL)
 	    {
-	      name = afct->objsearch (name, &loader->l_audit[cnt].cookie,
-				      whatcode);
+	      struct auditstate *state = link_map_audit_state (loader, cnt);
+	      name = afct->objsearch (name, &state->cookie, whatcode);
 	      if (name == NULL)
 		/* Ignore the path.  */
 		return -1;
@@ -1651,17 +1667,6 @@ open_verify (const char *name, int fd,
 	  errstring = N_("only ET_DYN and ET_EXEC can be loaded");
 	  goto call_lose;
 	}
-      else if (__glibc_unlikely (ehdr->e_type == ET_EXEC
-				 && (mode & __RTLD_OPENEXEC) == 0))
-	{
-	  /* BZ #16634. It is an error to dlopen ET_EXEC (unless
-	     __RTLD_OPENEXEC is explicitly set).  We return error here
-	     so that code in _dl_map_object_from_fd does not try to set
-	     l_tls_modid for this module.  */
-
-	  errstring = N_("cannot dynamically load executable");
-	  goto call_lose;
-	}
       else if (__glibc_unlikely (ehdr->e_phentsize != sizeof (ElfW(Phdr))))
 	{
 	  errstring = N_("ELF file's phentsize not the expected size");
@@ -1674,9 +1679,8 @@ open_verify (const char *name, int fd,
       else
 	{
 	  phdr = alloca (maplength);
-	  __lseek (fd, ehdr->e_phoff, SEEK_SET);
-	  if ((size_t) __read_nocancel (fd, (void *) phdr, maplength)
-	      != maplength)
+	  if ((size_t) __pread64_nocancel (fd, (void *) phdr, maplength,
+					   ehdr->e_phoff) != maplength)
 	    {
 	    read_error:
 	      errval = errno;
@@ -1692,21 +1696,10 @@ open_verify (const char *name, int fd,
 
       /* Check .note.ABI-tag if present.  */
       for (ph = phdr; ph < &phdr[ehdr->e_phnum]; ++ph)
-	if (ph->p_type == PT_NOTE && ph->p_filesz >= 32 && ph->p_align >= 4)
+	if (ph->p_type == PT_NOTE && ph->p_filesz >= 32
+	    && (ph->p_align == 4 || ph->p_align == 8))
 	  {
 	    ElfW(Addr) size = ph->p_filesz;
-	    /* NB: Some PT_NOTE segment may have alignment value of 0
-	       or 1.  gABI specifies that PT_NOTE segments should be
-	       aligned to 4 bytes in 32-bit objects and to 8 bytes in
-	       64-bit objects.  As a Linux extension, we also support
-	       4 byte alignment in 64-bit objects.  If p_align is less
-	       than 4, we treate alignment as 4 bytes since some note
-	       segments have 0 or 1 byte alignment.   */
-	    ElfW(Addr) align = ph->p_align;
-	    if (align < 4)
-	      align = 4;
-	    else if (align != 4 && align != 8)
-	      continue;
 
 	    if (ph->p_offset + size <= (size_t) fbp->len)
 	      abi_note = (void *) (fbp->buf + ph->p_offset);
@@ -1725,8 +1718,8 @@ open_verify (const char *name, int fd,
 
 		    abi_note = abi_note_malloced;
 		  }
-		__lseek (fd, ph->p_offset, SEEK_SET);
-		if (__read_nocancel (fd, (void *) abi_note, size) != size)
+		if (__pread64_nocancel (fd, (void *) abi_note, size,
+					ph->p_offset) != size)
 		  {
 		    free (abi_note_malloced);
 		    goto read_error;
@@ -1737,7 +1730,7 @@ open_verify (const char *name, int fd,
 	      {
 		ElfW(Addr) note_size
 		  = ELF_NOTE_NEXT_OFFSET (abi_note[0], abi_note[1],
-					  align);
+					  ph->p_align);
 
 		if (size - 32 < note_size)
 		  {
@@ -1995,8 +1988,8 @@ _dl_map_object (struct link_map *loader, const char *name,
 	  if (afct->objsearch != NULL)
 	    {
 	      const char *before = name;
-	      name = afct->objsearch (name, &loader->l_audit[cnt].cookie,
-				      LA_SER_ORIG);
+	      struct auditstate *state = link_map_audit_state (loader, cnt);
+	      name = afct->objsearch (name, &state->cookie, LA_SER_ORIG);
 	      if (name == NULL)
 		{
 		  /* Do not try anything further.  */

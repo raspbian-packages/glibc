@@ -40,7 +40,6 @@ GLIBC_2.3 __libc_allocate_rtsig F
 GLIBC_2.3 __libc_current_sigrtmax F
 GLIBC_2.3 __libc_current_sigrtmin F
 GLIBC_2.3 __lseek F
-GLIBC_2.3 __nanosleep F
 GLIBC_2.3 __open F
 GLIBC_2.3 __open64 F
 GLIBC_2.3 __pread64 F
@@ -68,7 +67,6 @@ GLIBC_2.3 __read F
 GLIBC_2.3 __res_state F
 GLIBC_2.3 __send F
 GLIBC_2.3 __sigaction F
-GLIBC_2.3 __wait F
 GLIBC_2.3 __write F
 GLIBC_2.3 _pthread_cleanup_pop F
 GLIBC_2.3 _pthread_cleanup_pop_restore F
@@ -87,27 +85,18 @@ GLIBC_2.3 longjmp F
 GLIBC_2.3 lseek F
 GLIBC_2.3 lseek64 F
 GLIBC_2.3 msync F
-GLIBC_2.3 nanosleep F
 GLIBC_2.3 open F
 GLIBC_2.3 open64 F
 GLIBC_2.3 pause F
 GLIBC_2.3 pread F
 GLIBC_2.3 pread64 F
-GLIBC_2.3 pthread_attr_destroy F
-GLIBC_2.3 pthread_attr_getdetachstate F
 GLIBC_2.3 pthread_attr_getguardsize F
-GLIBC_2.3 pthread_attr_getinheritsched F
-GLIBC_2.3 pthread_attr_getschedparam F
 GLIBC_2.3 pthread_attr_getschedpolicy F
 GLIBC_2.3 pthread_attr_getscope F
 GLIBC_2.3 pthread_attr_getstack F
 GLIBC_2.3 pthread_attr_getstackaddr F
 GLIBC_2.3 pthread_attr_getstacksize F
-GLIBC_2.3 pthread_attr_init F
-GLIBC_2.3 pthread_attr_setdetachstate F
 GLIBC_2.3 pthread_attr_setguardsize F
-GLIBC_2.3 pthread_attr_setinheritsched F
-GLIBC_2.3 pthread_attr_setschedparam F
 GLIBC_2.3 pthread_attr_setschedpolicy F
 GLIBC_2.3 pthread_attr_setscope F
 GLIBC_2.3 pthread_attr_setstack F
@@ -132,7 +121,6 @@ GLIBC_2.3 pthread_condattr_init F
 GLIBC_2.3 pthread_condattr_setpshared F
 GLIBC_2.3 pthread_create F
 GLIBC_2.3 pthread_detach F
-GLIBC_2.3 pthread_equal F
 GLIBC_2.3 pthread_exit F
 GLIBC_2.3 pthread_getattr_np F
 GLIBC_2.3 pthread_getconcurrency F
@@ -174,7 +162,6 @@ GLIBC_2.3 pthread_rwlockattr_getpshared F
 GLIBC_2.3 pthread_rwlockattr_init F
 GLIBC_2.3 pthread_rwlockattr_setkind_np F
 GLIBC_2.3 pthread_rwlockattr_setpshared F
-GLIBC_2.3 pthread_self F
 GLIBC_2.3 pthread_setcancelstate F
 GLIBC_2.3 pthread_setcanceltype F
 GLIBC_2.3 pthread_setconcurrency F
@@ -213,8 +200,6 @@ GLIBC_2.3 siglongjmp F
 GLIBC_2.3 sigwait F
 GLIBC_2.3 system F
 GLIBC_2.3 tcdrain F
-GLIBC_2.3 wait F
-GLIBC_2.3 waitpid F
 GLIBC_2.3 write F
 GLIBC_2.3.2 pthread_cond_broadcast F
 GLIBC_2.3.2 pthread_cond_destroy F
@@ -249,6 +234,7 @@ GLIBC_2.30 pthread_mutex_clocklock F
 GLIBC_2.30 pthread_rwlock_clockrdlock F
 GLIBC_2.30 pthread_rwlock_clockwrlock F
 GLIBC_2.30 sem_clockwait F
+GLIBC_2.31 pthread_clockjoin_np F
 GLIBC_2.4 pthread_mutex_consistent_np F
 GLIBC_2.4 pthread_mutex_getprioceiling F
 GLIBC_2.4 pthread_mutex_setprioceiling F

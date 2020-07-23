@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2019 Free Software Foundation, Inc.
+# Copyright (C) 1991-2020 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -13,7 +13,7 @@
 
 # You should have received a copy of the GNU Lesser General Public
 # License along with the GNU C Library; if not, see
-# <http://www.gnu.org/licenses/>.
+# <https://www.gnu.org/licenses/>.
 
 #
 #	Sub-makefile for POSIX portion of the library.
@@ -100,7 +100,8 @@ tests		:= test-errno tstgetopt testfnm runtests runptests \
 		   tst-posix_fadvise tst-posix_fadvise64 \
 		   tst-sysconf-empty-chroot tst-glob_symlinks tst-fexecve \
 		   tst-glob-tilde test-ssize-max tst-spawn4 bug-regex37 \
-		   bug-regex38 tst-regcomp-truncated tst-spawn-chdir
+		   bug-regex38 tst-regcomp-truncated tst-spawn-chdir \
+		   tst-wordexp-nocmd
 tests-internal	:= bug-regex5 bug-regex20 bug-regex33 \
 		   tst-rfc3484 tst-rfc3484-2 tst-rfc3484-3 \
 		   tst-glob_lstat_compat tst-spawn4-compat
@@ -222,6 +223,7 @@ CFLAGS-sleep.c += -fexceptions
 CFLAGS-wait.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-waitid.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-waitpid.c += -fexceptions -fasynchronous-unwind-tables
+CFLAGS-wait4.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-getopt.c += -fexceptions
 CFLAGS-wordexp.c += -fexceptions
 CFLAGS-wordexp.os = -fomit-frame-pointer

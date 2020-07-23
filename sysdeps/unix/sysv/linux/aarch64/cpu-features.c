@@ -1,6 +1,6 @@
 /* Initialize CPU feature data.  AArch64 version.
    This file is part of the GNU C Library.
-   Copyright (C) 2017-2019 Free Software Foundation, Inc.
+   Copyright (C) 2017-2020 Free Software Foundation, Inc.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <cpu-features.h>
 #include <sys/auxv.h>
@@ -38,6 +38,7 @@ static struct cpu_list cpu_list[] = {
       {"phecda",	 0x680F0000},
       {"ares",		 0x411FD0C0},
       {"emag",		 0x503F0001},
+      {"kunpeng920", 	 0x481FD010},
       {"generic", 	 0x0}
 };
 

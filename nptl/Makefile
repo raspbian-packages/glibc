@@ -1,4 +1,4 @@
-# Copyright (C) 2002-2019 Free Software Foundation, Inc.
+# Copyright (C) 2002-2020 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -13,7 +13,7 @@
 
 # You should have received a copy of the GNU Lesser General Public
 # License along with the GNU C Library; if not, see
-# <http://www.gnu.org/licenses/>.
+# <https://www.gnu.org/licenses/>.
 
 #
 #	Sub-makefile for NPTL portion of the library.
@@ -22,7 +22,8 @@ subdir	:= nptl
 
 include ../Makeconfig
 
-headers := pthread.h semaphore.h bits/semaphore.h threads.h
+headers := pthread.h semaphore.h bits/semaphore.h threads.h \
+	   bits/struct_mutex.h bits/struct_rwlock.h
 
 extra-libs := libpthread
 extra-libs-others := $(extra-libs)
@@ -30,7 +31,11 @@ extra-libs-others := $(extra-libs)
 routines = alloca_cutoff forward libc-lowlevellock libc-cancellation \
 	   libc-cleanup libc_pthread_init libc_multiple_threads \
 	   register-atfork pthread_atfork pthread_self thrd_current \
-	   thrd_equal thrd_sleep thrd_yield
+	   thrd_equal thrd_sleep thrd_yield pthread_equal \
+	   pthread_attr_destroy pthread_attr_init pthread_attr_getdetachstate \
+	   pthread_attr_setdetachstate pthread_attr_getinheritsched \
+	   pthread_attr_setinheritsched pthread_attr_getschedparam \
+	   pthread_attr_setschedparam
 shared-only-routines = forward
 static-only-routines = pthread_atfork
 
@@ -40,27 +45,21 @@ pthread-compat-wrappers = \
 		      write read close accept \
 		      connect recv recvfrom send \
 		      sendto fsync lseek lseek64 \
-		      msync nanosleep open open64 pause \
+		      msync open open64 pause \
 		      pread pread64 pwrite pwrite64 \
-		      tcdrain wait waitpid msgrcv msgsnd \
+		      tcdrain msgrcv msgsnd \
 		      sigwait sigsuspend \
 		      recvmsg sendmsg
 
 libpthread-routines = nptl-init nptlfreeres vars events version pt-interp \
 		      pthread_create pthread_exit pthread_detach \
 		      pthread_join pthread_tryjoin pthread_timedjoin \
-		      pthread_join_common \
-		      compat-pthread_self pthread_equal pthread_yield \
+		      pthread_clockjoin pthread_join_common pthread_yield \
 		      pthread_getconcurrency pthread_setconcurrency \
 		      pthread_getschedparam pthread_setschedparam \
 		      pthread_setschedprio \
-		      pthread_attr_init pthread_attr_destroy \
-		      pthread_attr_getdetachstate pthread_attr_setdetachstate \
 		      pthread_attr_getguardsize pthread_attr_setguardsize \
-		      pthread_attr_getschedparam pthread_attr_setschedparam \
 		      pthread_attr_getschedpolicy pthread_attr_setschedpolicy \
-		      pthread_attr_getinheritsched \
-		      pthread_attr_setinheritsched \
 		      pthread_attr_getscope pthread_attr_setscope \
 		      pthread_attr_getstackaddr pthread_attr_setstackaddr \
 		      pthread_attr_getstacksize pthread_attr_setstacksize \
@@ -191,6 +190,7 @@ CFLAGS-forward.c += -fexceptions
 CFLAGS-pthread_testcancel.c += -fexceptions
 CFLAGS-pthread_join.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-pthread_timedjoin.c += -fexceptions -fasynchronous-unwind-tables
+CFLAGS-pthread_clockjoin.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-pthread_once.c += $(uses-callbacks) -fexceptions \
 			-fasynchronous-unwind-tables
 CFLAGS-pthread_cond_wait.c += -fexceptions -fasynchronous-unwind-tables
@@ -206,8 +206,6 @@ CFLAGS-pread.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-pread64.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-pwrite.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-pwrite64.c += -fexceptions -fasynchronous-unwind-tables
-CFLAGS-wait.c += -fexceptions -fasynchronous-unwind-tables
-CFLAGS-waitpid.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-sigwait.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-msgrcv.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-msgsnd.c += -fexceptions -fasynchronous-unwind-tables
@@ -226,7 +224,6 @@ CFLAGS-sendmsg.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-close.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-read.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-write.c += -fexceptions -fasynchronous-unwind-tables
-CFLAGS-nanosleep.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-sigsuspend.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-msync.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-fdatasync.c += -fexceptions -fasynchronous-unwind-tables
@@ -275,7 +272,8 @@ tests = tst-attr1 tst-attr2 tst-attr3 tst-default-attr \
 	tst-kill1 tst-kill2 tst-kill3 tst-kill4 tst-kill5 tst-kill6 \
 	tst-raise1 \
 	tst-join1 tst-join2 tst-join3 tst-join4 tst-join5 tst-join6 tst-join7 \
-	tst-join8 tst-join9 \
+	tst-join8 tst-join9 tst-join10 tst-join11 tst-join12 tst-join13 \
+	tst-join14 \
 	tst-detach1 \
 	tst-eintr2 tst-eintr3 tst-eintr4 tst-eintr5 \
 	tst-tsd1 tst-tsd2 tst-tsd3 tst-tsd4 tst-tsd5 tst-tsd6 \
@@ -287,7 +285,7 @@ tests = tst-attr1 tst-attr2 tst-attr3 tst-default-attr \
 	tst-cancel6 tst-cancel7 tst-cancel8 tst-cancel9 tst-cancel10 \
 	tst-cancel11 tst-cancel12 tst-cancel13 tst-cancel14 tst-cancel15 \
 	tst-cancel16 tst-cancel17 tst-cancel18 tst-cancel19 tst-cancel20 \
-	tst-cancel21 tst-cancel22 tst-cancel23 tst-cancel24 tst-cancel25 \
+	tst-cancel21 tst-cancel22 tst-cancel23 tst-cancel24 \
 	tst-cancel26 tst-cancel27 \
 	tst-cancel-self tst-cancel-self-cancelstate \
 	tst-cancel-self-canceltype tst-cancel-self-testcancel \
@@ -331,7 +329,7 @@ tests = tst-attr1 tst-attr2 tst-attr3 tst-default-attr \
 tests-internal := tst-rwlock19 tst-rwlock20 \
 		  tst-sem11 tst-sem12 tst-sem13 \
 		  tst-barrier5 tst-signal7 tst-mutex8 tst-mutex8-static \
-		  tst-mutexpi8 tst-mutexpi8-static
+		  tst-mutexpi8 tst-mutexpi8-static tst-cancel25
 
 xtests = tst-setuid1 tst-setuid1-static tst-setuid2 \
 	tst-mutexpp1 tst-mutexpp6 tst-mutexpp10
@@ -591,7 +589,7 @@ $(objpfx)tst-tls4: $(libdl) $(shared-thread-library)
 $(objpfx)tst-tls4.out: $(objpfx)tst-tls4moda.so $(objpfx)tst-tls4modb.so
 
 $(objpfx)tst-tls5: $(objpfx)tst-tls5mod.so $(shared-thread-library)
-LDFLAGS-tst-tls5 = $(no-as-needed)
+LDFLAGS-tst-tls5 = -Wl,--no-as-needed
 LDFLAGS-tst-tls5mod.so = -Wl,-soname,tst-tls5mod.so
 
 ifeq ($(build-shared),yes)
@@ -631,7 +629,7 @@ LDFLAGS-tst-_res1mod2.so = -Wl,-soname,tst-_res1mod2.so
 $(objpfx)tst-_res1: $(objpfx)tst-_res1mod1.so $(objpfx)tst-_res1mod2.so \
 		    $(shared-thread-library)
 
-LDLIBS-tst-cancel24 = $(no-as-needed) -lstdc++
+LDLIBS-tst-cancel24 = -Wl,--no-as-needed -lstdc++
 LDLIBS-tst-cancel24-static = $(LDLIBS-tst-cancel24)
 
 extra-B-pthread.so = -B$(common-objpfx)nptl/

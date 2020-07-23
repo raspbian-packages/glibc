@@ -1,5 +1,5 @@
 /* Initialization code for TLS in statically linked application.
-   Copyright (C) 2002-2019 Free Software Foundation, Inc.
+   Copyright (C) 2002-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <startup.h>
 #include <errno.h>
@@ -23,7 +23,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/param.h>
-
+#include <array_length.h>
 
 #ifdef SHARED
  #error makefile bug, this file is for static only
@@ -32,17 +32,11 @@
 dtv_t _dl_static_dtv[2 + TLS_SLOTINFO_SURPLUS];
 
 
-static struct
-{
-  struct dtv_slotinfo_list si;
-  /* The dtv_slotinfo_list data structure does not include the actual
-     information since it is defined as an array of size zero.  We define
-     here the necessary entries.  Note that it is not important whether
-     there is padding or not since we will always access the information
-     through the 'si' element.  */
-  struct dtv_slotinfo info[2 + TLS_SLOTINFO_SURPLUS];
-} static_slotinfo;
-
+static struct dtv_slotinfo_list static_slotinfo =
+  {
+   /* Allocate an array of 2 + TLS_SLOTINFO_SURPLUS elements.  */
+   .slotinfo =  { [array_length (_dl_static_dtv) - 1] = { 0 } },
+  };
 
 /* Highest dtv index currently needed.  */
 size_t _dl_tls_max_dtv_idx;
@@ -52,13 +46,19 @@ bool _dl_tls_dtv_gaps;
 struct dtv_slotinfo_list *_dl_tls_dtv_slotinfo_list;
 /* Number of modules in the static TLS block.  */
 size_t _dl_tls_static_nelem;
-/* Size of the static TLS block.  Giving this initialized value
-   preallocates some surplus bytes in the static TLS area.  */
-size_t _dl_tls_static_size = 2048;
+/* Size of the static TLS block.  */
+size_t _dl_tls_static_size;
 /* Size actually allocated in the static TLS block.  */
 size_t _dl_tls_static_used;
 /* Alignment requirement of the static TLS block.  */
 size_t _dl_tls_static_align;
+/* Size of surplus space in the static TLS area for dynamically
+   loaded modules with IE-model TLS or for TLSDESC optimization.
+   See comments in elf/dl-tls.c where it is initialized.  */
+size_t _dl_tls_static_surplus;
+/* Remaining amount of static TLS that may be used for optimizing
+   dynamic TLS access (e.g. with TLSDESC).  */
+size_t _dl_tls_static_optional;
 
 /* Generation counter for the dtv.  */
 size_t _dl_tls_generation;
@@ -72,25 +72,23 @@ TLS_INIT_HELPER
 static void
 init_slotinfo (void)
 {
-  /* Create the slotinfo list.  */
-  static_slotinfo.si.len = (((char *) (&static_slotinfo + 1)
-			     - (char *) &static_slotinfo.si.slotinfo[0])
-			    / sizeof static_slotinfo.si.slotinfo[0]);
-  // static_slotinfo.si.next = NULL;	already zero
+  /* Create the slotinfo list.  Note that the type of static_slotinfo
+     has effectively a zero-length array, so we cannot use the size of
+     static_slotinfo to determine the array length.  */
+  static_slotinfo.len = array_length (_dl_static_dtv);
+  /* static_slotinfo.next = NULL; -- Already zero.  */
 
   /* The slotinfo list.  Will be extended by the code doing dynamic
      linking.  */
   GL(dl_tls_max_dtv_idx) = 1;
-  GL(dl_tls_dtv_slotinfo_list) = &static_slotinfo.si;
+  GL(dl_tls_dtv_slotinfo_list) = &static_slotinfo;
 }
 
 static void
 init_static_tls (size_t memsz, size_t align)
 {
-  /* That is the size of the TLS memory for this object.  The initialized
-     value of _dl_tls_static_size is provided by dl-open.c to request some
-     surplus that permits dynamic loading of modules with IE-model TLS.  */
-  GL(dl_tls_static_size) = roundup (memsz + GL(dl_tls_static_size),
+  /* That is the size of the TLS memory for this object.  */
+  GL(dl_tls_static_size) = roundup (memsz + GLRO(dl_tls_static_surplus),
 				    TLS_TCB_ALIGN);
 #if TLS_TCB_AT_TP
   GL(dl_tls_static_size) += TLS_TCB_SIZE;
@@ -131,25 +129,24 @@ __libc_setup_tls (void)
 	  break;
 	}
 
+  /* Calculate the size of the static TLS surplus, with 0 auditors.  */
+  _dl_tls_static_surplus_init (0);
+
   /* We have to set up the TCB block which also (possibly) contains
      'errno'.  Therefore we avoid 'malloc' which might touch 'errno'.
      Instead we use 'sbrk' which would only uses 'errno' if it fails.
      In this case we are right away out of memory and the user gets
-     what she/he deserves.
-
-     The initialized value of _dl_tls_static_size is provided by dl-open.c
-     to request some surplus that permits dynamic loading of modules with
-     IE-model TLS.  */
+     what she/he deserves.  */
 #if TLS_TCB_AT_TP
   /* Align the TCB offset to the maximum alignment, as
      _dl_allocate_tls_storage (in elf/dl-tls.c) does using __libc_memalign
      and dl_tls_static_align.  */
-  tcb_offset = roundup (memsz + GL(dl_tls_static_size), max_align);
+  tcb_offset = roundup (memsz + GLRO(dl_tls_static_surplus), max_align);
   tlsblock = __sbrk (tcb_offset + TLS_INIT_TCB_SIZE + max_align);
 #elif TLS_DTV_AT_TP
   tcb_offset = roundup (TLS_INIT_TCB_SIZE, align ?: 1);
   tlsblock = __sbrk (tcb_offset + memsz + max_align
-		     + TLS_PRE_TCB_SIZE + GL(dl_tls_static_size));
+		     + TLS_PRE_TCB_SIZE + GLRO(dl_tls_static_surplus));
   tlsblock += TLS_PRE_TCB_SIZE;
 #else
   /* In case a model with a different layout for the TCB and DTV
@@ -205,8 +202,8 @@ __libc_setup_tls (void)
   main_map->l_tls_modid = 1;
 
   init_slotinfo ();
-  // static_slotinfo.si.slotinfo[1].gen = 0; already zero
-  static_slotinfo.si.slotinfo[1].map = main_map;
+  /* static_slotinfo.slotinfo[1].gen = 0; -- Already zero.  */
+  static_slotinfo.slotinfo[1].map = main_map;
 
   memsz = roundup (memsz, align ?: 1);
 

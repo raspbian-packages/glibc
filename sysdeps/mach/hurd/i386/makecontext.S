@@ -1,5 +1,5 @@
 /* Create new context.
-   Copyright (C) 2001-2015 Free Software Foundation, Inc.
+   Copyright (C) 2001-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2001.
 
@@ -15,7 +15,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <sysdep.h>
 
@@ -83,6 +83,10 @@ ENTRY(__makecontext)
 #else
 	movl	$L(exitcode), (%edx)
 #endif
+	/* We need to terminate the FDE here instead of after ret because
+	   the unwinder looks at ra-1 for unwind information.  */
+	cfi_endproc
+
 	/* 'makecontext' returns no value.  */
 	ret
 
@@ -92,27 +96,31 @@ ENTRY(__makecontext)
 	   the context 'makecontext' manipulated at the time of the
 	   'makecontext' call.  If the pointer is NULL the process must
 	   terminate.  */
-	cfi_endproc
 L(exitcode):
 	/* This removes the parameters passed to the function given to
 	   'makecontext' from the stack.  EBX contains the number of
 	   parameters (see above).  */
 	leal	(%esp,%ebx,4), %esp
 
-#ifdef	PIC
-	call	1f
-1:	popl	%ebx
-	addl	$_GLOBAL_OFFSET_TABLE_+[.-1b], %ebx
-#endif
 	cmpl	$0, (%esp)		/* Check the next context.  */
 	je	2f			/* If it is zero exit.  */
 
-	call	JUMPTARGET(__setcontext)
+	call	HIDDEN_JUMPTARGET(__setcontext)
 	/* If this returns (which can happen if the syscall fails) we'll
 	   exit the program with the return error value (-1).  */
+	jmp L(call_exit)
 
-	movl	%eax, (%esp)
-2:	call	HIDDEN_JUMPTARGET(exit)
+2:
+	/* Exit with status 0.  */
+	xorl	%eax, %eax
+
+L(call_exit):
+	/* Align the stack and pass the exit code (from %eax).  */
+	andl	$0xfffffff0, %esp
+	subl	$12, %esp
+	pushl	%eax
+
+	call	HIDDEN_JUMPTARGET(exit)
 	/* The 'exit' call should never return.  In case it does cause
 	   the process to terminate.  */
 	hlt

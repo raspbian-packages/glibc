@@ -1,5 +1,5 @@
 /* Guts of both `select' and `poll' for Hurd.
-   Copyright (C) 1991-2019 Free Software Foundation, Inc.
+   Copyright (C) 1991-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <sys/time.h>
 #include <sys/types.h>
@@ -27,6 +27,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include <limits.h>
+#include <time.h>
 
 /* All user select types.  */
 #define SELECT_ALL (SELECT_READ | SELECT_WRITE | SELECT_URG)
@@ -47,7 +48,7 @@ _hurd_select (int nfds,
 	      const struct timespec *timeout, const sigset_t *sigmask)
 {
   int i;
-  mach_port_t portset;
+  mach_port_t portset, sigport;
   int got, ready;
   error_t err;
   fd_set rfds, wfds, xfds;
@@ -65,6 +66,7 @@ _hurd_select (int nfds,
       int error;
     } d[nfds];
   sigset_t oset;
+  struct hurd_sigstate *ss;
 
   union typeword		/* Use this to avoid unkosher casts.  */
     {
@@ -87,21 +89,20 @@ _hurd_select (int nfds,
     reply_msgid = IO_SELECT_REPLY_MSGID;
   else
     {
-      struct timeval now;
+      struct timespec now;
 
-      if (timeout->tv_sec < 0 || timeout->tv_nsec < 0 ||
-	  timeout->tv_nsec >= 1000000000)
+      if (timeout->tv_sec < 0 || ! valid_nanoseconds (timeout->tv_nsec))
 	{
 	  errno = EINVAL;
 	  return -1;
 	}
 
-      err = __gettimeofday(&now, NULL);
+      err = __clock_gettime (CLOCK_REALTIME, &now);
       if (err)
 	return -1;
 
       ts.tv_sec = now.tv_sec + timeout->tv_sec;
-      ts.tv_nsec = now.tv_usec * 1000 + timeout->tv_nsec;
+      ts.tv_nsec = now.tv_nsec + timeout->tv_nsec;
 
       if (ts.tv_nsec >= 1000000000)
 	{
@@ -115,8 +116,30 @@ _hurd_select (int nfds,
       reply_msgid = IO_SELECT_TIMEOUT_REPLY_MSGID;
     }
 
-  if (sigmask && __sigprocmask (SIG_SETMASK, sigmask, &oset))
-    return -1;
+  if (sigmask)
+    {
+      /* Add a port to the portset for the case when we get the signal even
+         before calling __mach_msg.  */
+
+      sigport = __mach_reply_port ();
+
+      ss = _hurd_self_sigstate ();
+      _hurd_sigstate_lock (ss);
+      /* And tell the signal thread to message us when a signal arrives.  */
+      ss->suspended = sigport;
+      _hurd_sigstate_unlock (ss);
+
+      if (__sigprocmask (SIG_SETMASK, sigmask, &oset))
+	{
+	  _hurd_sigstate_lock (ss);
+	  ss->suspended = MACH_PORT_NULL;
+	  _hurd_sigstate_unlock (ss);
+	  __mach_port_destroy (__mach_task_self (), sigport);
+	  return -1;
+	}
+    }
+  else
+    sigport = MACH_PORT_NULL;
 
   if (pollfds)
     {
@@ -175,8 +198,7 @@ _hurd_select (int nfds,
       if (error)
 	{
 	  /* Set timeout to 0.  */
-	  struct timeval now;
-	  err = __gettimeofday(&now, NULL);
+	  err = __clock_gettime (CLOCK_REALTIME, &ts);
 	  if (err)
 	    {
 	      /* Really bad luck.  */
@@ -189,11 +211,11 @@ _hurd_select (int nfds,
 				   d[i].io_port);
 	      __mutex_unlock (&_hurd_dtable_lock);
 	      HURD_CRITICAL_END;
+	      if (sigmask)
+		__sigprocmask (SIG_SETMASK, &oset, NULL);
 	      errno = err;
 	      return -1;
 	    }
-	  ts.tv_sec = now.tv_sec;
-	  ts.tv_nsec = now.tv_usec * 1000;
 	  reply_msgid = IO_SELECT_TIMEOUT_REPLY_MSGID;
 	}
 
@@ -280,9 +302,14 @@ _hurd_select (int nfds,
   /* Send them all io_select request messages.  */
 
   if (firstfd == -1)
-    /* But not if there were no ports to deal with at all.
-       We are just a pure timeout.  */
-    portset = __mach_reply_port ();
+    {
+      if (sigport == MACH_PORT_NULL)
+	/* But not if there were no ports to deal with at all.
+	   We are just a pure timeout.  */
+	portset = __mach_reply_port ();
+      else
+	portset = sigport;
+    }
   else
     {
       portset = MACH_PORT_NULL;
@@ -301,7 +328,7 @@ _hurd_select (int nfds,
 						 ts, type);
 	    if (!err)
 	      {
-		if (firstfd == lastfd)
+		if (firstfd == lastfd && sigport == MACH_PORT_NULL)
 		  /* When there's a single descriptor, we don't need a
 		     portset, so just pretend we have one, but really
 		     use the single reply port.  */
@@ -332,6 +359,16 @@ _hurd_select (int nfds,
 	      }
 	    _hurd_port_free (&d[i].cell->port, &d[i].ulink, d[i].io_port);
 	  }
+
+      if (got == 0 && sigport != MACH_PORT_NULL)
+	{
+	  if (portset == MACH_PORT_NULL)
+	    /* Create the portset to receive the signal message on.  */
+	    __mach_port_allocate (__mach_task_self (), MACH_PORT_RIGHT_PORT_SET,
+				  &portset);
+	  /* Put the signal reply port in the port set.  */
+	  __mach_port_move_member (__mach_task_self (), sigport, portset);
+	}
     }
 
   /* GOT is the number of replies (or errors), while READY is the number of
@@ -407,6 +444,16 @@ _hurd_select (int nfds,
 	    { MACH_MSG_TYPE_INTEGER_T, sizeof (integer_t) * 8, 1, 1, 0, 0 }
 	  };
 #endif
+
+	  if (sigport != MACH_PORT_NULL && sigport == msg.head.msgh_local_port)
+	    {
+	      /* We actually got interrupted by a signal before
+		 __mach_msg; poll for further responses and then
+		 return quickly. */
+	      err = EINTR;
+	      goto poll;
+	    }
+
 	  if (msg.head.msgh_id == reply_msgid
 	      && msg.head.msgh_size >= sizeof msg.error
 	      && !(msg.head.msgh_bits & MACH_MSGH_BITS_COMPLEX)
@@ -495,7 +542,17 @@ _hurd_select (int nfds,
     for (i = firstfd; i <= lastfd; ++i)
       if (d[i].reply_port != MACH_PORT_NULL)
 	__mach_port_destroy (__mach_task_self (), d[i].reply_port);
-  if (firstfd == -1 || (firstfd != lastfd && portset != MACH_PORT_NULL))
+
+  if (sigport != MACH_PORT_NULL)
+    {
+      _hurd_sigstate_lock (ss);
+      ss->suspended = MACH_PORT_NULL;
+      _hurd_sigstate_unlock (ss);
+      __mach_port_destroy (__mach_task_self (), sigport);
+    }
+
+  if ((firstfd == -1 && sigport == MACH_PORT_NULL)
+      || ((firstfd != lastfd || sigport != MACH_PORT_NULL) && portset != MACH_PORT_NULL))
     /* Destroy PORTSET, but only if it's not actually the reply port for a
        single descriptor (in which case it's destroyed in the previous loop;
        not doing it here is just a bit more efficient).  */

@@ -1,5 +1,5 @@
 /* Operating system support for run-time dynamic linker.  Hurd version.
-   Copyright (C) 1995-2019 Free Software Foundation, Inc.
+   Copyright (C) 1995-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 /* In the static library, this is all handled by dl-support.c
    or by the vanilla definitions in the rest of the C library.  */
@@ -280,13 +280,14 @@ _dl_sysdep_start_cleanup (void)
   __mach_port_deallocate (__mach_task_self (), __mach_task_self_);
 }
 
-/* Minimal open/close/mmap implementation sufficient for initial loading of
+/* Minimal open/close/mmap/etc. implementation sufficient for initial loading of
    shared libraries.  These are weak definitions so that when the
    dynamic linker re-relocates itself to be user-visible (for -ldl),
    it will get the user's definition (i.e. usually libc's).
 
-   They also need to be set in the ld section of sysdeps/mach/hurd/Versions, to
-   be overridable, and in libc.abilist and ld.abilist to be checked. */
+   They also need to be set in the libc and ld section of
+   sysdeps/mach/hurd/Versions, to be overridable, and in libc.abilist and
+   ld.abilist to be checked. */
 
 /* This macro checks that the function does not get renamed to be hidden: we do
    need these to be overridable by libc's.  */
@@ -373,9 +374,9 @@ __close (int fd)
   return 0;
 }
 
-check_no_hidden(__read);
+check_no_hidden(__pread64);
 __ssize_t weak_function
-__read (int fd, void *buf, size_t nbytes)
+__pread64 (int fd, void *buf, size_t nbytes, off64_t offset)
 {
   error_t err;
   char *data;
@@ -383,7 +384,7 @@ __read (int fd, void *buf, size_t nbytes)
 
   data = buf;
   nread = nbytes;
-  err = __io_read ((mach_port_t) fd, &data, &nread, -1, nbytes);
+  err = __io_read ((mach_port_t) fd, &data, &nread, offset, nbytes);
   if (err)
     return __hurd_fail (err);
 
@@ -394,6 +395,14 @@ __read (int fd, void *buf, size_t nbytes)
     }
 
   return nread;
+}
+libc_hidden_weak (__pread64)
+
+check_no_hidden(__read);
+__ssize_t weak_function
+__read (int fd, void *buf, size_t nbytes)
+{
+  return __pread64 (fd, buf, nbytes, -1);
 }
 libc_hidden_weak (__read)
 

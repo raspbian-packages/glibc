@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2019 Free Software Foundation, Inc.
+/* Copyright (C) 1997-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Thorsten Kukuk <kukuk@vt.uni-paderborn.de>, 1997.
 
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <errno.h>
 #include <fcntl.h>
@@ -709,6 +709,7 @@ __nisfind_server (const_nis_name name, int search_parent,
   nis_error status;
   directory_obj *obj;
   struct timeval now;
+  struct timespec ts;
   unsigned int server_used = ~0;
   unsigned int current_ep = ~0;
 
@@ -718,7 +719,8 @@ __nisfind_server (const_nis_name name, int search_parent,
   if (*dir != NULL)
     return NIS_SUCCESS;
 
-  (void) gettimeofday (&now, NULL);
+  __clock_gettime (CLOCK_REALTIME, &ts);
+  TIMESPEC_TO_TIMEVAL (&now, &ts);
 
   if ((flags & NO_CACHE) == 0)
     *dir = nis_server_cache_search (name, search_parent, &server_used,

@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2019 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #ifndef _PTHREADP_H
 #define _PTHREADP_H	1
@@ -475,8 +475,10 @@ extern int __pthread_setcanceltype (int type, int *oldtype);
 extern int __pthread_enable_asynccancel (void) attribute_hidden;
 extern void __pthread_disable_asynccancel (int oldtype) attribute_hidden;
 extern void __pthread_testcancel (void);
-extern int __pthread_timedjoin_ex (pthread_t, void **, const struct timespec *,
-				   bool);
+extern int __pthread_clockjoin_ex (pthread_t, void **, clockid_t,
+				   const struct timespec *, bool)
+  attribute_hidden;
+
 
 #if IS_IN (libpthread)
 hidden_proto (__pthread_mutex_init)
@@ -495,7 +497,6 @@ hidden_proto (__pthread_setcancelstate)
 hidden_proto (__pthread_testcancel)
 hidden_proto (__pthread_mutexattr_init)
 hidden_proto (__pthread_mutexattr_settype)
-hidden_proto (__pthread_timedjoin_ex)
 #endif
 
 extern int __pthread_cond_broadcast_2_0 (pthread_cond_2_0_t *cond);
@@ -616,5 +617,8 @@ check_stacksize_attr (size_t st)
   _Static_assert (offsetof (type, member) == offset,			\
 		  "offset of " #member " field of " #type " != "	\
 		  ASSERT_PTHREAD_STRING (offset))
+#define ASSERT_PTHREAD_INTERNAL_MEMBER_SIZE(type, member, mtype)	\
+  _Static_assert (sizeof (((type) { 0 }).member) != 8,	\
+		  "sizeof (" #type "." #member ") != sizeof (" #mtype "))")
 
 #endif	/* pthreadP.h */

@@ -1,5 +1,5 @@
 /* Support functionality for using threads.
-   Copyright (C) 2016-2019 Free Software Foundation, Inc.
+   Copyright (C) 2016-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #ifndef SUPPORT_THREAD_H
 #define SUPPORT_THREAD_H
@@ -74,6 +74,14 @@ void xpthread_attr_setstacksize (pthread_attr_t *attr,
 				 size_t stacksize);
 void xpthread_attr_setguardsize (pthread_attr_t *attr,
 				 size_t guardsize);
+
+/* Set the stack size in ATTR to a small value, but still large enough
+   to cover most internal glibc stack usage.  */
+void support_set_small_thread_stack_size (pthread_attr_t *attr);
+
+/* Return a pointer to a thread attribute which requests a small
+   stack.  The caller must not free this pointer.  */
+pthread_attr_t *support_small_stack_thread_attribute (void);
 
 /* This function returns non-zero if pthread_barrier_wait returned
    PTHREAD_BARRIER_SERIAL_THREAD.  */

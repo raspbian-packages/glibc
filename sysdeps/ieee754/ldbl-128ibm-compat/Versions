@@ -120,4 +120,115 @@ libc {
     __wcstoieee128_l;
 
     __printf_sizeieee128;
+
+    __asprintfieee128;
+    __dprintfieee128;
+    __fprintfieee128;
+    __printfieee128;
+    __snprintfieee128;
+    __sprintfieee128;
+
+    __vasprintfieee128;
+    __vdprintfieee128;
+    __vfprintfieee128;
+    __vprintfieee128;
+    __vsnprintfieee128;
+    __vsprintfieee128;
+
+    __fwprintfieee128;
+    __swprintfieee128;
+    __wprintfieee128;
+
+    __vfwprintfieee128;
+    __vswprintfieee128;
+    __vwprintfieee128;
+
+    __asprintf_chkieee128;
+    __dprintf_chkieee128;
+    __fprintf_chkieee128;
+    __printf_chkieee128;
+    __snprintf_chkieee128;
+    __sprintf_chkieee128;
+
+    __vasprintf_chkieee128;
+    __vdprintf_chkieee128;
+    __vfprintf_chkieee128;
+    __vprintf_chkieee128;
+    __vsnprintf_chkieee128;
+    __vsprintf_chkieee128;
+
+    __fwprintf_chkieee128;
+    __swprintf_chkieee128;
+    __wprintf_chkieee128;
+
+    __vfwprintf_chkieee128;
+    __vswprintf_chkieee128;
+    __vwprintf_chkieee128;
+
+    __obstack_printfieee128;
+    __obstack_vprintfieee128;
+    __obstack_printf_chkieee128;
+    __obstack_vprintf_chkieee128;
+
+    __syslogieee128;
+    __vsyslogieee128;
+    __syslog_chkieee128;
+    __vsyslog_chkieee128;
+
+    __fscanfieee128;
+    __scanfieee128;
+    __sscanfieee128;
+
+    __vfscanfieee128;
+    __vscanfieee128;
+    __vsscanfieee128;
+
+    __fwscanfieee128;
+    __swscanfieee128;
+    __wscanfieee128;
+
+    __vfwscanfieee128;
+    __vswscanfieee128;
+    __vwscanfieee128;
+
+    __isoc99_fscanfieee128;
+    __isoc99_scanfieee128;
+    __isoc99_sscanfieee128;
+
+    __isoc99_vfscanfieee128;
+    __isoc99_vscanfieee128;
+    __isoc99_vsscanfieee128;
+
+    __isoc99_fwscanfieee128;
+    __isoc99_swscanfieee128;
+    __isoc99_wscanfieee128;
+
+    __isoc99_vfwscanfieee128;
+    __isoc99_vswscanfieee128;
+    __isoc99_vwscanfieee128;
+
+    __argp_errorieee128;
+    __argp_failureieee128;
+
+    __warnieee128;
+    __warnxieee128;
+    __vwarnieee128;
+    __vwarnxieee128;
+    __errieee128;
+    __errxieee128;
+    __verrieee128;
+    __verrxieee128;
+
+    __errorieee128;
+    __error_at_lineieee128;
+
+    __strfmonieee128;
+    __strfmon_lieee128;
+
+    __qecvtieee128;
+    __qfcvtieee128;
+    __qgcvtieee128;
+    __qecvtieee128_r;
+    __qfcvtieee128_r;
   }
+}

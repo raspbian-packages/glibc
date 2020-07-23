@@ -1,5 +1,5 @@
 /* Support for GNU properties.  x86 version.
-   Copyright (C) 2018-2019 Free Software Foundation, Inc.
+   Copyright (C) 2018-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #ifndef _DL_PROP_H
 #define _DL_PROP_H
@@ -167,8 +167,7 @@ _dl_process_pt_note (struct link_map *l, const ElfW(Phdr) *ph,
 	  note_malloced = malloc (size);
 	  note = note_malloced;
 	}
-      __lseek (fd, ph->p_offset, SEEK_SET);
-      if (__read_nocancel (fd, (void *) note, size) != size)
+      if (__pread64_nocancel (fd, (void *) note, size, ph->p_offset) != size)
 	{
 	  if (note_malloced)
 	    free (note_malloced);

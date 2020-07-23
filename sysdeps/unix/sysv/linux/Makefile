@@ -1,3 +1,45 @@
+# Option to pass to Python scripts to set the C compiler.  Rewriting
+# MODULE_NAME is required to enable the _ISOMAC verbatim header
+# environment.
+sysdeps-linux-python-cc = \
+  --cc="$(CC) $(patsubst -DMODULE_NAME=%,-DMODULE_NAME=testsuite,$(CPPFLAGS))"
+
+# Additional dependencies for Python scripts.
+sysdeps-linux-python-deps = \
+  $(..)sysdeps/unix/sysv/linux/glibcsyscalls.py \
+  $(..)scripts/glibcextract.py
+
+# Invocation of the Python interpreter with the Python search path.
+sysdeps-linux-python = \
+  PYTHONPATH=$(..)scripts:$(..)sysdeps/unix/sysv/linux $(PYTHON)
+
+ifndef subdir
+# This target performs two actions:
+#
+# Replace <arch-syscall.h> with a file generated from kernel headers
+# and <fixup-asm-unistd.h>.  Both files are located via the sysdeps
+# override search path.
+#
+# Update sysdeps/unix/sysv/linux/syscall-names.list with additional
+# names found in the generated <arch-syscall.h> file, so that the
+# global system call names list is a superset of the
+# architecture-specific system call names.
+#
+# To bootstrap a new architecture, create an empty file in the right
+# place and run “make update-arch-syscall” from the top-level of a
+# configured, but not-yet-built glibc tree.
+#
+# --lock points to a file not replaced during the update operation, so
+# that mutual exclusion is achieved.
+.PHONY: update-syscall-lists
+update-syscall-lists: arch-syscall.h
+	$(sysdeps-linux-python) \
+	  sysdeps/unix/sysv/linux/update-syscall-lists.py \
+	    $(sysdeps-linux-python-cc) \
+	    --lock=sysdeps/unix/sysv/linux/update-syscall-lists.py $< \
+	    sysdeps/unix/sysv/linux/syscall-names.list
+endif
+
 ifeq ($(subdir),csu)
 sysdep_routines += errno-loc
 endif
@@ -14,11 +56,13 @@ endif
 ifeq ($(subdir),misc)
 include $(firstword $(wildcard $(sysdirs:=/sysctl.mk)))
 
-sysdep_routines += clone umount umount2 readahead \
+sysdep_routines += adjtimex clone umount umount2 readahead \
 		   setfsuid setfsgid epoll_pwait signalfd \
 		   eventfd eventfd_read eventfd_write prlimit \
 		   personality epoll_wait tee vmsplice splice \
-		   open_by_handle_at mlock2 pkey_mprotect pkey_set pkey_get
+		   open_by_handle_at mlock2 pkey_mprotect pkey_set pkey_get \
+		   prctl \
+		   process_vm_readv process_vm_writev
 
 CFLAGS-gethostid.c = -fexceptions
 CFLAGS-tee.c = -fexceptions -fasynchronous-unwind-tables
@@ -48,14 +92,17 @@ sysdep_headers += sys/mount.h sys/acct.h sys/sysctl.h \
 		  bits/termios-c_iflag.h bits/termios-c_oflag.h \
 		  bits/termios-baud.h bits/termios-c_cflag.h \
 		  bits/termios-c_lflag.h bits/termios-tcflow.h \
-		  bits/termios-misc.h
+		  bits/termios-misc.h \
+		  bits/ipc-perm.h
 
 tests += tst-clone tst-clone2 tst-clone3 tst-fanotify tst-personality \
 	 tst-quota tst-sync_file_range tst-sysconf-iov_max tst-ttyname \
 	 test-errno-linux tst-memfd_create tst-mlock2 tst-pkey \
 	 tst-rlimit-infinity tst-ofdlocks tst-gettid tst-gettid-kill \
 	 tst-tgkill
-tests-internal += tst-ofdlocks-compat
+tests-internal += tst-ofdlocks-compat tst-sigcontext-get_pc
+
+CFLAGS-tst-sigcontext-get_pc.c = -fasynchronous-unwind-tables
 
 # Generate the list of SYS_* macros for the system calls (__NR_*
 # macros).  The file syscall-names.list contains all possible system
@@ -100,6 +147,19 @@ $(objpfx)tst-syscall-list.out: \
   $(objpfx)tst-syscall-list-sys.list
 	$(BASH) $^ $(AWK) > $@; $(evaluate-test)
 
+tests-special += $(objpfx)tst-glibcsyscalls.out
+# arch-syscall.h is located via the sysdeps override search path.
+$(objpfx)tst-glibcsyscalls.out: arch-syscall.h \
+  ../sysdeps/unix/sysv/linux/syscall-names.list
+	$(sysdeps-linux-python) \
+	  ../sysdeps/unix/sysv/linux/tst-glibcsyscalls.py \
+	    $(sysdeps-linux-python-cc) $< \
+	    ../sysdeps/unix/sysv/linux/syscall-names.list \
+	  < /dev/null > $@ 2>&1; $(evaluate-test)
+$(objpfx)tst-glibcsyscalls.out: \
+  ../sysdeps/unix/sysv/linux/tst-glibcsyscalls.py \
+  $(sysdeps-linux-python-deps)
+
 # Separate object file for access to the constant from the UAPI header.
 $(objpfx)tst-sysconf-iov_max: $(objpfx)tst-sysconf-iov_max-uapi.o
 
@@ -107,12 +167,11 @@ $(objpfx)tst-pkey: $(shared-thread-library)
 
 tests-special += $(objpfx)tst-mman-consts.out
 $(objpfx)tst-mman-consts.out: ../sysdeps/unix/sysv/linux/tst-mman-consts.py
-	PYTHONPATH=../scripts \
-	$(PYTHON) ../sysdeps/unix/sysv/linux/tst-mman-consts.py \
-		   --cc="$(CC) $(patsubst -DMODULE_NAME=%, \
-					  -DMODULE_NAME=testsuite, \
-					  $(CPPFLAGS))" \
-	< /dev/null > $@ 2>&1; $(evaluate-test)
+	$(sysdeps-linux-python) \
+	  ../sysdeps/unix/sysv/linux/tst-mman-consts.py \
+	    $(sysdeps-linux-python-cc) \
+	  < /dev/null > $@ 2>&1; $(evaluate-test)
+$(objpfx)tst-mman-consts.out: $(sysdeps-linux-python-deps)
 
 $(objpfx)tst-gettid: $(shared-thread-library)
 $(objpfx)tst-gettid-kill: $(shared-thread-library)
@@ -135,12 +194,11 @@ tests-special += $(objpfx)tst-signal-numbers.out
 $(objpfx)tst-signal-numbers.out: \
 		../sysdeps/unix/sysv/linux/tst-signal-numbers.py \
 		$(objpfx)signal.o*
-	PYTHONPATH=../scripts \
-	$(PYTHON) ../sysdeps/unix/sysv/linux/tst-signal-numbers.py \
-		   --cc="$(CC) $(patsubst -DMODULE_NAME=%, \
-					  -DMODULE_NAME=testsuite, \
-					  $(CPPFLAGS))" \
-	< /dev/null > $@ 2>&1; $(evaluate-test)
+	$(sysdeps-linux-python) \
+	  ../sysdeps/unix/sysv/linux/tst-signal-numbers.py \
+	    $(sysdeps-linux-python-cc) \
+	  < /dev/null > $@ 2>&1; $(evaluate-test)
+$(objpfx)tst-signal-numbers.out: $(sysdeps-linux-python-deps)
 endif
 
 ifeq ($(subdir),socket)
@@ -209,11 +267,11 @@ endif
 ifeq ($(subdir),io)
 sysdep_routines += xstatconv internal_statvfs internal_statvfs64 \
 		   sync_file_range fallocate fallocate64 \
-		   close_nocancel fcntl_nocancel nanosleep_nocancel \
+		   close_nocancel fcntl_nocancel \
 		   open_nocancel open64_nocancel \
 		   openat_nocancel openat64_nocancel \
-		   pause_nocancel read_nocancel pread64_nocancel \
-		   waitpid_nocancel write_nocancel statx_cp
+		   read_nocancel pread64_nocancel \
+		   write_nocancel statx_cp
 
 sysdep_headers += bits/fcntl-linux.h
 

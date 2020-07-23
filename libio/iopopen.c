@@ -1,4 +1,4 @@
-/* Copyright (C) 1993-2019 Free Software Foundation, Inc.
+/* Copyright (C) 1993-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Written by Per Bothner <bothner@cygnus.com>.
 
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.
+   <https://www.gnu.org/licenses/>.
 
    As a special exception, if you link the code in this file with
    files compiled with a GNU compiler to produce an executable,
@@ -281,7 +281,11 @@ _IO_new_proc_close (FILE *fp)
      described in POSIX.2, such implementations are not conforming." */
   do
     {
-      wait_pid = __waitpid_nocancel (((_IO_proc_file *) fp)->pid, &wstatus, 0);
+      int state;
+      __libc_ptf_call (__pthread_setcancelstate,
+		       (PTHREAD_CANCEL_DISABLE, &state), 0);
+      wait_pid = __waitpid (((_IO_proc_file *) fp)->pid, &wstatus, 0);
+      __libc_ptf_call (__pthread_setcancelstate, (state, NULL), 0);
     }
   while (wait_pid == -1 && errno == EINTR);
   if (wait_pid == -1)

@@ -249,35 +249,48 @@ test-xfail-test-multiarch = yes
 
 # Need actual porting
 test-xfail-exe = yes
-test-xfail-tst-pselect = yes
-test-xfail-tst-ptrguard1-static = yes
-test-xfail-tst-ptrguard1 = yes
 
-# We don't provide ABI reference for these
-test-xfail-check-abi-libhurduser = yes
-test-xfail-check-abi-libmachuser = yes
+# TODO: in _hurd_port2fd store the flags in a new field in the hurd_fd
+# structure, and in __fdopendir pass over the O_NOATIME flag to the
+# __file_name_lookup_under call.
+test-xfail-tst-fdopendir = yes
 
 # Overzealous test
 test-xfail-tst-pathconf = yes
 
-# Need investigation
+# aio_suspend and lio_listio emulations use pthread_cond_wait, and thus can't be interrupted by a signal
 test-xfail-tst-aio10 = yes
 test-xfail-tst-aio9 = yes
+
+# Needs LD_AUDIT support
 test-xfail-tst-audit1 = yes
 test-xfail-tst-audit2 = yes
+test-xfail-tst-audit3 = yes
 test-xfail-tst-audit8 = yes
+test-xfail-tst-audit9 = yes
+test-xfail-tst-audit11 = yes
+test-xfail-tst-audit12 = yes
+test-xfail-tst-audit14 = yes
+test-xfail-tst-audit15 = yes
+test-xfail-tst-audit16 = yes
+test-xfail-tst-auditmany = yes
+
+# yes, ptsname_r works on the PTS slave side too
+test-xfail-tst-ptsname = yes
+
+# We always put LD_ORIGIN_PATH in the environment
+test-xfail-tst-execvpe5 = yes
+
+# being fixed in libgcc_s
 test-xfail-tst-backtrace4 = yes
 test-xfail-tst-backtrace5 = yes
-test-xfail-tst-fdopendir2 = yes
-test-xfail-tst-fdopendir = yes
-test-xfail-tst-getconf = yes
-test-xfail-tst-grantpt = yes
-test-xfail-tst-longjmp_chk2 = yes
-test-xfail-tst-mallocfork2 = yes
+test-xfail-tst-backtrace6 = yes
+
+# Crashes on dividing by a profiling period 0 (not initialized)
 test-xfail-tst-sprofil = yes
-test-xfail-tst-stackguard1-static = yes
-test-xfail-tst-stackguard1 = yes
-test-xfail-tst-strtod-round = yes
+
+# Missing RT signals.
+# And without rt_sigqueueinfo thread_expire_timer can't pass the si_code = SI_TIMER
 test-xfail-tst-timer4 = yes
 test-xfail-tst-timer5 = yes
 
@@ -288,37 +301,16 @@ tests-unsupported += test-lfs
 #test-xfail-test-lfs = yes
 test-xfail-tst-tzset = yes
 
-# TODO: should be succeeding again with gnumach >= 2019-12-01
-test-xfail-test-fpucw = yes
-test-xfail-test-fpucw-ieee = yes
-test-xfail-test-fpucw-ieee-static = yes
-test-xfail-test-fpucw-static = yes
-test-xfail-test-fenv-x87 = yes
-test-xfail-tst-wcstod-round = yes
-
-# new in 2.21
-test-xfail-test-misc = yes
-test-xfail-tst-ptsname = yes
-test-xfail-tst-audit9 = yes
-
 # new in 2.22
-test-xfail-tst-audit3 = yes
 test-xfail-tst-prelink = yes
 test-xfail-tst-tls-atexit = yes
-
-# new in 2.23
-test-xfail-tst-audit11 = yes
-test-xfail-tst-audit12 = yes
 
 # need get_cpu_features
 test-xfail-tst-get-cpu-features = yes
 test-xfail-test-fenv-sse-2 = yes
 
 # new in 2.24
-test-xfail-tst-execvpe5 = yes
 test-xfail-tst-spawn2 = yes
-test-xfail-tst-support_record_failure = yes
-test-xfail-tst-support_record_failure-2 = yes
 
 # fails randomly
 test-xfail-tst-preadvwritev64 = yes
@@ -326,8 +318,6 @@ test-xfail-tst-preadwrite64 = yes
 
 # happens on linux-i386 too
 test-xfail-annexc = yes
-test-xfail-tst-backtrace6 = yes
-test-xfail-tst-waitid = yes
 
 # seems fixed in 2.24-3?
 test-xfail-tst-secure-getenv = yes
@@ -348,24 +338,13 @@ test-xfail-tst-dynarray-fail-mem = yes
 test-xfail-test-errno = yes
 
 # new in 2.27
-test-xfail-tst-fexecve = yes
 test-xfail-tst-gmon-static = yes
 test-xfail-tst-gmon-static-gprof = yes
 test-xfail-tst-tls1-static-non-pie = yes
 test-xfail-tst-libc_dlvsym-static = yes
 test-xfail-tst-libc_dlvsym = yes
-test-xfail-tst-malloc-too-large = yes
 test-xfail-tst-spawn4 = yes
 test-xfail-tst-spawn4-compat = yes
-
-# Tests failing to build
-test-xfail-tst-copy_file_range = yes
-test-xfail-tst-copy_file_range-compat = yes
-
-# new in 2.28
-test-xfail-tst-fgetc-after-eof = yes
-test-xfail-tst-fgetwc-after-eof = yes
-test-xfail-tst-malloc-stats-cancellation = yes
 
 # want /proc/self/fd
 test-xfail-tst-if_index-long = yes
@@ -380,29 +359,47 @@ test-xfail-tst-nss-files-hosts-long = yes
 # realloc() etc.
 test-xfail-tst-res_hconf_reorder = yes
 
-test-xfail-ISO11/threads.h/conform = yes
-test-xfail-ISO11/threads.h/linknamespace = yes
-
 # wants pthread_barrierattr_setpshared
 test-xfail-tst-pututxline-cache = yes
 test-xfail-tst-pututxline-lockfail = yes
+test-xfail-tst-mallocfork2 = yes
 
 # wants /proc/self/fd
 test-xfail-tst-updwtmpx = yes
+test-xfail-tst-lchmod = yes
 
 # new in 2.31
-#test-xfail-tst-auditmany = yes
-#test-xfail-tst-dlopenfail = yes
+test-xfail-tst-dlopenfail = yes
+
+# new in 2.32
+test-xfail-tst-safe-linking = yes
+# Assumes some linuxish strings
+test-xfail-tst-strerror = yes
+# We always have several threads
+test-xfail-tst-single_threaded-pthread = yes
+# fixed in 2.32
+test-xfail-tst-fdopendir2 = yes
+test-xfail-tst-grantpt = yes
+test-xfail-ISO11/threads.h/conform = yes
+test-xfail-ISO11/threads.h/linknamespace = yes
+test-xfail-tst-stackguard1-static = yes
+test-xfail-tst-stackguard1 = yes
+test-xfail-tst-ptrguard1-static = yes
+test-xfail-tst-ptrguard1 = yes
+test-xfail-tst-malloc-stats-cancellation = yes
+test-xfail-tst-waitid = yes
 
 # actually never succeded
-#test-xfail-tst-create_format1 = yes
-#test-xfail-tst-getcwd-abspath = yes
+test-xfail-tst-create_format1 = yes
+test-xfail-tst-getcwd-abspath = yes
+test-xfail-tst-udp-error = yes
 test-xfail-test-fesetexcept-traps = yes
-# Assumes that self-locks are exclusive
-#test-xfail-tst-lockf = yes
+
+# Child seems to be inheriting the lockf from the parent?
+test-xfail-tst-lockf = yes
 
 # assumes that all st_mode flags (32bit) can exist in stx_mode flags (16bit)
-#test-xfail-tst-statx = yes
+test-xfail-tst-statx = yes
 
 endif
 

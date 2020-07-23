@@ -1,5 +1,5 @@
 /* Placeholder definitions to pull in removed symbol versions.
-   Copyright (C) 2019 Free Software Foundation, Inc.
+   Copyright (C) 2019-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,9 +14,19 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
+#include <sys/cdefs.h>
 #include <shlib-compat.h>
+
+#ifdef SHARED
+static void
+attribute_compat_text_section
+__attribute_used__
+__libpthread_version_placeholder (void)
+{
+}
+#endif
 
 /* This is an unused compatibility symbol definition, to prevent ld
    from creating a weak version definition for GLIBC_2.1.2.  (__vfork
@@ -27,11 +37,11 @@
    there are plenty of other symbols which populate those later
    versions.  */
 #if (SHLIB_COMPAT (libpthread, GLIBC_2_1_2, GLIBC_2_2))
-void
-attribute_compat_text_section
-__libpthread_version_placeholder (void)
-{
-}
-compat_symbol (libpthread, __libpthread_version_placeholder,
-               __libpthread_version_placeholder, GLIBC_2_1_2);
+compat_symbol_unique (libpthread,
+		      __libpthread_version_placeholder, GLIBC_2_1_2);
+#endif
+
+#if (SHLIB_COMPAT (libpthread, GLIBC_2_2_6, GLIBC_2_3))
+compat_symbol_unique (libpthread,
+		      __libpthread_version_placeholder, GLIBC_2_2_6);
 #endif

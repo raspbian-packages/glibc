@@ -1,12 +1,13 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl Note we do not use AC_PREREQ here!  See aclocal.m4 for what we use instead.
-AC_INIT([GNU C Library], [(see version.h)], [https://sourceware.org/bugzilla/], [glibc])
+AC_INIT([GNU C Library], [(see version.h)], [https://sourceware.org/bugzilla/],
+  [glibc], [https://www.gnu.org/software/glibc/])
 AC_CONFIG_SRCDIR([include/features.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR([scripts])
 
 ACX_PKGVERSION([GNU libc])
-ACX_BUGURL([http://www.gnu.org/software/libc/bugs.html])
+ACX_BUGURL([https://www.gnu.org/software/libc/bugs.html])
 AC_DEFINE_UNQUOTED([PKGVERSION], ["$PKGVERSION"],
 		   [Package description])
 AC_DEFINE_UNQUOTED([REPORT_BUGS_TO], ["$REPORT_BUGS_TO"],

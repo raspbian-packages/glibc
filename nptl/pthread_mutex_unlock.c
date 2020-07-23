@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2019 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <assert.h>
 #include <errno.h>
@@ -22,6 +22,7 @@
 #include "pthreadP.h"
 #include <lowlevellock.h>
 #include <stap-probe.h>
+#include <futex-internal.h>
 
 #ifndef lll_unlock_elision
 #define lll_unlock_elision(a,b,c) ({ lll_unlock (a,c); 0; })
@@ -277,9 +278,8 @@ __pthread_mutex_unlock_full (pthread_mutex_t *mutex, int decr)
 	  if (((l & FUTEX_WAITERS) != 0)
 	      || (l != THREAD_GETMEM (THREAD_SELF, tid)))
 	    {
-	      INTERNAL_SYSCALL_DECL (__err);
-	      INTERNAL_SYSCALL (futex, __err, 2, &mutex->__data.__lock,
-				__lll_private_flag (FUTEX_UNLOCK_PI, private));
+	      futex_unlock_pi ((unsigned int *) &mutex->__data.__lock,
+			       private);
 	      break;
 	    }
 	}

@@ -25,7 +25,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: libc 2.29.9000\n"
-"POT-Creation-Date: 2019-07-18 13:28-0400\n"
+"POT-Creation-Date: 2020-01-02 20:08+0530\n"
 "PO-Revision-Date: 2019-07-24 22:24+02:00\n"
 "Last-Translator: Petr Pisar <petr.pisar@atlas.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -88,8 +88,7 @@ msgid "Give a short usage message"
 msgstr "Vypíše krátký návod na použití"
 
 #: argp/argp-parse.c:103 catgets/gencat.c:109 catgets/gencat.c:113
-#: iconv/iconv_prog.c:60 iconv/iconv_prog.c:61 nscd/nscd.c:105
-#: nss/makedb.c:120
+#: iconv/iconv_prog.c:60 iconv/iconv_prog.c:61 nscd/nscd.c:105 nss/makedb.c:120
 msgid "NAME"
 msgstr "NÁZEV"
 
@@ -188,9 +187,9 @@ msgstr ""
 #: elf/ldconfig.c:324 elf/ldd.bash.in:38 elf/pldd.c:263 elf/sotruss.sh:75
 #: elf/sprof.c:389 iconv/iconv_prog.c:422 iconv/iconvconfig.c:396
 #: locale/programs/locale.c:293 locale/programs/localedef.c:463
-#: login/programs/pt_chown.c:63 malloc/memusage.sh:71
-#: malloc/memusagestat.c:581 nscd/nscd.c:509 nss/getent.c:88 nss/makedb.c:385
-#: posix/getconf.c:485 sysdeps/unix/sysv/linux/lddlibc4.c:68
+#: login/programs/pt_chown.c:63 malloc/memusage.sh:71 malloc/memusagestat.c:581
+#: nscd/nscd.c:509 nss/getent.c:88 nss/makedb.c:385 posix/getconf.c:485
+#: sysdeps/unix/sysv/linux/lddlibc4.c:68
 #, c-format
 msgid ""
 "Copyright (C) %s Free Software Foundation, Inc.\n"
@@ -386,11 +385,7 @@ msgstr "spustitelný program „$program“ nenalezen\\n"
 msgid "\\`$program' is no executable\\n"
 msgstr "„$program“ není spustitelný\\n"
 
-#: dlfcn/dlinfo.c:63
-msgid "RTLD_SELF used in code not dynamically loaded"
-msgstr "RTLD_SELF je použito pro kód, který není dynamicky zaveden"
-
-#: dlfcn/dlinfo.c:72
+#: dlfcn/dlinfo.c:53
 msgid "unsupported dlinfo request"
 msgstr "nepodporovaný požadavek dlinfo"
 
@@ -419,7 +414,7 @@ msgstr "Neznámý OS"
 msgid ", OS ABI: %s %d.%d.%d"
 msgstr ", ABI OS: %s %d.%d.%d"
 
-#: elf/cache.c:163 elf/ldconfig.c:1333
+#: elf/cache.c:163 elf/ldconfig.c:1334
 #, c-format
 msgid "Can't open cache file %s\n"
 msgstr "Soubor s keší %s nelze otevřít\n"
@@ -460,11 +455,11 @@ msgstr "Změna přístupových práv k %s na %#o se nezdařila"
 msgid "Renaming of %s to %s failed"
 msgstr "Přejmenování z %s na %s selhalo"
 
-#: elf/dl-close.c:399 elf/dl-open.c:424
+#: elf/dl-close.c:406 elf/dl-open.c:285
 msgid "cannot create scope list"
 msgstr "seznam rozsahů nelze vytvořit"
 
-#: elf/dl-close.c:839
+#: elf/dl-close.c:852
 msgid "shared object not open"
 msgstr "sdílený objekt není otevřen"
 
@@ -537,123 +532,123 @@ msgstr "nelze vytvořit kopii RUNPATH/RPATH"
 msgid "cannot create search path array"
 msgstr "nelze vytvořit pole vyhledávacích cest"
 
-#: elf/dl-load.c:883
+#: elf/dl-load.c:892
 msgid "cannot stat shared object"
 msgstr "nelze získat informace o sdíleném objektu"
 
-#: elf/dl-load.c:992 elf/dl-load.c:2198
+#: elf/dl-load.c:1003 elf/dl-load.c:2191
 msgid "cannot create shared object descriptor"
 msgstr "deskriptor sdíleného objektu nelze vytvořit"
 
-#: elf/dl-load.c:1011 elf/dl-load.c:1555 elf/dl-load.c:1668
+#: elf/dl-load.c:1022 elf/dl-load.c:1571 elf/dl-load.c:1672
 msgid "cannot read file data"
 msgstr "data ze souboru nelze načíst"
 
-#: elf/dl-load.c:1057
+#: elf/dl-load.c:1068
 msgid "ELF load command alignment not page-aligned"
 msgstr "Zarovnání kódu zavaděče formátu ELF nelícuje se stránkou"
 
-#: elf/dl-load.c:1064
+#: elf/dl-load.c:1075
 msgid "ELF load command address/offset not properly aligned"
 msgstr "Adresa/ofset kódu zavaděče formátu ELF není správně zarovnána"
 
-#: elf/dl-load.c:1146
+#: elf/dl-load.c:1151
 msgid "cannot process note segment"
 msgstr "segment s poznámkami nelze zpracovat"
 
-#: elf/dl-load.c:1157
+#: elf/dl-load.c:1162
 msgid "object file has no loadable segments"
 msgstr "objektový soubor nemá žádné nahratelné segmenty"
 
-#: elf/dl-load.c:1170 elf/dl-load.c:1647
+#: elf/dl-load.c:1175
 msgid "cannot dynamically load executable"
 msgstr "spustitelný kód nelze dynamicky zavést"
 
-#: elf/dl-load.c:1191
+#: elf/dl-load.c:1196
 msgid "object file has no dynamic section"
 msgstr "objektový soubor nemá žádnou dynamickou sekci"
 
-#: elf/dl-load.c:1218
+#: elf/dl-load.c:1223
 msgid "cannot dynamically load position-independent executable"
 msgstr "spustitelný kód nezávislý na umístění nelze dynamicky zavést"
 
-#: elf/dl-load.c:1220
+#: elf/dl-load.c:1225
 msgid "shared object cannot be dlopen()ed"
 msgstr "sdílený objekt nebylo možné načíst funkcí dlopen()"
 
-#: elf/dl-load.c:1233
+#: elf/dl-load.c:1238
 msgid "cannot allocate memory for program header"
 msgstr "nelze alokovat paměť pro hlavičku programu"
 
-#: elf/dl-load.c:1266 elf/dl-load.h:130
+#: elf/dl-load.c:1271 elf/dl-load.h:130
 msgid "cannot change memory protections"
 msgstr "ochrany paměti nelze změnit"
 
-#: elf/dl-load.c:1286
+#: elf/dl-load.c:1291
 msgid "cannot enable executable stack as shared object requires"
 msgstr "nemohu povolit spustitelnost zásobníku, jak vyžaduje sdílený objekt"
 
-#: elf/dl-load.c:1299
+#: elf/dl-load.c:1304
 msgid "cannot close file descriptor"
 msgstr "deskriptor souboru nelze zavřít"
 
-#: elf/dl-load.c:1555
+#: elf/dl-load.c:1571
 msgid "file too short"
 msgstr "soubor je příliš krátký"
 
-#: elf/dl-load.c:1590
+#: elf/dl-load.c:1606
 msgid "invalid ELF header"
 msgstr "neplatný hlavička ELF"
 
-#: elf/dl-load.c:1602
+#: elf/dl-load.c:1618
 msgid "ELF file data encoding not big-endian"
 msgstr "Kódování dat souboru ELF nemá velkou endianitu"
 
-#: elf/dl-load.c:1604
+#: elf/dl-load.c:1620
 msgid "ELF file data encoding not little-endian"
 msgstr "Kódování dat souboru ELF nemá malou endianitu"
 
-#: elf/dl-load.c:1608
+#: elf/dl-load.c:1624
 msgid "ELF file version ident does not match current one"
 msgstr "ident verze souboru ELF se neshoduje se současnou"
 
-#: elf/dl-load.c:1612
+#: elf/dl-load.c:1628
 msgid "ELF file OS ABI invalid"
 msgstr "Chybné ABI OS souboru ELF"
 
-#: elf/dl-load.c:1615
+#: elf/dl-load.c:1631
 msgid "ELF file ABI version invalid"
 msgstr "Chybná verze ABI souboru ELF"
 
-#: elf/dl-load.c:1618
+#: elf/dl-load.c:1634
 msgid "nonzero padding in e_ident"
 msgstr "nenulová výplň v e_ident"
 
-#: elf/dl-load.c:1621
+#: elf/dl-load.c:1637
 msgid "internal error"
 msgstr "vnitřní chyba"
 
-#: elf/dl-load.c:1628
+#: elf/dl-load.c:1644
 msgid "ELF file version does not match current one"
 msgstr "Verze souboru ELD se neshoduje se současnou"
 
-#: elf/dl-load.c:1636
+#: elf/dl-load.c:1652
 msgid "only ET_DYN and ET_EXEC can be loaded"
 msgstr "jen ET_DYN a ET_EXEC mohou být nahráni"
 
-#: elf/dl-load.c:1652
+#: elf/dl-load.c:1657
 msgid "ELF file's phentsize not the expected size"
 msgstr "phentsize souboru ELF má neočekávanou velikost"
 
-#: elf/dl-load.c:2217
+#: elf/dl-load.c:2210
 msgid "wrong ELF class: ELFCLASS64"
 msgstr "chybná třída ELF: ELFCLASS64"
 
-#: elf/dl-load.c:2218
+#: elf/dl-load.c:2211
 msgid "wrong ELF class: ELFCLASS32"
 msgstr "chybná třída ELF: ELFCLASS32"
 
-#: elf/dl-load.c:2221
+#: elf/dl-load.c:2214
 msgid "cannot open shared object file"
 msgstr "sdílený objektový soubor nelze otevřít"
 
@@ -665,27 +660,27 @@ msgstr "namapování segmentu ze sdíleného objektu se nepodařilo"
 msgid "cannot map zero-fill pages"
 msgstr "nulami vyplněné stránky nelze mapovat"
 
-#: elf/dl-lookup.c:830
+#: elf/dl-lookup.c:882
 msgid "symbol lookup error"
 msgstr "chyba při vyhledávání symbolu"
 
-#: elf/dl-open.c:99
+#: elf/dl-open.c:71
 msgid "cannot extend global scope"
 msgstr "globální rozsah nelze rozšířit"
 
-#: elf/dl-open.c:474
+#: elf/dl-open.c:391
 msgid "TLS generation counter wrapped!  Please report this."
 msgstr "Čítač generátoru TLS oříznut! Prosím, tuto skutečnost nahlaste."
 
-#: elf/dl-open.c:538
+#: elf/dl-open.c:783
 msgid "invalid mode for dlopen()"
 msgstr "neplatný mód pro dlopen()"
 
-#: elf/dl-open.c:555
+#: elf/dl-open.c:800
 msgid "no more namespaces available for dlmopen()"
 msgstr "pro dlmopen() již není dostupný žádný další jmenný prostor"
 
-#: elf/dl-open.c:579
+#: elf/dl-open.c:824
 msgid "invalid target namespace in dlmopen()"
 msgstr "neplatný cílový jmenný prostor v dlmopen()"
 
@@ -697,20 +692,20 @@ msgstr "nelze alokovat paměť uvnitř statického bloku TLS"
 msgid "cannot make segment writable for relocation"
 msgstr "segment nelze kvůli přemístění učinit zapisovatelný"
 
-#: elf/dl-reloc.c:272
+#: elf/dl-reloc.c:273
 #, c-format
 msgid "%s: out of memory to store relocation results for %s\n"
 msgstr "%s: pro uložení výsledků přemístění %s není dost paměti\n"
 
-#: elf/dl-reloc.c:288
+#: elf/dl-reloc.c:289
 msgid "cannot restore segment prot after reloc"
 msgstr "segment prot nelze po reloc obnovit"
 
-#: elf/dl-reloc.c:319
+#: elf/dl-reloc.c:320
 msgid "cannot apply additional memory protection after relocation"
 msgstr "po přemístění nelze nelze uplatnit dodatečnou ochranu paměti"
 
-#: elf/dl-sym.c:136
+#: elf/dl-sym.c:150
 msgid "RTLD_NEXT used in code not dynamically loaded"
 msgstr "RTLD_NEXT je použito pro kód, který není dynamicky zaveden"
 
@@ -888,58 +883,58 @@ msgstr "libc4 knihovna %s je ve špatném adresáři"
 msgid "libraries %s and %s in directory %s have same soname but different type."
 msgstr "knihovny %s a %s z adresáře %s mají stejný název (soname), ale rozdílný typ."
 
-#: elf/ldconfig.c:1082
+#: elf/ldconfig.c:1083
 #, c-format
 msgid "Warning: ignoring configuration file that cannot be opened: %s"
 msgstr "Pozor: soubor, který nelze otevřít, bude ignorován: %s"
 
-#: elf/ldconfig.c:1148
+#: elf/ldconfig.c:1149
 #, c-format
 msgid "%s:%u: bad syntax in hwcap line"
 msgstr "%s:%u: chybná syntaxe na řádku hwcap"
 
-#: elf/ldconfig.c:1154
+#: elf/ldconfig.c:1155
 #, c-format
 msgid "%s:%u: hwcap index %lu above maximum %u"
 msgstr "%s:%u: index hwcap %lu přesáhl maximum %u"
 
-#: elf/ldconfig.c:1161 elf/ldconfig.c:1169
+#: elf/ldconfig.c:1162 elf/ldconfig.c:1170
 #, c-format
 msgid "%s:%u: hwcap index %lu already defined as %s"
 msgstr "%s:%u: index hwcap %lu již definován jako %s"
 
-#: elf/ldconfig.c:1172
+#: elf/ldconfig.c:1173
 #, c-format
 msgid "%s:%u: duplicate hwcap %lu %s"
 msgstr "%s:%u: duplicitní hwcap %lu %s"
 
-#: elf/ldconfig.c:1194
+#: elf/ldconfig.c:1195
 #, c-format
 msgid "need absolute file name for configuration file when using -r"
 msgstr "Při použití -r je třeba zadat absolutní jméno konfiguračního souboru"
 
-#: elf/ldconfig.c:1201 locale/programs/xmalloc.c:63 malloc/obstack.c:416
+#: elf/ldconfig.c:1202 locale/programs/xmalloc.c:63 malloc/obstack.c:416
 #: malloc/obstack.c:418 posix/getconf.c:458 posix/getconf.c:697
 #, c-format
 msgid "memory exhausted"
 msgstr "paměť vyčerpána"
 
-#: elf/ldconfig.c:1234
+#: elf/ldconfig.c:1235
 #, c-format
 msgid "%s:%u: cannot read directory %s"
 msgstr "%s:%u: adresář %s nelze načíst"
 
-#: elf/ldconfig.c:1282
+#: elf/ldconfig.c:1283
 #, c-format
 msgid "relative path `%s' used to build cache"
 msgstr "pro vybudování keše byla použita relativní cesta „%s“"
 
-#: elf/ldconfig.c:1312
+#: elf/ldconfig.c:1313
 #, c-format
 msgid "Can't chdir to /"
 msgstr "Nelze se přepnout do adresáře /"
 
-#: elf/ldconfig.c:1353
+#: elf/ldconfig.c:1354
 #, c-format
 msgid "Can't open cache file directory %s\n"
 msgstr "Adresář %s se soubory keší nelze otevřít\n"
@@ -1113,27 +1108,27 @@ msgstr "proces %lu není programem ELF"
 msgid "file %s is truncated\n"
 msgstr "soubor %s je zkrácen\n"
 
-#: elf/readelflib.c:66
+#: elf/readelflib.c:65
 #, c-format
 msgid "%s is a 32 bit ELF file.\n"
 msgstr "%s je 32bitový soubor typu ELF.\n"
 
-#: elf/readelflib.c:68
+#: elf/readelflib.c:67
 #, c-format
 msgid "%s is a 64 bit ELF file.\n"
 msgstr "%s je 64bitový souboru typu ELF.\n"
 
-#: elf/readelflib.c:70
+#: elf/readelflib.c:69
 #, c-format
 msgid "Unknown ELFCLASS in file %s.\n"
 msgstr "Neznámá ELFCLASS v souboru %s.\n"
 
-#: elf/readelflib.c:77
+#: elf/readelflib.c:76
 #, c-format
 msgid "%s is not a shared object file (Type: %d).\n"
 msgstr "%s není sdíleným objektovým souborem (typ: %d).\n"
 
-#: elf/readelflib.c:108
+#: elf/readelflib.c:101
 #, c-format
 msgid "more than one dynamic segment\n"
 msgstr "více jak jeden dynamický segment\n"
@@ -1749,12 +1744,11 @@ msgstr "žádné symbolické jméno nebylo pro konec rozsahu zadáno"
 #: locale/programs/charmap.c:615 locale/programs/ld-address.c:524
 #: locale/programs/ld-collate.c:2616 locale/programs/ld-collate.c:3774
 #: locale/programs/ld-ctype.c:2118 locale/programs/ld-ctype.c:2830
-#: locale/programs/ld-identification.c:397
-#: locale/programs/ld-measurement.c:213 locale/programs/ld-messages.c:295
-#: locale/programs/ld-monetary.c:748 locale/programs/ld-name.c:262
-#: locale/programs/ld-numeric.c:325 locale/programs/ld-paper.c:212
-#: locale/programs/ld-telephone.c:276 locale/programs/ld-time.c:959
-#: locale/programs/repertoire.c:312
+#: locale/programs/ld-identification.c:397 locale/programs/ld-measurement.c:213
+#: locale/programs/ld-messages.c:295 locale/programs/ld-monetary.c:748
+#: locale/programs/ld-name.c:262 locale/programs/ld-numeric.c:325
+#: locale/programs/ld-paper.c:212 locale/programs/ld-telephone.c:276
+#: locale/programs/ld-time.c:959 locale/programs/repertoire.c:312
 #, c-format
 msgid "%1$s: definition does not end with `END %1$s'"
 msgstr "%1$s: definice nekončí na „END %1$s“"
@@ -1776,12 +1770,12 @@ msgstr "%s: chyba ve stavovém automatu"
 #: locale/programs/charmap.c:856 locale/programs/ld-address.c:540
 #: locale/programs/ld-collate.c:2613 locale/programs/ld-collate.c:3967
 #: locale/programs/ld-ctype.c:2115 locale/programs/ld-ctype.c:2847
-#: locale/programs/ld-identification.c:413
-#: locale/programs/ld-measurement.c:229 locale/programs/ld-messages.c:311
-#: locale/programs/ld-monetary.c:764 locale/programs/ld-name.c:278
-#: locale/programs/ld-numeric.c:341 locale/programs/ld-paper.c:228
-#: locale/programs/ld-telephone.c:292 locale/programs/ld-time.c:990
-#: locale/programs/locfile.c:1010 locale/programs/repertoire.c:323
+#: locale/programs/ld-identification.c:413 locale/programs/ld-measurement.c:229
+#: locale/programs/ld-messages.c:311 locale/programs/ld-monetary.c:764
+#: locale/programs/ld-name.c:278 locale/programs/ld-numeric.c:341
+#: locale/programs/ld-paper.c:228 locale/programs/ld-telephone.c:292
+#: locale/programs/ld-time.c:990 locale/programs/locfile.c:1010
+#: locale/programs/repertoire.c:323
 #, c-format
 msgid "%s: premature end of file"
 msgstr "%s: předčasný konec souboru"
@@ -1884,13 +1878,12 @@ msgstr "%s: číselný kód země „%d“ není platný"
 
 #: locale/programs/ld-address.c:432 locale/programs/ld-address.c:469
 #: locale/programs/ld-address.c:507 locale/programs/ld-ctype.c:2479
-#: locale/programs/ld-identification.c:309
-#: locale/programs/ld-measurement.c:196 locale/programs/ld-messages.c:264
-#: locale/programs/ld-monetary.c:503 locale/programs/ld-monetary.c:538
-#: locale/programs/ld-monetary.c:579 locale/programs/ld-name.c:235
-#: locale/programs/ld-numeric.c:217 locale/programs/ld-paper.c:195
-#: locale/programs/ld-telephone.c:251 locale/programs/ld-time.c:864
-#: locale/programs/ld-time.c:906
+#: locale/programs/ld-identification.c:309 locale/programs/ld-measurement.c:196
+#: locale/programs/ld-messages.c:264 locale/programs/ld-monetary.c:503
+#: locale/programs/ld-monetary.c:538 locale/programs/ld-monetary.c:579
+#: locale/programs/ld-name.c:235 locale/programs/ld-numeric.c:217
+#: locale/programs/ld-paper.c:195 locale/programs/ld-telephone.c:251
+#: locale/programs/ld-time.c:864 locale/programs/ld-time.c:906
 #, c-format
 msgid "%s: field `%s' declared more than once"
 msgstr "%s: položka „%s“ deklarována více krát"
@@ -1921,11 +1914,11 @@ msgstr "%s: neúplný řádek „END“"
 #: locale/programs/ld-collate.c:2603 locale/programs/ld-collate.c:3957
 #: locale/programs/ld-ctype.c:1847 locale/programs/ld-ctype.c:2105
 #: locale/programs/ld-ctype.c:2677 locale/programs/ld-ctype.c:2838
-#: locale/programs/ld-identification.c:404
-#: locale/programs/ld-measurement.c:220 locale/programs/ld-messages.c:302
-#: locale/programs/ld-monetary.c:755 locale/programs/ld-name.c:269
-#: locale/programs/ld-numeric.c:332 locale/programs/ld-paper.c:219
-#: locale/programs/ld-telephone.c:283 locale/programs/ld-time.c:981
+#: locale/programs/ld-identification.c:404 locale/programs/ld-measurement.c:220
+#: locale/programs/ld-messages.c:302 locale/programs/ld-monetary.c:755
+#: locale/programs/ld-name.c:269 locale/programs/ld-numeric.c:332
+#: locale/programs/ld-paper.c:219 locale/programs/ld-telephone.c:283
+#: locale/programs/ld-time.c:981
 #, c-format
 msgid "%s: syntax error"
 msgstr "%s: chyba syntaxe"
@@ -2237,7 +2230,7 @@ msgstr "kategorie „digit“ (číslice) nemá položky ve skupinách po deseti
 msgid "no input digits defined and none of the standard names in the charmap"
 msgstr "nedefinovány žádné vstupní číslice a žádná standardní jména v mapě znaků"
 
-#: locale/programs/ld-ctype.c:849
+#: locale/programs/ld-ctype.c:847
 msgid "not all characters used in `outdigit' are available in the charmap"
 msgstr "ne všechny znaky použité v „outdigit“ (výstupní číslice) jsou dostupné v mapě znaků"
 
@@ -4885,7 +4878,7 @@ msgstr "Nepárová ) or \\)"
 msgid "No previous regular expression"
 msgstr "Předchozí regulární výraz neexistuje"
 
-#: posix/wordexp.c:1816
+#: posix/wordexp.c:1795
 msgid "parameter null or not set"
 msgstr "parametr je nullový nebo prázdný"
 
@@ -5150,7 +5143,7 @@ msgstr "Signál reálného času %d"
 msgid "Unknown signal %d"
 msgstr "Neznámý signál %d"
 
-#: sunrpc/auth_unix.c:112 sunrpc/clnt_tcp.c:124 sunrpc/clnt_udp.c:139
+#: sunrpc/auth_unix.c:113 sunrpc/clnt_tcp.c:124 sunrpc/clnt_udp.c:140
 #: sunrpc/clnt_unix.c:125 sunrpc/svc_tcp.c:189 sunrpc/svc_tcp.c:233
 #: sunrpc/svc_udp.c:161 sunrpc/svc_unix.c:189 sunrpc/svc_unix.c:229
 #: sunrpc/xdr.c:631 sunrpc/xdr.c:791 sunrpc/xdr_array.c:102
@@ -5158,7 +5151,7 @@ msgstr "Neznámý signál %d"
 msgid "out of memory\n"
 msgstr "nedostatek paměti\n"
 
-#: sunrpc/auth_unix.c:349
+#: sunrpc/auth_unix.c:350
 msgid "auth_unix.c: Fatal marshalling problem"
 msgstr "auth_unix.c: Fatální chyba marshallingu"
 
@@ -7305,777 +7298,3 @@ msgstr "příliš mnoho nebo příliš dlouhé zkratky časového pásma"
 #, c-format
 msgid "%s: Can't create directory %s: %s"
 msgstr "%s: Adresář %s nelze vytvořit: %s"
-
-#~ msgid "cannot open zero fill device"
-#~ msgstr "nulami vyplněné zařízení (zero) nelze otevřít"
-
-#~ msgid "relocation error"
-#~ msgstr "chyba při přemisťování"
-
-#~ msgid "Cannot set LC_CTYPE to default locale"
-#~ msgstr "LC_CTYPE nelze nastavit na implicitní národní prostředí"
-
-#~ msgid "Cannot set LC_MESSAGES to default locale"
-#~ msgstr "LC_MESSAGES nelze nastavit na implicitní národní prostředí"
-
-#~ msgid "Cannot set LC_COLLATE to default locale"
-#~ msgstr "LC_COLLATE nelze nastavit na implicitní národní prostředí"
-
-#~ msgid "unruly zone"
-#~ msgstr "časové pásmo bez pravidel"
-
-#~ msgid "%s: Leap line in non leap seconds file %s"
-#~ msgstr "%s: řádek Leap v souboru nepřestupných sekund %s"
-
-#~ msgid "nameless rule"
-#~ msgstr "bezejmenné pravidlo"
-
-#~ msgid "repeated leap second moment"
-#~ msgstr "přestupná sekunda opakována"
-
-#~ msgid "invalid caller"
-#~ msgstr "nepřípustný kód volání"
-
-#~ msgid "Character out of range for UTF-8"
-#~ msgstr "Znak mimo povolený rozsah UTF-8"
-
-#~ msgid "cannot read /proc/self/cmdline: %s; disabling paranoia mode"
-#~ msgstr "/proc/self/cmdline nelze načíst: %s, vypínám paranoidní režim"
-
-#~ msgid "Haven't found \"%s\" in password cache!"
-#~ msgstr "„%s“ nebylo v keš pro hesla nalezeno!"
-
-#~ msgid "Reloading \"%s\" in password cache!"
-#~ msgstr "Znovu načítám „%s“ do keše hesel!"
-
-#~ msgid "This implementation doesn't support newstyle or MT-safe code!\n"
-#~ msgstr "Tato implementace nepodporuje nový MT-bezpečný kód!\n"
-
-#~ msgid "no definition of `UNDEFINED'"
-#~ msgstr "chybí definice symbolu „UNDEFINED“"
-
-#~ msgid "non-symbolic character value should not be used"
-#~ msgstr "hodnota nesymbolického znaku by neměla být používána"
-
-#~ msgid "cannot set socket to close on exec: %s; disabling paranoia mode"
-#~ msgstr "soket nelze nastavit na uzavření při spuštění, %s, vypínám paranoidní režim"
-
-#~ msgid "%s: option '--%s' doesn't allow an argument\n"
-#~ msgstr "%s: přepínač „--%s“ nedovoluje žádný argument\n"
-
-#~ msgid "%s: unrecognized option '--%s'\n"
-#~ msgstr "%s: nerozpoznaný přepínač „--%s“\n"
-
-#~ msgid "%s: option '-W %s' doesn't allow an argument\n"
-#~ msgstr "%s: přepínač „-W %s“ nedovoluje žádný argument\n"
-
-#~ msgid "%s: option '-W %s' requires an argument\n"
-#~ msgstr "%s: přepínač „-W %s“ vyžaduje argument\n"
-
-#~ msgid ""
-#~ "%s: usage: %s [--version] [--help] [-{vV}] [-{ct} [lo,]hi] zonename ...\n"
-#~ "\n"
-#~ "Report bugs to %s.\n"
-#~ msgstr ""
-#~ "%s: použití: %s [--version] [--help] [-{vV}]\n"
-#~ "\t\t[-{ct} [DOLNÍ_ROK,]HORNÍ_ROK ] ČASOVÉ_PÁSMO…\n"
-#~ "\n"
-#~ "Chyby v programu hlaste anglicky na %s.\n"
-
-#~ msgid "hard link failed, symbolic link used"
-#~ msgstr "pevný odkaz nevytvořen, použit symbolický"
-
-#~ msgid "link failed, copy used"
-#~ msgstr "odkaz selhal, použila se kopie"
-
-#~ msgid "cannot allocate TLS data structures for initial thread"
-#~ msgstr "Datové struktury TLS prvního vlákna nelze alokovat"
-
-#~ msgid "cannot handle TLS data"
-#~ msgstr "nelze zpracovat data TLS"
-
-#~ msgid "Don't generate links"
-#~ msgstr "Nevygeneruje odkazy"
-
-#~ msgid "Create old-style tables"
-#~ msgstr "Vytvoří tabulky ve starém stylu"
-
-#~ msgid "cannot change socket to nonblocking mode: %s"
-#~ msgstr "soket nelze přepnout do neblokujícího režimu: %s"
-
-#~ msgid "cannot set socket to close on exec: %s"
-#~ msgstr "soket nelze nastavit na uzavření při spuštění, %s"
-
-#~ msgid "program %lu is not available\n"
-#~ msgstr "program %lu není dostupný\n"
-
-#~ msgid "program %lu version %lu is not available\n"
-#~ msgstr "program %lu verze %lu není dostupný\n"
-
-#~ msgid "program %lu version %lu ready and waiting\n"
-#~ msgstr "program %lu verze %lu je připraven a čeká\n"
-
-#~ msgid "rpcinfo: can't contact portmapper"
-#~ msgstr "rpcinfo: s portmapperem se nelze spojit"
-
-#~ msgid "No remote programs registered.\n"
-#~ msgstr "Žádné vzdálené programy nejsou registrovány.\n"
-
-#~ msgid "   program vers proto   port\n"
-#~ msgstr "   program verz proto   port\n"
-
-# Vypisováno následovně:
-# IP-adresa jméno_stroje
-#~ msgid "(unknown)"
-#~ msgstr "(není známo)"
-
-#~ msgid "rpcinfo: broadcast failed: %s\n"
-#~ msgstr "rpcinfo: všesměrové vysílání nebylo úspěšné: %s\n"
-
-#~ msgid "Sorry. You are not root\n"
-#~ msgstr "Lituji, nejste superuživatel\n"
-
-#~ msgid "rpcinfo: Could not delete registration for prog %s version %s\n"
-#~ msgstr "rpcinfo: Registraci programu %s verze %s nelze zrušit\n"
-
-#~ msgid "Usage: rpcinfo [ -n portnum ] -u host prognum [ versnum ]\n"
-#~ msgstr "Použití: rpcinfo [ -n číslo_portu ] -u počítač číslo_programu [ číslo_verze ]\n"
-
-#~ msgid "       rpcinfo [ -n portnum ] -t host prognum [ versnum ]\n"
-#~ msgstr "       rpcinfo [ -n číslo_portu ] -t počítač číslo_programu [ číslo_verze ]\n"
-
-#~ msgid "       rpcinfo -p [ host ]\n"
-#~ msgstr "       rpcinfo -p [ počítač ]\n"
-
-#~ msgid "       rpcinfo -b prognum versnum\n"
-#~ msgstr "       rpcinfo -b číslo_programu číslo_verze\n"
-
-#~ msgid "       rpcinfo -d prognum versnum\n"
-#~ msgstr "       rpcinfo -d číslo_programu číslo_verze\n"
-
-#~ msgid "rpcinfo: %s is unknown service\n"
-#~ msgstr "rpcinfo: %s je neznámá služba\n"
-
-#~ msgid "rpcinfo: %s is unknown host\n"
-#~ msgstr "rpcinfo: %s je neznámý počítač\n"
-
-#~ msgid "lacks alphabetic at start"
-#~ msgstr "na začátku chybí písmeno"
-
-#~ msgid "differs from POSIX standard"
-#~ msgstr "nesouhlasí se standardem POSIX"
-
-#~ msgid "Error writing to standard output"
-#~ msgstr "Chyba při psaní na standardní výstup"
-
-#~ msgid "%s: Error reading %s\n"
-#~ msgstr "%s: Chyba při čtení %s\n"
-
-#~ msgid "%s: Error writing %s\n"
-#~ msgstr "%s: Chyba při zápisu %s\n"
-
-#~ msgid "%s: Error closing %s: %s\n"
-#~ msgstr "%s: Chyba při uzavírání %s: %s\n"
-
-#~ msgid "blank TO field on Link line"
-#~ msgstr "prázdná položka DO v řádku Link"
-
-#~ msgid "internal error - addtype called with bad isdst"
-#~ msgstr "vnitřní chyba – addtype volán s chybným isdst"
-
-#~ msgid "internal error - addtype called with bad ttisstd"
-#~ msgstr "vnitřní chyba – addtype volán s chybným ttisstd"
-
-#~ msgid "internal error - addtype called with bad ttisgmt"
-#~ msgstr "vnitřní chyba – addtype volán s chybným ttisgmt"
-
-#~ msgid "time zone abbreviation lacks alphabetic at start"
-#~ msgstr "zkratka časové zóny nezačíná písmenem"
-
-#~ msgid "cannot load any more object with static TLS"
-#~ msgstr "nelze zavést žádný další objekt se statickým TLS"
-
-#~ msgid "%s: no PLTREL found in object %s\n"
-#~ msgstr "%s: v objektu %s nenalezen žádný PLTREL\n"
-
-#~ msgid "cannot create internal descriptors"
-#~ msgstr "interní deskriptory nelze vytvořit"
-
-#~ msgid "compile-time support for database policy missing"
-#~ msgstr "podpora pro politiku databází v době překladu chybí"
-
-#~ msgid "time before zero"
-#~ msgstr "čas menší než nula"
-
-#~ msgid "%s: use of -v on system with floating time_t other than float or double\n"
-#~ msgstr "%s: použití –v na systému s desetinnou strukturou time_t jinou než než s float nebo double\n"
-
-#~ msgid "%s: %d did not sign extend correctly\n"
-#~ msgstr "%s: při přetypování %d došlo k chybě znaménka\n"
-
-#~ msgid "cannot find any C preprocessor (cpp)\n"
-#~ msgstr "žádný preprocesor jazyka C (cpp) nelze nalézt\n"
-
-#~ msgid "Try \\`%s --help' or `%s --usage' for more information.\\n"
-#~ msgstr "Více informací lze získat příkazem „%s --help“ nebo „%s --usage“.\\n"
-
-#~ msgid "Can't open configuration file %s"
-#~ msgstr "Konfigurační soubor %s nelze otevřít"
-
-#~ msgid "invalid value for 'reload-count': %u"
-#~ msgstr "neplatná hodnota pro „reload-count“: %u"
-
-#~ msgid "No usable database library found."
-#~ msgstr "Žádná použitelná databázová knihovna nebyla nalezena."
-
-#~ msgid "incorrectly formatted file"
-#~ msgstr "chybně formátovaný soubor"
-
-#~ msgid "while reading database"
-#~ msgstr "během čtení databáze"
-
-#~ msgid "Signal 0"
-#~ msgstr "Signál 0"
-
-#~ msgid "IOT trap"
-#~ msgstr "IOT past (SIGIOT)"
-
-#~ msgid "Try \\`xtrace --help' for more information.\\n"
-#~ msgstr "Pro více informací zkuste příkaz „xtrace --help“.\\n"
-
-#~ msgid "xtrace: option \\`$1' requires an argument.\\n"
-#~ msgstr "xtrace: přepínač „$1“ vyžaduje argument.\\n"
-
-#~ msgid "Try \\`memusage --help' for more information."
-#~ msgstr "Více informací získáte příkazem „memusage --help“."
-
-#~ msgid "memusage: option \\`$1' requires an argument"
-#~ msgstr "memusage: přepínač „$1“ vyžaduje argument"
-
-#~ msgid ""
-#~ "Read and display shared object profiling data.\vFor bug reporting instructions, please see:\n"
-#~ "<http://www.gnu.org/software/libc/bugs.html>.\n"
-#~ msgstr ""
-#~ "Načte a zobrazí profilovací data sdíleného objektu.\vNávod, jak nahlásit chybu, naleznete na:\n"
-#~ "<http://www.gnu.org/software/libc/bugs.html>.\n"
-
-#~ msgid "%s: stopping date is invalid in string %Zd in `era' field"
-#~ msgstr "%s: nepovolené koncové datum v řetězci %Zd položky „era“"
-
-#~ msgid ""
-#~ "Get locale-specific information.\vFor bug reporting instructions, please see:\n"
-#~ "<http://www.gnu.org/software/libc/bugs.html>.\n"
-#~ msgstr ""
-#~ "Vrátí informace o národním prostředí.\vNávod, jak nahlásit chybu, naleznete na:\n"
-#~ "<http://www.gnu.org/software/libc/bugs.html>.\n"
-
-#~ msgid ""
-#~ "Get entries from administrative database.\vFor bug reporting instructions, please see:\n"
-#~ "<http://www.gnu.org/software/libc/bugs.html>.\n"
-#~ msgstr ""
-#~ "Získá položky z administrativní databáze.\vNávod, jak nahlásit chybu, naleznete na:\n"
-#~ "<http://www.gnu.org/software/libc/bugs.html>.\n"
-
-# Rozdíl mezi 'illegal option' a 'invalid option' není žádný. To která zpráva
-# je vypisována je dáno tím, zda má být výstup podle normy 'POSIX' nebo ne.
-# 'Illegal option' je POSIXové.
-#~ msgid "%s: illegal option -- %c\n"
-#~ msgstr "%s: neznámý přepínač -- %c\n"
-
-#~ msgid "authunix_create: out of memory\n"
-#~ msgstr "authunix_create: nedostatek paměti\n"
-
-#~ msgid "clnttcp_create: out of memory\n"
-#~ msgstr "clnttcp_create: nedostatek paměti\n"
-
-#~ msgid "clntudp_create: out of memory\n"
-#~ msgstr "clntudp_create: nedostatek paměti\n"
-
-#~ msgid "clntunix_create: out of memory\n"
-#~ msgstr "clntunix_create: nedostatek paměti\n"
-
-#~ msgid "svctcp_create: out of memory\n"
-#~ msgstr "svctcp_create: nedostatek paměti\n"
-
-#~ msgid "svc_tcp: makefd_xprt: out of memory\n"
-#~ msgstr "svc_tcp: makefd_xprt: nedostatek paměti\n"
-
-#~ msgid "svcudp_create: out of memory\n"
-#~ msgstr "svcudp_create: nedostatek paměti\n"
-
-#~ msgid "svcunix_create: out of memory\n"
-#~ msgstr "svcunix_create: nedostatek paměti\n"
-
-#~ msgid "svc_unix: makefd_xprt: out of memory\n"
-#~ msgstr "svc_unix: makefd_xprt: nedostatek paměti\n"
-
-#~ msgid "xdr_bytes: out of memory\n"
-#~ msgstr "xdr_bytes: nedostatek paměti\n"
-
-#~ msgid "xdr_string: out of memory\n"
-#~ msgstr "xdr_string: nedostatek paměti\n"
-
-#~ msgid "xdr_array: out of memory\n"
-#~ msgstr "xdr_array: nedostatek paměti\n"
-
-#~ msgid "xdrrec_create: out of memory\n"
-#~ msgstr "xdrrec_create: nedostatek paměti\n"
-
-#~ msgid "xdr_reference: out of memory\n"
-#~ msgstr "xdr_reference: nedostatek paměti\n"
-
-#~ msgid "Can't remove old temporary cache file %s"
-#~ msgstr "Starý dočasný soubor s keší „%s“ nelze odstranit"
-
-#~ msgid "Writing of cache data failed."
-#~ msgstr "Zápis kešovaných dat selhal."
-
-#~ msgid "empty dynamics string token substitution"
-#~ msgstr "prázdné nahrazení dynamických řetězcových dílků (DST)"
-
-#~ msgid "Can't lstat %s"
-#~ msgstr "Nelze získat informace o symbolickém odkazu %s"
-
-#~ msgid "<%s> and <%s> are illegal names for range"
-#~ msgstr "<%s> a <%s> jsou zakázané názvy pro rozsah"
-
-#~ msgid "upper limit in range is not higher then lower limit"
-#~ msgstr "horní mez rozsahu není větší než dolní"
-
-#~ msgid "%s: character `%s' not defined in charmap while needed as default value"
-#~ msgstr "%s: znak „%s“ potřebný jako implicitní hodnota není v mapě znaků definován"
-
-#~ msgid "character `%s' not defined while needed as default value"
-#~ msgstr "znak „%s“ potřebný jako implicitní hodnota není definován"
-
-#~ msgid "%s: value for field `%s' must not be the empty string"
-#~ msgstr "%s: hodnota položky „%s“ nesmí být prázdný řetězec"
-
-#~ msgid "%s: values of field `%s' must not be larger than %d"
-#~ msgstr "%s: hodnoty položky „%s“ nesmí být větší než %d"
-
-#~ msgid "Failed to drop capabilities\n"
-#~ msgstr "Vzdání se kvalifikací se nezdařilo\n"
-
-#~ msgid "starting year too low to be represented"
-#~ msgstr "počáteční rok je pro uložení příliš malý"
-
-#~ msgid "starting year too high to be represented"
-#~ msgstr "počáteční rok je pro uložení příliš velký"
-
-#~ msgid "ending year too low to be represented"
-#~ msgstr "koncový rok je pro reprezentaci příliš malý"
-
-#~ msgid "ending year too high to be represented"
-#~ msgstr "počáteční rok je pro reprezentaci příliš velký"
-
-#~ msgid "      no"
-#~ msgstr "      ne"
-
-#~ msgid "     yes"
-#~ msgstr "     ano"
-
-#~ msgid " done\n"
-#~ msgstr " dokončeno\n"
-
-#~ msgid "%s: Error writing "
-#~ msgstr "%s: Chyba při zápisu na "
-
-#~ msgid "%s: cannot get modification time"
-#~ msgstr "%s: čas poslední změny souboru nelze zjistit"
-
-#~ msgid "Address family not supported by protocol family"
-#~ msgstr "Třída adres není podporována třídou protokolů"
-
-#~ msgid "Anode table overflow"
-#~ msgstr "Přetečení tabulky A-uzlů"
-
-#~ msgid "Arg list too long"
-#~ msgstr "Příliš dlouhý seznam argumentů"
-
-#~ msgid "Argument out of domain"
-#~ msgstr "Argument je mimo definiční obor"
-
-#~ msgid "Attempting to link in more shared libraries than system limit"
-#~ msgstr "Pokus o připojení více sdílených knihoven než je limit systému"
-
-#~ msgid "Bad exchange descriptor"
-#~ msgstr "Chybný popisovač výměníku"
-
-#~ msgid "Bad request descriptor"
-#~ msgstr "Neplatný popisovač požadavku"
-
-#~ msgid "CDS"
-#~ msgstr "CDS"
-
-#~ msgid "Can not exec a shared library directly"
-#~ msgstr "Sdílenou knihovnu nelze spustit přímo"
-
-#~ msgid "Cannot send after socket shutdown"
-#~ msgstr "Nelze vysílat po přerušení spojení"
-
-#~ msgid "Computing table size for character classes might take a while..."
-#~ msgstr "Výpočet velkosti tabulky pro třídy znaků (může chvíli trvat)..."
-
-#~ msgid "Computing table size for collation information might take a while..."
-#~ msgstr "Výpočet velkosti tabulky pro informace o řazení (může chvíli trvat)..."
-
-# Nepřípustný odkaz mezi zařízeními
-#~ msgid "Cross-device link"
-#~ msgstr "Odkaz mezi zařízeními"
-
-#~ msgid "DNANS"
-#~ msgstr "DNANS"
-
-#~ msgid "DNS"
-#~ msgstr "DNS"
-
-#~ msgid "Deadlock situation detected/avoided"
-#~ msgstr "Uváznutí detekováno/bylo mu zabráněno"
-
-#~ msgid "Device busy"
-#~ msgstr "Zařízení je používáno"
-
-#~ msgid "Disc quota exceeded"
-#~ msgstr "Překročena disková kvóta"
-
-#~ msgid "Error 0"
-#~ msgstr "Chyba 0"
-
-#~ msgid "Error 100"
-#~ msgstr "Chyba 100"
-
-#~ msgid "Error 101"
-#~ msgstr "Chyba 101"
-
-#~ msgid "Error 102"
-#~ msgstr "Chyba 102"
-
-#~ msgid "Error 103"
-#~ msgstr "Chyba 103"
-
-#~ msgid "Error 104"
-#~ msgstr "Chyba 104"
-
-#~ msgid "Error 105"
-#~ msgstr "Chyba 105"
-
-#~ msgid "Error 106"
-#~ msgstr "Chyba 106"
-
-#~ msgid "Error 107"
-#~ msgstr "Chyba 107"
-
-#~ msgid "Error 108"
-#~ msgstr "Chyba 108"
-
-#~ msgid "Error 109"
-#~ msgstr "Chyba 109"
-
-#~ msgid "Error 110"
-#~ msgstr "Chyba 110"
-
-#~ msgid "Error 111"
-#~ msgstr "Chyba 111"
-
-#~ msgid "Error 112"
-#~ msgstr "Chyba 112"
-
-#~ msgid "Error 113"
-#~ msgstr "Chyba 113"
-
-#~ msgid "Error 114"
-#~ msgstr "Chyba 114"
-
-#~ msgid "Error 115"
-#~ msgstr "Chyba 115"
-
-#~ msgid "Error 116"
-#~ msgstr "Chyba 116"
-
-#~ msgid "Error 117"
-#~ msgstr "Chyba 117"
-
-#~ msgid "Error 118"
-#~ msgstr "Chyba 118"
-
-#~ msgid "Error 119"
-#~ msgstr "Chyba 119"
-
-#~ msgid "Error 136"
-#~ msgstr "Chyba 136"
-
-#~ msgid "Error 142"
-#~ msgstr "Chyba 142"
-
-#~ msgid "Error 58"
-#~ msgstr "Chyba 58"
-
-#~ msgid "Error 59"
-#~ msgstr "Chyba 59"
-
-#~ msgid "Error 72"
-#~ msgstr "Chyba 72"
-
-#~ msgid "Error 73"
-#~ msgstr "Chyba 73"
-
-#~ msgid "Error 75"
-#~ msgstr "Chyba 75"
-
-#~ msgid "Error 76"
-#~ msgstr "Chyba 76"
-
-#~ msgid "Error 91"
-#~ msgstr "Chyba 91"
-
-#~ msgid "Error 92"
-#~ msgstr "Chyba 92"
-
-#~ msgid "File locking deadlock"
-#~ msgstr "Vzájemné zablokování při zamykaní souboru"
-
-#~ msgid "File table overflow"
-#~ msgstr "Přetečení tabulky souborů"
-
-#~ msgid "Haven't found \"%d\" in group cache!"
-#~ msgstr "\"%d\" nebylo v cache paměti pro skupiny nalezeno!"
-
-#~ msgid "Haven't found \"%d\" in password cache!"
-#~ msgstr "\"%d\" nebylo v cache paměti pro hesla nalezeno!"
-
-#~ msgid "IVY"
-#~ msgstr "IVY"
-
-#~ msgid "Illegal byte sequence"
-#~ msgstr "Nedovolené pořadí bajtů"
-
-# Je pojmenovaný typ souboru
-#~ msgid "Is a name file"
-#~ msgstr "Je názvový soubor"
-
-#~ msgid "Message tables full"
-#~ msgstr "Tabulky zpráv jsou plné"
-
-#~ msgid "NIS"
-#~ msgstr "NIS"
-
-#~ msgid "Network dropped connection because of reset"
-#~ msgstr "Síť zrušila spojení (problém se vzdáleným počítačem)"
-
-#~ msgid "No record locks available"
-#~ msgstr "Nejsou žádné volné zámky záznamů"
-
-#~ msgid "Not a data message"
-#~ msgstr "Není datovou zprávou"
-
-#~ msgid "Not a stream device"
-#~ msgstr "Není zařízení typu proud"
-
-#~ msgid "Not available"
-#~ msgstr "Není k dispozici"
-
-#~ msgid "Not enough space"
-#~ msgstr "Není volné místo"
-
-#~ msgid "Number of symbolic links encountered during path name traversal exceeds MAXSYMLINKS"
-#~ msgstr "Počet symbolických odkazů zjištěných při procházení cesty překročil MAXSYMLINKS"
-
-#~ msgid "Operation not supported on transport endpoint"
-#~ msgstr "Operace není podporována na cílovém bodu cesty"
-
-#~ msgid "Option not supported by protocol"
-#~ msgstr "Volba není protokolem podporována"
-
-# Zdroje proudu vyčerpány
-#~ msgid "Out of stream resources"
-#~ msgstr "Již nejsou volné proudy"
-
-#~ msgid "Report bugs using the `glibcbug' script to <bugs@gnu.org>.\n"
-#~ msgstr ""
-#~ "  Chyby v programu oznamujte pomocí skriptu `glibcbug' na adresu <bugs@gnu.org>\n"
-#~ "(pouze anglicky), připomínky k překladu zasílejte na <cs@li.org> (česky).\n"
-
-#~ msgid "Reserved for future use"
-#~ msgstr "Rezervováno pro budoucí použití"
-
-#~ msgid "Result too large"
-#~ msgstr "Výsledek je příliš velký"
-
-#~ msgid "SUNYP"
-#~ msgstr "SUNYP"
-
-#~ msgid "X500"
-#~ msgstr "X500"
-
-#~ msgid "XCHS"
-#~ msgstr "XCHS"
-
-#~ msgid "YPBINDPROC_DOMAIN: %s\n"
-#~ msgstr "YPBINDPROC_DOMAIN: %s\n"
-
-#~ msgid "__get_myaddress: ioctl (get interface configuration)"
-#~ msgstr "__get_myaddress: ioctl (čtení konfigurace rozhraní)"
-
-#~ msgid "`...' must only be used in `...' and `UNDEFINED' entries"
-#~ msgstr "`...' může být použito jen v položkách `...' a `UNDEFINED'"
-
-#~ msgid "`from' expected after first argument to `collating-element'"
-#~ msgstr "Za prvním argumentem pro `collating-element' je očekáváno `from'"
-
-#~ msgid "`from' string in collation element declaration contains unknown character"
-#~ msgstr "Řetězec `z-čeho' v deklaraci prvku řazení obsahuje neznámý znak"
-
-#~ msgid "broadcast: ioctl (get interface configuration)"
-#~ msgstr "všesměrové vysílání: ioctl (čtení konfigurace rozhraní)"
-
-#~ msgid "broadcast: ioctl (get interface flags)"
-#~ msgstr "všesměrové vysílání: ioctl (čtení příznaků rozhraní)"
-
-#~ msgid "buffer overflow"
-#~ msgstr "přetečení vyrovnávací paměti"
-
-#~ msgid "cannot insert new collating symbol definition: %s"
-#~ msgstr "nový symbol řazení nelze vložit: %s"
-
-#~ msgid "category data requested more than once: should not happen"
-#~ msgstr "údaje kategorie požadovány více než jednou - to by se nemělo stát"
-
-#~ msgid "character L'%s' (index %Zd) in class `%s' must be in class `%s'"
-#~ msgstr "znak L'%s' (index %Zd) ve třídě `%s' musí být ve třídě `%s'"
-
-#~ msgid "character L'%s' (index %Zd) in class `%s' must not be in class `%s'"
-#~ msgstr "znak L'%s' (index %Zd) ve třídě `%s' nesmí být ve třídě `%s'"
-
-#~ msgid "collation element `%.*s' appears more than once: ignore line"
-#~ msgstr "prvek řazení `%.*s' uveden více než jednou - řádek ignorován"
-
-#~ msgid "collation symbol `%.*s' appears more than once: ignore line"
-#~ msgstr "symbol řazení `%.*s' uveden více než jednou - řádek ignorován"
-
-#~ msgid "collation symbol expected after `%s'"
-#~ msgstr "po `%s' je očekáván symbol řazení"
-
-#~ msgid "duplicate character name `%s'"
-#~ msgstr "duplicitní název znaku `%s'"
-
-#~ msgid "end point of ellipsis range is bigger then start"
-#~ msgstr "koncový bod `...' je větší než počáteční"
-
-#~ msgid "error while inserting collation element into hash table"
-#~ msgstr "chyba během vkládání prvku řazení do hašovací tabulky"
-
-#~ msgid "fcntl: F_SETFD"
-#~ msgstr "fcntl: F_SETFD"
-
-#~ msgid "from-value of `collating-element' must be a string"
-#~ msgstr "hodnota z-čeho pro `collating-element' musí být řetězec"
-
-#~ msgid "get_myaddress: ioctl (get interface configuration)"
-#~ msgstr "get_myaddress: ioctl (čtení konfigurace rozhraní)"
-
-#~ msgid "illegal character constant in string"
-#~ msgstr "nepovolený znak v řetězci"
-
-#~ msgid "illegal collation element"
-#~ msgstr "nepovolený prvek řazení"
-
-#~ msgid "line after ellipsis must contain character definition"
-#~ msgstr "řádek za '...'  musí obsahovat definici znaku"
-
-#~ msgid "line before ellipsis does not contain definition for character constant"
-#~ msgstr "řádek před '...' neobsahuje definici znaku"
-
-#~ msgid "locale file `%s', used in `copy' statement, not found"
-#~ msgstr "soubor `%s' národního prostředí použitý v příkazu `copy' nebyl nalezen"
-
-#~ msgid "neither original nor target encoding specified"
-#~ msgstr "původní ani cílové kódování není zadáno"
-
-#~ msgid "no day in month matches rule"
-#~ msgstr "pravidlu nevyhovuje žádný den v měsíci"
-
-#~ msgid "no filename for profiling data given and shared object `%s' has no soname"
-#~ msgstr "název souboru pro profilovací data nebyl zadán a sdílený objekt `%s' nemá soname"
-
-#~ msgid "no repertoire map specified: cannot proceed"
-#~ msgstr "repertoár znaků nebyl zadán: nelze pokračovat"
-
-#~ msgid "no weight defined for symbol `%s'"
-#~ msgstr "symbol `%s' nemá definovanou váhu"
-
-#~ msgid "original encoding not specified using `-f'"
-#~ msgstr "původní kódování nebylo pomocí `-f' zadáno"
-
-#~ msgid "symbol for multicharacter collating element `%.*s' duplicates other symbol definition"
-#~ msgstr "symbol pro víceznakový prvek řazení `%.*s' duplikuje definici jiného symbolu"
-
-#~ msgid "symbol for multicharacter collating element `%.*s' duplicates symbol definition"
-#~ msgstr "symbol pro víceznakový prvek řazení `%.*s' duplikuje definici symbolu"
-
-#~ msgid "symbol for multicharacter collating element `%.*s' duplicates symbolic name in charset"
-#~ msgstr "symbol pro víceznakový prvek řazení `%.*s' duplikuje symbolické jméno ve znakové sadě"
-
-#~ msgid "syntax error in `order_start' directive"
-#~ msgstr "syntaktická chyba v direktivě `order_start'"
-
-#~ msgid "syntax error in character class definition"
-#~ msgstr "syntaktická chyba v definici třídy znaků"
-
-#~ msgid "syntax error in collating order definition"
-#~ msgstr "syntaktická chyba v definici pořadí řazení"
-
-#~ msgid "syntax error in collation definition"
-#~ msgstr "syntaktická chyba v definici řazení"
-
-#~ msgid "syntax error in definition of LC_CTYPE category"
-#~ msgstr "syntaktická chyba v definici kategorie LC_CTYPE"
-
-#~ msgid "syntax error in message locale definition"
-#~ msgstr "syntaktická chyba v definici národních zpráv"
-
-#~ msgid "syntax error in monetary locale definition"
-#~ msgstr "syntaktická chyba v definici národního prostředí pro peněžní údaje"
-
-#~ msgid "syntax error in numeric locale definition"
-#~ msgstr "syntaktická chyba v definici národního prostředí pro čísla"
-
-#~ msgid "syntax error in order specification"
-#~ msgstr "syntaktická chyba ve specifikaci pořadí"
-
-#~ msgid "syntax error in time locale definition"
-#~ msgstr "syntaktická chyba v definici národního prostředí pro čas"
-
-#~ msgid "target encoding not specified using `-t'"
-#~ msgstr "kódování cíle nebylo pomocí `-t' zadáno"
-
-#~ msgid "too many character classes defined"
-#~ msgstr "definováno příliš mnoho znakových tříd"
-
-#~ msgid "too many weights"
-#~ msgstr "příliš mnoho vah"
-
-#~ msgid "two lines in a row containing `...' are not allowed"
-#~ msgstr "dva řádky za sebou obsahující `...' nejsou povoleny"
-
-#~ msgid "unknown collation directive"
-#~ msgstr "neznámá direktiva řazení"
-
-# Překlad OK
-#~ msgid "unterminated weight name"
-#~ msgstr "escape sekvence není celá"
-
-#~ msgid "value for <%s> must lie between 1 and 4"
-#~ msgstr "hodnota pro <%s> musí být mezi 1 a 4"
-
-#~ msgid "while accepting connection: %s"
-#~ msgstr "během přijímání spojení: %s"
-
-#~ msgid "while allocating cache entry"
-#~ msgstr "během alokace záznamu cache paměti"
-
-#~ msgid "while allocating hash table entry"
-#~ msgstr "během alokace záznamu hašovací tabulky"
-
-#~ msgid "while allocating key copy"
-#~ msgstr "během alokace kopie klíče"

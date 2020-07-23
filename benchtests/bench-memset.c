@@ -1,5 +1,5 @@
 /* Measure memset functions.
-   Copyright (C) 2013-2019 Free Software Foundation, Inc.
+   Copyright (C) 2013-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,35 +14,30 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #define TEST_MAIN
 #ifndef WIDE
 # define TEST_NAME "memset"
 #else
 # define TEST_NAME "wmemset"
+# define generic_memset generic_wmemset
 #endif /* WIDE */
 #define MIN_PAGE_SIZE 131072
 #include "bench-string.h"
 
 #include "json-lib.h"
 
-CHAR *SIMPLE_MEMSET (CHAR *, int, size_t);
+#ifdef WIDE
+CHAR *generic_wmemset (CHAR *, CHAR, size_t);
+#else
+void *generic_memset (void *, int, size_t);
+#endif
 
-typedef CHAR *(*proto_t) (CHAR *, int, size_t);
+typedef void *(*proto_t) (void *, int, size_t);
 
 IMPL (MEMSET, 1)
-IMPL (SIMPLE_MEMSET, 0)
-
-CHAR *
-inhibit_loop_to_libcall
-SIMPLE_MEMSET (CHAR *s, int c, size_t n)
-{
-  CHAR *r = s, *end = s + n;
-  while (r < end)
-    *r++ = c;
-  return s;
-}
+IMPL (generic_memset, 0)
 
 static void
 do_one_test (json_ctx_t *json_ctx, impl_t *impl, CHAR *s,
@@ -146,3 +141,16 @@ test_main (void)
 }
 
 #include <support/test-driver.c>
+
+#define libc_hidden_builtin_def(X)
+#define libc_hidden_def(X)
+#define libc_hidden_weak(X)
+#define weak_alias(X,Y)
+#ifndef WIDE
+# undef MEMSET
+# define MEMSET generic_memset
+# include <string/memset.c>
+#else
+# define WMEMSET generic_wmemset
+# include <wcsmbs/wmemset.c>
+#endif

@@ -1,5 +1,5 @@
 /* Condition type.  Generic version.
-   Copyright (C) 2000-2019 Free Software Foundation, Inc.
+   Copyright (C) 2000-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library;  if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #ifndef _BITS_TYPES_STRUCT___PTHREAD_COND_H
 #define _BITS_TYPES_STRUCT___PTHREAD_COND_H	1
@@ -27,12 +27,12 @@ struct __pthread_cond
   __pthread_spinlock_t __lock;
   struct __pthread *__queue;
   struct __pthread_condattr *__attr;
-  struct __pthread_condimpl *__impl;
+  unsigned int __wrefs;
   void *__data;
 };
 
 /* Initializer for a condition variable.  */
 #define __PTHREAD_COND_INITIALIZER \
-  { __PTHREAD_SPIN_LOCK_INITIALIZER, NULL, NULL, NULL, NULL }
+  { __PTHREAD_SPIN_LOCK_INITIALIZER, NULL, NULL, 0, NULL }
 
 #endif /* bits/types/struct___pthread_cond.h */

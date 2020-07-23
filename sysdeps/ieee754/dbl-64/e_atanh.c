@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2019 Free Software Foundation, Inc.
+/* Copyright (C) 2011-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@gmail.com>, 2011.
 
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 
 /* __ieee754_atanh(x)
@@ -41,6 +41,7 @@
 #include <math-barriers.h>
 #include <math_private.h>
 #include <math-underflow.h>
+#include <libm-alias-finite.h>
 
 static const double huge = 1e300;
 
@@ -73,4 +74,4 @@ __ieee754_atanh (double x)
 
   return copysign (t, x);
 }
-strong_alias (__ieee754_atanh, __atanh_finite)
+libm_alias_finite (__ieee754_atanh, __atanh)

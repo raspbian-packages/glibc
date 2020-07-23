@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2019 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <assert.h>
 #include <errno.h>
@@ -25,6 +25,7 @@
 #include <atomic.h>
 #include <lowlevellock.h>
 #include <not-cancel.h>
+#include <futex-internal.h>
 
 #include <stap-probe.h>
 
@@ -235,7 +236,7 @@ __pthread_mutex_clocklock_common (pthread_mutex_t *mutex,
 	    }
 
 	  /* We are about to block; check whether the timeout is invalid.  */
-	  if (abstime->tv_nsec < 0 || abstime->tv_nsec >= 1000000000)
+	  if (! valid_nanoseconds (abstime->tv_nsec))
 	    return EINVAL;
 	  /* Work around the fact that the kernel rejects negative timeout
 	     values despite them being valid.  */
@@ -377,51 +378,29 @@ __pthread_mutex_clocklock_common (pthread_mutex_t *mutex,
 	    int private = (robust
 			   ? PTHREAD_ROBUST_MUTEX_PSHARED (mutex)
 			   : PTHREAD_MUTEX_PSHARED (mutex));
-	    INTERNAL_SYSCALL_DECL (__err);
-
-	    int e = INTERNAL_SYSCALL (futex, __err, 4, &mutex->__data.__lock,
-				      __lll_private_flag (FUTEX_LOCK_PI,
-							  private), 1,
-				      abstime);
-	    if (INTERNAL_SYSCALL_ERROR_P (e, __err))
+	    int e = futex_lock_pi ((unsigned int *) &mutex->__data.__lock,
+				   abstime, private);
+	    if (e == ETIMEDOUT)
+	      return ETIMEDOUT;
+	    else if (e == ESRCH || e == EDEADLK)
 	      {
-		if (INTERNAL_SYSCALL_ERRNO (e, __err) == ETIMEDOUT)
-		  return ETIMEDOUT;
+		assert (e != EDEADLK
+			|| (kind != PTHREAD_MUTEX_ERRORCHECK_NP
+			   && kind != PTHREAD_MUTEX_RECURSIVE_NP));
+		/* ESRCH can happen only for non-robust PI mutexes where
+		   the owner of the lock died.  */
+		assert (e != ESRCH || !robust);
 
-		if (INTERNAL_SYSCALL_ERRNO (e, __err) == ESRCH
-		    || INTERNAL_SYSCALL_ERRNO (e, __err) == EDEADLK)
-		  {
-		    assert (INTERNAL_SYSCALL_ERRNO (e, __err) != EDEADLK
-			    || (kind != PTHREAD_MUTEX_ERRORCHECK_NP
-				&& kind != PTHREAD_MUTEX_RECURSIVE_NP));
-		    /* ESRCH can happen only for non-robust PI mutexes where
-		       the owner of the lock died.  */
-		    assert (INTERNAL_SYSCALL_ERRNO (e, __err) != ESRCH
-			    || !robust);
-
-		    /* Delay the thread until the timeout is reached.
-		       Then return ETIMEDOUT.  */
-		    struct timespec reltime;
-		    struct timespec now;
-
-		    INTERNAL_SYSCALL (clock_gettime, __err, 2, clockid,
-				      &now);
-		    reltime.tv_sec = abstime->tv_sec - now.tv_sec;
-		    reltime.tv_nsec = abstime->tv_nsec - now.tv_nsec;
-		    if (reltime.tv_nsec < 0)
-		      {
-			reltime.tv_nsec += 1000000000;
-			--reltime.tv_sec;
-		      }
-		    if (reltime.tv_sec >= 0)
-		      while (__nanosleep_nocancel (&reltime, &reltime) != 0)
-			continue;
-
-		    return ETIMEDOUT;
-		  }
-
-		return INTERNAL_SYSCALL_ERRNO (e, __err);
+		/* Delay the thread until the timeout is reached. Then return
+		   ETIMEDOUT.  */
+		do
+		  e = lll_timedwait (&(int){0}, 0, clockid, abstime,
+				     private);
+		while (e != ETIMEDOUT);
+		return ETIMEDOUT;
 	      }
+	    else if (e != 0)
+	      return e;
 
 	    oldval = mutex->__data.__lock;
 
@@ -459,11 +438,8 @@ __pthread_mutex_clocklock_common (pthread_mutex_t *mutex,
 	    /* This mutex is now not recoverable.  */
 	    mutex->__data.__count = 0;
 
-	    INTERNAL_SYSCALL_DECL (__err);
-	    INTERNAL_SYSCALL (futex, __err, 4, &mutex->__data.__lock,
-			      __lll_private_flag (FUTEX_UNLOCK_PI,
-						  PTHREAD_ROBUST_MUTEX_PSHARED (mutex)),
-			      0, 0);
+	    futex_unlock_pi ((unsigned int *) &mutex->__data.__lock,
+			     PTHREAD_ROBUST_MUTEX_PSHARED (mutex));
 
 	    /* To the kernel, this will be visible after the kernel has
 	       acquired the mutex in the syscall.  */
@@ -561,21 +537,20 @@ __pthread_mutex_clocklock_common (pthread_mutex_t *mutex,
 		if (oldval != ceilval)
 		  {
 		    /* Reject invalid timeouts.  */
-		    if (abstime->tv_nsec < 0 || abstime->tv_nsec >= 1000000000)
+		    if (! valid_nanoseconds (abstime->tv_nsec))
 		      {
 			result = EINVAL;
 			goto failpp;
 		      }
 
-		    struct timeval tv;
 		    struct timespec rt;
 
 		    /* Get the current time.  */
-		    (void) __gettimeofday (&tv, NULL);
+		    __clock_gettime (CLOCK_REALTIME, &rt);
 
 		    /* Compute relative timeout.  */
-		    rt.tv_sec = abstime->tv_sec - tv.tv_sec;
-		    rt.tv_nsec = abstime->tv_nsec - tv.tv_usec * 1000;
+		    rt.tv_sec = abstime->tv_sec - rt.tv_sec;
+		    rt.tv_nsec = abstime->tv_nsec - rt.tv_nsec;
 		    if (rt.tv_nsec < 0)
 		      {
 			rt.tv_nsec += 1000000000;

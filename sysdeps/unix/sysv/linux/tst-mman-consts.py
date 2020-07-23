@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # Test that glibc's sys/mman.h constants match the kernel's.
-# Copyright (C) 2018-2019 Free Software Foundation, Inc.
+# Copyright (C) 2018-2020 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 #
 # The GNU C Library is free software; you can redistribute it and/or
@@ -15,21 +15,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with the GNU C Library; if not, see
-# <http://www.gnu.org/licenses/>.
+# <https://www.gnu.org/licenses/>.
 
 import argparse
 import sys
 
 import glibcextract
-
-
-def linux_kernel_version(cc):
-    """Return the (major, minor) version of the Linux kernel headers."""
-    sym_data = ['#include <linux/version.h>', 'START',
-                ('LINUX_VERSION_CODE', 'LINUX_VERSION_CODE')]
-    val = glibcextract.compute_c_consts(sym_data, cc)['LINUX_VERSION_CODE']
-    val = int(val)
-    return ((val & 0xff0000) >> 16, (val & 0xff00) >> 8)
+import glibcsyscalls
 
 
 def main():
@@ -40,8 +32,8 @@ def main():
     parser.add_argument('--cc', metavar='CC',
                         help='C compiler (including options) to use')
     args = parser.parse_args()
-    linux_version_headers = linux_kernel_version(args.cc)
-    linux_version_glibc = (4, 20)
+    linux_version_headers = glibcsyscalls.linux_kernel_version(args.cc)
+    linux_version_glibc = (5, 4)
     sys.exit(glibcextract.compare_macro_consts(
         '#define _GNU_SOURCE 1\n'
         '#include <sys/mman.h>\n',

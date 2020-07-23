@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2019 Free Software Foundation, Inc.
+# Copyright (C) 2013-2020 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -13,7 +13,7 @@
 
 # You should have received a copy of the GNU Lesser General Public
 # License along with the GNU C Library; if not, see
-# <http://www.gnu.org/licenses/>.
+# <https://www.gnu.org/licenses/>.
 
 # Makefile for benchmark tests.  The only useful target here is `bench`.
 # Add benchmark functions in alphabetical order.
@@ -217,7 +217,10 @@ bench-malloc: $(binaries-bench-malloc)
 # capable language or tool.
 bench-func: $(binaries-bench)
 	if [ -n '$^' ] ; then \
-	{ timing_type=$$($(timing-type)); \
+	{ timing_type=$$($(test-wrapper-env) \
+			 $(run-program-env) \
+			 $(test-via-rtld-prefix) \
+			 $(timing-type)); \
 	  echo "{\"timing_type\": \"$${timing_type}\","; \
 	  echo " \"functions\": {"; \
 	  for run in $^; do \

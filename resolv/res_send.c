@@ -1,4 +1,4 @@
-/* Copyright (C) 2016-2019 Free Software Foundation, Inc.
+/* Copyright (C) 2016-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -13,7 +13,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 /*
  * Copyright (c) 1985, 1989, 1993
@@ -181,12 +181,7 @@ evCmpTime(struct timespec a, struct timespec b) {
 
 static void
 evNowTime(struct timespec *res) {
-	struct timeval now;
-
-	if (gettimeofday(&now, NULL) < 0)
-		evConsTime(res, 0, 0);
-	else
-		TIMEVAL_TO_TIMESPEC (&now, res);
+	__clock_gettime(CLOCK_REALTIME, res);
 }
 
 
@@ -344,6 +339,15 @@ nameserver_offset (struct __res_state *statp)
     default:
       return offset % nscount;
     }
+}
+
+/* Clear the AD bit unless the trust-ad option was specified in the
+   resolver configuration.  */
+static void
+mask_ad_bit (struct resolv_context *ctx, void *buf)
+{
+  if (!(ctx->resp->options & RES_TRUSTAD))
+    ((HEADER *) buf)->ad = 0;
 }
 
 /* int
@@ -538,6 +542,22 @@ __res_context_send (struct resolv_context *ctx,
 		}
 
 		resplen = n;
+
+		/* See comment at the declaration of n.  Note: resplen = n;  */
+		DIAG_PUSH_NEEDS_COMMENT;
+		DIAG_IGNORE_NEEDS_COMMENT (9, "-Wmaybe-uninitialized");
+		/* Mask the AD bit in both responses unless it is
+		   marked trusted.  */
+		if (resplen > HFIXEDSZ)
+		  {
+		    if (ansp != NULL)
+		      mask_ad_bit (ctx, *ansp);
+		    else
+		      mask_ad_bit (ctx, ans);
+		  }
+		DIAG_POP_NEEDS_COMMENT;
+		if (resplen2 != NULL && *resplen2 > HFIXEDSZ)
+		  mask_ad_bit (ctx, *ansp2);
 
 		/*
 		 * If we have temporarily opened a virtual circuit,

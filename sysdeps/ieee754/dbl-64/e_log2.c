@@ -1,5 +1,5 @@
 /* Double-precision log2(x) function.
-   Copyright (C) 2018-2019 Free Software Foundation, Inc.
+   Copyright (C) 2018-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,12 +14,12 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <math.h>
 #include <stdint.h>
 #include <math-svid-compat.h>
-#include <shlib-compat.h>
+#include <libm-alias-finite.h>
 #include <libm-alias-double.h>
 #include "math_config.h"
 
@@ -141,7 +141,7 @@ __log2 (double x)
 }
 #ifndef __log2
 strong_alias (__log2, __ieee754_log2)
-strong_alias (__log2, __log2_finite)
+libm_alias_finite (__ieee754_log2, __log2)
 # if LIBM_SVID_COMPAT
 versioned_symbol (libm, __log2, log2, GLIBC_2_29);
 libm_alias_double_other (__log2, log2)

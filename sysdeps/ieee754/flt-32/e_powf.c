@@ -1,5 +1,5 @@
 /* Single-precision pow function.
-   Copyright (C) 2017-2019 Free Software Foundation, Inc.
+   Copyright (C) 2017-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,13 +14,13 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <math.h>
 #include <math-barriers.h>
 #include <math-narrow-eval.h>
 #include <stdint.h>
-#include <shlib-compat.h>
+#include <libm-alias-finite.h>
 #include <libm-alias-float.h>
 #include "math_config.h"
 
@@ -158,9 +158,9 @@ __powf (float x, float y)
       if (__glibc_unlikely (zeroinfnan (iy)))
 	{
 	  if (2 * iy == 0)
-	    return issignalingf_inline (x) ? x + y : 1.0f;
+	    return issignaling (x) ? x + y : 1.0f;
 	  if (ix == 0x3f800000)
-	    return issignalingf_inline (y) ? x + y : 1.0f;
+	    return issignaling (y) ? x + y : 1.0f;
 	  if (2 * ix > 2u * 0x7f800000 || 2 * iy > 2u * 0x7f800000)
 	    return x + y;
 	  if (2 * ix == 2 * 0x3f800000)
@@ -231,7 +231,7 @@ __powf (float x, float y)
 }
 #ifndef __powf
 strong_alias (__powf, __ieee754_powf)
-strong_alias (__powf, __powf_finite)
+libm_alias_finite (__ieee754_powf, __powf)
 versioned_symbol (libm, __powf, powf, GLIBC_2_27);
 libm_alias_float_other (__pow, pow)
 #endif

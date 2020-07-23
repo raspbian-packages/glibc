@@ -1,5 +1,5 @@
 /* Host and service name lookups using Name Service Switch modules.
-   Copyright (C) 1996-2019 Free Software Foundation, Inc.
+   Copyright (C) 1996-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 /* The Inner Net License, Version 2.00
 
@@ -288,6 +288,7 @@ convert_hostent_to_gaih_addrtuple (const struct addrinfo *req,
 	  canonbuf = __strdup (localcanon);				      \
 	  if (canonbuf == NULL)						      \
 	    {								      \
+	      __resolv_context_put (res_ctx);				      \
 	      result = -EAI_SYSTEM;					      \
 	      goto free_and_return;					      \
 	    }								      \
@@ -2186,6 +2187,10 @@ getaddrinfo (const char *name, const char *service,
   if ((hints->ai_flags & AI_CANONNAME) && name == NULL)
     return EAI_BADFLAGS;
 
+  if (hints->ai_family != AF_UNSPEC && hints->ai_family != AF_INET
+      && hints->ai_family != AF_INET6)
+    return EAI_FAMILY;
+
   struct in6addrinfo *in6ai = NULL;
   size_t in6ailen = 0;
   bool seen_ipv4 = false;
@@ -2206,7 +2211,7 @@ getaddrinfo (const char *name, const char *service,
 	{
 	  /* If we haven't seen both IPv4 and IPv6 interfaces we can
 	     narrow down the search.  */
-	  if ((! seen_ipv4 || ! seen_ipv6) && (seen_ipv4 || seen_ipv6))
+	  if (seen_ipv4 != seen_ipv6)
 	    {
 	      local_hints = *hints;
 	      local_hints.ai_family = seen_ipv4 ? PF_INET : PF_INET6;
@@ -2244,33 +2249,25 @@ getaddrinfo (const char *name, const char *service,
     pservice = NULL;
 
   struct addrinfo **end = &p;
-
   unsigned int naddrs = 0;
-  if (hints->ai_family == AF_UNSPEC || hints->ai_family == AF_INET
-      || hints->ai_family == AF_INET6)
-    {
-      struct scratch_buffer tmpbuf;
-      scratch_buffer_init (&tmpbuf);
-      last_i = gaih_inet (name, pservice, hints, end, &naddrs, &tmpbuf);
-      scratch_buffer_free (&tmpbuf);
+  struct scratch_buffer tmpbuf;
 
-      if (last_i != 0)
-	{
-	  freeaddrinfo (p);
-	  __free_in6ai (in6ai);
+  scratch_buffer_init (&tmpbuf);
+  last_i = gaih_inet (name, pservice, hints, end, &naddrs, &tmpbuf);
+  scratch_buffer_free (&tmpbuf);
 
-	  return -last_i;
-	}
-      while (*end)
-	{
-	  end = &((*end)->ai_next);
-	  ++nresults;
-	}
-    }
-  else
+  if (last_i != 0)
     {
+      freeaddrinfo (p);
       __free_in6ai (in6ai);
-      return EAI_FAMILY;
+
+      return -last_i;
+    }
+
+  while (*end)
+    {
+      end = &((*end)->ai_next);
+      ++nresults;
     }
 
   if (naddrs > 1)

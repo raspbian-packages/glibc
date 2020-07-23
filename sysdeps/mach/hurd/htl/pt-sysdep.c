@@ -1,5 +1,5 @@
 /* System dependent pthreads code.  Hurd version.
-   Copyright (C) 2000-2019 Free Software Foundation, Inc.
+   Copyright (C) 2000-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library;  if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <assert.h>
 #include <stddef.h>
@@ -25,7 +25,6 @@
 
 #include <pt-internal.h>
 #include <pthreadP.h>
-#include <dso_handle.h>
 
 __thread struct __pthread *___pthread_self;
 
@@ -86,7 +85,7 @@ _init_routine (void *stack)
      when we return from here) shouldn't be seen as a user thread.  */
   __pthread_total--;
 
-  __register_atfork (NULL, NULL, reset_pthread_total, __dso_handle);
+  __pthread_atfork (NULL, NULL, reset_pthread_total);
 
   /* Make MiG code thread aware.  */
   __mig_init (thread->stackaddr);

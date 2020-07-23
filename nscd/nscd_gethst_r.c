@@ -1,4 +1,4 @@
-/* Copyright (C) 1998-2019 Free Software Foundation, Inc.
+/* Copyright (C) 1998-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1998.
 
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #include <errno.h>
 #include <resolv/resolv-internal.h>
@@ -113,7 +113,7 @@ __nscd_get_nl_timestamp (void)
   if (map == NULL
       || (map != NO_MAPPING
 	  && map->head->nscd_certainly_running == 0
-	  && map->head->timestamp + MAPPING_TIMEOUT < time (NULL)))
+	  && map->head->timestamp + MAPPING_TIMEOUT < time_now ()))
     map = __nscd_get_mapping (GETFDHST, "hosts", &__hst_map_handle.mapped);
 
   if (map == NO_MAPPING)

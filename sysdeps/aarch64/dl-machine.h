@@ -1,4 +1,4 @@
-/* Copyright (C) 1995-2019 Free Software Foundation, Inc.
+/* Copyright (C) 1995-2020 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
 #ifndef dl_machine_h
 #define dl_machine_h
@@ -358,7 +358,8 @@ elf_machine_rela (struct link_map *map, const ElfW(Rela) *reloc,
 
 	case AARCH64_R(IRELATIVE):
 	  value = map->l_addr + reloc->r_addend;
-	  value = elf_ifunc_invoke (value);
+	  if (__glibc_likely (!skip_ifunc))
+	    value = elf_ifunc_invoke (value);
 	  *reloc_addr = value;
 	  break;
 
