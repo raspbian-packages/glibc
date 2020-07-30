@@ -1,4 +1,4 @@
-glibc (2.31-1+rpi1) bullseye-staging; urgency=medium
+glibc (2.31-2+rpi1) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -9,7 +9,38 @@ glibc (2.31-1+rpi1) bullseye-staging; urgency=medium
     script does not seem to be used for anything in the Debian
     package.
 
- -- Raspbian forward porter <root@raspbian.org>  Thu, 23 Jul 2020 20:52:08 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 30 Jul 2020 15:09:03 +0000
+
+glibc (2.31-2) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/control.in/libc: add a Breaks: against macs (<< 2.2.7.1-3~) due to
+    bug #965073.
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix a signed comparison vulnerability in the ARMv7 memcpy and memmove
+      functions (CVE-2020-6096).  Closes: #961452.
+  * debian/control.in/libc: do not limit the openssh-server breaks to 32-bit
+    architectures, clock_nanosleep has to be allowed in addition to
+    clock_gettime64.  Closes: #965932.
+  * debian/patches/any/submitted-selinux-deprecations.diff: proposed patch to
+    ignore the selinux deprecations introduced in libselinux (>= 3.1), fixing
+    an FTBFS.  Closes: #965941.
+  * debian/patches/x32/submitted-fix-nptl-setgroups-x32.patch: proposed patch
+    to fix the setgroups functions in threaded applications on x32 (without
+    the testsuite part).  Closes: #965091.
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/local-tls-ie-align.diff: Fix TLS IE load with >=
+    8 byte alignment.
+  * debian/testsuite-xfail-debian.mk: Update backtrace result.
+  * debian/patches/hurd-i386/git-fix-longjmp.diff: Fix longjmp from dl loader.
+    Notably fixes calling setuid programs from eatmydata.
+  * debian/control: Build-depend on gnumach-dev with userland driver RPC interface.
+  * debian/libc0.3.symbols.hurd-i386: Add userland driver RPC interface stubs.
+  * debian/patches/hurd-i386/local-clock_gettime_MONOTONIC.diff: Make
+    clock_nanosleep accept CLOCK_MONOTONIC as well.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Thu, 23 Jul 2020 00:26:24 +0200
 
 glibc (2.31-1) unstable; urgency=medium
 

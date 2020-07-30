@@ -75,6 +75,8 @@ hurd-i386/git-holes.diff
 hurd-i386/git-longjmp-onstack.diff
 hurd-i386/git-intr-msg-unwind.diff
 hurd-i386/git-strtol-test.diff
+hurd-i386/local-tls-ie-align.diff
+hurd-i386/git-fix-longjmp.diff
 
 i386/local-biarch.diff
 i386/unsubmitted-quiet-ldconfig.diff
@@ -101,6 +103,8 @@ mips/submitted-rld_map.diff
 powerpc/local-powerpc8xx-dcbz.diff
 
 sh4/local-fpscr_values.diff
+
+x32/submitted-fix-nptl-setgroups-x32.diff
 
 all/local-alias-et_EE.diff
 all/local-remove-manual.diff
@@ -134,3 +138,4 @@ any/local-cudacc-float128.diff
 any/submitted-ld.so-cache-new-format.diff
 any/local-test-install.diff
 any/git-surplus-tls-accounting.diff
+any/submitted-selinux-deprecations.diff
