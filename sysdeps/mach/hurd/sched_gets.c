@@ -1,5 +1,4 @@
-/* Register fork handlers.  Generic version.
-   Copyright (C) 2002-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -13,14 +12,19 @@
    Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public
-   License along with the GNU C Library;  if not, see
+   License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <shlib-compat.h>
+#include <errno.h>
+#include <sched.h>
+#include <sys/types.h>
+#include <hurd.h>
 
-#if SHLIB_COMPAT(libpthread, GLIBC_2_12, GLIBC_2_23)
-# define __pthread_atfork __dyn_pthread_atfork
-# include "pt-atfork.c"
-# undef __pthread_atfork
-compat_symbol (libpthread, __dyn_pthread_atfork, pthread_atfork, GLIBC_2_12);
-#endif
+
+/* Retrieve scheduling algorithm for a particular purpose.  */
+int
+__sched_getscheduler (pid_t pid)
+{
+  return SCHED_OTHER;
+}
+weak_alias (__sched_getscheduler, sched_getscheduler)

@@ -1,5 +1,4 @@
-/* Register fork handlers.  Generic version.
-   Copyright (C) 2002-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -13,14 +12,13 @@
    Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public
-   License along with the GNU C Library;  if not, see
+   License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <shlib-compat.h>
+#ifndef _I386_VM_PARAM_H
+#define _I386_VM_PARAM_H
 
-#if SHLIB_COMPAT(libpthread, GLIBC_2_12, GLIBC_2_23)
-# define __pthread_atfork __dyn_pthread_atfork
-# include "pt-atfork.c"
-# undef __pthread_atfork
-compat_symbol (libpthread, __dyn_pthread_atfork, pthread_atfork, GLIBC_2_12);
-#endif
+/* Arbitrary start of the brk. This is after usual binary and library mappings.  */
+#define BRK_START	0x10000000
+
+#endif /* i386/vm_param.h */

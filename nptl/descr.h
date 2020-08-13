@@ -96,7 +96,7 @@ struct xid_command
   int syscall_no;
   /* Enforce zero-extension for the pointer argument in
 
-     int setgroups(size_t size, const gid_t *list);
+     int setgroups (size_t size, const gid_t *list);
 
      The kernel XID arguments are unsigned and do not require sign
      extension.  */
