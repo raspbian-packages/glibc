@@ -1,6 +1,5 @@
-/* Set flags signalling availability of kernel features based on given
-   kernel version number.  NIOS2 version.
-   Copyright (C) 2019-2020 Free Software Foundation, Inc.
+/* Sigreturn stub function used on sa_restore field.
+   Copyright (C) 2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -17,6 +16,19 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include_next <kernel-features.h>
+#include <sysdep.h>
 
-#undef __ASSUME_SYSVIPC_DEFAULT_IPC_64
+/* These functions must not change the register window or the stack
+   pointer [1].
+
+   [1] https://lkml.org/lkml/2016/5/27/465  */
+
+ENTRY (__rt_sigreturn_stub)
+	mov	__NR_rt_sigreturn, %g1
+	ta	0x10
+END (__rt_sigreturn_stub)
+
+ENTRY (__sigreturn_stub)
+	mov	__NR_sigreturn, %g1
+	ta	0x10
+END (__sigreturn_stub)
