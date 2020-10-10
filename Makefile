@@ -635,7 +635,7 @@ endif
 	# Setting INSTALL_UNCOMPRESSED causes localedata/Makefile to
 	# install the charmaps uncompressed, as the testroot does not
 	# provide a gunzip program.
-	$(MAKE) install DESTDIR=$(objpfx)testroot.pristine \
+	$(MAKE) install install_root=$(objpfx)testroot.pristine \
 	  INSTALL_UNCOMPRESSED=yes subdirs='$(sorted-subdirs)'
 	rm -f $(symbolic-link-list)
 	touch $(objpfx)testroot.pristine/install.stamp
