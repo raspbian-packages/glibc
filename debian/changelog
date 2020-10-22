@@ -1,4 +1,4 @@
-glibc (2.31-3+rpi1) bullseye-staging; urgency=medium
+glibc (2.31-4+rpi1) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -9,7 +9,49 @@ glibc (2.31-3+rpi1) bullseye-staging; urgency=medium
     script does not seem to be used for anything in the Debian
     package.
 
- -- Raspbian forward porter <root@raspbian.org>  Thu, 13 Aug 2020 16:13:44 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 22 Oct 2020 05:17:52 +0000
+
+glibc (2.31-4) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/{unsubmitted-sbrk-_end.diff,tg-pie-sbrk.diff}:
+    Merge into...
+  * debian/patches/hurd-i386/git-sbrk-end.diff: ... committed patch.
+  * debian/patches/hurd-i386/unsubmitted-sched_sets.diff: Rename to...
+  * debian/patches/hurd-i386/git-sched_sets.diff: ... committed patch.
+  * debian/patches/hurd-i386/local-posix_cputime.diff: New patch to avoid
+    applications trying to use extended clock ids.
+  * debian/patches/hurd-i386/git-bsd4.3-ioctls.diff: New patch to avoid
+    defining elder macros.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Handle translation output codesets with suffixes.  Closes: #968260.
+  * debian/control.in/libc: add a Breaks: against libgegl-0.4-0 (<< 0.4.18).
+    Closes: #968342.
+  * debian/control.in/libc: add a Breaks: against busybox (<< 1.30.1-6) due to
+    bug #966074.
+  * debian/debhelper.in/libc-dev{,-alt}.lintian-overrides: remove files as
+    lintian is now smarter.
+  * debian/po/it.po: Update Italian debconf translation, by Luca Monducci.
+    Closes: #969219.
+  * debian/po/pt_BR.po: Update Brazilian Portuguese debconf translation, by
+    Adriano Rafael Gomes. Closes: #970199.
+  * debian/po/de.po: recode to UTF-8.
+  * debian/rules.d/build.mk: stop passing --enable-obsolete-nsl.
+  * debian/debhelper.in/libc-dev{,-alt}.install: do not install libnsl.a.
+  * debian/debhelper.in/libc-dev.install.hurd-i386: ditto.
+  * debian/libc0.1.symbols.common, debian/libc0.3.symbols.hurd-i386,
+    debian/libc6.1.symbols.alpha, debian/libc6.symbols{common,hppa,sparc}:
+    remove libnss_nis.so.2 and libnss_nisplus.so.2 symbols.
+  * debian/rules.d/build.mk: do not ship <rpcsvc/yppasswd.h> and
+    <rpcsvc/yppasswd.x> as they are shipped by libnsl-dev.
+  * debian/control.in/libc, debian/rules.d/debhelper.mk: make libc6 to depend on
+    libnss-nis and libnss-nisplus, except for stage1 and stage2.
+  * debian/control.in/libc, debian/rules.d/debhelper.mk: make libc6-dev to
+    depend on libnsl-dev, except for stage1 and stage2.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sat, 10 Oct 2020 21:54:24 +0200
 
 glibc (2.31-3) unstable; urgency=medium
 
