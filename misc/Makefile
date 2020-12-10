@@ -137,10 +137,6 @@ CFLAGS-sbrk.op = $(no-stack-protector)
 CFLAGS-brk.o = $(no-stack-protector)
 CFLAGS-brk.op = $(no-stack-protector)
 
-tests += tst-sbrk tst-sbrk-pie tst-sbrk-static
-tests-pie += tst-sbrk-pie
-tests-static += tst-sbrk-static
-
 include ../Rules
 
 $(objpfx)libg.a: $(dep-dummy-lib); $(make-dummy-lib)

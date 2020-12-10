@@ -3,8 +3,8 @@ Architecture: @archs@
 Section: libs
 Priority: optional
 Multi-Arch: same
-Depends: ${shlibs:Depends}, ${libgcc:Depends}, ${libcrypt:Depends}, ${libnss-nis:Depends}, ${libnss-nisplus:Depends}
-Recommends: libidn2-0 (>= 2.0.5~)
+Depends: ${shlibs:Depends}, ${libgcc:Depends}, ${libcrypt:Depends}
+Recommends: libidn2-0 (>= 2.0.5~), libnss-nis, libnss-nisplus
 Suggests: glibc-doc, debconf | debconf-2.0, libc-l10n, locales [!hurd-i386]
 Provides: libc6-sparcv9b [sparc sparc64], libc0.1-i686 [kfreebsd-i386], libc0.3-i686 [hurd-i386], libc6-i686 [i386]
 Conflicts: libc0.1-i686 [kfreebsd-i386], libc6-i686 [i386]

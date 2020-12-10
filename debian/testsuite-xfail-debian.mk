@@ -275,9 +275,6 @@ test-xfail-tst-audit15 = yes
 test-xfail-tst-audit16 = yes
 test-xfail-tst-auditmany = yes
 
-# yes, ptsname_r works on the PTS slave side too
-test-xfail-tst-ptsname = yes
-
 # We always put LD_ORIGIN_PATH in the environment
 test-xfail-tst-execvpe5 = yes
 
@@ -303,10 +300,6 @@ test-xfail-tst-tzset = yes
 test-xfail-tst-prelink = yes
 test-xfail-tst-tls-atexit = yes
 
-# need get_cpu_features
-test-xfail-tst-get-cpu-features = yes
-test-xfail-test-fenv-sse-2 = yes
-
 # new in 2.24
 test-xfail-tst-spawn2 = yes
 
@@ -329,8 +322,6 @@ test-xfail-tst-env-setuid = yes
 test-xfail-tst-env-setuid-tunables = yes
 
 # new in 2.26
-test-xfail-tst-malloc-usable-static-tunables = yes
-test-xfail-tst-malloc-usable-static = yes
 test-xfail-tst-malloc-tcache-leak = yes
 test-xfail-tst-dynarray-fail-mem = yes
 test-xfail-test-errno = yes
@@ -387,11 +378,24 @@ test-xfail-tst-ptrguard1 = yes
 test-xfail-tst-malloc-stats-cancellation = yes
 test-xfail-tst-waitid = yes
 
+# new in 2.33
+test-xfail-tst-cpu-features-cpuinfo = yes
+test-xfail-tst-cpu-features-support = yes
+# Mach misses getting adjtime without privileges
+test-xfail-tst-adjtime = yes
+
+# fixed in 2.33
+test-xfail-tst-malloc-usable-static-tunables = yes
+test-xfail-tst-malloc-usable-static = yes
+test-xfail-tst-get-cpu-features = yes
+test-xfail-test-fenv-sse-2 = yes
+test-xfail-test-fesetexcept-traps = yes
+test-xfail-tst-ptsname = yes
+
 # actually never succeded
 test-xfail-tst-create_format1 = yes
 test-xfail-tst-getcwd-abspath = yes
 test-xfail-tst-udp-error = yes
-test-xfail-test-fesetexcept-traps = yes
 
 # Child seems to be inheriting the lockf from the parent?
 test-xfail-tst-lockf = yes

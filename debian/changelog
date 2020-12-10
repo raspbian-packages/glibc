@@ -1,4 +1,4 @@
-glibc (2.31-4+rpi1) bullseye-staging; urgency=medium
+glibc (2.31-5+rpi1) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -9,7 +9,41 @@ glibc (2.31-4+rpi1) bullseye-staging; urgency=medium
     script does not seem to be used for anything in the Debian
     package.
 
- -- Raspbian forward porter <root@raspbian.org>  Thu, 22 Oct 2020 05:17:52 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 10 Dec 2020 08:50:37 +0000
+
+glibc (2.31-5) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/testsuite-xfail-debian.mk: Update with 2.33 tests.
+  * debian/patches/hurd-i386/git-clock-cputime.diff: New patch to support
+    clock_gettime(CPUTIME).
+  * debian/patches/hurd-i386/local-clock_gettime_MONOTONIC.diff: Refresh.
+  * debian/patches/hurd-i386/local-posix_cputime.diff: Remove.
+  * debian/patches/hurd-i386/git-raise.diff: Reject raising invalid signals.
+  * debian/patches/hurd-i386/git-sbrk-end.diff: Remove the tst-sbrk tests,
+    they fail on various architectures.  Closes: #972510.
+  * debian/patches/hurd-i386/git-posix_openpt.diff: Note that patch is
+    committed upstream.
+  * debian/patches/hurd-i386/git-WAIT.diff: Fix printing fd in ps' WAIT
+    output.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix missing floating-point rounding and exception handling functions
+      missing on SH4.  Closes: #975421.
+    - Fix an infinite loop in iconv with input containing redundant shift
+      sequences in the IBM1364, ++  IBM1371, IBM1388, IBM1390, or IBM1399
+      character sets (CVE-2020-27618).  Closes: #973914.
+  * debian/patches/localedata/locale-C.diff: replace the LC_CTYPE definition
+    by 'copy "i18n"'. Note that with this change the "blank", "cntrl",
+    "space" classes do not conform to POSIX anymore, however this matches the
+    Fedora behaviour.  Closes: #973647.
+  * debian/control.in/libc: downgrade libnss-nis and libnss-nisplus
+    dependencies to recommends. Closes: #972770, #975052, #972552.
+  * debian/debhelper.in/libc.NEWS: add an entry about libnss-nis and
+    libnss-nisplus packages.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Tue, 01 Dec 2020 08:42:44 +0100
 
 glibc (2.31-4) unstable; urgency=medium
 
