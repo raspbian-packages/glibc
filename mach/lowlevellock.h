@@ -32,20 +32,45 @@
 #endif
 
 /* Static initializer for low-level locks.  */
-#define LLL_INITIALIZER   0
+#define LLL_LOCK_INITIALIZER   0
+
+#define LLL_PRIVATE        0
+#define LLL_SHARED         SYNC_SHARED
+
+/* Interruptible version of __gsync_wait.  */
+extern kern_return_t __gsync_wait_intr
+(
+	mach_port_t task,
+	vm_offset_t addr,
+	unsigned val1,
+	unsigned val2,
+	natural_t msec,
+	int flags
+);
 
 /* Wait on address PTR, without blocking if its contents
  * are different from VAL.  */
-#define lll_wait(ptr, val, flags)   \
+#define __lll_wait(ptr, val, flags)   \
   __gsync_wait (__mach_task_self (),   \
     (vm_offset_t)(ptr), (val), 0, 0, (flags))
+#define lll_wait(var, val, flags) \
+  __lll_wait (&(var), val, flags)
+
+/* Interruptible version.  */
+#define __lll_wait_intr(ptr, val, flags)   \
+  __gsync_wait_intr (__mach_task_self (),   \
+    (vm_offset_t)(ptr), (val), 0, 0, (flags))
+#define lll_wait_intr(var, val, flags) \
+  __lll_wait_intr ((&var), val, flags)
 
 /* Wake one or more threads waiting on address PTR.  */
-#define lll_wake(ptr, flags)   \
+#define __lll_wake(ptr, flags)   \
   __gsync_wake (__mach_task_self (), (vm_offset_t)(ptr), 0, (flags))
+#define lll_wake(var, flags) \
+  __lll_wake (&(var), flags)
 
 /* Acquire the lock at PTR.  */
-#define lll_lock(ptr, flags)   \
+#define __lll_lock(ptr, flags)   \
   ({   \
      int *__iptr = (int *)(ptr);   \
      int __flags = (flags);   \
@@ -55,27 +80,33 @@
          {   \
            if (atomic_exchange_acq (__iptr, 2) == 0)   \
              break;   \
-           lll_wait (__iptr, 2, __flags);   \
+           __lll_wait (__iptr, 2, __flags);   \
          }   \
      (void)0;   \
    })
+#define lll_lock(var, flags) \
+  __lll_lock (&(var), flags)
 
 /* Try to acquire the lock at PTR, without blocking.
    Evaluates to zero on success.  */
-#define lll_trylock(ptr)   \
+#define __lll_trylock(ptr)   \
   ({   \
      int *__iptr = (int *)(ptr);   \
      *__iptr == 0   \
        && atomic_compare_and_exchange_bool_acq (__iptr, 1, 0) == 0 ? 0 : -1;   \
    })
+#define lll_trylock(var) \
+  __lll_trylock (&(var))
 
 /* Release the lock at PTR.  */
-#define lll_unlock(ptr, flags)   \
+#define __lll_unlock(ptr, flags)   \
   ({   \
      int *__iptr = (int *)(ptr);   \
      if (atomic_exchange_rel (__iptr, 0) == 2)   \
-       lll_wake (__iptr, (flags));   \
+       __lll_wake (__iptr, (flags));   \
      (void)0;   \
    })
+#define lll_unlock(var, flags) \
+  __lll_unlock (&(var), flags)
 
 #endif

@@ -144,7 +144,7 @@ libc {
 
   HURD_CTHREADS_0.3 {
     # weak refs to libthreads functions that libc calls iff libthreads in use
-    __cthread_fork; __cthread_detach;
+    __cthread_fork; __pthread_create; __cthread_detach; __pthread_detach;
     __pthread_getattr_np; __pthread_attr_getstack;
 
     # variables used for detecting cthreads
@@ -156,10 +156,11 @@ libc {
 
   GLIBC_PRIVATE {
     # Used by other libs.
-    __lll_abstimed_wait; __lll_abstimed_xwait;
+    __lll_abstimed_wait; __lll_abstimed_wait_intr; __lll_abstimed_xwait;
     __lll_abstimed_lock; __lll_robust_lock;
     __lll_robust_abstimed_lock; __lll_robust_trylock;
     __lll_robust_unlock;
+    __libc_open; __libc_close;
 
     # Used by libpthread.
     _hurd_sigstate_set_global_rcv;

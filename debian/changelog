@@ -1,4 +1,4 @@
-glibc (2.31-5+rpi1) bullseye-staging; urgency=medium
+glibc (2.31-6+rpi1) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -9,7 +9,42 @@ glibc (2.31-5+rpi1) bullseye-staging; urgency=medium
     script does not seem to be used for anything in the Debian
     package.
 
- -- Raspbian forward porter <root@raspbian.org>  Thu, 10 Dec 2020 08:50:37 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Tue, 29 Dec 2020 20:48:55 +0000
+
+glibc (2.31-6) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/testsuite-xfail-debian.mk: Update with 2.33 tests.
+  * debian/patches/hurd-i386/git-pthread_link_tests.diff: Fix linking static
+    tests with the build libpthread.a.
+  * debian/patches/hurd-i386/git-libpthread_syms.diff: Fix linking static tests
+    by factorizing the symbols list.
+  * debian/patches/hurd-i386/git-libpthread-nodelete.diff: initialize
+    libpthread.so first and prevent from unloading.
+  * debian/patches/hurd-i386/git-cthreads.diff: Fix build without cthreads.h.
+  * debian/patches/hurd-i386/git-cthreads-symbols.diff: Fix libpthread
+    detection from libc.
+  * debian/patches/hurd-i386/git-libpthread_plt.diff: Fix spurious PLT.
+  * debian/patches/hurd-i386/git-lll-initializer.diff,
+    debian/patches/hurd-i386/sysvshm-lll.diff,
+    debian/patches/hurd-i386/git-lll-ptr.diff,
+    debian/patches/hurd-i386/git-ld-library-path-checks.diff,
+    debian/patches/hurd-i386/git-lll-wait-intr.diff,
+    debian/patches/hurd-i386/git-lll-private.diff,
+    debian/patches/hurd-i386/git-futex-internal.diff,
+    debian/patches/hurd-i386/git-libc-open.diff,
+    debian/patches/hurd-i386/git-pthread_get_cleanup_stack.diff,
+    debian/patches/hurd-i386/git-libpthread-testcancel.diff,
+    debian/patches/hurd-i386/git-SEM_VALUE_MAX.diff,
+    debian/patches/hurd-i386/git-sem-pshared.diff,
+    debian/patches/hurd-i386/git-sem-open-init.diff,
+    debian/patches/hurd-i386/git-sem-open.diff: Add sem_open support.
+
+  [ Aurelien Jarno ]
+  * debian/debhelper.in/libc.NEWS: fix the name if the libnss-nis package,
+    thanks to Diederik de Haas for the hint.
+
+ -- Samuel Thibault <sthibault@debian.org>  Wed, 16 Dec 2020 22:33:25 +0100
 
 glibc (2.31-5) unstable; urgency=medium
 

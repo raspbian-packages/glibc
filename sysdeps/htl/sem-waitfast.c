@@ -1,4 +1,4 @@
-/* Open a named semaphore.  Generic version.
+/* Lock a semaphore if it does not require blocking.  Generic version.
    Copyright (C) 2005-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -21,11 +21,35 @@
 
 #include <pt-internal.h>
 
-sem_t *
-__sem_open (const char *name, int open_flags, ...)
+int
+__sem_waitfast (struct new_sem *isem, int definitive_result)
 {
-  errno = EOPNOTSUPP;
-  return SEM_FAILED;
-}
+#if __HAVE_64B_ATOMICS
+  uint64_t d = atomic_load_relaxed (&isem->data);
 
-strong_alias (__sem_open, sem_open);
+  do
+    {
+      if ((d & SEM_VALUE_MASK) == 0)
+	break;
+      if (atomic_compare_exchange_weak_acquire (&isem->data, &d, d - 1))
+	/* Successful down.  */
+	return 0;
+    }
+  while (definitive_result);
+  return -1;
+#else
+  unsigned v = atomic_load_relaxed (&isem->value);
+
+  do
+    {
+      if ((v >> SEM_VALUE_SHIFT) == 0)
+	break;
+      if (atomic_compare_exchange_weak_acquire (&isem->value,
+	    &v, v - (1 << SEM_VALUE_SHIFT)))
+	/* Successful down.  */
+	return 0;
+    }
+  while (definitive_result);
+  return -1;
+#endif
+}

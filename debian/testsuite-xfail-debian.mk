@@ -357,9 +357,6 @@ test-xfail-tst-mallocfork2 = yes
 test-xfail-tst-updwtmpx = yes
 test-xfail-tst-lchmod = yes
 
-# new in 2.31
-test-xfail-tst-dlopenfail = yes
-
 # new in 2.32
 test-xfail-tst-safe-linking = yes
 # Assumes some linuxish strings
@@ -383,6 +380,7 @@ test-xfail-tst-cpu-features-cpuinfo = yes
 test-xfail-tst-cpu-features-support = yes
 # Mach misses getting adjtime without privileges
 test-xfail-tst-adjtime = yes
+test-xfail-tst-join15 = yes
 
 # fixed in 2.33
 test-xfail-tst-malloc-usable-static-tunables = yes

@@ -57,13 +57,13 @@ typedef struct __libc_lock_recursive_opaque__ __libc_lock_recursive_t;
   CLASS __libc_lock_t NAME;
 
 /* Define an initialized lock variable NAME with storage class CLASS.  */
-#define _LIBC_LOCK_INITIALIZER LLL_INITIALIZER
+#define _LIBC_LOCK_INITIALIZER LLL_LOCK_INITIALIZER
 #define __libc_lock_define_initialized(CLASS,NAME) \
-  CLASS __libc_lock_t NAME = LLL_INITIALIZER;
+  CLASS __libc_lock_t NAME = LLL_LOCK_INITIALIZER;
 
 /* Initialize the named lock variable, leaving it in a consistent, unlocked
    state.  */
-#define __libc_lock_init(NAME) (NAME) = LLL_INITIALIZER
+#define __libc_lock_init(NAME) (NAME) = LLL_LOCK_INITIALIZER
 
 /* Finalize the named lock variable, which must be locked.  It cannot be
    used again until __libc_lock_init is called again on it.  This must be
@@ -74,19 +74,19 @@ typedef struct __libc_lock_recursive_opaque__ __libc_lock_recursive_t;
 
 /* Lock the named lock variable.  */
 #define __libc_lock_lock(NAME)   \
-  ({ lll_lock (&(NAME), 0); 0; })
+  ({ lll_lock ((NAME), 0); 0; })
 
 /* Lock the named lock variable.  */
-#define __libc_lock_trylock(NAME) lll_trylock (&(NAME))
+#define __libc_lock_trylock(NAME) lll_trylock (NAME)
 
 /* Unlock the named lock variable.  */
 #define __libc_lock_unlock(NAME)   \
-  ({ lll_unlock (&(NAME), 0); 0; })
+  ({ lll_unlock ((NAME), 0); 0; })
 
 #define __libc_lock_define_recursive(CLASS,NAME) \
   CLASS __libc_lock_recursive_t NAME;
 
-#define _LIBC_LOCK_RECURSIVE_INITIALIZER { LLL_INITIALIZER, 0, 0 }
+#define _LIBC_LOCK_RECURSIVE_INITIALIZER { LLL_LOCK_INITIALIZER, 0, 0 }
 
 #define __libc_lock_define_initialized_recursive(CLASS,NAME) \
   CLASS __libc_lock_recursive_t NAME = _LIBC_LOCK_RECURSIVE_INITIALIZER;
@@ -111,7 +111,7 @@ typedef struct __libc_lock_recursive_opaque__ __libc_lock_recursive_t;
      int __r = 0;   \
      if (__self == __lock->owner)   \
        ++__lock->cnt;   \
-     else if ((__r = lll_trylock (&__lock->lock)) == 0)   \
+     else if ((__r = lll_trylock (__lock->lock)) == 0)   \
        __lock->owner = __self, __lock->cnt = 1;   \
      __r;   \
    })
@@ -122,7 +122,7 @@ typedef struct __libc_lock_recursive_opaque__ __libc_lock_recursive_t;
      void *__self = __libc_lock_owner_self ();   \
      if (__self != __lock->owner)   \
        {   \
-         lll_lock (&__lock->lock, 0);   \
+         lll_lock (__lock->lock, 0);   \
          __lock->owner = __self;   \
        }   \
      ++__lock->cnt;   \
@@ -135,7 +135,7 @@ typedef struct __libc_lock_recursive_opaque__ __libc_lock_recursive_t;
      if (--__lock->cnt == 0)   \
        {   \
          __lock->owner = 0;   \
-         lll_unlock (&__lock->lock, 0);   \
+         lll_unlock (__lock->lock, 0);   \
        }   \
    })
 

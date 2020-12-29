@@ -82,6 +82,26 @@ hurd-i386/git-bsd4.3-ioctls.diff
 hurd-i386/git-clock-cputime.diff
 hurd-i386/git-raise.diff
 hurd-i386/git-WAIT.diff
+hurd-i386/git-pthread_link_tests.diff
+hurd-i386/git-libpthread_syms.diff
+hurd-i386/git-libpthread-nodelete.diff
+hurd-i386/git-cthreads.diff
+hurd-i386/git-cthreads-symbols.diff
+hurd-i386/git-libpthread_plt.diff
+hurd-i386/git-lll-initializer.diff
+hurd-i386/sysvshm-lll.diff
+hurd-i386/git-lll-ptr.diff
+hurd-i386/git-ld-library-path-checks.diff
+hurd-i386/git-lll-wait-intr.diff
+hurd-i386/git-lll-private.diff
+hurd-i386/git-futex-internal.diff
+hurd-i386/git-libc-open.diff
+hurd-i386/git-pthread_get_cleanup_stack.diff
+hurd-i386/git-libpthread-testcancel.diff
+hurd-i386/git-SEM_VALUE_MAX.diff
+hurd-i386/git-sem-pshared.diff
+hurd-i386/git-sem-open-init.diff
+hurd-i386/git-sem-open.diff
 
 i386/local-biarch.diff
 i386/unsubmitted-quiet-ldconfig.diff

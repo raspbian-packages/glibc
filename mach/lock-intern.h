@@ -31,7 +31,7 @@
 typedef unsigned int __spin_lock_t;
 
 /* Static initializer for spinlocks.  */
-#define __SPIN_LOCK_INITIALIZER   LLL_INITIALIZER
+#define __SPIN_LOCK_INITIALIZER   LLL_LOCK_INITIALIZER
 
 /* Initialize LOCK.  */
 
@@ -57,7 +57,7 @@ extern void __spin_lock (__spin_lock_t *__lock);
 _EXTERN_INLINE void
 __spin_lock (__spin_lock_t *__lock)
 {
-  lll_lock (__lock, 0);
+  __lll_lock (__lock, 0);
 }
 #endif
 
@@ -68,7 +68,7 @@ extern void __spin_unlock (__spin_lock_t *__lock);
 _EXTERN_INLINE void
 __spin_unlock (__spin_lock_t *__lock)
 {
-  lll_unlock (__lock, 0);
+  __lll_unlock (__lock, 0);
 }
 #endif
 
@@ -79,7 +79,7 @@ extern int __spin_try_lock (__spin_lock_t *__lock);
 _EXTERN_INLINE int
 __spin_try_lock (__spin_lock_t *__lock)
 {
-  return (lll_trylock (__lock) == 0);
+  return (__lll_trylock (__lock) == 0);
 }
 #endif
 
@@ -95,6 +95,15 @@ __spin_lock_locked (__spin_lock_t *__lock)
 #endif
 
 /* Name space-clean internal interface to mutex locks.  */
+struct mutex {
+	__spin_lock_t __held;
+	__spin_lock_t __lock;
+	const char *__name;
+	void *__head, *__tail;
+	void *__holder;
+};
+
+#define MUTEX_INITIALIZER { __SPIN_LOCK_INITIALIZER }
 
 /* Initialize the newly allocated mutex lock LOCK for further use.  */
 extern void __mutex_init (void *__lock);

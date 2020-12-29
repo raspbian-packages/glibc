@@ -48,15 +48,36 @@ __lll_abstimed_wait (void *ptr, int val,
   const struct timespec *tsp, int flags, int clk)
 {
   int mlsec = compute_reltime (tsp, clk);
-  return mlsec < 0 ? KERN_TIMEDOUT : lll_timed_wait (ptr, val, mlsec, flags);
+  return mlsec < 0 ? KERN_TIMEDOUT : __lll_timed_wait (ptr, val, mlsec, flags);
 }
+
+#if 1
+int
+__lll_abstimed_wait_intr (void *ptr, int val,
+  const struct timespec *tsp, int flags, int clk)
+{
+  if (clk != CLOCK_REALTIME)
+    return EINVAL;
+
+  int mlsec = compute_reltime (tsp, clk);
+  extern void _S_msg_server(void);
+  extern void __fsys_get_children(void);
+  //return (int) (intptr_t) _S_msg_server;
+  //return (int) (intptr_t) __fsys_get_children;
+  //return (int) (intptr_t) __gsync_wait_intr;
+  //return (int) (intptr_t) _hurd_intr_rpc_mach_msg;
+  //return mlsec < 0 ? KERN_TIMEDOUT : 0;
+  //__lll_timed_wait_intr (ptr, val, mlsec, flags);
+  return mlsec < 0 ? KERN_TIMEDOUT : __lll_timed_wait_intr (ptr, val, mlsec, flags);
+}
+#endif
 
 int
 __lll_abstimed_xwait (void *ptr, int lo, int hi,
   const struct timespec *tsp, int flags, int clk)
 {
   int mlsec = compute_reltime (tsp, clk);
-  return mlsec < 0 ? KERN_TIMEDOUT : lll_timed_xwait (ptr, lo, hi, mlsec,
+  return mlsec < 0 ? KERN_TIMEDOUT : __lll_timed_xwait (ptr, lo, hi, mlsec,
 	                                              flags);
 }
 
@@ -64,7 +85,7 @@ int
 __lll_abstimed_lock (void *ptr,
   const struct timespec *tsp, int flags, int clk)
 {
-  if (lll_trylock (ptr) == 0)
+  if (__lll_trylock (ptr) == 0)
     return 0;
 
   while (1)
@@ -75,7 +96,7 @@ __lll_abstimed_lock (void *ptr,
         return EINVAL;
 
       int mlsec = compute_reltime (tsp, clk);
-      if (mlsec < 0 || lll_timed_wait (ptr, 2, mlsec, flags) == KERN_TIMEDOUT)
+      if (mlsec < 0 || __lll_timed_wait (ptr, 2, mlsec, flags) == KERN_TIMEDOUT)
         return ETIMEDOUT;
     }
 }
@@ -131,7 +152,7 @@ __lll_robust_lock (void *ptr, int flags)
         }
       else
         {
-          lll_timed_wait (iptr, val, wait_time, flags);
+          __lll_timed_wait (iptr, val, wait_time, flags);
           if (wait_time < MAX_WAIT_TIME)
             wait_time <<= 1;
         }
@@ -175,7 +196,7 @@ __lll_robust_abstimed_lock (void *ptr,
           else if (mlsec > wait_time)
             mlsec = wait_time;
 
-          int res = lll_timed_wait (iptr, val, mlsec, flags);
+          int res = __lll_timed_wait (iptr, val, mlsec, flags);
           if (res == KERN_TIMEDOUT)
             return ETIMEDOUT;
           else if (wait_time < MAX_WAIT_TIME)
@@ -211,7 +232,7 @@ __lll_robust_unlock (void *ptr, int flags)
     {
       if (val & LLL_WAITERS)
         {
-          lll_set_wake (ptr, 0, flags);
+          __lll_set_wake (ptr, 0, flags);
           break;
         }
       else if (atomic_compare_exchange_weak_release ((unsigned int *)ptr, &val, 0))
