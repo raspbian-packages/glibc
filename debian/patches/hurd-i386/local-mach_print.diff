@@ -1,5 +1,6 @@
-TODO: glibc 2.32 now provides it. Rebuild binaries which might be
-referencing the 2.21-versioned symbol, and drop this patch.
+TODO: glibc 2.32 will provide it. Once it is uploaded, rebuild binaries
+which might be referencing the 2.21-versioned symbol, and drop this
+patch.
 
 --- a/mach/Versions
 +++ b/mach/Versions

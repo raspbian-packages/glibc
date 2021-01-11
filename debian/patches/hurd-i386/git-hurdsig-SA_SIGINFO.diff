@@ -1,3 +1,5 @@
+Committed for 2.33
+
 From: Jeremie Koenig <jk@jk.fr.eu.org>
 Subject: [PATCH] implement SA_SIGINFO signal handlers.
 

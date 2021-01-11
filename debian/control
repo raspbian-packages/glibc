@@ -6,7 +6,7 @@ Build-Depends: gettext, dpkg (>= 1.18.7), dpkg-dev (>= 1.17.14), xz-utils, file,
  linux-libc-dev (>= 3.9) [linux-any],
  libaudit-dev [linux-any], libcap-dev [linux-any], libselinux-dev [linux-any] <!stage2>,
  mig-for-host (>= 1.5-3) [hurd-i386], gnumach-dev (>= 2:1.8+git20200710-2~) [hurd-i386],
- hurd-dev (>= 1:0.9.git20191029) [hurd-i386] | hurd-headers-dev [hurd-i386],
+ hurd-dev (>= 1:0.9.git20201127-4~) [hurd-i386] | hurd-headers-dev [hurd-i386],
  kfreebsd-kernel-headers [kfreebsd-any],
  binutils (>= 2.29),
  g++-10, g++-10-multilib [amd64 i386 kfreebsd-amd64 mips mipsel mipsn32 mipsn32el mips64 mips64el mipsr6 mipsr6el mipsn32r6 mipsn32r6el mips64r6 mips64r6el powerpc ppc64 s390x sparc sparc64 x32] <!nobiarch>,
@@ -14,7 +14,8 @@ Build-Depends: gettext, dpkg (>= 1.18.7), dpkg-dev (>= 1.17.14), xz-utils, file,
  gcc-10 (>= 10.1.0-3) [hurd-i386],
  python3:native,
  libidn2-0 (>= 2.0.5~) <!nocheck>,
- libc-bin (>= 2.31) <cross>
+ libc-bin (>= 2.31) <cross>,
+ libgd-dev <!stage1> <!stage2>,
 Build-Depends-Indep: perl, po-debconf (>= 1.0)
 Maintainer: GNU Libc Maintainers <debian-glibc@lists.debian.org>
 Uploaders: Clint Adams <clint@debian.org>, Aurelien Jarno <aurel32@debian.org>, Adam Conrad <adconrad@0c3.net>, Samuel Thibault <sthibault@debian.org>
@@ -49,11 +50,33 @@ Section: libdevel
 Priority: optional
 Multi-Arch: foreign
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Recommends: manpages, manpages-dev
+Recommends: manpages, manpages-dev, libc-devtools (>> 2.31)
 Build-Profiles: <!stage1>
 Description: GNU C Library: Development binaries
  This package contains utility programs related to the GNU C Library
  development package.
+ .
+  * gencat: generate message catalogs
+  * rpcgen: compile RPC protocols to C
+
+Package: libc-devtools
+Architecture: any
+Section: devel
+Priority: optional
+Multi-Arch: foreign
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Breaks: libc-dev-bin (<< 2.31-8)
+Replaces: libc-dev-bin (<< 2.31-8)
+Recommends: manpages, manpages-dev
+Build-Profiles: <!stage1> <!stage2>
+Description: GNU C Library: Development tools
+ This package contains development tools shipped by the GNU C
+ Library.
+ .
+  * memusage, memusagestat: profile a program's memory usage
+  * mtrace: interpret the malloc trace log
+  * sotruss: trace shared library calls
+  * sprof: display shared object profiling data
 
 Package: libc-l10n
 Architecture: all
@@ -144,7 +167,7 @@ Recommends: libidn2-0 (>= 2.0.5~), libnss-nis, libnss-nisplus
 Suggests: glibc-doc, debconf | debconf-2.0, libc-l10n, locales [!hurd-i386]
 Provides: libc6-sparcv9b [sparc sparc64], libc0.1-i686 [kfreebsd-i386], libc0.3-i686 [hurd-i386], libc6-i686 [i386]
 Conflicts: libc0.1-i686 [kfreebsd-i386], libc6-i686 [i386]
-Breaks: nscd (<< 2.31), locales (<< 2.31), locales-all (<< 2.31), hurd (<< 1:0.9.git20170910-1), libtirpc1 (<< 0.2.3), r-cran-later (<< 0.7.5+dfsg-2), nocache (<< 1.1-1~), iraf-fitsutil (<< 2018.07.06-4), wcc (<< 0.0.2+dfsg-3), openssh-server (<< 1:8.1p1-5), macs (<< 2.2.7.1-3~), openarena (<< 0.8.8+dfsg-4~), ioquake3 (<< 1.36+u20200211.f2c61c1~dfsg-2~), libgegl-0.4-0 (<< 0.4.18), busybox (<< 1.30.1-6)
+Breaks: nscd (<< 2.31), locales (<< 2.31), locales-all (<< 2.31), hurd (<< 1:0.9.git20170910-1), libtirpc1 (<< 0.2.3), r-cran-later (<< 0.7.5+dfsg-2), nocache (<< 1.1-1~), iraf-fitsutil (<< 2018.07.06-4), wcc (<< 0.0.2+dfsg-3), openssh-server (<< 1:8.1p1-5), macs (<< 2.2.7.1-3~), openarena (<< 0.8.8+dfsg-4~), ioquake3 (<< 1.36+u20200211.f2c61c1~dfsg-2~), libgegl-0.4-0 (<< 0.4.18), busybox (<< 1.30.1-6), libgegl-0.4-0 (<< 0.4.18)
 Replaces: libc6-amd64 [amd64],
           libc6-i386 [i386],
           libc0.1-i686 [kfreebsd-i386],
@@ -219,7 +242,7 @@ Recommends: libidn2-0 (>= 2.0.5~), libnss-nis, libnss-nisplus
 Suggests: glibc-doc, debconf | debconf-2.0, libc-l10n, locales [!hurd-i386]
 Provides: libc6-sparcv9b [sparc sparc64], libc0.1-i686 [kfreebsd-i386], libc0.3-i686 [hurd-i386], libc6-i686 [i386]
 Conflicts: libc0.1-i686 [kfreebsd-i386], libc6-i686 [i386]
-Breaks: nscd (<< 2.31), locales (<< 2.31), locales-all (<< 2.31), hurd (<< 1:0.9.git20170910-1), libtirpc1 (<< 0.2.3), r-cran-later (<< 0.7.5+dfsg-2), nocache (<< 1.1-1~), iraf-fitsutil (<< 2018.07.06-4), wcc (<< 0.0.2+dfsg-3), openssh-server (<< 1:8.1p1-5), macs (<< 2.2.7.1-3~), openarena (<< 0.8.8+dfsg-4~), ioquake3 (<< 1.36+u20200211.f2c61c1~dfsg-2~), libgegl-0.4-0 (<< 0.4.18), busybox (<< 1.30.1-6)
+Breaks: nscd (<< 2.31), locales (<< 2.31), locales-all (<< 2.31), hurd (<< 1:0.9.git20170910-1), libtirpc1 (<< 0.2.3), r-cran-later (<< 0.7.5+dfsg-2), nocache (<< 1.1-1~), iraf-fitsutil (<< 2018.07.06-4), wcc (<< 0.0.2+dfsg-3), openssh-server (<< 1:8.1p1-5), macs (<< 2.2.7.1-3~), openarena (<< 0.8.8+dfsg-4~), ioquake3 (<< 1.36+u20200211.f2c61c1~dfsg-2~), libgegl-0.4-0 (<< 0.4.18), busybox (<< 1.30.1-6), libgegl-0.4-0 (<< 0.4.18)
 Replaces: libc6-amd64 [amd64],
           libc6-i386 [i386],
           libc0.1-i686 [kfreebsd-i386],
@@ -294,7 +317,7 @@ Recommends: libidn2-0 (>= 2.0.5~), libnss-nis, libnss-nisplus
 Suggests: glibc-doc, debconf | debconf-2.0, libc-l10n, locales [!hurd-i386]
 Provides: libc6-sparcv9b [sparc sparc64], libc0.1-i686 [kfreebsd-i386], libc0.3-i686 [hurd-i386], libc6-i686 [i386]
 Conflicts: libc0.1-i686 [kfreebsd-i386], libc6-i686 [i386]
-Breaks: nscd (<< 2.31), locales (<< 2.31), locales-all (<< 2.31), hurd (<< 1:0.9.git20170910-1), libtirpc1 (<< 0.2.3), r-cran-later (<< 0.7.5+dfsg-2), nocache (<< 1.1-1~), iraf-fitsutil (<< 2018.07.06-4), wcc (<< 0.0.2+dfsg-3), openssh-server (<< 1:8.1p1-5), macs (<< 2.2.7.1-3~), openarena (<< 0.8.8+dfsg-4~), ioquake3 (<< 1.36+u20200211.f2c61c1~dfsg-2~), libgegl-0.4-0 (<< 0.4.18), busybox (<< 1.30.1-6)
+Breaks: nscd (<< 2.31), locales (<< 2.31), locales-all (<< 2.31), hurd (<< 1:0.9.git20170910-1), libtirpc1 (<< 0.2.3), r-cran-later (<< 0.7.5+dfsg-2), nocache (<< 1.1-1~), iraf-fitsutil (<< 2018.07.06-4), wcc (<< 0.0.2+dfsg-3), openssh-server (<< 1:8.1p1-5), macs (<< 2.2.7.1-3~), openarena (<< 0.8.8+dfsg-4~), ioquake3 (<< 1.36+u20200211.f2c61c1~dfsg-2~), libgegl-0.4-0 (<< 0.4.18), busybox (<< 1.30.1-6), libgegl-0.4-0 (<< 0.4.18)
 Replaces: libc6-amd64 [amd64],
           libc6-i386 [i386],
           libc0.1-i686 [kfreebsd-i386],
@@ -369,7 +392,7 @@ Recommends: libidn2-0 (>= 2.0.5~), libnss-nis, libnss-nisplus
 Suggests: glibc-doc, debconf | debconf-2.0, libc-l10n, locales [!hurd-i386]
 Provides: libc6-sparcv9b [sparc sparc64], libc0.1-i686 [kfreebsd-i386], libc0.3-i686 [hurd-i386], libc6-i686 [i386]
 Conflicts: libc0.1-i686 [kfreebsd-i386], libc6-i686 [i386]
-Breaks: nscd (<< 2.31), locales (<< 2.31), locales-all (<< 2.31), hurd (<< 1:0.9.git20170910-1), libtirpc1 (<< 0.2.3), r-cran-later (<< 0.7.5+dfsg-2), nocache (<< 1.1-1~), iraf-fitsutil (<< 2018.07.06-4), wcc (<< 0.0.2+dfsg-3), openssh-server (<< 1:8.1p1-5), macs (<< 2.2.7.1-3~), openarena (<< 0.8.8+dfsg-4~), ioquake3 (<< 1.36+u20200211.f2c61c1~dfsg-2~), libgegl-0.4-0 (<< 0.4.18), busybox (<< 1.30.1-6)
+Breaks: nscd (<< 2.31), locales (<< 2.31), locales-all (<< 2.31), hurd (<< 1:0.9.git20170910-1), libtirpc1 (<< 0.2.3), r-cran-later (<< 0.7.5+dfsg-2), nocache (<< 1.1-1~), iraf-fitsutil (<< 2018.07.06-4), wcc (<< 0.0.2+dfsg-3), openssh-server (<< 1:8.1p1-5), macs (<< 2.2.7.1-3~), openarena (<< 0.8.8+dfsg-4~), ioquake3 (<< 1.36+u20200211.f2c61c1~dfsg-2~), libgegl-0.4-0 (<< 0.4.18), busybox (<< 1.30.1-6), libgegl-0.4-0 (<< 0.4.18)
 Replaces: libc6-amd64 [amd64],
           libc6-i386 [i386],
           libc0.1-i686 [kfreebsd-i386],

@@ -136,6 +136,9 @@ ifneq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
   endif
 else
   DEB_ARCH_REGULAR_PACKAGES = $(libc) $(libc)-dev $(libc)-dbg libc-bin libc-dev-bin
+  ifeq ($(filter stage2,$(DEB_BUILD_PROFILES)),)
+    DEB_ARCH_REGULAR_PACKAGES += libc-devtools
+  endif
   DEB_INDEP_REGULAR_PACKAGES = glibc-doc glibc-source libc-l10n locales
   ifneq ($(filter noudeb,$(DEB_BUILD_PROFILES)),)
     DEB_UDEB_PACKAGES =

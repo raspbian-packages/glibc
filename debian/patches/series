@@ -14,6 +14,7 @@ localedata/locale-zh_TW.diff
 localedata/tailor-iso14651_t1.diff
 localedata/locale-C.diff
 localedata/submitted-es_MX-decimal_point.diff
+localedata/git-unicode-13-support.diff
 
 alpha/local-gcc4.1.diff
 alpha/submitted-dl-support.diff
@@ -40,7 +41,7 @@ hurd-i386/tg-sendmsg-SCM_CREDS.diff
 hurd-i386/tg-mach-hurd-link.diff
 hurd-i386/local-ED.diff
 hurd-i386/local-madvise_warn.diff
-hurd-i386/tg-hurdsig-SA_SIGINFO.diff
+hurd-i386/git-hurdsig-SA_SIGINFO.diff
 hurd-i386/tg-hooks.diff
 hurd-i386/local-usr.diff
 hurd-i386/git-sbrk-end.diff
@@ -49,7 +50,7 @@ hurd-i386/tg-EIEIO-fr.diff
 hurd-i386/tg-EGREGIOUS-fr.diff
 hurd-i386/unsubmitted-clock_t_centiseconds.diff
 hurd-i386/submitted-path_mounted.diff
-hurd-i386/tg-sigstate_thread_reference.diff
+hurd-i386/git-sigstate_thread_reference.diff
 hurd-i386/submitted-bind_umask2.diff
 hurd-i386/tg-bootstrap.diff
 hurd-i386/local-mach_print.diff
@@ -102,6 +103,11 @@ hurd-i386/git-SEM_VALUE_MAX.diff
 hurd-i386/git-sem-pshared.diff
 hurd-i386/git-sem-open-init.diff
 hurd-i386/git-sem-open.diff
+hurd-i386/git-siginfo_uesp.diff
+hurd-i386/git-mmap-EINVAL.diff
+hurd-i386/git-waitid.diff
+hurd-i386/git-hurd-version.diff
+hurd-i386/git-mmap_addr.diff
 
 i386/local-biarch.diff
 i386/unsubmitted-quiet-ldconfig.diff
@@ -161,3 +167,4 @@ any/local-cudacc-float128.diff
 any/submitted-ld.so-cache-new-format.diff
 any/local-test-install.diff
 any/git-surplus-tls-accounting.diff
+any/git-ld.so-cache-endianness-markup.diff

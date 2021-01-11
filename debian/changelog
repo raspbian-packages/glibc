@@ -1,4 +1,4 @@
-glibc (2.31-6+rpi1) bullseye-staging; urgency=medium
+glibc (2.31-9+rpi1) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -9,7 +9,71 @@ glibc (2.31-6+rpi1) bullseye-staging; urgency=medium
     script does not seem to be used for anything in the Debian
     package.
 
- -- Raspbian forward porter <root@raspbian.org>  Tue, 29 Dec 2020 20:48:55 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Mon, 11 Jan 2021 01:56:57 +0000
+
+glibc (2.31-9) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/testsuite-xfail-debian.mk: Update tests.
+  * debian/patches/hurd-i386/git-mmap_addr.diff: Fix long-running ghc processes.
+
+  [ Aurelien Jarno ]
+  * Upload to unstable.
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix a buffer over-read when processing invalid multi-byte input
+      sequences in the EUC-KR encoding (CVE-2019-25013).  Closes: #979273.
+  * debian/control.in/libc: add a Breaks: against libgegl-0.4-0 (<< 0.4.18).
+    Closes: #968349.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Tue, 05 Jan 2021 06:47:42 +0100
+
+glibc (2.31-8) experimental; urgency=medium
+
+  [ Stephen Kitt ]
+  * Build memusage and memusagestat in the libc pass and ship them into
+    libc-devtools. Move mtrace, sotruss and sprof into that package.
+    Closes: #91815.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 03 Jan 2021 18:55:16 +0100
+
+glibc (2.31-7) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/testsuite-xfail-debian.mk: Update with 2.33 tests.
+  * debian/patches/hurd-i386/local-clock_gettime_MONOTONIC.diff: Also accept
+    CLOCK_MONOTONIC_RAW, CLOCK_REALTIME_COARSE, CLOCK_MONOTONIC_COARSE.
+  * debian/patches/hurd-i386/tg-hurdsig-SA_SIGINFO.diff: Rename to
+    git-hurdsig-SA_SIGINFO.diff.
+  * debian/patches/hurd-i386/tg-sigstate_thread_reference.diff: Rename to
+    git-sigstate_thread_reference.diff.
+  * debian/patches/hurd-i386/git-siginfo_uesp.diff: Fix ss_sp field in
+    siginfo.
+  * debian/patches/hurd-i386/git-mmap-EINVAL.diff: Fix mmap EINVAL return value.
+  * debian/patches/hurd-i386/git-waitid.diff: Support
+    WEXITED/WCONTINUED/WSTOPPED/WNOWAIT.
+  * debian/patches/hurd-i386/git-hurd-version.diff: Accept including
+    hurd/version.h.
+  * debian/patches/kfreebsd/submitted-waitid.diff: Refresh.
+  * debian/control: Bump hurd-dev build-dep to get proc_waitid RPC.
+  * debian/libc0.3.symbols.hurd-i386: Add proc_waitid RPC.
+  * debian/debhelper.in/libc-dev.install.hurd-i386: Add missing
+    libpthread_syms.a.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix assertion failure in iconv when converting invalid UCS4
+      (CVE-2020-29562).  Closes: #976391.
+  * debian/sysdeps/arm64.mk: enable static PIE support on arm64.  Closes:
+    #973430.
+  * debian/patches/localedata/git-unicode-13-support.diff: backport Unicode 13
+    support from upstream.  Closes: #977691.
+  * debian/local/manpages/po/pt_BR.po: recode to UTF-8 to make lintian happy.
+  * debian/debhelper.in/*.lintian-overrides: update for recent lintian
+    versions.
+  * debian/patches/any/git-ld.so-cache-endianness-markup.diff: backport ld.so
+    cache endianness support from upstream.  Closes: #731082.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 03 Jan 2021 17:01:18 +0100
 
 glibc (2.31-6) unstable; urgency=medium
 

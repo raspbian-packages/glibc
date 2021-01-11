@@ -242,6 +242,7 @@ test-xfail-tst-null-argv = yes
 
 # bounding memory allocation is not supported yet
 tests-unsupported += tst-malloc-thread-fail
+tests-unsupported += tst-malloc-thread-fail-mcheck
 tests-unsupported += tst-dynarray-fail
 
 # We don't provide /proc/cpuinfo yet
@@ -310,6 +311,10 @@ test-xfail-tst-preadwrite64 = yes
 # happens on linux-i386 too
 test-xfail-annexc = yes
 
+# needs sigwaitinfo
+test-xfail-tst-waitid = yes
+test-xfail-tst-wait4 = yes
+
 # seems fixed in 2.24-3?
 test-xfail-tst-secure-getenv = yes
 
@@ -332,8 +337,6 @@ test-xfail-tst-gmon-static-gprof = yes
 test-xfail-tst-tls1-static-non-pie = yes
 test-xfail-tst-libc_dlvsym-static = yes
 test-xfail-tst-libc_dlvsym = yes
-test-xfail-tst-spawn4 = yes
-test-xfail-tst-spawn4-compat = yes
 
 # want /proc/self/fd
 test-xfail-tst-if_index-long = yes
@@ -352,6 +355,7 @@ test-xfail-tst-res_hconf_reorder = yes
 test-xfail-tst-pututxline-cache = yes
 test-xfail-tst-pututxline-lockfail = yes
 test-xfail-tst-mallocfork2 = yes
+test-xfail-tst-mallocfork2-mcheck = yes
 
 # wants /proc/self/fd
 test-xfail-tst-updwtmpx = yes
@@ -373,7 +377,7 @@ test-xfail-tst-stackguard1 = yes
 test-xfail-tst-ptrguard1-static = yes
 test-xfail-tst-ptrguard1 = yes
 test-xfail-tst-malloc-stats-cancellation = yes
-test-xfail-tst-waitid = yes
+test-xfail-tst-malloc-stats-cancellation-mcheck = yes
 
 # new in 2.33
 test-xfail-tst-cpu-features-cpuinfo = yes
@@ -389,6 +393,8 @@ test-xfail-tst-get-cpu-features = yes
 test-xfail-test-fenv-sse-2 = yes
 test-xfail-test-fesetexcept-traps = yes
 test-xfail-tst-ptsname = yes
+test-xfail-tst-spawn4 = yes
+test-xfail-tst-spawn4-compat = yes
 
 # actually never succeded
 test-xfail-tst-create_format1 = yes

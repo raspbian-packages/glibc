@@ -5,6 +5,9 @@ VM_MAX_ADDRESS shouldn't be hardcoded in libc, the kernel should be able to
 decide about it dynamically. This fixes glibc into supporting that. It's however
 a bit hackish.
 
+This kludge will however go out once we have a recent enough gnumach,
+anyway.
+
 ---
  sysdeps/mach/hurd/dl-sysdep.c |   26 ++++++++++++++++++++------
  1 file changed, 20 insertions(+), 6 deletions(-)

@@ -3,7 +3,7 @@
 LIBC: unstripped-binary-or-object */libpthread-GLIBC_VERSION.so
 
 # ld.so must be executable, otherwise the system will not work
-LIBC: shlib-with-executable-bit */ld-GLIBC_VERSION.so 0755
+LIBC: shared-library-is-executable */ld-GLIBC_VERSION.so 0755
 
 # It is normal that the ELF dynamic linker does not need any other 
 # library

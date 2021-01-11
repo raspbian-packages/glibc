@@ -14,11 +14,14 @@ Index: glibc-2.27/sysdeps/mach/clock_gettime.c
 ===================================================================
 --- glibc-2.27.orig/sysdeps/mach/clock_gettime.c
 +++ glibc-2.27/sysdeps/mach/clock_gettime.c
-@@ -31,6 +31,7 @@ __clock_gettime (clockid_t clock_id, str
+@@ -31,6 +31,10 @@ __clock_gettime (clockid_t clock_id, str
    switch (clock_id) {
  
      case CLOCK_REALTIME:
 +    case CLOCK_MONOTONIC:
++    case CLOCK_MONOTONIC_RAW:
++    case CLOCK_REALTIME_COARSE:
++    case CLOCK_MONOTONIC_COARSE:
        {
  	/* __host_get_time can only fail if passed an invalid host_t.
  	   __mach_host_self could theoretically fail (producing an
@@ -31,7 +34,7 @@ Index: glibc-2.27/sysdeps/pthread/timer_create.c
      }
  
 -  if (clock_id != CLOCK_REALTIME)
-+  if (clock_id != CLOCK_REALTIME && clock_id != CLOCK_MONOTONIC)
++  if (clock_id != CLOCK_REALTIME && clock_id != CLOCK_MONOTONIC && clock_id != CLOCK_MONOTONIC_RAW && clock_id != CLOCK_REALTIME_COARSE && clock_id != CLOCK_MONOTONIC_COARSE)
      {
        __set_errno (EINVAL);
        return -1;
@@ -57,11 +60,14 @@ Index: glibc-upstream/sysdeps/posix/clock_getres.c
 ===================================================================
 --- glibc-upstream.orig/sysdeps/posix/clock_getres.c
 +++ glibc-upstream/sysdeps/posix/clock_getres.c
-@@ -52,6 +52,7 @@ __clock_getres (clockid_t clock_id, stru
+@@ -52,6 +52,10 @@ __clock_getres (clockid_t clock_id, stru
    switch (clock_id)
      {
      case CLOCK_REALTIME:
 +    case CLOCK_MONOTONIC:
++    case CLOCK_MONOTONIC_RAW:
++    case CLOCK_REALTIME_COARSE:
++    case CLOCK_MONOTONIC_COARSE:
        retval = realtime_getres (res);
        break;
  
@@ -72,7 +78,7 @@ Index: glibc-upstream/sysdeps/posix/clock_getres.c
  		   struct timespec *rem)
  {
 -  if (clock_id != CLOCK_REALTIME
-+  if ((clock_id != CLOCK_REALTIME && clock_id != CLOCK_MONOTONIC)
++  if ((clock_id != CLOCK_REALTIME && clock_id != CLOCK_MONOTONIC && clock_id != CLOCK_MONOTONIC_RAW && clock_id != CLOCK_REALTIME_COARSE && clock_id != CLOCK_MONOTONIC_COARSE)
        || !valid_nanoseconds (req->tv_nsec)
        || (flags != 0 && flags != TIMER_ABSTIME))
      return EINVAL;

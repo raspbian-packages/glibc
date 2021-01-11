@@ -25,6 +25,14 @@
 #define	WNOHANG		1	/* Don't block waiting.  */
 #define	WUNTRACED	2	/* Report status of stopped children.  */
 
+/* Bits in the fourth argument to `waitid'.  */
+#if defined __USE_XOPEN_EXTENDED || defined __USE_XOPEN2K8
+# define WSTOPPED	WUNTRACED	/* Report stopped child. */
+# define WCONTINUED	4		/* Report continued child.  */
+# define WNOWAIT	8		/* Don't reap, just poll status.  */
+# define WEXITED	16		/* Report dead child.  */
+#endif
+
 /* The following values are used by the `waitid' function.  */
 #if defined __USE_XOPEN_EXTENDED || defined __USE_XOPEN2K8
 # ifndef __ENUM_IDTYPE_T

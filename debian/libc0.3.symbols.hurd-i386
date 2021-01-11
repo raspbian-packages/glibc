@@ -368,6 +368,7 @@ libhurduser.so.0.3 #PACKAGE# #MINVER#
  __proc_uname@Base 2.11
  __proc_uname_request@Base 2.11
  __proc_wait@Base 2.11
+ __proc_waitid@Base 2.31-7~
  __proc_wait_request@Base 2.11
  __socket_accept@Base 2.11
  __socket_bind@Base 2.11
@@ -746,6 +747,7 @@ libhurduser.so.0.3 #PACKAGE# #MINVER#
  proc_uname@Base 2.11
  proc_uname_request@Base 2.11
  proc_wait@Base 2.11
+ proc_waitid@Base 2.31-7~
  proc_wait_request@Base 2.11
  socket_accept@Base 2.11
  socket_bind@Base 2.11

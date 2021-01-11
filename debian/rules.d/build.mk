@@ -51,7 +51,15 @@ $(stamp)configure_%: $(stamp)config_sub_guess $(stamp)patch $(KERNEL_HEADER_DIR)
 	echo "BASH := /bin/bash"                  >> $(DEB_BUILDDIR)/configparms
 	echo "KSH := /bin/bash"                   >> $(DEB_BUILDDIR)/configparms
 	echo "SHELL := /bin/bash"                 >> $(DEB_BUILDDIR)/configparms
+ifeq (,$(filter stage1 stage2,$(DEB_BUILD_PROFILES)))
+	if [ "$(curpass)" = "libc" ]; then \
+	  echo "LIBGD = yes"                      >> $(DEB_BUILDDIR)/configparms; \
+	else \
+	  echo "LIBGD = no"                       >> $(DEB_BUILDDIR)/configparms; \
+	fi
+else
 	echo "LIBGD = no"                         >> $(DEB_BUILDDIR)/configparms
+endif
 	echo "bindir = $(bindir)"                 >> $(DEB_BUILDDIR)/configparms
 	echo "datadir = $(datadir)"               >> $(DEB_BUILDDIR)/configparms
 	echo "complocaledir = $(complocaledir)"   >> $(DEB_BUILDDIR)/configparms

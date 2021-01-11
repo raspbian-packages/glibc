@@ -1,3 +1,5 @@
+Committed for 2.33
+
 From: Richard Braun <rbraun@sceen.net>
 Subject: [PATCH] Hurd: make sigstates hold a reference on thread ports
 

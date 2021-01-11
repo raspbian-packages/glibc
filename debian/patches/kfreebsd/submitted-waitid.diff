@@ -9,9 +9,9 @@ index 59215f6..73fd714 100644
 --- a/bits/waitflags.h
 +++ b/bits/waitflags.h
 @@ -24,3 +24,16 @@
- /* Bits in the third argument to `waitpid'.  */
- #define	WNOHANG		1	/* Don't block waiting.  */
- #define	WUNTRACED	2	/* Report status of stopped children.  */
+ # define WNOWAIT	8		/* Don't reap, just poll status.  */
+ # define WEXITED	16		/* Report dead child.  */
+ #endif
 +
 +/* The following values are used by the `waitid' function.  */
 +#if defined __USE_XOPEN_EXTENDED || defined __USE_XOPEN2K8
