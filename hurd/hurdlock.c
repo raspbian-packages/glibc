@@ -51,6 +51,27 @@ __lll_abstimed_wait (void *ptr, int val,
   return mlsec < 0 ? KERN_TIMEDOUT : __lll_timed_wait (ptr, val, mlsec, flags);
 }
 
+#if 1
+int
+__lll_abstimed_wait_intr (void *ptr, int val,
+  const struct timespec *tsp, int flags, int clk)
+{
+  if (clk != CLOCK_REALTIME)
+    return EINVAL;
+
+  int mlsec = compute_reltime (tsp, clk);
+  extern void _S_msg_server(void);
+  extern void __fsys_get_children(void);
+  //return (int) (intptr_t) _S_msg_server;
+  //return (int) (intptr_t) __fsys_get_children;
+  //return (int) (intptr_t) __gsync_wait_intr;
+  //return (int) (intptr_t) _hurd_intr_rpc_mach_msg;
+  //return mlsec < 0 ? KERN_TIMEDOUT : 0;
+  //__lll_timed_wait_intr (ptr, val, mlsec, flags);
+  return mlsec < 0 ? KERN_TIMEDOUT : __lll_timed_wait_intr (ptr, val, mlsec, flags);
+}
+#endif
+
 int
 __lll_abstimed_xwait (void *ptr, int lo, int hi,
   const struct timespec *tsp, int flags, int clk)
