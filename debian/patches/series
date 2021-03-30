@@ -108,6 +108,7 @@ hurd-i386/git-mmap-EINVAL.diff
 hurd-i386/git-waitid.diff
 hurd-i386/git-hurd-version.diff
 hurd-i386/git-mmap_addr.diff
+hurd-i386/git-tiocflush.diff
 
 i386/local-biarch.diff
 i386/unsubmitted-quiet-ldconfig.diff

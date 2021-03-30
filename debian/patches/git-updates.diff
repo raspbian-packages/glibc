@@ -1,10 +1,10 @@
 GIT update of https://sourceware.org/git/glibc.git/release/2.31/master from glibc-2.31
 
 diff --git a/NEWS b/NEWS
-index 292fbc595a..67d5e08f2a 100644
+index 292fbc595a..98d4b24ab4 100644
 --- a/NEWS
 +++ b/NEWS
-@@ -5,6 +5,65 @@ See the end for copying conditions.
+@@ -5,6 +5,68 @@ See the end for copying conditions.
  Please send GNU C library bug reports via <https://sourceware.org/bugzilla/>
  using `glibc' in the "product" field.
  
@@ -13,6 +13,7 @@ index 292fbc595a..67d5e08f2a 100644
 +The following bugs are resolved with this release:
 +  [19519] iconv(1) with -c option hangs on illegal multi-byte sequences
 +    (CVE-2016-10228)
++  [20019] NULL pointer dereference in libc.so.6 IFUNC due to uninitialized GOT
 +  [20543] Please move from .gnu.linkonce to comdat
 +  [23296] Data race in setting function descriptor during lazy binding
 +  [24973] iconv encounters segmentation fault when converting 0x00 0xfe in
@@ -38,6 +39,8 @@ index 292fbc595a..67d5e08f2a 100644
 +  [26383] bind_textdomain_codeset doesn't accept //TRANSLIT anymore
 +  [26923] Assertion failure in iconv when converting invalid UCS4 (CVE-2020-29562)
 +  [26932] libc: sh: Multiple floating point functions defined as stubs only
++  [27130] "rep movsb" performance issue
++  [27177] GLIBC_TUNABLES=glibc.cpu.x86_ibt=on:glibc.cpu.x86_shstk=on doesn't work
 +
 +Security related changes:
 +
@@ -184,6 +187,93 @@ index cc4b9a5c90..69cf4c23c8 100644
  
        /* Check whether we make any progress.  */
        _Unwind_Word cfa = unwind_getcfa (ctx);
+diff --git a/elf/Makefile b/elf/Makefile
+index 632a4d8b0f..e8384d1754 100644
+--- a/elf/Makefile
++++ b/elf/Makefile
+@@ -1348,6 +1348,8 @@ CFLAGS-ifuncmain7pie.c += $(pie-ccflag)
+ CFLAGS-ifuncmain9pie.c += $(pie-ccflag)
+ CFLAGS-tst-ifunc-textrel.c += $(pic-ccflag)
+ 
++LDFLAGS-ifuncmain6pie = -Wl,-z,lazy
++
+ $(objpfx)ifuncmain1pie: $(objpfx)ifuncmod1.so
+ $(objpfx)ifuncmain1staticpie: $(objpfx)ifuncdep1pic.o
+ $(objpfx)ifuncmain1vispie: $(objpfx)ifuncmod1.so
+diff --git a/elf/ifuncmain6pie.c b/elf/ifuncmain6pie.c
+index 04faeb86ef..4a01906836 100644
+--- a/elf/ifuncmain6pie.c
++++ b/elf/ifuncmain6pie.c
+@@ -9,7 +9,6 @@
+ #include "ifunc-sel.h"
+ 
+ typedef int (*foo_p) (void);
+-extern foo_p foo_ptr;
+ 
+ static int
+ one (void)
+@@ -28,20 +27,17 @@ foo_ifunc (void)
+ }
+ 
+ extern int foo (void);
+-extern foo_p get_foo (void);
++extern int call_foo (void);
+ extern foo_p get_foo_p (void);
+ 
+-foo_p my_foo_ptr = foo;
++foo_p foo_ptr = foo;
+ 
+ int
+ main (void)
+ {
+   foo_p p;
+ 
+-  p = get_foo ();
+-  if (p != foo)
+-    abort ();
+-  if ((*p) () != -30)
++  if (call_foo () != -30)
+     abort ();
+ 
+   p = get_foo_p ();
+@@ -52,12 +48,8 @@ main (void)
+ 
+   if (foo_ptr != foo)
+     abort ();
+-  if (my_foo_ptr != foo)
+-    abort ();
+   if ((*foo_ptr) () != -30)
+     abort ();
+-  if ((*my_foo_ptr) () != -30)
+-    abort ();
+   if (foo () != -30)
+     abort ();
+ 
+diff --git a/elf/ifuncmod6.c b/elf/ifuncmod6.c
+index 2e16c1d06d..2f6d0715e6 100644
+--- a/elf/ifuncmod6.c
++++ b/elf/ifuncmod6.c
+@@ -4,7 +4,7 @@ extern int foo (void);
+ 
+ typedef int (*foo_p) (void);
+ 
+-foo_p foo_ptr = foo;
++extern foo_p foo_ptr;
+ 
+ foo_p
+ get_foo_p (void)
+@@ -12,8 +12,8 @@ get_foo_p (void)
+   return foo_ptr;
+ }
+ 
+-foo_p
+-get_foo (void)
++int
++call_foo (void)
+ {
+-  return foo;
++  return foo ();
+ }
 diff --git a/iconv/Makefile b/iconv/Makefile
 index b8fe8c47df..f9b51e23ec 100644
 --- a/iconv/Makefile
@@ -1625,7 +1715,7 @@ index 0000000000..d8db7b335c
 +  check_errtest_result
 +done
 diff --git a/iconvdata/Makefile b/iconvdata/Makefile
-index c83962f351..9ac3ccc77b 100644
+index c83962f351..72a91416d3 100644
 --- a/iconvdata/Makefile
 +++ b/iconvdata/Makefile
 @@ -73,7 +73,7 @@ modules.so := $(addsuffix .so, $(modules))
@@ -1633,10 +1723,19 @@ index c83962f351..9ac3ccc77b 100644
  tests = bug-iconv1 bug-iconv2 tst-loading tst-e2big tst-iconv4 bug-iconv4 \
  	tst-iconv6 bug-iconv5 bug-iconv6 tst-iconv7 bug-iconv8 bug-iconv9 \
 -	bug-iconv10 bug-iconv11 bug-iconv12
-+	bug-iconv10 bug-iconv11 bug-iconv12 bug-iconv13
++	bug-iconv10 bug-iconv11 bug-iconv12 bug-iconv13 bug-iconv14
  ifeq ($(have-thread-library),yes)
  tests += bug-iconv3
  endif
+@@ -316,6 +316,8 @@ $(objpfx)bug-iconv10.out: $(objpfx)gconv-modules \
+ 			  $(addprefix $(objpfx),$(modules.so))
+ $(objpfx)bug-iconv12.out: $(objpfx)gconv-modules \
+ 			  $(addprefix $(objpfx),$(modules.so))
++$(objpfx)bug-iconv14.out: $(objpfx)gconv-modules \
++			  $(addprefix $(objpfx),$(modules.so))
+ 
+ $(objpfx)iconv-test.out: run-iconv-test.sh $(objpfx)gconv-modules \
+ 			 $(addprefix $(objpfx),$(modules.so)) \
 diff --git a/iconvdata/bug-iconv13.c b/iconvdata/bug-iconv13.c
 new file mode 100644
 index 0000000000..87aaff398e
@@ -1696,6 +1795,139 @@ index 0000000000..87aaff398e
 +}
 +
 +#include <support/test-driver.c>
+diff --git a/iconvdata/bug-iconv14.c b/iconvdata/bug-iconv14.c
+new file mode 100644
+index 0000000000..902f140fa9
+--- /dev/null
++++ b/iconvdata/bug-iconv14.c
+@@ -0,0 +1,127 @@
++/* Assertion in ISO-2022-JP-3 due to two-character sequence (bug 27256).
++   Copyright (C) 2021 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <https://www.gnu.org/licenses/>.  */
++
++#include <iconv.h>
++#include <string.h>
++#include <errno.h>
++#include <support/check.h>
++
++/* Use an escape sequence to return to the initial state.  */
++static void
++with_escape_sequence (void)
++{
++  iconv_t c = iconv_open ("UTF-8", "ISO-2022-JP-3");
++  TEST_VERIFY_EXIT (c != (iconv_t) -1);
++
++  char in[] = "\e$(O+D\e(B";
++  char *inbuf = in;
++  size_t inleft = strlen (in);
++  char out[3];                  /* Space for one output character.  */
++  char *outbuf;
++  size_t outleft;
++
++  outbuf = out;
++  outleft = sizeof (out);
++  TEST_COMPARE (iconv (c, &inbuf, &inleft, &outbuf, &outleft), (size_t) -1);
++  TEST_COMPARE (errno, E2BIG);
++  TEST_COMPARE (inleft, 3);
++  TEST_COMPARE (inbuf - in, strlen (in) - 3);
++  TEST_COMPARE (outleft, sizeof (out) - 2);
++  TEST_COMPARE (outbuf - out, 2);
++  TEST_COMPARE (out[0] & 0xff, 0xc3);
++  TEST_COMPARE (out[1] & 0xff, 0xa6);
++
++  /* Return to the initial shift state, producing the pending
++     character.  */
++  outbuf = out;
++  outleft = sizeof (out);
++  TEST_COMPARE (iconv (c, &inbuf, &inleft, &outbuf, &outleft), 0);
++  TEST_COMPARE (inleft, 0);
++  TEST_COMPARE (inbuf - in, strlen (in));
++  TEST_COMPARE (outleft, sizeof (out) - 2);
++  TEST_COMPARE (outbuf - out, 2);
++  TEST_COMPARE (out[0] & 0xff, 0xcc);
++  TEST_COMPARE (out[1] & 0xff, 0x80);
++
++  /* Nothing should be flushed the second time.  */
++  outbuf = out;
++  outleft = sizeof (out);
++  TEST_COMPARE (iconv (c, NULL, 0, &outbuf, &outleft), 0);
++  TEST_COMPARE (outleft, sizeof (out));
++  TEST_COMPARE (outbuf - out, 0);
++  TEST_COMPARE (out[0] & 0xff, 0xcc);
++  TEST_COMPARE (out[1] & 0xff, 0x80);
++
++  TEST_COMPARE (iconv_close (c), 0);
++}
++
++/* Use an explicit flush to return to the initial state.  */
++static void
++with_flush (void)
++{
++  iconv_t c = iconv_open ("UTF-8", "ISO-2022-JP-3");
++  TEST_VERIFY_EXIT (c != (iconv_t) -1);
++
++  char in[] = "\e$(O+D";
++  char *inbuf = in;
++  size_t inleft = strlen (in);
++  char out[3];                  /* Space for one output character.  */
++  char *outbuf;
++  size_t outleft;
++
++  outbuf = out;
++  outleft = sizeof (out);
++  TEST_COMPARE (iconv (c, &inbuf, &inleft, &outbuf, &outleft), (size_t) -1);
++  TEST_COMPARE (errno, E2BIG);
++  TEST_COMPARE (inleft, 0);
++  TEST_COMPARE (inbuf - in, strlen (in));
++  TEST_COMPARE (outleft, sizeof (out) - 2);
++  TEST_COMPARE (outbuf - out, 2);
++  TEST_COMPARE (out[0] & 0xff, 0xc3);
++  TEST_COMPARE (out[1] & 0xff, 0xa6);
++
++  /* Flush the pending character.  */
++  outbuf = out;
++  outleft = sizeof (out);
++  TEST_COMPARE (iconv (c, NULL, 0, &outbuf, &outleft), 0);
++  TEST_COMPARE (outleft, sizeof (out) - 2);
++  TEST_COMPARE (outbuf - out, 2);
++  TEST_COMPARE (out[0] & 0xff, 0xcc);
++  TEST_COMPARE (out[1] & 0xff, 0x80);
++
++  /* Nothing should be flushed the second time.  */
++  outbuf = out;
++  outleft = sizeof (out);
++  TEST_COMPARE (iconv (c, NULL, 0, &outbuf, &outleft), 0);
++  TEST_COMPARE (outleft, sizeof (out));
++  TEST_COMPARE (outbuf - out, 0);
++  TEST_COMPARE (out[0] & 0xff, 0xcc);
++  TEST_COMPARE (out[1] & 0xff, 0x80);
++
++  TEST_COMPARE (iconv_close (c), 0);
++}
++
++static int
++do_test (void)
++{
++  with_escape_sequence ();
++  with_flush ();
++  return 0;
++}
++
++#include <support/test-driver.c>
 diff --git a/iconvdata/euc-kr.c b/iconvdata/euc-kr.c
 index b0d56cf3ee..1045bae926 100644
 --- a/iconvdata/euc-kr.c
@@ -1744,6 +1976,112 @@ index 49e7267ab4..521f0825b7 100644
  	curcs = sb;							      \
  	++inptr;							      \
  	continue;							      \
+diff --git a/iconvdata/iso-2022-jp-3.c b/iconvdata/iso-2022-jp-3.c
+index 8c3b7e627e..62cbc54a11 100644
+--- a/iconvdata/iso-2022-jp-3.c
++++ b/iconvdata/iso-2022-jp-3.c
+@@ -67,23 +67,34 @@ enum
+   CURRENT_SEL_MASK = 7 << 3
+ };
+ 
+-/* During UCS-4 to ISO-2022-JP-3 conversion, the COUNT element of the state
+-   also contains the last two bytes to be output, shifted by 6 bits, and a
+-   one-bit indicator whether they must be preceded by the shift sequence,
+-   in bit 22.  */
++/* During UCS-4 to ISO-2022-JP-3 conversion, the COUNT element of the
++   state also contains the last two bytes to be output, shifted by 6
++   bits, and a one-bit indicator whether they must be preceded by the
++   shift sequence, in bit 22.  During ISO-2022-JP-3 to UCS-4
++   conversion, COUNT may also contain a non-zero pending wide
++   character, shifted by six bits.  This happens for certain inputs in
++   JISX0213_1_2004_set and JISX0213_2_set if the second wide character
++   in a combining sequence cannot be written because the buffer is
++   full.  */
+ 
+ /* Since this is a stateful encoding we have to provide code which resets
+    the output state to the initial state.  This has to be done during the
+    flushing.  */
+ #define EMIT_SHIFT_TO_INIT \
+-  if ((data->__statep->__count & ~7) != ASCII_set)			      \
++  if (data->__statep->__count != ASCII_set)			      \
+     {									      \
+       if (FROM_DIRECTION)						      \
+ 	{								      \
+-	  /* It's easy, we don't have to emit anything, we just reset the     \
+-	     state for the input.  */					      \
+-	  data->__statep->__count &= 7;					      \
+-	  data->__statep->__count |= ASCII_set;				      \
++	  if (__glibc_likely (outbuf + 4 <= outend))			      \
++	    {								      \
++	      /* Write out the last character.  */			      \
++	      *((uint32_t *) outbuf) = data->__statep->__count >> 6;	      \
++	      outbuf += sizeof (uint32_t);				      \
++	      data->__statep->__count = ASCII_set;			\
++	    }								      \
++	  else								      \
++	    /* We don't have enough room in the output buffer.  */	      \
++	    status = __GCONV_FULL_OUTPUT;				      \
+ 	}								      \
+       else								      \
+ 	{								      \
+@@ -151,7 +162,21 @@ enum
+ #define LOOPFCT			FROM_LOOP
+ #define BODY \
+   {									      \
+-    uint32_t ch = *inptr;						      \
++    uint32_t ch;							      \
++									      \
++    /* Output any pending character.  */				      \
++    ch = set >> 6;							      \
++    if (__glibc_unlikely (ch != 0))					      \
++      {									      \
++	put32 (outptr, ch);						      \
++	outptr += 4;							      \
++	/* Remove the pending character, but preserve state bits.  */	      \
++	set &= (1 << 6) - 1;						      \
++	continue;							      \
++      }									      \
++									      \
++    /* Otherwise read the next input byte.  */				      \
++    ch = *inptr;							      \
+ 									      \
+     /* Recognize escape sequences.  */					      \
+     if (__glibc_unlikely (ch == ESC))					      \
+@@ -297,21 +322,25 @@ enum
+ 	    uint32_t u1 = __jisx0213_to_ucs_combining[ch - 1][0];	      \
+ 	    uint32_t u2 = __jisx0213_to_ucs_combining[ch - 1][1];	      \
+ 									      \
++	    inptr += 2;							      \
++									      \
++	    put32 (outptr, u1);						      \
++	    outptr += 4;						      \
++									      \
+ 	    /* See whether we have room for two characters.  */		      \
+-	    if (outptr + 8 <= outend)					      \
++	    if (outptr + 4 <= outend)					      \
+ 	      {								      \
+-		inptr += 2;						      \
+-		put32 (outptr, u1);					      \
+-		outptr += 4;						      \
+ 		put32 (outptr, u2);					      \
+ 		outptr += 4;						      \
+ 		continue;						      \
+ 	      }								      \
+-	    else							      \
+-	      {								      \
+-		result = __GCONV_FULL_OUTPUT;				      \
+-		break;							      \
+-	      }								      \
++									      \
++	    /* Otherwise store only the first character now, and	      \
++	       put the second one into the queue.  */			      \
++	    set |= u2 << 6;						      \
++	    /* Tell the caller why we terminate the loop.  */		      \
++	    result = __GCONV_FULL_OUTPUT;				      \
++	    break;							      \
+ 	  }								      \
+ 									      \
+ 	inptr += 2;							      \
 diff --git a/iconvdata/ksc5601.h b/iconvdata/ksc5601.h
 index d3eb3a4ff8..f5cdc72797 100644
 --- a/iconvdata/ksc5601.h
@@ -2493,6 +2831,28 @@ index 0000000000..ae3c1b1ba0
 +}
 +
 +#include <support/test-driver.c>
+diff --git a/nscd/netgroupcache.c b/nscd/netgroupcache.c
+index 88c69d1e9c..381aa721ef 100644
+--- a/nscd/netgroupcache.c
++++ b/nscd/netgroupcache.c
+@@ -248,7 +248,7 @@ addgetnetgrentX (struct database_dyn *db, int fd, request_header *req,
+ 					     : NULL);
+ 				    ndomain = (ndomain ? newbuf + ndomaindiff
+ 					       : NULL);
+-				    buffer = newbuf;
++				    *tofreep = buffer = newbuf;
+ 				  }
+ 
+ 				nhost = memcpy (buffer + bufused,
+@@ -319,7 +319,7 @@ addgetnetgrentX (struct database_dyn *db, int fd, request_header *req,
+ 		    else if (status == NSS_STATUS_TRYAGAIN && e == ERANGE)
+ 		      {
+ 			buflen *= 2;
+-			buffer = xrealloc (buffer, buflen);
++			*tofreep = buffer = xrealloc (buffer, buflen);
+ 		      }
+ 		    else if (status == NSS_STATUS_RETURN
+ 			     || status == NSS_STATUS_NOTFOUND
 diff --git a/nscd/selinux.c b/nscd/selinux.c
 index a4ea8008e2..1ebf924826 100644
 --- a/nscd/selinux.c
@@ -4436,6 +4796,38 @@ index 0114ca8b19..d0804b30c0 100644
          .EXIT
          .PROCEND
  	cfi_endproc
+diff --git a/sysdeps/i386/dl-machine.h b/sysdeps/i386/dl-machine.h
+index 8af0789a9c..4334ade2a0 100644
+--- a/sysdeps/i386/dl-machine.h
++++ b/sysdeps/i386/dl-machine.h
+@@ -338,16 +338,22 @@ elf_machine_rel (struct link_map *map, const Elf32_Rel *reloc,
+ 	{
+ # ifndef RTLD_BOOTSTRAP
+ 	  if (sym_map != map
+-	      && sym_map->l_type != lt_executable
+ 	      && !sym_map->l_relocated)
+ 	    {
+ 	      const char *strtab
+ 		= (const char *) D_PTR (map, l_info[DT_STRTAB]);
+-	      _dl_error_printf ("\
++	      if (sym_map->l_type == lt_executable)
++		_dl_fatal_printf ("\
++%s: IFUNC symbol '%s' referenced in '%s' is defined in the executable \
++and creates an unsatisfiable circular dependency.\n",
++				  RTLD_PROGNAME, strtab + refsym->st_name,
++				  map->l_name);
++	      else
++		_dl_error_printf ("\
+ %s: Relink `%s' with `%s' for IFUNC symbol `%s'\n",
+-				RTLD_PROGNAME, map->l_name,
+-				sym_map->l_name,
+-				strtab + refsym->st_name);
++				  RTLD_PROGNAME, map->l_name,
++				  sym_map->l_name,
++				  strtab + refsym->st_name);
+ 	    }
+ # endif
+ 	  value = ((Elf32_Addr (*) (void)) value) ();
 diff --git a/sysdeps/i386/sysdep.h b/sysdeps/i386/sysdep.h
 index b4bcd8fb6c..6094af8fec 100644
 --- a/sysdeps/i386/sysdep.h
@@ -4603,6 +4995,34 @@ index 2ba009e919..829eec266a 100644
  #endif	/* PIC */
  
  #endif	/* __ASSEMBLER__ */
+diff --git a/sysdeps/powerpc/powerpc64/backtrace.c b/sysdeps/powerpc/powerpc64/backtrace.c
+index 8a53a1088f..362a2b713c 100644
+--- a/sysdeps/powerpc/powerpc64/backtrace.c
++++ b/sysdeps/powerpc/powerpc64/backtrace.c
+@@ -54,11 +54,22 @@ struct signal_frame_64 {
+   /* We don't care about the rest, since the IP value is at 'uc' field.  */
+ };
+ 
++/* Test if the address match to the inside the trampoline code.
++   Up to and including kernel 5.8, returning from an interrupt or syscall to a
++   signal handler starts execution directly at the handler's entry point, with
++   LR set to address of the sigreturn trampoline (the vDSO symbol).
++   Newer kernels will branch to signal handler from the trampoline instead, so
++   checking the stacktrace against the vDSO entrypoint does not work in such
++   case.
++   The vDSO branches with a 'bctrl' instruction, so checking either the
++   vDSO address itself and the next instruction should cover all kernel
++   versions.  */
+ static inline bool
+ is_sigtramp_address (void *nip)
+ {
+ #ifdef HAVE_SIGTRAMP_RT64
+-  if (nip == GLRO (dl_vdso_sigtramp_rt64))
++  if (nip == GLRO (dl_vdso_sigtramp_rt64) ||
++      nip == GLRO (dl_vdso_sigtramp_rt64) + 4)
+     return true;
+ #endif
+   return false;
 diff --git a/sysdeps/sh/be/sh4/fpu/Implies b/sysdeps/sh/be/sh4/fpu/Implies
 new file mode 100644
 index 0000000000..71b28ee1a4
@@ -7073,6 +7493,23 @@ index 5bf9eed80b..62e6f8fe11 100644
 +#endif	/* __ASSEMBLER__ */
 +
  #endif /* linux/x86_64/x32/sysdep.h */
+diff --git a/sysdeps/x86/Makefile b/sysdeps/x86/Makefile
+index 95182a508c..a5112ef367 100644
+--- a/sysdeps/x86/Makefile
++++ b/sysdeps/x86/Makefile
+@@ -12,6 +12,12 @@ endif
+ ifeq ($(subdir),setjmp)
+ gen-as-const-headers += jmp_buf-ssp.sym
+ sysdep_routines += __longjmp_cancel
++ifneq ($(enable-cet),no)
++ifneq ($(have-tunables),no)
++tests += tst-setjmp-cet
++tst-setjmp-cet-ENV = GLIBC_TUNABLES=glibc.cpu.x86_ibt=on:glibc.cpu.x86_shstk=on
++endif
++endif
+ endif
+ 
+ ifeq ($(enable-cet),yes)
 diff --git a/sysdeps/x86/cacheinfo.c b/sysdeps/x86/cacheinfo.c
 index e3e8ef27bb..39c13b7195 100644
 --- a/sysdeps/x86/cacheinfo.c
@@ -7137,11 +7574,81 @@ index e3e8ef27bb..39c13b7195 100644
  }
  
  #endif
+diff --git a/sysdeps/x86/dl-cet.c b/sysdeps/x86/dl-cet.c
+index ca3b5849bc..8ffaf94a00 100644
+--- a/sysdeps/x86/dl-cet.c
++++ b/sysdeps/x86/dl-cet.c
+@@ -105,7 +105,11 @@ dl_cet_check (struct link_map *m, const char *program)
+   /* No legacy object check if both IBT and SHSTK are always on.  */
+   if (enable_ibt_type == CET_ALWAYS_ON
+       && enable_shstk_type == CET_ALWAYS_ON)
+-    return;
++    {
++      THREAD_SETMEM (THREAD_SELF, header.feature_1,
++		     GL(dl_x86_feature_1)[0]);
++      return;
++    }
+ 
+   /* Check if IBT is enabled by kernel.  */
+   bool ibt_enabled
+diff --git a/sysdeps/x86/tst-setjmp-cet.c b/sysdeps/x86/tst-setjmp-cet.c
+new file mode 100644
+index 0000000000..42c795d2a8
+--- /dev/null
++++ b/sysdeps/x86/tst-setjmp-cet.c
+@@ -0,0 +1 @@
++#include <setjmp/tst-setjmp.c>
+diff --git a/sysdeps/x86_64/dl-machine.h b/sysdeps/x86_64/dl-machine.h
+index 8e9baffeb4..74029871d8 100644
+--- a/sysdeps/x86_64/dl-machine.h
++++ b/sysdeps/x86_64/dl-machine.h
+@@ -315,16 +315,22 @@ elf_machine_rela (struct link_map *map, const ElfW(Rela) *reloc,
+ 	{
+ # ifndef RTLD_BOOTSTRAP
+ 	  if (sym_map != map
+-	      && sym_map->l_type != lt_executable
+ 	      && !sym_map->l_relocated)
+ 	    {
+ 	      const char *strtab
+ 		= (const char *) D_PTR (map, l_info[DT_STRTAB]);
+-	      _dl_error_printf ("\
++	      if (sym_map->l_type == lt_executable)
++		_dl_fatal_printf ("\
++%s: IFUNC symbol '%s' referenced in '%s' is defined in the executable \
++and creates an unsatisfiable circular dependency.\n",
++				  RTLD_PROGNAME, strtab + refsym->st_name,
++				  map->l_name);
++	      else
++		_dl_error_printf ("\
+ %s: Relink `%s' with `%s' for IFUNC symbol `%s'\n",
+-				RTLD_PROGNAME, map->l_name,
+-				sym_map->l_name,
+-				strtab + refsym->st_name);
++				  RTLD_PROGNAME, map->l_name,
++				  sym_map->l_name,
++				  strtab + refsym->st_name);
+ 	    }
+ # endif
+ 	  value = ((ElfW(Addr) (*) (void)) value) ();
 diff --git a/sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S b/sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S
-index c763b7d871..74953245aa 100644
+index c763b7d871..06f70eb1b0 100644
 --- a/sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S
 +++ b/sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S
-@@ -244,7 +244,7 @@ L(return):
+@@ -67,6 +67,13 @@
+ # define REP_MOVSB_THRESHOLD	(2048 * (VEC_SIZE / 16))
+ #endif
+ 
++/* Avoid short distance rep movsb only with non-SSE vector.  */
++#ifndef AVOID_SHORT_DISTANCE_REP_MOVSB
++# define AVOID_SHORT_DISTANCE_REP_MOVSB (VEC_SIZE > 16)
++#else
++# define AVOID_SHORT_DISTANCE_REP_MOVSB 0
++#endif
++
+ #ifndef PREFETCH
+ # define PREFETCH(addr) prefetcht0 addr
+ #endif
+@@ -244,7 +251,7 @@ L(return):
  	ret
  
  L(movsb):
@@ -7150,7 +7657,29 @@ index c763b7d871..74953245aa 100644
  	jae	L(more_8x_vec)
  	cmpq	%rsi, %rdi
  	jb	1f
-@@ -402,7 +402,7 @@ L(more_8x_vec):
+@@ -257,7 +264,21 @@ L(movsb):
+ #  error Unsupported REP_MOVSB_THRESHOLD and VEC_SIZE!
+ # endif
+ 	jb	L(more_8x_vec_backward)
++# if AVOID_SHORT_DISTANCE_REP_MOVSB
++	movq	%rdi, %rcx
++	subq	%rsi, %rcx
++	jmp	2f
++# endif
+ 1:
++# if AVOID_SHORT_DISTANCE_REP_MOVSB
++	movq	%rsi, %rcx
++	subq	%rdi, %rcx
++2:
++/* Avoid "rep movsb" if RCX, the distance between source and destination,
++   is N*4GB + [1..63] with N >= 0.  */
++	cmpl	$63, %ecx
++	jbe	L(more_2x_vec)	/* Avoid "rep movsb" if ECX <= 63.  */
++# endif
+ 	mov	%RDX_LP, %RCX_LP
+ 	rep movsb
+ L(nop):
+@@ -402,7 +423,7 @@ L(more_8x_vec):
  	addq	%r8, %rdx
  #if (defined USE_MULTIARCH || VEC_SIZE == 16) && IS_IN (libc)
  	/* Check non-temporal store threshold.  */
@@ -7159,7 +7688,7 @@ index c763b7d871..74953245aa 100644
  	ja	L(large_forward)
  #endif
  L(loop_4x_vec_forward):
-@@ -454,7 +454,7 @@ L(more_8x_vec_backward):
+@@ -454,7 +475,7 @@ L(more_8x_vec_backward):
  	subq	%r8, %rdx
  #if (defined USE_MULTIARCH || VEC_SIZE == 16) && IS_IN (libc)
  	/* Check non-temporal store threshold.  */

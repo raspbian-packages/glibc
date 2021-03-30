@@ -396,6 +396,9 @@ test-xfail-tst-ptsname = yes
 test-xfail-tst-spawn4 = yes
 test-xfail-tst-spawn4-compat = yes
 
+# new in 2.34
+test-xfail-tst-cpu-features-cpuinfo-static = yes
+
 # actually never succeded
 test-xfail-tst-create_format1 = yes
 test-xfail-tst-getcwd-abspath = yes

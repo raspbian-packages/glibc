@@ -1,4 +1,4 @@
-glibc (2.31-9+rpi1) bullseye-staging; urgency=medium
+glibc (2.31-10+rpi1) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -9,7 +9,30 @@ glibc (2.31-9+rpi1) bullseye-staging; urgency=medium
     script does not seem to be used for anything in the Debian
     package.
 
- -- Raspbian forward porter <root@raspbian.org>  Mon, 11 Jan 2021 01:56:57 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Tue, 30 Mar 2021 21:55:53 +0000
+
+glibc (2.31-10) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/git-tiocflush.diff: Cope with
+    BSD 4.1-ish ioctl(..., TIOCFLUSH, NULL).
+  * debian/debhelper.in/libc-udeb.install.hurd-i386: Add missing
+    libmachuser/libhurduser.
+  * debian/testsuite-xfail-debian.mk: Update tests.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix a possible assertion failure in iconv when converting
+      from ISO-2022-JP-3 to UTF-8 (CVE-2021-3326).  Closes: #981198.
+    - Fix a possible double-free in nscd when processing a request for netgroup
+      lookup (CVE-2021-27645).  Closes: #983479.
+  * debian/debhelper.in/libc.preinst: fallback to text mode in case 1) debconf
+    is about to use the dialog frontend with whiptail or frontend and 2) the
+    corresponding executable is unusable.  Closes: #984533.
+  * debian/rules.d/debhelper.mk: correctly strip libpthread.so for bi/triarch
+    builds.  Closes: #983457.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 21 Mar 2021 00:38:37 +0100
 
 glibc (2.31-9) unstable; urgency=medium
 

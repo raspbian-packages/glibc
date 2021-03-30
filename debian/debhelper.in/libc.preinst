@@ -22,10 +22,43 @@ kfreebsd_compare_versions () {
 if [ "$type" != abort-upgrade -a -z "$DPKG_ROOT" ]
 then
     # Load debconf module if available and usable
-    if [ -f /usr/share/debconf/confmodule ] && \
-       ( [ "$DEBCONF_USE_CDEBCONF" ] || perl -e "" 2>/dev/null ) ; then
-        . /usr/share/debconf/confmodule
-        USE_DEBCONF=1
+    if [ -f /usr/share/debconf/confmodule ]; then
+        # cdebconf has a working fallback mechanism in case dialog
+        # is not usable, so do not try to do anything smart here
+        if [ "$DEBCONF_USE_CDEBCONF" ] ; then
+            . /usr/share/debconf/confmodule
+            USE_DEBCONF=1
+        # debconf requires perl
+        elif perl -e "" 2>/dev/null ; then
+            . /usr/share/debconf/confmodule
+            # Check that the selected frontend will work
+            if [ -n "$DEBIAN_FRONTEND" ] ; then
+                frontend="$DEBIAN_FRONTEND"
+            else
+                db_version 2.0
+                db_get debconf/frontend
+                frontend="$RET"
+            fi
+            frontend=`echo $frontend | tr '[:upper:]' '[:lower:]'`
+            case "$frontend" in
+            dialog)
+                # debconf uses whiptail by default unless dialog is available and
+                # $DEBCONF_FORCE_DIALOG is set
+                if [ -x "$(which whiptail)" ] && ! ( [ -n "$DEBCONF_FORCE_DIALOG" ] && [ -x "$(which dialog)" ] ); then
+                    frontend=whiptail
+                fi
+                # Only enable debconf if the whiptail/dialog are not available
+                # (in which case debconf has a fallback mechanism) or usable
+                if ! [ -x "$(which $frontend)" ] || $frontend --version > /dev/null 2>&1 ; then
+                    USE_DEBCONF=1
+                fi
+                ;;
+            *)
+                 # For now assume that all other frontends are fine
+                 USE_DEBCONF=1
+                ;;
+            esac
+        fi
     fi
 
     # See if LD_LIBRARY_PATH contains the traditional /lib, but not the
