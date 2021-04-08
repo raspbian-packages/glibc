@@ -36,7 +36,7 @@ then
                 frontend="$DEBIAN_FRONTEND"
             else
                 db_version 2.0
-                db_get debconf/frontend
+                db_get debconf/frontend || RET="Dialog"
                 frontend="$RET"
             fi
             frontend=`echo $frontend | tr '[:upper:]' '[:lower:]'`

@@ -1,4 +1,4 @@
-glibc (2.31-10+rpi1) bullseye-staging; urgency=medium
+glibc (2.31-11+rpi1) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -9,7 +9,14 @@ glibc (2.31-10+rpi1) bullseye-staging; urgency=medium
     script does not seem to be used for anything in the Debian
     package.
 
- -- Raspbian forward porter <root@raspbian.org>  Tue, 30 Mar 2021 21:55:53 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 08 Apr 2021 12:18:08 +0000
+
+glibc (2.31-11) unstable; urgency=medium
+
+  * debian/debhelper.in/libc.preinst: handle the case where debconf
+    configuration has never been done.  Closes: #986180.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Wed, 31 Mar 2021 22:09:32 +0200
 
 glibc (2.31-10) unstable; urgency=medium
 
