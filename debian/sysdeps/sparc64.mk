@@ -31,9 +31,4 @@ cp -a debian/tmp-sparc/usr/include/gnu/lib-names-32.h \
 
 endef
 
-define libc6-sparc_extra_pkg_install
-mkdir -p debian/$(curpass)/lib
-ln -s /lib32/ld-linux.so.2 debian/$(curpass)/lib
-endef
-
 endif # multilib

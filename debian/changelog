@@ -1,4 +1,4 @@
-glibc (2.31-11+rpi1) bullseye-staging; urgency=medium
+glibc (2.31-12+rpi1) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -9,7 +9,33 @@ glibc (2.31-11+rpi1) bullseye-staging; urgency=medium
     script does not seem to be used for anything in the Debian
     package.
 
- -- Raspbian forward porter <root@raspbian.org>  Thu, 08 Apr 2021 12:18:08 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 27 May 2021 20:01:29 +0000
+
+glibc (2.31-12) unstable; urgency=medium
+
+  * debian/po/de.po: fix encoding declaration.  Closes: #986450.
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - On s390x, check for vector support in memmove ifunc-selector in
+      addition to Miscellaneous-Instruction-Extensions.
+  * debian/patches/any/local-rtlddir-cross.diff: drop patch, letting upstream
+    makefiles to install the dynamic linker symlink directly in the right
+    location. This fixes the temporary installation done by upstream makefiles
+    to run some tests in a container.  Closes: #973278, #985617.
+  * debian/rules.d/build.mk: do not create the dynamic linker manually.
+  * debian/sysdeps/*.mk: do not create the dynamic linker manually for
+    bi/tri-arch packages.
+  * debian/rules.d/build.mk: create the soname symlink for ld-2.xx.so, to
+    avoid its creation later by ldconfig.
+  * debian/debhelper.in/libc.install, debhelper.in/libc-alt.install,
+    debhelper.in/libc-udeb.install, debhelper.in/libc-udeb.install.hurd-i386:
+    adjust given that the dynamic linker symlink is now already at the correct
+    location.
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix GLIBC_TUNABLES parsing for AT_SECURE binaries.
+  * debian/rules.d/build.mk: escape EOL so that $configure_build is correctly
+    passed to the configure script.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sat, 01 May 2021 22:56:06 +0200
 
 glibc (2.31-11) unstable; urgency=medium
 

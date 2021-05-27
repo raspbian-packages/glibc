@@ -46,10 +46,4 @@ cp -a debian/tmp-mips32/usr/include/gnu/lib-names-o32_hard.h \
 
 endef
 
-# create a symlink for the 32 bit dynamic linker in /lib
-define libc6-mips32_extra_pkg_install
-mkdir -p debian/libc6-mips32/lib
-ln -sf /libo32/ld.so.1 debian/libc6-mips32/lib
-endef
-
 endif # multilib

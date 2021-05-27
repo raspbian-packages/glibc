@@ -28,10 +28,4 @@ cp -a debian/tmp-powerpc/usr/include/gnu/lib-names-32.h \
 
 endef
 
-# create a symlink for the 32 bit dynamic linker in /lib
-define libc6-powerpc_extra_pkg_install
-mkdir -p debian/$(curpass)/lib
-ln -s /lib32/ld.so.1 debian/$(curpass)/lib
-endef
-
 endif # multilib

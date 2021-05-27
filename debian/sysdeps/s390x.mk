@@ -25,9 +25,4 @@ cp -a debian/tmp-s390/usr/include/gnu/lib-names-32.h \
 
 endef
 
-define libc6-s390_extra_pkg_install
-mkdir -p debian/$(curpass)/lib
-ln -s /lib32/ld.so.1 debian/$(curpass)/lib
-endef
-
 endif # multilib

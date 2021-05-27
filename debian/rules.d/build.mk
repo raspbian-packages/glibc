@@ -94,8 +94,8 @@ endif
 	    echo "No.  Forcing cross-compile by setting build to $$configure_build."; \
 	  fi; \
 	fi; \
-	echo -n "Build started: " ; date --rfc-2822
-	echo "---------------"
+	echo -n "Build started: " ; date --rfc-2822; \
+	echo "---------------"; \
 	cd $(DEB_BUILDDIR) && \
 		CC="$(call xx,CC)" \
 		CXX=$(if $(filter nocheck,$(DEB_BUILD_OPTIONS)),:,"$(call xx,CXX)") \
@@ -317,14 +317,14 @@ ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
 	  esac; \
 	fi
 
-	# Create the ld.so symlink to the multiarch directory
-	if [ $(curpass) = libc ]; then \
-	  rtld_so="$$(LANG=C LC_ALL=C readelf -l debian/tmp-$(curpass)/usr/bin/iconv | grep 'interpreter' | sed -e 's/.*interpreter: \(.*\)]/\1/g')" ; \
-	  rtld_so="$$(basename $$rtld_so)" ; \
-	  link_name="debian/tmp-$(curpass)/lib/$$rtld_so" ; \
-	  target="$(call xx,slibdir)/$$(readlink debian/tmp-$(curpass)/$(call xx,slibdir)/$$rtld_so)" ; \
-	  ln -s $$target $$link_name ;  \
-	fi
+	# Create the ld.so symlink in the slibdir directory, otherwise it will get
+	# created later by ldconfig, leading to a dangling symlink when the package
+	# is removed
+	ld_so="$$(ls debian/tmp-$(curpass)/$(call xx,slibdir)/ld-*.so)" ; \
+	soname="$$(LANG=C LC_ALL=C readelf -d $$ld_so | grep 'Library soname:' | sed -e 's/.*Library soname: \[\(.*\)\]/\1/g')" ; \
+	target="$$(basename $$ld_so)" ; \
+	link_name="debian/tmp-$(curpass)/$(call xx,slibdir)/$$soname" ; \
+	ln -sf $$target $$link_name
 	
 	$(call xx,extra_install)
 endif

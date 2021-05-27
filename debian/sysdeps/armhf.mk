@@ -34,10 +34,5 @@ ifeq (,$(filter nobiarch, $(DEB_BUILD_PROFILES)))
 #	debian/libc6-dev-armel/usr/include/arm-linux-gnueabihf/gnu
 #
 #endef
-#
-#define libc6-armel_extra_pkg_install
-#mkdir -p debian/libc6-armel/lib
-#ln -sf $(armel_slibdir)/ld-linux.so.3 debian/libc6-armel/lib
-#endef
 
 endif # multilib

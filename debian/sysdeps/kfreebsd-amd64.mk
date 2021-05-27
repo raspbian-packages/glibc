@@ -28,9 +28,4 @@ cp -a debian/tmp-i386/usr/include/sys/vm86.h \
 
 endef
 
-define libc0.1-i386_extra_pkg_install
-mkdir -p debian/libc0.1-i386/lib
-ln -sf /lib32/ld.so.1 debian/libc0.1-i386/lib
-endef
-
 endif # multilib

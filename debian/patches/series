@@ -143,7 +143,6 @@ all/local-ldd.diff
 all/local-nis-shadow.diff
 all/submitted-po-fr-fixes.diff
 
-any/local-rtlddir-cross.diff
 any/local-asserth-decls.diff
 any/local-bindresvport_blacklist.diff
 any/local-fhs-linux-paths.diff

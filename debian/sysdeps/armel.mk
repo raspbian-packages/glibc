@@ -26,7 +26,6 @@ ifeq (,$(filter nobiarch, $(DEB_BUILD_PROFILES)))
 #
 #define libc6-armhf_extra_pkg_install
 #mkdir -p debian/libc6-armhf$(armhf_slibdir)
-#ln -sf $(armhf_slibdir)/ld-linux-armhf.so.3 debian/libc6-armhf/lib
 #ln -sf ld-linux-armhf.so.3 debian/libc6-armhf$(armhf_slibdir)/ld-linux.so.3 
 #endef
 

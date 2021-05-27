@@ -51,9 +51,4 @@ cp -a debian/tmp-i386/usr/include/gnu/lib-names-32.h \
 
 endef
 
-define libc6-i386_extra_pkg_install
-mkdir -p debian/libc6-i386/lib
-ln -sf /lib32/ld-linux.so.2 debian/libc6-i386/lib
-endef
-
 endif # multilib
