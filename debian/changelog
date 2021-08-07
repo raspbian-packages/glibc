@@ -1,4 +1,4 @@
-glibc (2.31-12+rpi1) bullseye-staging; urgency=medium
+glibc (2.31-13+rpi1) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -9,7 +9,20 @@ glibc (2.31-12+rpi1) bullseye-staging; urgency=medium
     script does not seem to be used for anything in the Debian
     package.
 
- -- Raspbian forward porter <root@raspbian.org>  Thu, 27 May 2021 20:01:29 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Sat, 07 Aug 2021 01:10:32 +0000
+
+glibc (2.31-13) unstable; urgency=medium
+
+  [ Colin Watson ]
+  * debian/debhelper.in/libc.postinst, script.in/nsscheck.sh: Look for
+    openssh-server package rather than ssh.  Closes: #990069
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix an arbitrary read in wordexp() (CVE-2021-35942).  Closes:
+      #990542.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Tue, 06 Jul 2021 21:16:59 +0200
 
 glibc (2.31-12) unstable; urgency=medium
 

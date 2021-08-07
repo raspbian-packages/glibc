@@ -33,9 +33,10 @@ then
 	    check="$check boa cucipop courier-authdaemon cron cups exim"
 	    check="$check exim4-base dovecot-common cucipop incron lprng lpr"
 	    check="$check lpr-ppd mysql-server nis openbsd-inetd"
-	    check="$check openldapd postgresql-common proftpd postfix postfix-tls"
-	    check="$check rsync samba sasl2-bin slapd smail sendmail snmpd ssh"
-	    check="$check spamassassin vsftpd wu-ftpd wu-ftpd-academ wwwoffle"
+	    check="$check openldapd openssh-server postgresql-common proftpd"
+	    check="$check postfix postfix-tls rsync samba sasl2-bin slapd"
+	    check="$check smail sendmail snmpd spamassassin vsftpd"
+	    check="$check wu-ftpd wu-ftpd-academ wwwoffle"
 	    check="$check webmin dropbear gdm"
 	    # NSS services check: 
 	    __NSS_CHECK__

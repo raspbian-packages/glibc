@@ -12,6 +12,7 @@
 			-e's/\blpr\b/lpd/g' \
 			-e's/\blpr-ppd\b/lpd-ppd/g' \
 			-e's/\bmysql-server\b/mysql/g' \
+			-e's/\bopenssh-server\b/ssh/g' \
 			-e's/\bsasl2-bin\b/saslauthd/g' \
 			-e's/\bsamba\b/smbd/g' \
 			-e's/\bpostgresql-common\b/postgresql/g' \
