@@ -24,12 +24,6 @@
 int
 __sem_init (sem_t *sem, int pshared, unsigned value)
 {
-  if (pshared != 0)
-    {
-      errno = EOPNOTSUPP;
-      return -1;
-    }
-
 #ifdef SEM_VALUE_MAX
   if (value > SEM_VALUE_MAX)
     {
@@ -38,7 +32,9 @@ __sem_init (sem_t *sem, int pshared, unsigned value)
     }
 #endif
 
-  *sem = (sem_t) __SEMAPHORE_INITIALIZER (pshared, value);
+  struct new_sem *isem = (struct new_sem *) sem;
+
+  *isem = (struct new_sem) __SEMAPHORE_INITIALIZER (value, pshared);
   return 0;
 }
 
