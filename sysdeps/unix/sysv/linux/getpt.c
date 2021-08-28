@@ -31,7 +31,7 @@
 #define _PATH_DEVPTS _PATH_DEV "pts"
 
 /* Prototype for function that opens BSD-style master pseudo-terminals.  */
-extern int __bsd_getpt (void) attribute_hidden;
+extern int __bsd_openpt (int oflag) attribute_hidden;
 
 /* Open a master pseudo terminal and return its file descriptor.  */
 int
@@ -88,14 +88,15 @@ __getpt (void)
 {
   int fd = __posix_openpt (O_RDWR);
   if (fd == -1)
-    fd = __bsd_getpt ();
+    fd = __bsd_openpt (O_RDWR);
   return fd;
 }
+weak_alias (__getpt, getpt)
 
 
 #define PTYNAME1 "pqrstuvwxyzabcde";
 #define PTYNAME2 "0123456789abcdef";
 
-#define __getpt __bsd_getpt
+#define HAVE_GETPT
 #define HAVE_POSIX_OPENPT
 #include <sysdeps/unix/bsd/getpt.c>
