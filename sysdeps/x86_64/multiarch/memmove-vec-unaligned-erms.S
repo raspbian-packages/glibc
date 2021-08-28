@@ -67,6 +67,13 @@
 # define REP_MOVSB_THRESHOLD	(2048 * (VEC_SIZE / 16))
 #endif
 
+/* Avoid short distance rep movsb only with non-SSE vector.  */
+#ifndef AVOID_SHORT_DISTANCE_REP_MOVSB
+# define AVOID_SHORT_DISTANCE_REP_MOVSB (VEC_SIZE > 16)
+#else
+# define AVOID_SHORT_DISTANCE_REP_MOVSB 0
+#endif
+
 #ifndef PREFETCH
 # define PREFETCH(addr) prefetcht0 addr
 #endif
@@ -244,7 +251,7 @@ L(return):
 	ret
 
 L(movsb):
-	cmpq	__x86_shared_non_temporal_threshold(%rip), %rdx
+	cmp	__x86_shared_non_temporal_threshold(%rip), %RDX_LP
 	jae	L(more_8x_vec)
 	cmpq	%rsi, %rdi
 	jb	1f
@@ -257,7 +264,21 @@ L(movsb):
 #  error Unsupported REP_MOVSB_THRESHOLD and VEC_SIZE!
 # endif
 	jb	L(more_8x_vec_backward)
+# if AVOID_SHORT_DISTANCE_REP_MOVSB
+	movq	%rdi, %rcx
+	subq	%rsi, %rcx
+	jmp	2f
+# endif
 1:
+# if AVOID_SHORT_DISTANCE_REP_MOVSB
+	movq	%rsi, %rcx
+	subq	%rdi, %rcx
+2:
+/* Avoid "rep movsb" if RCX, the distance between source and destination,
+   is N*4GB + [1..63] with N >= 0.  */
+	cmpl	$63, %ecx
+	jbe	L(more_2x_vec)	/* Avoid "rep movsb" if ECX <= 63.  */
+# endif
 	mov	%RDX_LP, %RCX_LP
 	rep movsb
 L(nop):
@@ -402,7 +423,7 @@ L(more_8x_vec):
 	addq	%r8, %rdx
 #if (defined USE_MULTIARCH || VEC_SIZE == 16) && IS_IN (libc)
 	/* Check non-temporal store threshold.  */
-	cmpq	__x86_shared_non_temporal_threshold(%rip), %rdx
+	cmp	__x86_shared_non_temporal_threshold(%rip), %RDX_LP
 	ja	L(large_forward)
 #endif
 L(loop_4x_vec_forward):
@@ -454,7 +475,7 @@ L(more_8x_vec_backward):
 	subq	%r8, %rdx
 #if (defined USE_MULTIARCH || VEC_SIZE == 16) && IS_IN (libc)
 	/* Check non-temporal store threshold.  */
-	cmpq	__x86_shared_non_temporal_threshold(%rip), %rdx
+	cmp	__x86_shared_non_temporal_threshold(%rip), %RDX_LP
 	ja	L(large_backward)
 #endif
 L(loop_4x_vec_backward):
