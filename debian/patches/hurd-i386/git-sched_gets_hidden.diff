@@ -1,0 +1,20 @@
+Committed for glibc 2.33
+
+commit 4ebd73d43f73702301640baecca35458a327996d
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Thu Aug 6 20:10:58 2020 +0200
+
+    hurd: Add missing hidden def
+    
+    * sysdeps/mach/hurd/sched_gets.c (__sched_getscheduler): Add hidden def.
+
+diff --git a/sysdeps/mach/hurd/sched_gets.c b/sysdeps/mach/hurd/sched_gets.c
+index 9fe31ce79e..af1fc80487 100644
+--- a/sysdeps/mach/hurd/sched_gets.c
++++ b/sysdeps/mach/hurd/sched_gets.c
+@@ -27,4 +27,5 @@ __sched_getscheduler (pid_t pid)
+ {
+   return SCHED_OTHER;
+ }
++libc_hidden_def (__sched_getscheduler)
+ weak_alias (__sched_getscheduler, sched_getscheduler)

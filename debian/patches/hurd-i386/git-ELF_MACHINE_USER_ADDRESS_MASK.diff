@@ -1,0 +1,24 @@
+Committed for 2.33
+
+commit 407765e9f24f5a82f318a9e069a977710ac99ee0
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Sun Dec 20 01:47:47 2020 +0100
+
+    hurd: Fix ELF_MACHINE_USER_ADDRESS_MASK value
+    
+    x86 binaries are linked at 0x08000000, so we need to let them get mapped
+    there.
+
+diff --git a/sysdeps/i386/dl-machine.h b/sysdeps/i386/dl-machine.h
+index bdc21d1a3c..fea9e579ec 100644
+--- a/sysdeps/i386/dl-machine.h
++++ b/sysdeps/i386/dl-machine.h
+@@ -143,7 +143,7 @@ extern ElfW(Addr) _dl_profile_fixup (struct link_map *l,
+ 
+ /* Mask identifying addresses reserved for the user program,
+    where the dynamic linker should not map anything.  */
+-#define ELF_MACHINE_USER_ADDRESS_MASK	0xf8000000UL
++#define ELF_MACHINE_USER_ADDRESS_MASK	0xf0000000UL
+ 
+ /* Initial entry point code for the dynamic linker.
+    The C function `_dl_start' is the real entry point;
