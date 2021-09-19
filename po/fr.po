@@ -39,7 +39,7 @@ msgstr "Rebut dans ARGP_HELP_FMT: %s"
 msgid "Mandatory or optional arguments to long options are also mandatory or optional for any corresponding short options."
 msgstr ""
 "Les arguments obligatoires ou optionnels pour les options de forme longue\n"
-"le sont aussi pour les options de   courte."
+"le sont aussi pour les options de forme courte."
 
 #: argp/argp-help.c:1600
 msgid "Usage:"
@@ -5655,7 +5655,7 @@ msgstr "Trop de fichiers ouverts dans le système"
 #. TRANS modes on an ordinary file.
 #: sysdeps/gnu/errlist.h:173
 msgid "Inappropriate ioctl for device"
-msgstr "Ioctl() inappropré pour un périphérique"
+msgstr "Ioctl() inapproprié pour un périphérique"
 
 #. TRANS An attempt to execute a file that is currently open for writing, or
 #. TRANS write to a file that is currently being executed.  Often using a
