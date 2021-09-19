@@ -1,0 +1,167 @@
+commit 306b8dbac917ef7f499044551df9bf051ca78fa4
+Author: Vincent Chen <vincent.chen@sifive.com>
+Date:   Tue Dec 15 17:16:40 2020 +0800
+
+    riscv: Initialize $gp before resolving the IRELATIVE relocation
+    
+    The $gp register may be used to access the global variable in
+    the PDE program, so the $gp register should be initialized before
+    executing the IFUNC resolver of PDE program to avoid unexpected
+    error occurs.
+
+commit 963f5858750635876d849878fd1df9eac1a6cd6a
+Author: Vincent Chen <vincent.chen@sifive.com>
+Date:   Tue Dec 15 17:16:39 2020 +0800
+
+    riscv: support GNU indirect function
+    
+    Enable riscv glibc to support GNU indirect function
+
+--- a/libc-abis
++++ b/libc-abis
+@@ -48,3 +48,4 @@
+ IFUNC		sparc-*-linux*
+ # Absolute (SHN_ABS) symbols working correctly.
+ ABSOLUTE
++IFUNC		riscv*-linux*
+--- /dev/null
++++ b/sysdeps/riscv/dl-irel.h
+@@ -0,0 +1,56 @@
++/* Machine-dependent ELF indirect relocation inline functions.
++   RISC-V version.
++   Copyright (C) 2020 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <https://www.gnu.org/licenses/>.  */
++
++#ifndef _DL_IREL_H
++#define _DL_IREL_H
++
++#include <stdio.h>
++#include <unistd.h>
++#include <ldsodefs.h>
++#include <sysdep.h>
++
++#define ELF_MACHINE_IRELA	1
++
++static inline ElfW(Addr)
++__attribute ((always_inline))
++elf_ifunc_invoke (ElfW(Addr) addr)
++{
++  /* The second argument is a void pointer to preserve the extension
++     fexibility.  */
++  return ((ElfW(Addr) (*) (uint64_t, void *)) (addr))
++	 (GLRO(dl_hwcap), NULL);
++}
++
++static inline void
++__attribute ((always_inline))
++elf_irela (const ElfW(Rela) *reloc)
++{
++  ElfW(Addr) *const reloc_addr = (void *) reloc->r_offset;
++  const unsigned long int r_type = ELFW(R_TYPE) (reloc->r_info);
++
++  if (__glibc_likely (r_type == R_RISCV_IRELATIVE))
++    {
++      ElfW(Addr) value = elf_ifunc_invoke (reloc->r_addend);
++      *reloc_addr = value;
++    }
++  else
++    __libc_fatal ("Unexpected reloc type in static binary.\n");
++}
++
++#endif
+--- a/sysdeps/riscv/dl-machine.h
++++ b/sysdeps/riscv/dl-machine.h
+@@ -25,6 +25,7 @@
+ #include <elf/elf.h>
+ #include <sys/asm.h>
+ #include <dl-tls.h>
++#include <dl-irel.h>
+ 
+ #ifndef _RTLD_PROLOGUE
+ # define _RTLD_PROLOGUE(entry)						\
+@@ -174,6 +175,13 @@
+   if (sym_map != NULL)
+     value = SYMBOL_ADDRESS (sym_map, sym, true) + reloc->r_addend;
+ 
++  if (sym != NULL
++      && __glibc_unlikely (ELFW(ST_TYPE) (sym->st_info) == STT_GNU_IFUNC)
++      && __glibc_likely (sym->st_shndx != SHN_UNDEF)
++      && __glibc_likely (!skip_ifunc))
++    value = elf_ifunc_invoke (value);
++
++
+   switch (r_type)
+     {
+ #ifndef RTLD_BOOTSTRAP
+@@ -249,6 +257,13 @@
+     }
+ #endif
+ 
++    case R_RISCV_IRELATIVE:
++      value = map->l_addr + reloc->r_addend;
++      if (__glibc_likely (!skip_ifunc))
++        value = elf_ifunc_invoke (value);
++      *addr_field = value;
++      break;
++
+     case R_RISCV_JUMP_SLOT:
+     case __WORDSIZE == 64 ? R_RISCV_64 : R_RISCV_32:
+       *addr_field = value;
+@@ -290,6 +305,13 @@
+       else
+ 	*reloc_addr = map->l_mach.plt;
+     }
++  else if (__glibc_unlikely (r_type == R_RISCV_IRELATIVE))
++    {
++      ElfW(Addr) value = map->l_addr + reloc->r_addend;
++      if (__glibc_likely (!skip_ifunc))
++        value = elf_ifunc_invoke (value);
++      *reloc_addr = value;
++    }
+   else
+     _dl_reloc_bad_type (map, r_type, 1);
+ }
+@@ -315,8 +337,28 @@
+       gotplt[0] = (ElfW(Addr)) &_dl_runtime_resolve;
+       gotplt[1] = (ElfW(Addr)) l;
+     }
+-#endif
+ 
++  if (l->l_type == lt_executable)
++    {
++      /* The __global_pointer$ may not be defined by the linker if the
++	 $gp register does not be used to access the global variable
++	 in the executable program. Therefore, the search symbol is
++	 set to a weak symbol to avoid we error out if the
++	 __global_pointer$ is not found.  */
++      ElfW(Sym) gp_sym = { 0 };
++      gp_sym.st_info = (unsigned char) ELFW (ST_INFO (STB_WEAK, STT_NOTYPE));
++
++      const ElfW(Sym) *ref = &gp_sym;
++      _dl_lookup_symbol_x ("__global_pointer$", l, &ref,
++			   l->l_scope, NULL, 0, 0, NULL);
++      if (ref)
++        asm (
++          "mv gp, %0\n"
++          :
++          : "r" (ref->st_value)
++        );
++    }
++#endif
+   return lazy;
+ }
+ 

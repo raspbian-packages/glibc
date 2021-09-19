@@ -1,0 +1,82 @@
+Commited for 2.33
+
+commit 3dbbd2ff92b1a0a2465461ee049e3e2813b73fa4
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Fri Nov 13 19:37:41 2020 +0000
+
+    Add {,sysdep-}ld-library-path make variable
+    
+    On GNU/Hurd we not only need $(common-objpfx) in LD_LIBRARY_PATH when loading
+    dynamic objects, but also $(common-objpfx)/mach and $(common-objpfx)/hurd. This
+    adds an ld-library-path variable to be used as LD_LIBRARY_PATH basis in
+    Makefiles, and a sysdep-ld-library-path variable for sysdeps to add some
+    more paths, here mach/ and hurd/.
+
+---
+ Makeconfig                   |    3 +++
+ dlfcn/Makefile               |    2 +-
+ elf/Makefile                 |    4 ++--
+ inet/Makefile                |    2 +-
+ sysdeps/mach/hurd/Makeconfig |    2 ++
+ 5 files changed, 9 insertions(+), 4 deletions(-)
+
+--- a/Makeconfig
++++ b/Makeconfig
+@@ -769,6 +769,9 @@
+ # the second dependency of the makefile target in which
+ # $(host-built-program-cmd) is used.
+ host-built-program-cmd = $(run-via-rtld-prefix) $(built-program-file)
++# $(ld-library-path) is the common content to be set in LD_LIBRARY_PATH
++# for running static binaries that may load dynamic objects.
++ld-library-path = $(objpfx):$(common-objpfx)$(addprefix :,$(sysdep-ld-library-path))
+ 
+ ifndef LD
+ LD := ld -X
+--- a/dlfcn/Makefile
++++ b/dlfcn/Makefile
+@@ -52,7 +52,7 @@
+ tests += tststatic tststatic2 tststatic3 tststatic4 tststatic5
+ tests-static += tststatic tststatic2 tststatic3 tststatic4 tststatic5
+ modules-names += modstatic modstatic2 modstatic3 modstatic5
+-tststatic-ENV = LD_LIBRARY_PATH=$(objpfx):$(common-objpfx):$(common-objpfx)elf
++tststatic-ENV = LD_LIBRARY_PATH=$(ld-library-path):$(common-objpfx)elf
+ tststatic2-ENV = $(tststatic-ENV)
+ tststatic3-ENV = $(tststatic-ENV)
+ tststatic4-ENV = $(tststatic-ENV)
+--- a/elf/Makefile
++++ b/elf/Makefile
+@@ -178,7 +178,7 @@
+ ifeq (yes,$(build-shared))
+ tests-static += tst-tls9-static tst-single_threaded-static-dlopen
+ static-dlopen-environment = \
+-  LD_LIBRARY_PATH=$(objpfx):$(common-objpfx):$(common-objpfx)dlfcn
++  LD_LIBRARY_PATH=$(ld-library-path):$(common-objpfx)dlfcn
+ tst-tls9-static-ENV = $(static-dlopen-environment)
+ tst-single_threaded-static-dlopen-ENV = $(static-dlopen-environment)
+ 
+@@ -1660,7 +1660,7 @@
+ $(objpfx)tst-libc_dlvsym.out: $(objpfx)tst-libc_dlvsym-dso.so
+ $(objpfx)tst-libc_dlvsym-static: $(common-objpfx)dlfcn/libdl.a
+ tst-libc_dlvsym-static-ENV = \
+-  LD_LIBRARY_PATH=$(objpfx):$(common-objpfx):$(common-objpfx)dlfcn
++  LD_LIBRARY_PATH=$(ld-library-path):$(common-objpfx)dlfcn
+ $(objpfx)tst-libc_dlvsym-static.out: $(objpfx)tst-libc_dlvsym-dso.so
+ 
+ $(objpfx)tst-big-note: $(objpfx)tst-big-note-lib.so
+--- a/inet/Makefile
++++ b/inet/Makefile
+@@ -123,5 +123,5 @@
+ # The test uses dlopen indirectly and would otherwise load system
+ # objects.
+ tst-idna_name_classify-ENV = \
+-  LD_LIBRARY_PATH=$(objpfx):$(common-objpfx):$(common-objpfx)elf
++  LD_LIBRARY_PATH=$(ld-library-path):$(common-objpfx):$(common-objpfx)elf
+ $(objpfx)tst-idna_name_classify.out: $(gen-locales)
+--- a/sysdeps/mach/hurd/Makeconfig
++++ b/sysdeps/mach/hurd/Makeconfig
+@@ -5,3 +5,5 @@
+ 
+ # GNU libc on the Hurd is always reentrant.
+ libc-reentrant = yes
++
++sysdep-ld-library-path = $(common-objpfx)/mach:$(common-objpfx)/hurd
