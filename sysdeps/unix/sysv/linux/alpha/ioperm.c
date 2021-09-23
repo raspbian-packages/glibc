@@ -196,12 +196,7 @@ stl_mb(unsigned int val, unsigned long addr)
 static inline void
 __sethae(unsigned long value)
 {
-  register unsigned long r16 __asm__("$16") = value;
-  register unsigned long r0 __asm__("$0") = __NR_sethae;
-  __asm__ __volatile__ ("callsys"
-			: "=r"(r0)
-			: "0"(r0), "r" (r16)
-			: inline_syscall_clobbers, "$19");
+  INLINE_SYSCALL_CALL (sethae, value);
 }
 
 extern long __pciconfig_iobase(enum __pciconfig_iobase_which __which,
@@ -542,7 +537,6 @@ init_iosys (void)
 
   /* First try the pciconfig_iobase syscall added to 2.2.15 and 2.3.99.  */
 
-#ifdef __NR_pciconfig_iobase
   addr = __pciconfig_iobase (IOBASE_DENSE_MEM, 0, 0);
   if (addr != -1)
     {
@@ -584,7 +578,6 @@ init_iosys (void)
 
       return 0;
     }
-#endif
 
   /* Second, collect the contents of /etc/alpha_systype or /proc/cpuinfo.  */
 

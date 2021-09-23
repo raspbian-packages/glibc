@@ -20,16 +20,16 @@
 
 #if SHLIB_COMPAT (libc, GLIBC_2_0, GLIBC_2_1)
 
+#include <time.h>
 #include <sys/time.h>
 #include <time.h>
 #include <errno.h>
-#include <tv32-compat.h>
 
 /* Set the current time of day and timezone information.
    This call is restricted to the super-user.  */
 int
 attribute_compat_text_section
-__settimeofday_tv32 (const struct timeval32 *tv32,
+__settimeofday_tv32 (const struct __timeval32 *tv32,
                      const struct timezone *tz)
 {
   if (__glibc_unlikely (tz != 0))

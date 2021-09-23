@@ -47,6 +47,7 @@
 
 #include <dl-tunables.h>
 #include <not-errno.h>
+#include <not-cancel.h>
 
 extern void __mach_init (void);
 
@@ -66,6 +67,8 @@ rtld_hidden_data_def(__libc_stack_end)
 void *_dl_random attribute_relro = NULL;
 
 struct hurd_startup_data *_dl_hurd_data;
+
+uintptr_t __stack_chk_guard attribute_relro;
 
 
 ElfW(Addr)
@@ -302,6 +305,7 @@ open_file (const char *file_name, int flags,
 
 check_no_hidden(__open);
 check_no_hidden (__open64);
+check_no_hidden (__open_nocancel);
 int weak_function
 __open (const char *file_name, int mode, ...)
 {
@@ -313,8 +317,10 @@ __open (const char *file_name, int mode, ...)
     return (int)port;
 }
 weak_alias (__open, __open64)
+weak_alias (__open, __open_nocancel)
 
 check_no_hidden(__close);
+check_no_hidden(__close_nocancel);
 int weak_function
 __close (int fd)
 {
@@ -322,8 +328,10 @@ __close (int fd)
     __mach_port_deallocate (__mach_task_self (), (mach_port_t) fd);
   return 0;
 }
+weak_alias (__close, __close_nocancel)
 
 check_no_hidden(__pread64);
+check_no_hidden(__pread64_nocancel);
 __ssize_t weak_function
 __pread64 (int fd, void *buf, size_t nbytes, off64_t offset)
 {
@@ -346,16 +354,20 @@ __pread64 (int fd, void *buf, size_t nbytes, off64_t offset)
   return nread;
 }
 libc_hidden_weak (__pread64)
+weak_alias (__pread64, __pread64_nocancel)
 
 check_no_hidden(__read);
+check_no_hidden(__read_nocancel);
 __ssize_t weak_function
 __read (int fd, void *buf, size_t nbytes)
 {
   return __pread64 (fd, buf, nbytes, -1);
 }
 libc_hidden_weak (__read)
+weak_alias (__read, __read_nocancel)
 
 check_no_hidden(__write);
+check_no_hidden(__write_nocancel);
 __ssize_t weak_function
 __write (int fd, const void *buf, size_t nbytes)
 {
@@ -371,6 +383,7 @@ __write (int fd, const void *buf, size_t nbytes)
   return nwrote;
 }
 libc_hidden_weak (__write)
+  weak_alias (__write, __write_nocancel)
 
 /* This is only used for printing messages (see dl-misc.c).  */
 check_no_hidden(__writev);

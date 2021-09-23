@@ -20,89 +20,96 @@
 #define _SIGSETOPS_H 1
 
 #include <signal.h>
+#include <limits.h>
+#include <libc-pointer-arith.h>
 
 /* Return a mask that includes the bit for SIG only.  */
-# define __sigmask(sig) \
-  (((unsigned long int) 1) << (((sig) - 1) % (8 * sizeof (unsigned long int))))
+#define __sigmask(sig) \
+  (1UL << (((sig) - 1) % ULONG_WIDTH))
 
 /* Return the word index for SIG.  */
-# define __sigword(sig) (((sig) - 1) / (8 * sizeof (unsigned long int)))
+static inline unsigned long int
+__sigword (int sig)
+{
+  return (sig - 1) / ULONG_WIDTH;
+}
 
-# define __sigemptyset(set)					\
-  (__extension__ ({						\
-    int __cnt = _SIGSET_NWORDS;					\
-    sigset_t *__set = (set);					\
-    while (--__cnt >= 0)					\
-      __set->__val[__cnt] = 0;					\
-    (void)0;							\
-  }))
+/* Linux sig* functions only handle up to __NSIG_WORDS words instead of
+   full _SIGSET_NWORDS sigset size.  The signal numbers are 1-based, and
+   bit 0 of a signal mask is for signal 1.  */
+#define __NSIG_WORDS (ALIGN_UP ((_NSIG - 1), ULONG_WIDTH) / ULONG_WIDTH)
+_Static_assert (__NSIG_WORDS <= _SIGSET_NWORDS,
+		"__NSIG_WORDS > _SIGSET_WORDS");
 
-# define __sigfillset(set)					\
-  (__extension__ ({						\
-    int __cnt = _SIGSET_NWORDS;					\
-    sigset_t *__set = (set);					\
-    while (--__cnt >= 0)					\
-      __set->__val[__cnt] = ~0UL;				\
-    (void)0;							\
-  }))
+/* This macro is used on syscall that takes a sigset_t to specify the expected
+   size in bytes.  As for glibc, kernel sigset is implemented as an array of
+   unsigned long.  */
+#define __NSIG_BYTES (__NSIG_WORDS * (ULONG_WIDTH / UCHAR_WIDTH))
 
-# define __sigisemptyset(set)					\
-  (__extension__ ({						\
-    int __cnt = _SIGSET_NWORDS;					\
-    const sigset_t *__set = (set);				\
-    int __ret = __set->__val[--__cnt];				\
-    while (!__ret && --__cnt >= 0)				\
-      __ret = __set->__val[__cnt];				\
-    __ret == 0;							\
-  }))
+static inline void
+__sigemptyset (sigset_t *set)
+{
+  int cnt = __NSIG_WORDS;
+  while (--cnt >= 0)
+   set->__val[cnt] = 0;
+}
 
-# define __sigandset(dest, left, right)				\
-  (__extension__ ({						\
-    int __cnt = _SIGSET_NWORDS;					\
-    sigset_t *__dest = (dest);					\
-    const sigset_t *__left = (left);				\
-    const sigset_t *__right = (right);				\
-    while (--__cnt >= 0)					\
-      __dest->__val[__cnt] = (__left->__val[__cnt]		\
-			      & __right->__val[__cnt]);		\
-    (void)0;							\
-  }))
+static inline void
+__sigfillset (sigset_t *set)
+{
+  int cnt = __NSIG_WORDS;
+  while (--cnt >= 0)
+   set->__val[cnt] = ~0UL;
+}
 
-# define __sigorset(dest, left, right)				\
-  (__extension__ ({						\
-    int __cnt = _SIGSET_NWORDS;					\
-    sigset_t *__dest = (dest);					\
-    const sigset_t *__left = (left);				\
-    const sigset_t *__right = (right);				\
-    while (--__cnt >= 0)					\
-      __dest->__val[__cnt] = (__left->__val[__cnt]		\
-			      | __right->__val[__cnt]);		\
-    (void)0;							\
-  }))
+static inline int
+__sigisemptyset (const sigset_t *set)
+{
+  int cnt = __NSIG_WORDS;
+  int ret = set->__val[--cnt];
+  while (ret == 0 && --cnt >= 0)
+    ret = set->__val[cnt];
+  return ret == 0;
+}
 
-/* These macros needn't check for a bogus signal number;
-   error checking is done in the non-__ versions.  */
-# define __sigismember(set, sig)				\
-  (__extension__ ({						\
-    unsigned long int __mask = __sigmask (sig);			\
-    unsigned long int __word = __sigword (sig);			\
-    (set)->__val[__word] & __mask ? 1 : 0;			\
-  }))
+static inline void
+__sigandset (sigset_t *dest, const sigset_t *left, const sigset_t *right)
+{
+  int cnt = __NSIG_WORDS;
+  while (--cnt >= 0)
+    dest->__val[cnt] = left->__val[cnt] & right->__val[cnt];
+}
 
-# define __sigaddset(set, sig)					\
-  (__extension__ ({						\
-    unsigned long int __mask = __sigmask (sig);			\
-    unsigned long int __word = __sigword (sig);			\
-    (set)->__val[__word] |= __mask;				\
-    (void)0;							\
-  }))
+static inline void
+__sigorset (sigset_t *dest, const sigset_t *left, const sigset_t *right)
+{
+  int cnt = __NSIG_WORDS;
+  while (--cnt >= 0)
+    dest->__val[cnt] = left->__val[cnt] | right->__val[cnt];
+}
 
-# define __sigdelset(set, sig)					\
-  (__extension__ ({						\
-    unsigned long int __mask = __sigmask (sig);			\
-    unsigned long int __word = __sigword (sig);			\
-    (set)->__val[__word] &= ~__mask;				\
-    (void)0;							\
- }))
+static inline int
+__sigismember (const sigset_t *set, int sig)
+{
+  unsigned long int mask = __sigmask (sig);
+  unsigned long int word = __sigword (sig);
+  return set->__val[word] & mask ? 1 : 0;
+}
+
+static inline void
+__sigaddset (sigset_t *set, int sig)
+{
+  unsigned long int mask = __sigmask (sig);
+  unsigned long int word = __sigword (sig);
+  set->__val[word] |= mask;
+}
+
+static inline void
+__sigdelset (sigset_t *set, int sig)
+{
+  unsigned long int mask = __sigmask (sig);
+  unsigned long int word = __sigword (sig);
+  set->__val[word] &= ~mask;
+}
 
 #endif /* bits/sigsetops.h */

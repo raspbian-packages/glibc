@@ -16,39 +16,39 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <errno.h>
 #include <signal.h>
 #include <pthreadP.h>
 #include <sysdep.h>
-
+#include <shlib-compat.h>
 
 int
-pthread_sigmask (int how, const sigset_t *newmask, sigset_t *oldmask)
+__pthread_sigmask (int how, const sigset_t *newmask, sigset_t *oldmask)
 {
   sigset_t local_newmask;
 
   /* The only thing we have to make sure here is that SIGCANCEL and
      SIGSETXID is not blocked.  */
   if (newmask != NULL
-      && (__builtin_expect (__sigismember (newmask, SIGCANCEL), 0)
-	  || __builtin_expect (__sigismember (newmask, SIGSETXID), 0)))
+      && (__glibc_unlikely (__sigismember (newmask, SIGCANCEL))
+         || __glibc_unlikely (__sigismember (newmask, SIGSETXID))))
     {
       local_newmask = *newmask;
-      __sigdelset (&local_newmask, SIGCANCEL);
-      __sigdelset (&local_newmask, SIGSETXID);
+      __clear_internal_signals (&local_newmask);
       newmask = &local_newmask;
     }
 
-#ifdef INTERNAL_SYSCALL
   /* We know that realtime signals are available if NPTL is used.  */
-  INTERNAL_SYSCALL_DECL (err);
-  int result = INTERNAL_SYSCALL (rt_sigprocmask, err, 4, how, newmask,
-				 oldmask, _NSIG / 8);
+  int result = INTERNAL_SYSCALL_CALL (rt_sigprocmask, how, newmask,
+				      oldmask, __NSIG_BYTES);
 
-  return (INTERNAL_SYSCALL_ERROR_P (result, err)
-	  ? INTERNAL_SYSCALL_ERRNO (result, err)
+  return (INTERNAL_SYSCALL_ERROR_P (result)
+	  ? INTERNAL_SYSCALL_ERRNO (result)
 	  : 0);
-#else
-  return sigprocmask (how, newmask, oldmask) == -1 ? errno : 0;
-#endif
 }
+libc_hidden_def (__pthread_sigmask)
+
+versioned_symbol (libc, __pthread_sigmask, pthread_sigmask, GLIBC_2_32);
+#if SHLIB_COMPAT (libc, GLIBC_2_0, GLIBC_2_32)
+strong_alias (__pthread_sigmask, __pthread_sigmask_2);
+compat_symbol (libc, __pthread_sigmask_2, pthread_sigmask, GLIBC_2_0);
+#endif

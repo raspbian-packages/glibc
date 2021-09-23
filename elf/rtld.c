@@ -46,6 +46,7 @@
 #include <stackinfo.h>
 #include <not-cancel.h>
 #include <array_length.h>
+#include <libc-early-init.h>
 
 #include <assert.h>
 
@@ -153,9 +154,17 @@ static void audit_list_init (struct audit_list *);
    not be called after audit_list_next.  */
 static void audit_list_add_string (struct audit_list *, const char *);
 
+/* Add the audit strings from the link map, found in the dynamic
+   segment at TG (either DT_AUDIT and DT_DEPAUDIT).  Must be called
+   before audit_list_next.  */
+static void audit_list_add_dynamic_tag (struct audit_list *,
+					struct link_map *,
+					unsigned int tag);
+
 /* Extract the next audit module from the audit list.  Only modules
    for which dso_name_valid_for_suid is true are returned.  Must be
-   called after all the audit_list_add_string calls.  */
+   called after all the audit_list_add_string,
+   audit_list_add_dynamic_tags calls.  */
 static const char *audit_list_next (struct audit_list *);
 
 /* This is a list of all the modes the dynamic loader can be in.  */
@@ -233,6 +242,16 @@ audit_list_add_string (struct audit_list *list, const char *string)
      audit_list_next.  */
   if (list->length == 1)
     list->current_tail = string;
+}
+
+static void
+audit_list_add_dynamic_tag (struct audit_list *list, struct link_map *main_map,
+			    unsigned int tag)
+{
+  ElfW(Dyn) *info = main_map->l_info[ADDRIDX (tag)];
+  const char *strtab = (const char *) D_PTR (main_map, l_info[DT_STRTAB]);
+  if (info != NULL)
+    audit_list_add_string (list, strtab + info->d_un.d_val);
 }
 
 static const char *
@@ -313,6 +332,8 @@ rtld_hidden_def (_dl_starting_up)
    (except those which cannot be added for some reason).  */
 struct rtld_global _rtld_global =
   {
+    /* Get architecture specific initializer.  */
+#include <dl-procruntime.c>
     /* Generally the default presumption without further information is an
      * executable stack but this is not true for all platforms.  */
     ._dl_stack_flags = DEFAULT_STACK_PERMS,
@@ -570,6 +591,9 @@ _dl_start (void *arg)
      header table in core.  Put the rest of _dl_start into a separate
      function, that way the compiler cannot put accesses to the GOT
      before ELF_DYNAMIC_RELOCATE.  */
+
+  __rtld_malloc_init_stubs ();
+
   {
 #ifdef DONT_USE_BOOTSTRAP_MAP
     ElfW(Addr) entry = _dl_start_final (arg);
@@ -1505,11 +1529,17 @@ of this helper program; chances are you did not intend to run this program.\n\
 	main_map->l_relro_addr = ph->p_vaddr;
 	main_map->l_relro_size = ph->p_memsz;
 	break;
-
+      }
+  /* Process program headers again, but scan them backwards so
+     that PT_NOTE can be skipped if PT_GNU_PROPERTY exits.  */
+  for (ph = &phdr[phnum]; ph != phdr; --ph)
+    switch (ph[-1].p_type)
+      {
       case PT_NOTE:
-	if (_rtld_process_pt_note (main_map, ph))
-	  _dl_error_printf ("\
-ERROR: '%s': cannot process note segment.\n", _dl_argv[0]);
+	_dl_process_pt_note (main_map, -1, &ph[-1]);
+	break;
+      case PT_GNU_PROPERTY:
+	_dl_process_pt_gnu_property (main_map, -1, &ph[-1]);
 	break;
       }
 
@@ -1655,6 +1685,9 @@ ERROR: '%s': cannot process note segment.\n", _dl_argv[0]);
   if (GL(dl_rtld_map).l_tls_blocksize != 0)
     /* Assign a module ID.  Do this before loading any audit modules.  */
     GL(dl_rtld_map).l_tls_modid = _dl_next_tls_modid ();
+
+  audit_list_add_dynamic_tag (&audit_list, main_map, DT_AUDIT);
+  audit_list_add_dynamic_tag (&audit_list, main_map, DT_DEPAUDIT);
 
   /* If we have auditing DSOs to load, do it now.  */
   bool need_security_init = true;
@@ -2257,6 +2290,10 @@ ERROR: '%s': cannot process note segment.\n", _dl_argv[0]);
 	  rtld_timer_stop (&relocate_time, start);
 	}
 
+      /* The library defining malloc has already been relocated due to
+	 prelinking.  Resolve the malloc symbols for the dynamic
+	 loader.  */
+      __rtld_malloc_init_real (main_map);
 
       /* Mark all the objects so we know they have been already relocated.  */
       for (struct link_map *l = main_map; l != NULL; l = l->l_next)
@@ -2357,6 +2394,11 @@ ERROR: '%s': cannot process note segment.\n", _dl_argv[0]);
 	 re-relocation, we might call a user-supplied function
 	 (e.g. calloc from _dl_relocate_object) that uses TLS data.  */
 
+      /* The malloc implementation has been relocated, so resolving
+	 its symbols (and potentially calling IFUNC resolvers) is safe
+	 at this point.  */
+      __rtld_malloc_init_real (main_map);
+
       RTLD_TIMING_VAR (start);
       rtld_timer_start (&start);
 
@@ -2366,6 +2408,11 @@ ERROR: '%s': cannot process note segment.\n", _dl_argv[0]);
 
       rtld_timer_accum (&relocate_time, start);
     }
+
+  /* Relocation is complete.  Perform early libc initialization.  This
+     is the initial libc, even if audit modules have been loaded with
+     other libcs.  */
+  _dl_call_libc_early_init (GL(dl_ns)[LM_ID_BASE].libc_map, true);
 
   /* Do any necessary cleanups for the startup OS interface code.
      We do these now so that no calls are made after rtld re-relocation

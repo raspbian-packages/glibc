@@ -3,11 +3,14 @@
 
 #ifndef _ISOMAC
 # include <bits/types/struct_timeval.h>
+# include <struct___timespec64.h>
+# include <struct___timeval64.h>
 # include <bits/types/locale_t.h>
 # include <stdbool.h>
 # include <time/mktime-internal.h>
-# include <endian.h>
+# include <sys/time.h>
 # include <time-clockid.h>
+# include <sys/time.h>
 
 extern __typeof (strftime_l) __strftime_l;
 libc_hidden_proto (__strftime_l)
@@ -59,28 +62,6 @@ extern void __tzset_parse_tz (const char *tz) attribute_hidden;
 extern void __tz_compute (__time64_t timer, struct tm *tm, int use_localtime)
   __THROW attribute_hidden;
 
-#if __TIMESIZE == 64
-# define __timespec64 timespec
-#else
-/* The glibc Y2038-proof struct __timespec64 structure for a time value.
-   To keep things Posix-ish, we keep the nanoseconds field a 32-bit
-   signed long, but since the Linux field is a 64-bit signed int, we
-   pad our tv_nsec with a 32-bit unnamed bit-field padding.
-
-   As a general rule the Linux kernel is ignoring upper 32 bits of
-   tv_nsec field.  */
-struct __timespec64
-{
-  __time64_t tv_sec;         /* Seconds */
-# if BYTE_ORDER == BIG_ENDIAN
-  __int32_t :32;             /* Padding */
-  __int32_t tv_nsec;         /* Nanoseconds */
-# else
-  __int32_t tv_nsec;         /* Nanoseconds */
-  __int32_t :32;             /* Padding */
-# endif
-};
-#endif
 
 #if __TIMESIZE == 64
 # define __itimerspec64 itimerspec
@@ -91,6 +72,39 @@ struct __itimerspec64
   struct __timespec64 it_interval;
   struct __timespec64 it_value;
 };
+#endif
+
+#if __TIMESIZE == 64
+# define __utimbuf64 utimbuf
+# define __itimerval64 itimerval
+#else
+/* The glibc Y2038-proof struct __utimbuf64 structure for file's access
+   and modification time values.  */
+struct __utimbuf64
+{
+  __time64_t actime;		/* Access time.  */
+  __time64_t modtime;		/* Modification time.  */
+};
+/* The glibc's internal representation of the struct itimerval.  */
+struct __itimerval64
+{
+  struct __timeval64 it_interval;
+  struct __timeval64 it_value;
+};
+#endif
+
+#if __TIMESIZE == 64
+# define __getitimer64 __getitimer
+# define __setitimer64 __setitimer
+#else
+extern int __getitimer64 (enum __itimer_which __which,
+                          struct __itimerval64 *__value);
+
+libc_hidden_proto (__getitimer64)
+extern int __setitimer64 (enum __itimer_which __which,
+                          const struct __itimerval64 *__restrict __new,
+                          struct __itimerval64 *__restrict __old);
+libc_hidden_proto (__setitimer64)
 #endif
 
 #if __TIMESIZE == 64
@@ -161,8 +175,14 @@ libc_hidden_proto (__clock_getres64);
 #endif
 
 #if __TIMESIZE == 64
+# define __utime64 __utime
+# define __utimes64 __utimes
 # define __utimensat64 __utimensat
 #else
+extern int __utime64 (const char *file, const struct __utimbuf64 *times);
+libc_hidden_proto (__utime64)
+extern int __utimes64 (const char *file, const struct __timeval64 tvp[2]);
+libc_hidden_proto (__utimes64)
 extern int __utimensat64 (int fd, const char *file,
                           const struct __timespec64 tsp[2], int flags);
 libc_hidden_proto (__utimensat64);
@@ -173,26 +193,63 @@ extern int __utimensat64_helper (int fd, const char *file,
 libc_hidden_proto (__utimensat64_helper);
 
 #if __TIMESIZE == 64
+# define __futimes64 __futimes
+# define __futimesat64 __futimesat
+# define __lutimes64 __lutimes
 # define __futimens64 __futimens
 #else
+extern int __futimes64 (int fd, const struct __timeval64 tvp64[2]);
+libc_hidden_proto (__futimes64);
+extern int __futimesat64 (int fd, const char *file,
+                          const struct __timeval64 tvp[2]);
+libc_hidden_proto (__futimesat64);
+extern int __lutimes64 (const char *file, const struct __timeval64 tvp64[2]);
+libc_hidden_proto (__lutimes64);
 extern int __futimens64 (int fd, const struct __timespec64 tsp[2]);
 libc_hidden_proto (__futimens64);
 #endif
 
 #if __TIMESIZE == 64
 # define __timer_gettime64 __timer_gettime
+# define __timerfd_gettime64 __timerfd_gettime
 #else
 extern int __timer_gettime64 (timer_t timerid, struct __itimerspec64 *value);
-libc_hidden_proto (__timer_gettime64);
+extern int __timerfd_gettime64 (int fd, struct __itimerspec64 *value);
+librt_hidden_proto (__timer_gettime64);
+libc_hidden_proto (__timerfd_gettime64);
 #endif
 
 #if __TIMESIZE == 64
 # define __timer_settime64 __timer_settime
+# define __timerfd_settime64 __timerfd_settime
 #else
 extern int __timer_settime64 (timer_t timerid, int flags,
                               const struct __itimerspec64 *value,
                               struct __itimerspec64 *ovalue);
-libc_hidden_proto (__timer_settime64);
+extern int __timerfd_settime64 (int fd, int flags,
+                                const struct __itimerspec64 *value,
+                                struct __itimerspec64 *ovalue);
+librt_hidden_proto (__timer_settime64);
+libc_hidden_proto (__timerfd_settime64);
+#endif
+
+#if __TIMESIZE == 64
+# define __sched_rr_get_interval64 __sched_rr_get_interval
+#else
+extern int __sched_rr_get_interval64 (pid_t pid, struct __timespec64 *tp);
+libc_hidden_proto (__sched_rr_get_interval64);
+#endif
+
+#if __TIMESIZE == 64
+# define __settimeofday64 __settimeofday
+# define __gettimeofday64 __gettimeofday
+#else
+extern int __settimeofday64 (const struct __timeval64 *tv,
+                             const struct timezone *tz);
+libc_hidden_proto (__settimeofday64)
+extern int __gettimeofday64 (struct __timeval64 *restrict tv,
+                             void *restrict tz);
+libc_hidden_proto (__gettimeofday64)
 #endif
 
 /* Compute the `struct tm' representation of T,
@@ -239,6 +296,7 @@ extern double __difftime (time_t time1, time_t time0);
 #if __TIMESIZE == 64
 # define __clock_nanosleep_time64 __clock_nanosleep
 # define __clock_gettime64 __clock_gettime
+# define __timespec_get64 __timespec_get
 #else
 extern int __clock_nanosleep_time64 (clockid_t clock_id,
                                      int flags, const struct __timespec64 *req,
@@ -246,6 +304,8 @@ extern int __clock_nanosleep_time64 (clockid_t clock_id,
 libc_hidden_proto (__clock_nanosleep_time64)
 extern int __clock_gettime64 (clockid_t clock_id, struct __timespec64 *tp);
 libc_hidden_proto (__clock_gettime64)
+extern int __timespec_get64 (struct __timespec64 *ts, int base);
+libc_hidden_proto (__timespec_get64)
 #endif
 
 /* Use in the clock_* functions.  Size of the field representing the
@@ -268,6 +328,43 @@ valid_timeval_to_timespec64 (const struct timeval tv)
 
   ts64.tv_sec = tv.tv_sec;
   ts64.tv_nsec = tv.tv_usec * 1000;
+
+  return ts64;
+}
+
+/* Convert a known valid struct timeval into a struct __timeval64.  */
+static inline struct __timeval64
+valid_timeval_to_timeval64 (const struct timeval tv)
+{
+  struct __timeval64 tv64;
+
+  tv64.tv_sec = tv.tv_sec;
+  tv64.tv_usec = tv.tv_usec;
+
+  return tv64;
+}
+
+/* Convert a valid and within range of struct timeval, struct
+   __timeval64 into a struct timeval.  */
+static inline struct timeval
+valid_timeval64_to_timeval (const struct __timeval64 tv64)
+{
+  struct timeval tv;
+
+  tv.tv_sec = (time_t) tv64.tv_sec;
+  tv.tv_usec = (suseconds_t) tv64.tv_usec;
+
+  return tv;
+}
+
+/* Convert a struct __timeval64 into a struct __timespec64.  */
+static inline struct __timespec64
+timeval64_to_timespec64 (const struct __timeval64 tv64)
+{
+  struct __timespec64 ts64;
+
+  ts64.tv_sec = tv64.tv_sec;
+  ts64.tv_nsec = tv64.tv_usec * 1000;
 
   return ts64;
 }
@@ -308,6 +405,63 @@ valid_timespec64_to_timeval (const struct __timespec64 ts64)
   tv.tv_usec = ts64.tv_nsec / 1000;
 
   return tv;
+}
+
+/* Convert a struct __timespec64 into a struct __timeval64.  */
+static inline struct __timeval64
+timespec64_to_timeval64 (const struct __timespec64 ts64)
+{
+  struct __timeval64 tv64;
+
+  tv64.tv_sec = ts64.tv_sec;
+  tv64.tv_usec = ts64.tv_nsec / 1000;
+
+  return tv64;
+}
+
+/* A version of 'struct timeval' with 32-bit time_t
+   and suseconds_t.  */
+struct __timeval32
+{
+  __int32_t tv_sec;         /* Seconds.  */
+  __int32_t tv_usec;        /* Microseconds.  */
+};
+
+/* Conversion functions for converting to/from __timeval32  */
+static inline struct __timeval64
+valid_timeval32_to_timeval64 (const struct __timeval32 tv)
+{
+  return (struct __timeval64) { tv.tv_sec, tv.tv_usec };
+}
+
+static inline struct __timeval32
+valid_timeval64_to_timeval32 (const struct __timeval64 tv64)
+{
+  return (struct __timeval32) { tv64.tv_sec, tv64.tv_usec };
+}
+
+static inline struct timeval
+valid_timeval32_to_timeval (const struct __timeval32 tv)
+{
+  return (struct timeval) { tv.tv_sec, tv.tv_usec };
+}
+
+static inline struct __timeval32
+valid_timeval_to_timeval32 (const struct timeval tv)
+{
+  return (struct __timeval32) { tv.tv_sec, tv.tv_usec };
+}
+
+static inline struct timespec
+valid_timeval32_to_timespec (const struct __timeval32 tv)
+{
+  return (struct timespec) { tv.tv_sec, tv.tv_usec * 1000 };
+}
+
+static inline struct __timeval32
+valid_timespec_to_timeval32 (const struct timespec ts)
+{
+  return (struct __timeval32) { (time_t) ts.tv_sec, ts.tv_nsec / 1000 };
 }
 
 /* Check if a value is in the valid nanoseconds range. Return true if

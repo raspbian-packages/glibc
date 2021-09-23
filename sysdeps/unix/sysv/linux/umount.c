@@ -16,12 +16,10 @@
    License along with the GNU C Library.  If not, see
    <https://www.gnu.org/licenses/>.  */
 
-/* Since the generic Linux syscall ABI doesn't have an oldumount system call,
-   do what the kernel does down here.  */
+#include <sys/mount.h>
+#include <sysdep.h>
 
-extern long int __umount2 (const char *name, int flags);
-
-long int
+int
 __umount (const char *name)
 {
   return __umount2 (name, 0);

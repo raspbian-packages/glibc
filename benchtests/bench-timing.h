@@ -18,8 +18,11 @@
 
 #undef attribute_hidden
 #define attribute_hidden
-#define __clock_gettime clock_gettime
-#include <hp-timing.h>
+#ifdef USE_CLOCK_GETTIME
+# include <sysdeps/generic/hp-timing.h>
+#else
+# include <hp-timing.h>
+#endif
 #include <stdint.h>
 
 #define GL(x) _##x

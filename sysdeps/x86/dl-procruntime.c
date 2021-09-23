@@ -47,7 +47,10 @@
 # if !defined PROCINFO_DECL && defined SHARED
   ._dl_x86_feature_1
 # else
-PROCINFO_CLASS unsigned int _dl_x86_feature_1[2]
+PROCINFO_CLASS unsigned int _dl_x86_feature_1
+# endif
+# ifndef PROCINFO_DECL
+= 0
 # endif
 # if !defined SHARED || defined PROCINFO_DECL
 ;
@@ -56,9 +59,15 @@ PROCINFO_CLASS unsigned int _dl_x86_feature_1[2]
 # endif
 
 # if !defined PROCINFO_DECL && defined SHARED
-  ._dl_x86_legacy_bitmap
+  ._dl_x86_feature_control
 # else
-PROCINFO_CLASS unsigned long _dl_x86_legacy_bitmap[2]
+PROCINFO_CLASS struct dl_x86_feature_control _dl_x86_feature_control
+# endif
+# ifndef PROCINFO_DECL
+= {
+    .ibt = DEFAULT_DL_X86_CET_CONTROL,
+    .shstk = DEFAULT_DL_X86_CET_CONTROL,
+  }
 # endif
 # if !defined SHARED || defined PROCINFO_DECL
 ;

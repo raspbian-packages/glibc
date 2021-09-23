@@ -1,9 +1,21 @@
 ifeq ($(subdir),libio)
 ldbl-extra-routines += fwscanf \
+		       fwprintf \
+		       obprintf \
 		       swscanf \
+		       swprintf \
 		       wscanf \
+		       vasprintf \
+		       vdprintf \
+		       vscanf \
+		       vsprintf \
+		       vsnprintf \
+		       vsscanf \
+		       vswprintf \
 		       vswscanf \
-		       vwscanf
+		       vwprintf \
+		       vwscanf \
+		       wprintf
 endif
 
 ifeq ($(subdir),wcsmbs)
@@ -18,7 +30,6 @@ tests-internal += test-wcstold-ibm128 test-wcstold-ieee128
 CFLAGS-test-wcstold-ieee128.c += -mfloat128 -mabi=ieeelongdouble -Wno-psabi
 CFLAGS-test-wcstold-ibm128.c += -mabi=ibmlongdouble -Wno-psabi
 
-$(objpfx)test-wcstold-ieee128: gnulib-tests += $(f128-loader-link)
 endif
 
 ifeq ($(subdir),stdio-common)
@@ -29,28 +40,14 @@ ldbl-extra-routines += printf_size \
 		       printf \
 		       snprintf \
 		       sprintf \
-		       vasprintf \
-		       vdprintf \
 		       vfprintf \
 		       vprintf \
-		       vsnprintf \
-		       vsprintf \
-		       fwprintf \
-		       swprintf \
-		       wprintf \
 		       vfwprintf \
-		       vswprintf \
-		       vwprintf \
 		       fscanf \
 		       scanf \
 		       sscanf \
 		       vfscanf \
-		       vscanf \
-		       vsscanf \
 		       vfwscanf \
-		       obprintf \
-		       obstack_chk \
-		       vobstack_chk \
 		       isoc99_fscanf \
 		       isoc99_scanf \
 		       isoc99_sscanf \
@@ -91,25 +88,17 @@ tests-internal += test-scanf-ieee128 test-scanf-ibm128
 CFLAGS-test-scanf-ieee128.c += -mfloat128 -mabi=ieeelongdouble -Wno-psabi -std=c89 -D_GNU_SOURCE
 CFLAGS-test-scanf-ibm128.c += -mabi=ibmlongdouble -Wno-psabi -std=c89 -D_GNU_SOURCE
 
-$(objpfx)test-scanf-ieee128: gnulib-tests += $(f128-loader-link)
-
 tests-internal += test-wscanf-ieee128 test-wscanf-ibm128
 CFLAGS-test-wscanf-ieee128.c += -mfloat128 -mabi=ieeelongdouble -Wno-psabi -std=c89 -D_GNU_SOURCE
 CFLAGS-test-wscanf-ibm128.c += -mabi=ibmlongdouble -Wno-psabi -std=c89 -D_GNU_SOURCE
-
-$(objpfx)test-wscanf-ieee128: gnulib-tests += $(f128-loader-link)
 
 tests-internal += test-isoc99-scanf-ieee128 test-isoc99-scanf-ibm128
 CFLAGS-test-isoc99-scanf-ieee128.c += -mfloat128 -mabi=ieeelongdouble -Wno-psabi -std=c99
 CFLAGS-test-isoc99-scanf-ibm128.c += -mabi=ibmlongdouble -Wno-psabi -std=c99
 
-$(objpfx)test-isoc99-scanf-ieee128: gnulib-tests += $(f128-loader-link)
-
 tests-internal += test-isoc99-wscanf-ieee128 test-isoc99-wscanf-ibm128
 CFLAGS-test-isoc99-wscanf-ieee128.c += -mfloat128 -mabi=ieeelongdouble -Wno-psabi -std=c99
 CFLAGS-test-isoc99-wscanf-ibm128.c += -mabi=ibmlongdouble -Wno-psabi -std=c99
-
-$(objpfx)test-isoc99-wscanf-ieee128: gnulib-tests += $(f128-loader-link)
 
 ifeq ($(run-built-tests),yes)
 tests-special += $(objpfx)test-scanf-ieee128.out
@@ -211,7 +200,9 @@ ldbl-extra-routines += asprintf_chk \
 		       wprintf_chk \
 		       vfwprintf_chk \
 		       vswprintf_chk \
-		       vwprintf_chk
+		       vwprintf_chk \
+		       obstack_chk \
+		       vobstack_chk
 
 tests-internal += test-printf-chk-ieee128 test-printf-chk-ibm128
 CFLAGS-test-printf-chk-ieee128.c += -mfloat128 -mabi=ieeelongdouble -Wno-psabi
@@ -258,18 +249,9 @@ ldbl-extra-routines += err \
 CFLAGS-ieee128-qefgcvt.c += -mabi=ieeelongdouble -Wno-psabi -mno-gnu-attribute
 CFLAGS-ieee128-qefgcvt_r.c += -mabi=ieeelongdouble -Wno-psabi -mno-gnu-attribute
 
-# Remove -mlong-double-128 because it does not work correctly with
-# -mabi=ibmlongdoule in some GCC versions, e.g. GCC 7.
-$(foreach o,$(all-object-suffixes),$(objpfx)ieee128-qefgcvt$(o)): \
-  sysdep-CFLAGS := $(filter-out -mlong-double-128, $(sysdep-CFLAGS))
-$(foreach o,$(all-object-suffixes),$(objpfx)ieee128-qefgcvt_r$(o)): \
-  sysdep-CFLAGS := $(filter-out -mlong-double-128, $(sysdep-CFLAGS))
-
 tests-internal += tst-ibm128-warn tst-ieee128-warn
 tests-internal += tst-ibm128-error tst-ieee128-error
 tests-internal += tst-ibm128-efgcvt tst-ieee128-efgcvt
-
-$(objpfx)tst-ieee128-efgcvt: gnulib-tests += $(f128-loader-link)
 
 $(objpfx)tst-ibm128-%.c: tst-ldbl-%.c
 	cp $< $@
@@ -315,7 +297,13 @@ tests-internal += test-strfrom-ibm128 test-strfrom-ieee128
 CFLAGS-test-strfrom-ieee128.c += -mfloat128 -mabi=ieeelongdouble -Wno-psabi
 CFLAGS-test-strfrom-ibm128.c += -mabi=ibmlongdouble -Wno-psabi
 
-$(objpfx)test-strfrom-ieee128: gnulib-tests += $(f128-loader-link)
+endif
+
+ifeq ($(subdir),math)
+# The totalorder{,mag} compatibility tests were added prior to this
+# support.  Thus, they can only correctly be used with ibm128.
+CFLAGS-test-ldouble-compat_totalorder.c += -mabi=ibmlongdouble
+CFLAGS-test-ldouble-compat_totalordermag.c += -mabi=ibmlongdouble
 endif
 
 # Add IEEE binary128 files as make targets.
@@ -338,14 +326,20 @@ ldbl-ibm128-files := $(objpfx)test-%-ibm128^ \
 		     $(objpfx)iovswscanf^ \
 		     $(objpfx)iovfscanf^ \
 		     $(objpfx)iovfwscanf^ \
+		     $(objpfx)mpn2ldbl^ \
+		     $(objpfx)ldbl2mpn^ \
+		     $(objpfx)strtold_nan^ \
+		     $(objpfx)strtold_l^ \
+		     $(objpfx)strtold^ \
+		     $(objpfx)strfroml^ \
+		     $(objpfx)wcstold_nan^ \
+		     $(objpfx)wcstold_l^ \
+		     $(objpfx)wcstold^ \
+		     $(objpfx)printf_fphex^ \
+		     $(objpfx)printf_fp^ \
 		     $(foreach r,$(ldbl-extra-routines),$(objpfx)$(r)^) \
 		     $(foreach r,$(ldbl-extra-routines),$(objpfx)$(r)-internal^)
 obj-suf-foreach = $(foreach suf,$(all-object-suffixes),$(subst ^,$(suf),$(1)))
-
-# Remove -mlong-double-128 because it does not work correctly with
-# -mabi=ibmlongdoule in some GCC versions, e.g. GCC 7.
-$(call obj-suf-foreach,$(ldbl-ibm128-files)): \
-  sysdep-CFLAGS := $(filter-out -mlong-double-128, $(sysdep-CFLAGS))
 
 # Explicitly add -mabi=ibm-long-double to required files.
 $(call obj-suf-foreach,$(ldbl-ibm128-files)): \

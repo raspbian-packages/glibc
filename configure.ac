@@ -376,28 +376,6 @@ AC_SUBST(libc_cv_nss_crypt)
 AC_SUBST(libc_cv_static_nss_crypt)
 
 
-AC_ARG_ENABLE([obsolete-rpc],
-              AC_HELP_STRING([--enable-obsolete-rpc],
-                             [build and install the obsolete RPC code for link-time usage]),
-              [link_obsolete_rpc=$enableval],
-              [link_obsolete_rpc=no])
-AC_SUBST(link_obsolete_rpc)
-
-if test "$link_obsolete_rpc" = yes; then
-  AC_DEFINE(LINK_OBSOLETE_RPC)
-fi
-
-AC_ARG_ENABLE([obsolete-nsl],
-              AC_HELP_STRING([--enable-obsolete-nsl],
-                             [build and install the obsolete libnsl library and depending NSS modules]),
-              [build_obsolete_nsl=$enableval],
-              [build_obsolete_nsl=no])
-AC_SUBST(build_obsolete_nsl)
-
-if test "$build_obsolete_nsl" = yes; then
-  AC_DEFINE(LINK_OBSOLETE_NSL)
-fi
-
 AC_ARG_ENABLE([systemtap],
               [AS_HELP_STRING([--enable-systemtap],
 	       [enable systemtap static probe points @<:@default=no@:>@])],
@@ -811,7 +789,8 @@ mach=
 tail=$machine${submachine:+/$submachine}
 while m=`echo $tail | sed 's@^\(.*\)/\([^/]*\)$@& \1@'`; test -n "$m"; do
   set $m
-  # Prepend the machine's FPU directory unless --without-fp.
+  # Prepend the machine's FPU directory unless the architecture specific
+  # preconfigure disables it.
   if test "$libc_cv_with_fp" = yes; then
     maybe_fpu=/fpu
   else
@@ -1250,36 +1229,6 @@ AC_CACHE_CHECK(whether to put _rtld_local into .sdata section,
 	       ])
 if test $libc_cv_have_sdata_section = yes; then
   AC_DEFINE(HAVE_SDATA_SECTION)
-fi
-
-AC_CACHE_CHECK(whether to use .ctors/.dtors header and trailer,
-	       libc_cv_ctors_header, [dnl
-  libc_cv_ctors_header=yes
-  LIBC_TRY_LINK_STATIC([
-__attribute__ ((constructor)) void ctor (void) { asm (""); }
-__attribute__ ((destructor))  void dtor (void) { asm (""); }
-],
-	      [dnl
-      AS_IF([$READELF -WS conftest$ac_exeext | $AWK '
-	{ gsub(/\@<:@ */, "@<:@") }
-	$2 == ".ctors" || $2 == ".dtors" {
-	  size = strtonum("0x" $6)
-	  align = strtonum("0x" $NF)
-	  seen@<:@$2@:>@ = 1
-	  stub@<:@$2@:>@ = size == align * 2
-	}
-	END {
-	  ctors_ok = !seen@<:@".ctors"@:>@ || stub@<:@".ctors"@:>@
-	  dtors_ok = !seen@<:@".dtors"@:>@ || stub@<:@".dtors"@:>@
-	  exit ((ctors_ok && dtors_ok) ? 0 : 1)
-	}
-      '], [libc_cv_ctors_header=no])
-    ], [dnl
-      AC_MSG_ERROR([missing __attribute__ ((constructor)) support??])
-    ])
-])
-if test $libc_cv_ctors_header = no; then
-  AC_DEFINE(NO_CTORS_DTORS_SECTIONS)
 fi
 
 AC_CACHE_CHECK(for libunwind-support in compiler,

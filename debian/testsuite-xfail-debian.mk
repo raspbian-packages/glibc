@@ -218,6 +218,7 @@ test-xfail-tst-setcontext7 = yes
 test-xfail-tst-stack4 = yes
 # The following tests sometimes fail due to timeouts.
 test-xfail-tst-barrier5 = yes
+test-xfail-tst-cond24 = yes
 test-xfail-tst-cond25 = yes
 
 # The following tests fail as xsigstack.c does not allocate stack
@@ -277,6 +278,7 @@ test-xfail-tst-auditmany = yes
 test-xfail-tst-execvpe5 = yes
 
 # libgcc_s support assumes non-SIGINFO signal handler parameters
+# Will be fixed in gcc-10 >> 10.2.1-6 upload, or gcc-11.
 test-xfail-tst-backtrace6 = yes
 
 # Crashes on dividing by a profiling period 0 (not initialized)
@@ -362,17 +364,9 @@ test-xfail-tst-safe-linking = yes
 test-xfail-tst-strerror = yes
 # We always have several threads
 test-xfail-tst-single_threaded-pthread = yes
-# fixed in 2.32
-test-xfail-tst-fdopendir2 = yes
-test-xfail-tst-grantpt = yes
-test-xfail-ISO11/threads.h/conform = yes
-test-xfail-ISO11/threads.h/linknamespace = yes
-test-xfail-tst-stackguard1-static = yes
-test-xfail-tst-stackguard1 = yes
-test-xfail-tst-ptrguard1-static = yes
-test-xfail-tst-ptrguard1 = yes
-test-xfail-tst-malloc-stats-cancellation = yes
-test-xfail-tst-malloc-stats-cancellation-mcheck = yes
+test-xfail-tst-latepthread = yes
+test-xfail-tst-initfinilazyfail = yes
+test-xfail-tst-kill6 = yes
 
 # new in 2.33
 test-xfail-tst-cpu-features-cpuinfo = yes

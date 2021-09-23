@@ -52,8 +52,10 @@ create_thread (struct pthread *pd, const struct pthread_attr *attr,
   /* Determine whether the newly created threads has to be started
      stopped since we have to set the scheduling parameters or set the
      affinity.  */
+  bool need_setaffinity = (attr != NULL && attr->extension != NULL
+			   && attr->extension->cpuset != 0);
   if (attr != NULL
-      && (__glibc_unlikely (attr->cpuset != NULL)
+      && (__glibc_unlikely (need_setaffinity)
 	  || __glibc_unlikely ((attr->flags & ATTR_FLAG_NOTINHERITSCHED) != 0)))
     *stopped_start = true;
 
@@ -110,29 +112,27 @@ create_thread (struct pthread *pd, const struct pthread_attr *attr,
   /* Now we have the possibility to set scheduling parameters etc.  */
   if (attr != NULL)
     {
-      INTERNAL_SYSCALL_DECL (err);
       int res;
 
       /* Set the affinity mask if necessary.  */
-      if (attr->cpuset != NULL)
+      if (need_setaffinity)
 	{
 	  assert (*stopped_start);
 
-	  res = INTERNAL_SYSCALL (sched_setaffinity, err, 3, pd->tid,
-				  attr->cpusetsize, attr->cpuset);
+	  res = INTERNAL_SYSCALL_CALL (sched_setaffinity, pd->tid,
+				       attr->extension->cpusetsize,
+				       attr->extension->cpuset);
 
-	  if (__glibc_unlikely (INTERNAL_SYSCALL_ERROR_P (res, err)))
+	  if (__glibc_unlikely (INTERNAL_SYSCALL_ERROR_P (res)))
 	  err_out:
 	    {
 	      /* The operation failed.  We have to kill the thread.
 		 We let the normal cancellation mechanism do the work.  */
 
 	      pid_t pid = __getpid ();
-	      INTERNAL_SYSCALL_DECL (err2);
-	      (void) INTERNAL_SYSCALL_CALL (tgkill, err2, pid, pd->tid,
-					    SIGCANCEL);
+	      INTERNAL_SYSCALL_CALL (tgkill, pid, pd->tid, SIGCANCEL);
 
-	      return INTERNAL_SYSCALL_ERRNO (res, err);
+	      return INTERNAL_SYSCALL_ERRNO (res);
 	    }
 	}
 
@@ -141,10 +141,10 @@ create_thread (struct pthread *pd, const struct pthread_attr *attr,
 	{
 	  assert (*stopped_start);
 
-	  res = INTERNAL_SYSCALL (sched_setscheduler, err, 3, pd->tid,
-				  pd->schedpolicy, &pd->schedparam);
+	  res = INTERNAL_SYSCALL_CALL (sched_setscheduler, pd->tid,
+				       pd->schedpolicy, &pd->schedparam);
 
-	  if (__glibc_unlikely (INTERNAL_SYSCALL_ERROR_P (res, err)))
+	  if (__glibc_unlikely (INTERNAL_SYSCALL_ERROR_P (res)))
 	    goto err_out;
 	}
     }

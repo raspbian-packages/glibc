@@ -202,13 +202,16 @@ _dl_load_cache_lookup (const char *name)
 					       PROT_READ);
 
       /* We can handle three different cache file formats here:
+	 - only the new format
 	 - the old libc5/glibc2.0/2.1 format
 	 - the old format with the new format in it
-	 - only the new format
 	 The following checks if the cache contains any of these formats.  */
       if (file != MAP_FAILED && cachesize > sizeof *cache_new
-	       && memcmp (file, CACHEMAGIC_VERSION_NEW,
-			  sizeof CACHEMAGIC_VERSION_NEW - 1) == 0)
+	  && memcmp (file, CACHEMAGIC_VERSION_NEW,
+		     sizeof CACHEMAGIC_VERSION_NEW - 1) == 0
+	  /* Check for corruption, avoiding overflow.  */
+	  && ((cachesize - sizeof *cache_new) / sizeof (struct file_entry_new)
+	      >= ((struct cache_file_new *) file)->nlibs))
 	{
 	  if (! cache_file_new_matches_endian (file))
 	    {
@@ -219,10 +222,10 @@ _dl_load_cache_lookup (const char *name)
 	  cache = file;
 	}
       else if (file != MAP_FAILED && cachesize > sizeof *cache
-	  && memcmp (file, CACHEMAGIC, sizeof CACHEMAGIC - 1) == 0
-	  /* Check for corruption, avoiding overflow.  */
-	  && ((cachesize - sizeof *cache) / sizeof (struct file_entry)
-	      >= ((struct cache_file *) file)->nlibs))
+	       && memcmp (file, CACHEMAGIC, sizeof CACHEMAGIC - 1) == 0
+	       /* Check for corruption, avoiding overflow.  */
+	       && ((cachesize - sizeof *cache) / sizeof (struct file_entry)
+		   >= ((struct cache_file *) file)->nlibs))
 	{
 	  size_t offset;
 	  /* Looks ok.  */

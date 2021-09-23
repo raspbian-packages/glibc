@@ -167,6 +167,7 @@ _dl_debug_vdprintf (int fd, int tag_p, const char *fmt, va_list arg)
 	  switch (*fmt)
 	    {
 	      /* Integer formatting.  */
+	    case 'd':
 	    case 'u':
 	    case 'x':
 	      {
@@ -179,17 +180,43 @@ _dl_debug_vdprintf (int fd, int tag_p, const char *fmt, va_list arg)
 #else
 		unsigned long int num = va_arg (arg, unsigned int);
 #endif
+		bool negative = false;
+		if (*fmt == 'd')
+		  {
+#if LONG_MAX != INT_MAX
+		    if (long_mod)
+		      {
+			if ((long int) num < 0)
+			  negative = true;
+		      }
+		    else
+		      {
+			if ((int) num < 0)
+			  {
+			    num = (unsigned int) num;
+			    negative = true;
+			  }
+		      }
+#else
+		    if ((int) num < 0)
+		      negative = true;
+#endif
+		  }
+
 		/* We use alloca() to allocate the buffer with the most
 		   pessimistic guess for the size.  Using alloca() allows
 		   having more than one integer formatting in a call.  */
-		char *buf = (char *) alloca (3 * sizeof (unsigned long int));
-		char *endp = &buf[3 * sizeof (unsigned long int)];
+		char *buf = (char *) alloca (1 + 3 * sizeof (unsigned long int));
+		char *endp = &buf[1 + 3 * sizeof (unsigned long int)];
 		char *cp = _itoa (num, endp, *fmt == 'x' ? 16 : 10, 0);
 
 		/* Pad to the width the user specified.  */
 		if (width != -1)
 		  while (endp - cp < width)
 		    *--cp = fill;
+
+		if (negative)
+		  *--cp = '-';
 
 		iov[niov].iov_base = cp;
 		iov[niov].iov_len = endp - cp;
@@ -275,6 +302,37 @@ _dl_dprintf (int fd, const char *fmt, ...)
   va_end (arg);
 }
 
+void
+_dl_printf (const char *fmt, ...)
+{
+  va_list arg;
+
+  va_start (arg, fmt);
+  _dl_debug_vdprintf (STDOUT_FILENO, 0, fmt, arg);
+  va_end (arg);
+}
+
+void
+_dl_error_printf (const char *fmt, ...)
+{
+  va_list arg;
+
+  va_start (arg, fmt);
+  _dl_debug_vdprintf (STDERR_FILENO, 0, fmt, arg);
+  va_end (arg);
+}
+
+void
+_dl_fatal_printf (const char *fmt, ...)
+{
+  va_list arg;
+
+  va_start (arg, fmt);
+  _dl_debug_vdprintf (STDERR_FILENO, 0, fmt, arg);
+  va_end (arg);
+  _exit (127);
+}
+rtld_hidden_def (_dl_fatal_printf)
 
 /* Test whether given NAME matches any of the names of the given object.  */
 int

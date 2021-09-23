@@ -3,11 +3,22 @@
 #ifndef _ISOMAC
 # include <stddef.h>
 #endif
+
+/* Workaround PR90731 with GCC 9 when using ldbl redirects in C++.  */
+#include <bits/floatn.h>
+#if defined __cplusplus && __LDOUBLE_REDIRECTS_TO_FLOAT128_ABI == 1
+# if __GNUC_PREREQ (9, 0) && !__GNUC_PREREQ (9, 3)
+#   pragma GCC system_header
+# endif
+#endif
+
 #include <stdlib/stdlib.h>
 
 /* Now define the internal interfaces.  */
 #if !defined _ISOMAC
 # include <sys/stat.h>
+
+# include <rtld-malloc.h>
 
 extern __typeof (strtol_l) __strtol_l;
 extern __typeof (strtoul_l) __strtoul_l;
@@ -205,7 +216,7 @@ libc_hidden_proto (____strtoull_l_internal)
 #include <bits/floatn.h>
 libc_hidden_proto (strtof)
 libc_hidden_proto (strtod)
-#if __LONG_DOUBLE_USES_FLOAT128 == 0
+#if __LDOUBLE_REDIRECTS_TO_FLOAT128_ABI == 0
 libc_hidden_proto (strtold)
 #endif
 libc_hidden_proto (strtol)

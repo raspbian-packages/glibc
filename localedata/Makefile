@@ -47,6 +47,7 @@ test-input := \
 	bg_BG.UTF-8 \
 	br_FR.UTF-8 \
 	bs_BA.UTF-8 \
+	ckb_IQ.UTF-8 \
 	cmn_TW.UTF-8 \
 	crh_UA.UTF-8 \
 	cs_CZ.UTF-8 \
@@ -91,6 +92,7 @@ test-input := \
 	nan_TW.UTF-8@latin \
 	nb_NO.UTF-8 \
 	om_KE.UTF-8 \
+	or_IN.UTF-8 \
 	os_RU.UTF-8 \
 	pl_PL.UTF-8 \
 	ps_AF.UTF-8 \
@@ -165,6 +167,8 @@ tests-special += $(objpfx)mtrace-tst-leaks.out
 endif
 endif
 endif
+tests-container = \
+			tst-localedef-hardlinks
 
 # Files to install.
 ifeq ($(INSTALL_UNCOMPRESSED),yes)
@@ -202,6 +206,7 @@ LOCALES := \
 	bg_BG.UTF-8 \
 	br_FR.UTF-8 \
 	bs_BA.UTF-8 \
+	ckb_IQ.UTF-8 \
 	cmn_TW.UTF-8 \
 	crh_UA.UTF-8 \
 	cs_CZ.UTF-8 \
@@ -256,6 +261,7 @@ LOCALES := \
 	nl_NL.UTF-8 \
 	nn_NO.ISO-8859-1 \
 	om_KE.UTF-8 \
+	or_IN.UTF-8 \
 	os_RU.UTF-8 \
 	pl_PL.UTF-8 \
 	ps_AF.UTF-8 \

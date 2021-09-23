@@ -26,7 +26,7 @@ ifndef subdir
 # architecture-specific system call names.
 #
 # To bootstrap a new architecture, create an empty file in the right
-# place and run “make update-arch-syscall” from the top-level of a
+# place and run `make update-syscall-lists' from the top-level of a
 # configured, but not-yet-built glibc tree.
 #
 # --lock points to a file not replaced during the update operation, so
@@ -54,15 +54,13 @@ CFLAGS-malloc.c += -DMORECORE_CLEARS=2
 endif
 
 ifeq ($(subdir),misc)
-include $(firstword $(wildcard $(sysdirs:=/sysctl.mk)))
-
-sysdep_routines += adjtimex clone umount umount2 readahead \
+sysdep_routines += adjtimex clone umount umount2 readahead sysctl \
 		   setfsuid setfsgid epoll_pwait signalfd \
 		   eventfd eventfd_read eventfd_write prlimit \
 		   personality epoll_wait tee vmsplice splice \
 		   open_by_handle_at mlock2 pkey_mprotect pkey_set pkey_get \
-		   prctl \
-		   process_vm_readv process_vm_writev
+		   timerfd_gettime timerfd_settime prctl \
+		   process_vm_readv process_vm_writev clock_adjtime
 
 CFLAGS-gethostid.c = -fexceptions
 CFLAGS-tee.c = -fexceptions -fasynchronous-unwind-tables
@@ -72,7 +70,7 @@ CFLAGS-open_by_handle_at.c = -fexceptions -fasynchronous-unwind-tables
 CFLAGS-sync_file_range.c = -fexceptions -fasynchronous-unwind-tables
 CFLAGS-tst-writev.c += "-DARTIFICIAL_LIMIT=(0x80000000-sysconf(_SC_PAGESIZE))"
 
-sysdep_headers += sys/mount.h sys/acct.h sys/sysctl.h \
+sysdep_headers += sys/mount.h sys/acct.h \
 		  sys/klog.h \
 		  sys/user.h sys/prctl.h \
 		  sys/kd.h sys/soundcard.h sys/vt.h \
@@ -82,24 +80,27 @@ sysdep_headers += sys/mount.h sys/acct.h sys/sysctl.h \
 		  bits/a.out.h sys/inotify.h sys/signalfd.h sys/eventfd.h \
 		  sys/timerfd.h sys/fanotify.h bits/eventfd.h bits/inotify.h \
 		  bits/signalfd.h bits/timerfd.h bits/epoll.h \
-		  bits/socket_type.h bits/syscall.h bits/sysctl.h \
+		  bits/socket_type.h bits/syscall.h \
 		  bits/mman-linux.h bits/mman-shared.h bits/ptrace-shared.h \
 		  bits/siginfo-arch.h bits/siginfo-consts-arch.h \
 		  bits/procfs.h bits/procfs-id.h bits/procfs-extra.h \
 		  bits/procfs-prregset.h bits/mman-map-flags-generic.h \
-		  bits/msq-pad.h bits/sem-pad.h bits/shmlba.h bits/shm-pad.h \
+		  bits/shmlba.h \
 		  bits/termios-struct.h bits/termios-c_cc.h \
 		  bits/termios-c_iflag.h bits/termios-c_oflag.h \
 		  bits/termios-baud.h bits/termios-c_cflag.h \
 		  bits/termios-c_lflag.h bits/termios-tcflow.h \
 		  bits/termios-misc.h \
+		  bits/types/struct_semid_ds.h \
+		  bits/types/struct_msqid_ds.h \
+		  bits/types/struct_shmid_ds.h \
 		  bits/ipc-perm.h
 
 tests += tst-clone tst-clone2 tst-clone3 tst-fanotify tst-personality \
 	 tst-quota tst-sync_file_range tst-sysconf-iov_max tst-ttyname \
 	 test-errno-linux tst-memfd_create tst-mlock2 tst-pkey \
 	 tst-rlimit-infinity tst-ofdlocks tst-gettid tst-gettid-kill \
-	 tst-tgkill
+	 tst-tgkill tst-sysvsem-linux tst-sysvmsg-linux tst-sysvshm-linux
 tests-internal += tst-ofdlocks-compat tst-sigcontext-get_pc
 
 CFLAGS-tst-sigcontext-get_pc.c = -fasynchronous-unwind-tables
@@ -275,7 +276,7 @@ sysdep_routines += xstatconv internal_statvfs internal_statvfs64 \
 
 sysdep_headers += bits/fcntl-linux.h
 
-tests += tst-fallocate tst-fallocate64
+tests += tst-fallocate tst-fallocate64 tst-o_path-locks
 endif
 
 ifeq ($(subdir),elf)
@@ -300,8 +301,5 @@ CFLAGS-gai.c += -DNEED_NETLINK
 endif
 
 ifeq ($(subdir),nptl)
-tests += tst-align-clone tst-getpid1 \
-	tst-thread-affinity-pthread tst-thread-affinity-pthread2 \
-	tst-thread-affinity-sched
-tests-internal += tst-setgetname
+tests += tst-align-clone tst-getpid1
 endif

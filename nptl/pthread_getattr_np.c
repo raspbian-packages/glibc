@@ -30,11 +30,16 @@
 
 
 int
-pthread_getattr_np (pthread_t thread_id, pthread_attr_t *attr)
+__pthread_getattr_np (pthread_t thread_id, pthread_attr_t *attr)
 {
   struct pthread *thread = (struct pthread *) thread_id;
+
+  /* Prepare the new thread attribute.  */
+  int ret = __pthread_attr_init (attr);
+  if (ret != 0)
+    return ret;
+
   struct pthread_attr *iattr = (struct pthread_attr *) attr;
-  int ret = 0;
 
   lll_lock (thread->lock, LLL_PRIVATE);
 
@@ -84,7 +89,7 @@ pthread_getattr_np (pthread_t thread_id, pthread_attr_t *attr)
       /* We need the limit of the stack in any case.  */
       else
 	{
-	  if (getrlimit (RLIMIT_STACK, &rl) != 0)
+	  if (__getrlimit (RLIMIT_STACK, &rl) != 0)
 	    ret = errno;
 	  else
 	    {
@@ -115,7 +120,7 @@ pthread_getattr_np (pthread_t thread_id, pthread_attr_t *attr)
 
 	      while (! feof_unlocked (fp))
 		{
-		  if (__getdelim (&line, &linelen, '\n', fp) <= 0)
+		  if (__getline (&line, &linelen, fp) <= 0)
 		    break;
 
 		  uintptr_t from;
@@ -187,24 +192,24 @@ pthread_getattr_np (pthread_t thread_id, pthread_attr_t *attr)
       while (ret == EINVAL && size < 1024 * 1024);
 
       if (ret == 0)
-	{
-	  iattr->cpuset = cpuset;
-	  iattr->cpusetsize = size;
-	}
-      else
-	{
-	  free (cpuset);
-	  if (ret == ENOSYS)
-	    {
-	      /* There is no such functionality.  */
-	      ret = 0;
-	      iattr->cpuset = NULL;
-	      iattr->cpusetsize = 0;
-	    }
-	}
+	ret = __pthread_attr_setaffinity_np (attr, size, cpuset);
+      else if (ret == ENOSYS)
+	/* There is no such functionality.  */
+	ret = 0;
+      free (cpuset);
     }
 
   lll_unlock (thread->lock, LLL_PRIVATE);
 
+  if (ret != 0)
+    __pthread_attr_destroy (attr);
+
   return ret;
 }
+versioned_symbol (libc, __pthread_getattr_np, pthread_getattr_np, GLIBC_2_32);
+
+#if SHLIB_COMPAT (libc, GLIBC_2_2_3, GLIBC_2_32)
+strong_alias (__pthread_getattr_np, __pthread_getattr_np_alias)
+compat_symbol (libc, __pthread_getattr_np_alias,
+	       pthread_getattr_np, GLIBC_2_2_3);
+#endif

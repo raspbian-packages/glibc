@@ -34,6 +34,7 @@
 #include <futex-internal.h>
 #include <tls-setup.h>
 #include "libioP.h"
+#include <sys/single_threaded.h>
 
 #include <shlib-compat.h>
 
@@ -369,7 +370,6 @@ __free_tcb (struct pthread *pd)
     }
 }
 
-
 /* Local function to start thread and handle cleanup.
    createthread.c defines the macro START_THREAD_DEFN to the
    declaration that its create_thread function will refer to, and
@@ -385,34 +385,14 @@ START_THREAD_DEFN
   /* Initialize pointers to locale data.  */
   __ctype_init ();
 
-  /* Allow setxid from now onwards.  */
-  if (__glibc_unlikely (atomic_exchange_acq (&pd->setxid_futex, 0) == -2))
-    futex_wake (&pd->setxid_futex, 1, FUTEX_PRIVATE);
-
-#ifdef __NR_set_robust_list
-# ifndef __ASSUME_SET_ROBUST_LIST
+#ifndef __ASSUME_SET_ROBUST_LIST
   if (__set_robust_list_avail >= 0)
-# endif
+#endif
     {
-      INTERNAL_SYSCALL_DECL (err);
       /* This call should never fail because the initial call in init.c
 	 succeeded.  */
-      INTERNAL_SYSCALL (set_robust_list, err, 2, &pd->robust_head,
-			sizeof (struct robust_list_head));
-    }
-#endif
-
-  /* If the parent was running cancellation handlers while creating
-     the thread the new thread inherited the signal mask.  Reset the
-     cancellation signal mask.  */
-  if (__glibc_unlikely (pd->parent_cancelhandling & CANCELING_BITMASK))
-    {
-      INTERNAL_SYSCALL_DECL (err);
-      sigset_t mask;
-      __sigemptyset (&mask);
-      __sigaddset (&mask, SIGCANCEL);
-      (void) INTERNAL_SYSCALL (rt_sigprocmask, err, 4, SIG_UNBLOCK, &mask,
-			       NULL, _NSIG / 8);
+      INTERNAL_SYSCALL_CALL (set_robust_list, &pd->robust_head,
+			     sizeof (struct robust_list_head));
     }
 
   /* This is where the try/finally block should be created.  For
@@ -435,6 +415,12 @@ START_THREAD_DEFN
      handlers.  */
   unwind_buf.priv.data.prev = NULL;
   unwind_buf.priv.data.cleanup = NULL;
+
+  __libc_signal_restore_set (&pd->sigmask);
+
+  /* Allow setxid from now onwards.  */
+  if (__glibc_unlikely (atomic_exchange_acq (&pd->setxid_futex, 0) == -2))
+    futex_wake (&pd->setxid_futex, 1, FUTEX_PRIVATE);
 
   if (__glibc_likely (! not_first_call))
     {
@@ -564,14 +550,11 @@ START_THREAD_DEFN
     }
 #endif
 
-  advise_stack_range (pd->stackblock, pd->stackblock_size, (uintptr_t) pd,
-		      pd->guardsize);
+  if (!pd->user_stack)
+    advise_stack_range (pd->stackblock, pd->stackblock_size, (uintptr_t) pd,
+			pd->guardsize);
 
-  /* If the thread is detached free the TCB.  */
-  if (IS_DETACHED (pd))
-    /* Free the TCB.  */
-    __free_tcb (pd);
-  else if (__glibc_unlikely (pd->cancelhandling & SETXID_BITMASK))
+  if (__glibc_unlikely (pd->cancelhandling & SETXID_BITMASK))
     {
       /* Some other thread might call any of the setXid functions and expect
 	 us to reply.  In this case wait until we did that.  */
@@ -586,6 +569,11 @@ START_THREAD_DEFN
       /* Reset the value so that the stack can be reused.  */
       pd->setxid_futex = 0;
     }
+
+  /* If the thread is detached free the TCB.  */
+  if (IS_DETACHED (pd))
+    /* Free the TCB.  */
+    __free_tcb (pd);
 
   /* We cannot call '_exit' here.  '_exit' will terminate the process.
 
@@ -625,35 +613,21 @@ __pthread_create_2_1 (pthread_t *newthread, const pthread_attr_t *attr,
 {
   STACK_VARIABLES;
 
+  /* Avoid a data race in the multi-threaded case.  */
+  if (__libc_single_threaded)
+    __libc_single_threaded = 0;
+
   const struct pthread_attr *iattr = (struct pthread_attr *) attr;
-  struct pthread_attr default_attr;
-  bool free_cpuset = false;
+  union pthread_attr_transparent default_attr;
+  bool destroy_default_attr = false;
   bool c11 = (attr == ATTR_C11_THREAD);
   if (iattr == NULL || c11)
     {
-      lll_lock (__default_pthread_attr_lock, LLL_PRIVATE);
-      default_attr = __default_pthread_attr;
-      size_t cpusetsize = default_attr.cpusetsize;
-      if (cpusetsize > 0)
-	{
-	  cpu_set_t *cpuset;
-	  if (__glibc_likely (__libc_use_alloca (cpusetsize)))
-	    cpuset = __alloca (cpusetsize);
-	  else
-	    {
-	      cpuset = malloc (cpusetsize);
-	      if (cpuset == NULL)
-		{
-		  lll_unlock (__default_pthread_attr_lock, LLL_PRIVATE);
-		  return ENOMEM;
-		}
-	      free_cpuset = true;
-	    }
-	  memcpy (cpuset, default_attr.cpuset, cpusetsize);
-	  default_attr.cpuset = cpuset;
-	}
-      lll_unlock (__default_pthread_attr_lock, LLL_PRIVATE);
-      iattr = &default_attr;
+      int ret = __pthread_getattr_default_np (&default_attr.external);
+      if (ret != 0)
+	return ret;
+      destroy_default_attr = true;
+      iattr = &default_attr.internal;
     }
 
   struct pthread *pd = NULL;
@@ -726,10 +700,6 @@ __pthread_create_2_1 (pthread_t *newthread, const pthread_attr_t *attr,
   CHECK_THREAD_SYSINFO (pd);
 #endif
 
-  /* Inform start_thread (above) about cancellation state that might
-     translate into inherited signal state.  */
-  pd->parent_cancelhandling = THREAD_GETMEM (THREAD_SELF, cancelhandling);
-
   /* Determine scheduling parameters for the thread.  */
   if (__builtin_expect ((iattr->flags & ATTR_FLAG_NOTINHERITSCHED) != 0, 0)
       && (iattr->flags & (ATTR_FLAG_SCHED_SET | ATTR_FLAG_POLICY_SET)) != 0)
@@ -775,6 +745,30 @@ __pthread_create_2_1 (pthread_t *newthread, const pthread_attr_t *attr,
      ownership of PD (see CONCURRENCY NOTES above).  */
   bool stopped_start = false; bool thread_ran = false;
 
+  /* Block all signals, so that the new thread starts out with
+     signals disabled.  This avoids race conditions in the thread
+     startup.  */
+  sigset_t original_sigmask;
+  __libc_signal_block_all (&original_sigmask);
+
+  if (iattr->extension != NULL && iattr->extension->sigmask_set)
+    /* Use the signal mask in the attribute.  The internal signals
+       have already been filtered by the public
+       pthread_attr_setsigmask_np interface.  */
+    pd->sigmask = iattr->extension->sigmask;
+  else
+    {
+      /* Conceptually, the new thread needs to inherit the signal mask
+	 of this thread.  Therefore, it needs to restore the saved
+	 signal mask of this thread, so save it in the startup
+	 information.  */
+      pd->sigmask = original_sigmask;
+
+      /* Reset the cancellation signal mask in case this thread is
+	 running cancellation.  */
+      __sigdelset (&pd->sigmask, SIGCANCEL);
+    }
+
   /* Start the thread.  */
   if (__glibc_unlikely (report_thread_creation (pd)))
     {
@@ -816,6 +810,10 @@ __pthread_create_2_1 (pthread_t *newthread, const pthread_attr_t *attr,
   else
     retval = create_thread (pd, iattr, &stopped_start,
 			    STACK_VARIABLES_ARGS, &thread_ran);
+
+  /* Return to the previous signal mask, after creating the new
+     thread.  */
+  __libc_signal_restore_set (&original_sigmask);
 
   if (__glibc_unlikely (retval != 0))
     {
@@ -868,8 +866,8 @@ __pthread_create_2_1 (pthread_t *newthread, const pthread_attr_t *attr,
     }
 
  out:
-  if (__glibc_unlikely (free_cpuset))
-    free (default_attr.cpuset);
+  if (destroy_default_attr)
+    __pthread_attr_destroy (&default_attr.external);
 
   return retval;
 }
@@ -901,7 +899,7 @@ __pthread_create_2_0 (pthread_t *newthread, const pthread_attr_t *attr,
       new_attr.guardsize = ps;
       new_attr.stackaddr = NULL;
       new_attr.stacksize = 0;
-      new_attr.cpuset = NULL;
+      new_attr.extension = NULL;
 
       /* We will pass this value on to the real implementation.  */
       attr = (pthread_attr_t *) &new_attr;

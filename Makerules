@@ -557,7 +557,7 @@ $(common-objpfx)shlib.lds: $(common-objpfx)config.make $(..)Makerules
 	$(LINK.o) -shared -Wl,-O1 \
 		  -nostdlib -nostartfiles \
 		  $(sysdep-LDFLAGS) $(rtld-LDFLAGS) $(LDFLAGS.so) \
-		  -Wl,--verbose 2>&1 | \
+		  -Wl,--verbose 2>/dev/null | \
 	  sed > $@T \
 	      -e '/^=========/,/^=========/!d;/^=========/d' \
 	      $(if $(filter yes,$(have-hash-style)), \
@@ -729,8 +729,7 @@ $(common-objpfx)linkobj/libc.so: link-libc-deps = # empty
 
 # Use our own special initializer and finalizer files for the libc.so
 # libraries.
-$(common-objpfx)libc.so: $(elf-objpfx)soinit.os \
-			 $(common-objpfx)libc_pic.os$(libc_pic_clean) \
+$(common-objpfx)libc.so: $(common-objpfx)libc_pic.os$(libc_pic_clean) \
 			 $(elf-objpfx)sofini.os \
 			 $(elf-objpfx)interp.os \
 			 $(elf-objpfx)ld.so \
@@ -738,8 +737,7 @@ $(common-objpfx)libc.so: $(elf-objpfx)soinit.os \
 	$(build-shlib)
 	$(call after-link,$@)
 
-$(common-objpfx)linkobj/libc.so: $(elf-objpfx)soinit.os \
-			 $(common-objpfx)linkobj/libc_pic.a \
+$(common-objpfx)linkobj/libc.so: $(common-objpfx)linkobj/libc_pic.a \
 			 $(elf-objpfx)sofini.os \
 			 $(elf-objpfx)interp.os \
 			 $(elf-objpfx)ld.so \
@@ -1114,7 +1112,7 @@ ifneq (unknown,$(output-format))
 else
 	$(LINK.o) -shared $(sysdep-LDFLAGS) $(rtld-LDFLAGS) \
 		  $(LDFLAGS.so) $(LDFLAGS-lib.so) \
-		  -x c /dev/null -o $@.so -Wl,--verbose -v 2>&1 \
+		  -x c /dev/null -o $@.so -Wl,--verbose -v 2>/dev/null \
 	| sed -n -f $< > $@.new
 	test -s $@.new
 	rm -f $@.so

@@ -19,6 +19,8 @@
 #ifndef _PTHREADP_H
 #define _PTHREADP_H	1
 
+#define __PTHREAD_NPTL
+
 #include <pthread.h>
 #include <setjmp.h>
 #include <stdbool.h>
@@ -197,8 +199,10 @@ enum
 
 
 /* Default pthread attributes.  */
-extern struct pthread_attr __default_pthread_attr attribute_hidden;
+extern union pthread_attr_transparent __default_pthread_attr attribute_hidden;
 extern int __default_pthread_attr_lock attribute_hidden;
+/* Called from __libpthread_freeres to deallocate the default attribute.  */
+extern void __default_pthread_attr_freeres (void) attribute_hidden;
 
 /* Size and alignment of static TLS block.  */
 extern size_t __static_tls_size attribute_hidden;
@@ -345,7 +349,8 @@ extern int __pthread_create_2_1 (pthread_t *newthread,
 extern int __pthread_create_2_0 (pthread_t *newthread,
 				 const pthread_attr_t *attr,
 				 void *(*start_routine) (void *), void *arg);
-extern int __pthread_attr_init_2_1 (pthread_attr_t *attr);
+extern int __pthread_attr_init (pthread_attr_t *attr);
+libc_hidden_proto (__pthread_attr_init)
 extern int __pthread_attr_init_2_0 (pthread_attr_t *attr);
 
 
@@ -401,6 +406,7 @@ extern int __pthread_mutexattr_init (pthread_mutexattr_t *attr);
 extern int __pthread_mutexattr_destroy (pthread_mutexattr_t *attr);
 extern int __pthread_mutexattr_settype (pthread_mutexattr_t *attr, int kind);
 extern int __pthread_attr_destroy (pthread_attr_t *attr);
+libc_hidden_proto (__pthread_attr_destroy)
 extern int __pthread_attr_getdetachstate (const pthread_attr_t *attr,
 					  int *detachstate);
 extern int __pthread_attr_setdetachstate (pthread_attr_t *attr,
@@ -431,6 +437,10 @@ extern int __pthread_attr_getstack (const pthread_attr_t *__restrict __attr,
 				    size_t *__restrict __stacksize);
 extern int __pthread_attr_setstack (pthread_attr_t *__attr, void *__stackaddr,
 				    size_t __stacksize);
+int __pthread_attr_setaffinity_np (pthread_attr_t *, size_t, const cpu_set_t *);
+libc_hidden_proto (__pthread_attr_setaffinity_np)
+extern __typeof (pthread_getattr_default_np) __pthread_getattr_default_np;
+libpthread_hidden_proto (__pthread_getattr_default_np)
 extern int __pthread_rwlock_init (pthread_rwlock_t *__restrict __rwlock,
 				  const pthread_rwlockattr_t *__restrict
 				  __attr);
@@ -442,8 +452,10 @@ extern int __pthread_rwlock_trywrlock (pthread_rwlock_t *__rwlock);
 extern int __pthread_rwlock_unlock (pthread_rwlock_t *__rwlock);
 extern int __pthread_cond_broadcast (pthread_cond_t *cond);
 extern int __pthread_cond_destroy (pthread_cond_t *cond);
+libc_hidden_proto (__pthread_cond_destroy)
 extern int __pthread_cond_init (pthread_cond_t *cond,
 				const pthread_condattr_t *cond_attr);
+libc_hidden_proto (__pthread_cond_init)
 extern int __pthread_cond_signal (pthread_cond_t *cond);
 extern int __pthread_cond_wait (pthread_cond_t *cond, pthread_mutex_t *mutex);
 extern int __pthread_cond_timedwait (pthread_cond_t *cond,
@@ -478,6 +490,8 @@ extern void __pthread_testcancel (void);
 extern int __pthread_clockjoin_ex (pthread_t, void **, clockid_t,
 				   const struct timespec *, bool)
   attribute_hidden;
+extern int __pthread_sigmask (int, const sigset_t *, sigset_t *);
+libc_hidden_proto (__pthread_sigmask);
 
 
 #if IS_IN (libpthread)
@@ -512,6 +526,17 @@ extern int __pthread_cond_wait_2_0 (pthread_cond_2_0_t *cond,
 
 extern int __pthread_getaffinity_np (pthread_t th, size_t cpusetsize,
 				     cpu_set_t *cpuset);
+libc_hidden_proto (__pthread_getaffinity_np)
+
+/* Special internal version of pthread_attr_setsigmask_np which does
+   not filter out internal signals from *SIGMASK.  This can be used to
+   launch threads with internal signals blocked.  */
+  extern int __pthread_attr_setsigmask_internal (pthread_attr_t *attr,
+						 const sigset_t *sigmask);
+libc_hidden_proto (__pthread_attr_setsigmask_internal)
+
+extern __typeof (pthread_attr_getsigmask_np) __pthread_attr_getsigmask_np;
+libc_hidden_proto (__pthread_attr_getsigmask_np)
 
 #if IS_IN (libpthread)
 /* Special versions which use non-exported functions.  */
@@ -563,11 +588,23 @@ extern void __shm_directory_freeres (void) attribute_hidden;
 
 extern void __wait_lookup_done (void) attribute_hidden;
 
+/* Allocates the extension space for ATTR.  Returns an error code on
+   memory allocation failure, zero on success.  If ATTR already has an
+   extension space, this function does nothing.  */
+int __pthread_attr_extension (struct pthread_attr *attr) attribute_hidden
+  __attribute_warn_unused_result__;
+
 #ifdef SHARED
 # define PTHREAD_STATIC_FN_REQUIRE(name)
 #else
 # define PTHREAD_STATIC_FN_REQUIRE(name) __asm (".globl " #name);
 #endif
+
+/* Make a deep copy of the attribute *SOURCE in *TARGET.  *TARGET is
+   not assumed to have been initialized.  Returns 0 on success, or a
+   positive error code otherwise.  */
+int __pthread_attr_copy (pthread_attr_t *target, const pthread_attr_t *source);
+libc_hidden_proto (__pthread_attr_copy)
 
 /* Returns 0 if POL is a valid scheduling policy.  */
 static inline int

@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <hurd.h>
 #include <hurd/port.h>
+#include <sysdep-cancel.h>
 
 pid_t
 __wait4 (pid_t pid, int *stat_loc, int options, struct rusage *usage)
@@ -29,10 +30,13 @@ __wait4 (pid_t pid, int *stat_loc, int options, struct rusage *usage)
   struct rusage ignored;
   int sigcode;
   int dummy;
+  int cancel_oldtype;
 
-  err = __USEPORT (PROC, __proc_wait (port, pid, options,
-				      stat_loc ?: &dummy, &sigcode,
-				      usage ?: &ignored, &dead));
+  cancel_oldtype = LIBC_CANCEL_ASYNC();
+  err = __USEPORT_CANCEL (PROC, __proc_wait (port, pid, options,
+					     stat_loc ?: &dummy, &sigcode,
+					     usage ?: &ignored, &dead));
+  LIBC_CANCEL_RESET (cancel_oldtype);
   switch (err)
     {
     case 0:			/* Got a child.  */

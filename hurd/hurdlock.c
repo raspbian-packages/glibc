@@ -47,6 +47,9 @@ int
 __lll_abstimed_wait (void *ptr, int val,
   const struct timespec *tsp, int flags, int clk)
 {
+  if (clk != CLOCK_REALTIME)
+    return EINVAL;
+
   int mlsec = compute_reltime (tsp, clk);
   return mlsec < 0 ? KERN_TIMEDOUT : __lll_timed_wait (ptr, val, mlsec, flags);
 }
@@ -76,6 +79,9 @@ int
 __lll_abstimed_xwait (void *ptr, int lo, int hi,
   const struct timespec *tsp, int flags, int clk)
 {
+  if (clk != CLOCK_REALTIME)
+    return EINVAL;
+
   int mlsec = compute_reltime (tsp, clk);
   return mlsec < 0 ? KERN_TIMEDOUT : __lll_timed_xwait (ptr, lo, hi, mlsec,
 	                                              flags);
@@ -85,6 +91,9 @@ int
 __lll_abstimed_lock (void *ptr,
   const struct timespec *tsp, int flags, int clk)
 {
+  if (clk != CLOCK_REALTIME)
+    return EINVAL;
+
   if (__lll_trylock (ptr) == 0)
     return 0;
 
@@ -167,6 +176,9 @@ __lll_robust_abstimed_lock (void *ptr,
   int id = __getpid ();
   int wait_time = 25;
   unsigned int val;
+
+  if (clk != CLOCK_REALTIME)
+    return EINVAL;
 
   while (1)
     {

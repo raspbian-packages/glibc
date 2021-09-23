@@ -57,6 +57,8 @@ libc {
   }
   GLIBC_2.21 {
     __mach_host_self_;
+  }
+  GLIBC_2.32 {
     mach_print;
   }
 

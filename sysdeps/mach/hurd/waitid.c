@@ -34,6 +34,7 @@ __waitid (idtype_t idtype, id_t id, siginfo_t *infop, int options)
   pid_t pid, child;
   int sigcode;
   int status;
+  int cancel_oldtype;
 
   switch (idtype)
     {
@@ -67,15 +68,17 @@ __waitid (idtype_t idtype, id_t id, siginfo_t *infop, int options)
       return -1;
     }
 
+  cancel_oldtype = LIBC_CANCEL_ASYNC();
 #if HURD_INTERFACE_VERSION >= 20201227
-  err = __USEPORT (PROC, __proc_waitid (port, pid, options,
-					&status, &sigcode,
-					&ignored, &child));
+  err = __USEPORT_CANCEL (PROC, __proc_waitid (port, pid, options,
+					       &status, &sigcode,
+					       &ignored, &child));
   if (err == MIG_BAD_ID || err == EOPNOTSUPP)
 #endif
-    err = __USEPORT (PROC, __proc_wait (port, pid, options,
-					&status, &sigcode,
-					&ignored, &child));
+    err = __USEPORT_CANCEL (PROC, __proc_wait (port, pid, options,
+					       &status, &sigcode,
+					       &ignored, &child));
+  LIBC_CANCEL_RESET (cancel_oldtype);
 
   if (err == EAGAIN)
     {

@@ -15,14 +15,7 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-/* sys_errlist cannot have Unix semantics on the Hurd, so it is easier just
-   to rename it.  We also need to remap error codes to array indices by
-   taking their subcode. */
-#define _sys_errlist_internal	_hurd_errlist
-#define _sys_nerr_internal	_hurd_nerr
-#define ERRLIST_NO_COMPAT	1
-
 #include <mach/error.h>
-#define ERR_REMAP(n) (err_get_code (n))
 
-#include <sysdeps/gnu/errlist.c>
+#define ERR_MAP(value) err_get_code (value)
+#include <stdio-common/errlist.c>

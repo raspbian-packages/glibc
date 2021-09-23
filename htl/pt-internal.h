@@ -81,7 +81,6 @@ struct __pthread
   int cancel_state;
   int cancel_type;
   int cancel_pending;
-  struct __pthread_cancelation_handler *cancelation_handlers;
 
   /* Thread stack.  */
   void *stackaddr;
@@ -99,6 +98,9 @@ struct __pthread
 
   /* Resolver state.  */
   struct __res_state res_state;
+
+  /* Indicates whether is a C11 thread created by thrd_creat.  */
+  bool c11;
 
   /* Thread context.  */
   struct pthread_mcontext mcontext;
@@ -194,6 +196,9 @@ extern pthread_rwlock_t __pthread_threads_lock;
 #ifndef _pthread_self
 extern struct __pthread *_pthread_self (void);
 #endif
+
+/* Stores the stack of cleanup handlers for the thread.  */
+extern __thread struct __pthread_cancelation_handler *__pthread_cleanup_stack;
 
 
 /* Initialize the pthreads library.  */
@@ -306,16 +311,16 @@ extern error_t __pthread_sigstate (struct __pthread *__restrict thread, int how,
 				   const sigset_t *__restrict set,
 				   sigset_t *__restrict oset,
 				   int clear_pending);
+
+/* If supported, check that MUTEX is locked by the caller.  */
+extern int __pthread_mutex_checklocked (pthread_mutex_t *mtx);
 
 
 /* Default thread attributes.  */
-extern const struct __pthread_attr __pthread_default_attr;
+extern struct __pthread_attr __pthread_default_attr;
 
 /* Default barrier attributes.  */
 extern const struct __pthread_barrierattr __pthread_default_barrierattr;
-
-/* Default mutex attributes.  */
-extern const struct __pthread_mutexattr __pthread_default_mutexattr;
 
 /* Default rdlock attributes.  */
 extern const struct __pthread_rwlockattr __pthread_default_rwlockattr;

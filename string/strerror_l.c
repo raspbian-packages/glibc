@@ -18,12 +18,8 @@
 #include <libintl.h>
 #include <locale.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <sys/param.h>
-#include <libc-symbols.h>
-
-static __thread char *last_value;
+#include <tls-internal.h>
 
 
 static const char *
@@ -38,27 +34,25 @@ translate (const char *str, locale_t loc)
 
 /* Return a string describing the errno code in ERRNUM.  */
 char *
-strerror_l (int errnum, locale_t loc)
+__strerror_l (int errnum, locale_t loc)
 {
-
-
-  if (__builtin_expect (errnum < 0 || errnum >= _sys_nerr_internal
-			|| _sys_errlist_internal[errnum] == NULL, 0))
+  int saved_errno = errno;
+  char *err = (char *) __get_errlist (errnum);
+  if (__glibc_unlikely (err == NULL))
     {
-      free (last_value);
-      if (__asprintf (&last_value, "%s%d",
+      struct tls_internal_t *tls_internal = __glibc_tls_internal ();
+      free (tls_internal->strerror_l_buf);
+      if (__asprintf (&tls_internal->strerror_l_buf, "%s%d",
 		      translate ("Unknown error ", loc), errnum) == -1)
-	last_value = NULL;
+	tls_internal->strerror_l_buf = NULL;
 
-      return last_value;
+      err = tls_internal->strerror_l_buf;
     }
+  else
+    err = (char *) translate (err, loc);
 
-  return (char *) translate (_sys_errlist_internal[errnum], loc);
+  __set_errno (saved_errno);
+  return err;
 }
-
-void
-__strerror_thread_freeres (void)
-{
-  free (last_value);
-}
-text_set_element (__libc_subfreeres, __strerror_thread_freeres);
+weak_alias (__strerror_l, strerror_l)
+libc_hidden_def (__strerror_l)

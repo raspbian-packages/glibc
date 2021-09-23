@@ -22,11 +22,6 @@
 # error "Never use <bits/string_fortified.h> directly; include <string.h> instead."
 #endif
 
-#if !__GNUC_PREREQ (5,0)
-__warndecl (__warn_memset_zero_len,
-	    "memset used with constant zero length parameter; this could be due to transposed parameters");
-#endif
-
 __fortify_function void *
 __NTH (memcpy (void *__restrict __dest, const void *__restrict __src,
 	       size_t __len))
@@ -58,16 +53,6 @@ __NTH (mempcpy (void *__restrict __dest, const void *__restrict __src,
 __fortify_function void *
 __NTH (memset (void *__dest, int __ch, size_t __len))
 {
-  /* GCC-5.0 and newer implements these checks in the compiler, so we don't
-     need them here.  */
-#if !__GNUC_PREREQ (5,0)
-  if (__builtin_constant_p (__len) && __len == 0
-      && (!__builtin_constant_p (__ch) || __ch != 0))
-    {
-      __warn_memset_zero_len ();
-      return __dest;
-    }
-#endif
   return __builtin___memset_chk (__dest, __ch, __len, __bos0 (__dest));
 }
 
@@ -75,7 +60,7 @@ __NTH (memset (void *__dest, int __ch, size_t __len))
 # include <bits/strings_fortified.h>
 
 void __explicit_bzero_chk (void *__dest, size_t __len, size_t __destlen)
-  __THROW __nonnull ((1));
+  __THROW __nonnull ((1)) __attr_access ((__write_only__, 1, 2));
 
 __fortify_function void
 __NTH (explicit_bzero (void *__dest, size_t __len))
@@ -108,7 +93,8 @@ __NTH (strncpy (char *__restrict __dest, const char *__restrict __src,
 
 /* XXX We have no corresponding builtin yet.  */
 extern char *__stpncpy_chk (char *__dest, const char *__src, size_t __n,
-			    size_t __destlen) __THROW;
+			    size_t __destlen) __THROW
+  __attr_access ((__write_only__, 1, 3)) __attr_access ((__read_only__, 2));
 extern char *__REDIRECT_NTH (__stpncpy_alias, (char *__dest, const char *__src,
 					       size_t __n), stpncpy);
 

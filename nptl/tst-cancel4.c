@@ -39,6 +39,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <sys/uio.h>
+#include <libc-diag.h>
 
 
 /* Since STREAMS are not supported in the standard Linux kernel and
@@ -527,7 +528,13 @@ tf_sigpause (void *arg)
 
   pthread_cleanup_push (cl, NULL);
 
+  /* This tests the deprecated sigpause and sigmask functions.  The
+     file is compiled with -Wno-errno so that the sigmask deprecation
+     warning is not fatal.  */
+  DIAG_PUSH_NEEDS_COMMENT;
+  DIAG_IGNORE_NEEDS_COMMENT (4.9, "-Wdeprecated-declarations");
   sigpause (sigmask (SIGINT));
+  DIAG_POP_NEEDS_COMMENT;
 
   pthread_cleanup_pop (0);
 
@@ -600,7 +607,15 @@ tf_sigwaitinfo (void *arg)
   pthread_cleanup_push (cl, NULL);
 
   /* Wait for SIGUSR1.  */
-  sigwaitinfo (&mask, &info);
+  int ret;
+  ret = sigwaitinfo (&mask, &info);
+  if (ret == -1 && errno == ENOSYS)
+    {
+      int sig;
+
+      printf ("sigwaitinfo not supported\n");
+      sigwait (&mask, &sig);
+    }
 
   pthread_cleanup_pop (0);
 
@@ -627,7 +642,15 @@ tf_sigtimedwait (void *arg)
   struct timespec ts = { .tv_sec = 60, .tv_nsec = 0 };
   pthread_cleanup_push (cl, NULL);
 
-  sigtimedwait (&mask, &info, &ts);
+  int ret;
+  ret = sigtimedwait (&mask, &info, &ts);
+  if (ret == -1 && errno == ENOSYS)
+    {
+      int sig;
+      printf ("sigtimedwait not supported\n");
+
+      sigwait (&mask, &sig);
+    }
 
   pthread_cleanup_pop (0);
 
@@ -1452,7 +1475,16 @@ tf_msgrcv (void *arg)
 {
   tempmsg = msgget (IPC_PRIVATE, 0666 | IPC_CREAT);
   if (tempmsg == -1)
-    FAIL_EXIT1 ("msgget (IPC_PRIVATE, 0666 | IPC_CREAT): %m");
+    {
+      if (errno == ENOSYS)
+	{
+	  printf ("msgget not supported\n");
+	  tf_usleep (arg);
+	  pthread_exit (NULL);
+	}
+      else
+	FAIL_EXIT1 ("msgget (IPC_PRIVATE, 0666 | IPC_CREAT): %m");
+    }
 
   xpthread_barrier_wait (&b2);
 
@@ -1498,7 +1530,16 @@ tf_msgsnd (void *arg)
 
   tempmsg = msgget (IPC_PRIVATE, 0666 | IPC_CREAT);
   if (tempmsg == -1)
-    FAIL_EXIT1 ("msgget (IPC_PRIVATE, 0666 | IPC_CREAT): %m");
+    {
+      if (errno == ENOSYS)
+	{
+	  printf ("msgget not supported\n");
+	  tf_usleep (arg);
+	  pthread_exit (NULL);
+	}
+      else
+	FAIL_EXIT1 ("msgget (IPC_PRIVATE, 0666 | IPC_CREAT): %m");
+    }
 
   xpthread_barrier_wait (&b2);
 

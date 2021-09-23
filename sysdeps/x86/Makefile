@@ -20,13 +20,18 @@ endif
 endif
 endif
 
-ifeq ($(enable-cet),yes)
+ifeq ($(subdir),string)
+sysdep_routines += cacheinfo
+endif
+
+ifneq ($(enable-cet),no)
 ifeq ($(subdir),elf)
 sysdep-dl-routines += dl-cet
 
 tests += tst-cet-legacy-1 tst-cet-legacy-1a tst-cet-legacy-2 \
 	 tst-cet-legacy-2a tst-cet-legacy-3 tst-cet-legacy-4 \
-	 tst-cet-legacy-5a tst-cet-legacy-6a
+	 tst-cet-legacy-5a tst-cet-legacy-6a tst-cet-legacy-7 \
+	 tst-cet-legacy-8
 tst-cet-legacy-1a-ARGS = -- $(host-test-program-cmd)
 ifneq (no,$(have-tunables))
 tests += tst-cet-legacy-4a tst-cet-legacy-4b tst-cet-legacy-4c \
@@ -47,16 +52,26 @@ CFLAGS-tst-cet-legacy-4.c += -fcf-protection=branch
 CFLAGS-tst-cet-legacy-4a.c += -fcf-protection
 CFLAGS-tst-cet-legacy-4b.c += -fcf-protection
 CFLAGS-tst-cet-legacy-mod-4.c += -fcf-protection=none
-CFLAGS-tst-cet-legacy-5a.c += -fcf-protection
-CFLAGS-tst-cet-legacy-5b.c += -fcf-protection
-CFLAGS-tst-cet-legacy-mod-5a.c += -fcf-protection=none
+CFLAGS-tst-cet-legacy-5a.c += -fcf-protection -mshstk
+ifeq ($(enable-cet),permissive)
+CPPFLAGS-tst-cet-legacy-5a.c += -DCET_IS_PERMISSIVE=1
+endif
+CFLAGS-tst-cet-legacy-5b.c += -fcf-protection -mshstk
+CPPFLAGS-tst-cet-legacy-5b.c += -DCET_DISABLED_BY_ENV=1
+CFLAGS-tst-cet-legacy-mod-5a.c += -fcf-protection=branch
 CFLAGS-tst-cet-legacy-mod-5b.c += -fcf-protection
 CFLAGS-tst-cet-legacy-mod-5c.c += -fcf-protection
-CFLAGS-tst-cet-legacy-6a.c += -fcf-protection
-CFLAGS-tst-cet-legacy-6b.c += -fcf-protection
-CFLAGS-tst-cet-legacy-mod-6a.c += -fcf-protection=none
+CFLAGS-tst-cet-legacy-6a.c += -fcf-protection -mshstk
+ifeq ($(enable-cet),permissive)
+CPPFLAGS-tst-cet-legacy-6a.c += -DCET_IS_PERMISSIVE=1
+endif
+CFLAGS-tst-cet-legacy-6b.c += -fcf-protection -mshstk
+CPPFLAGS-tst-cet-legacy-6b.c += -DCET_DISABLED_BY_ENV=1
+CFLAGS-tst-cet-legacy-mod-6a.c += -fcf-protection=branch
 CFLAGS-tst-cet-legacy-mod-6b.c += -fcf-protection
 CFLAGS-tst-cet-legacy-mod-6c.c += -fcf-protection
+CFLAGS-tst-cet-legacy-7.c += -fcf-protection=none
+CFLAGS-tst-cet-legacy-8.c += -mshstk
 
 $(objpfx)tst-cet-legacy-1: $(objpfx)tst-cet-legacy-mod-1.so \
 		       $(objpfx)tst-cet-legacy-mod-2.so

@@ -21,9 +21,11 @@ endif
 
 ifeq ($(subdir),conform)
 # For bugs 23081, 23082, 23083, 23084, 23085, 23086.
+# (type conformance)
 conformtest-xfail-conds += i386-gnu
 
 # For bug 23088
+# (sched_* visibility)
 test-xfail-POSIX/fcntl.h/conform = yes
 test-xfail-POSIX/signal.h/conform = yes
 test-xfail-POSIX/semaphore.h/conform = yes
@@ -91,10 +93,6 @@ test-xfail-XOPEN2K8/sys/socket.h/conform = yes
 test-xfail-XOPEN2K8/sys/types.h/conform = yes
 test-xfail-XOPEN2K8/stdlib.h/conform = yes
 test-xfail-XOPEN2K8/arpa/inet.h/conform = yes
-
-# For bug 23819
-test-xfail-ISO11/threads.h/linknamespace = yes
-test-xfail-ISO11/threads.h/conform = yes
 endif
 
 # For bug 23286
@@ -103,6 +101,51 @@ test-xfail-check-abi-libhurduser = yes
 endif
 ifeq ($(subdir),mach)
 test-xfail-check-abi-libmachuser = yes
+endif
+
+ifeq ($(subdir),htl)
+# For bug 25521
+# (setpshared support)
+test-xfail-tst-mutex4 = yes
+test-xfail-tst-cancel16 = yes
+test-xfail-tst-cancelx16 = yes
+test-xfail-tst-cond4 = yes
+test-xfail-tst-cond6 = yes
+test-xfail-tst-cond12 = yes
+test-xfail-tst-cond13 = yes
+test-xfail-tst-cond23 = yes
+test-xfail-tst-rwlock4 = yes
+test-xfail-tst-rwlock12 = yes
+test-xfail-tst-barrier2 = yes
+test-xfail-tst-pututxline-cache = yes
+test-xfail-tst-pututxline-lockfail = yes
+test-xfail-tst-mallocfork2 = yes
+test-xfail-tst-flock2 = yes
+test-xfail-tst-signal1 = yes
+test-xfail-tst-signal2 = yes
+
+# For bug 25522
+# (setprotocol support)
+test-xfail-tst-cond24 = yes
+test-xfail-tst-cond25 = yes
+
+# For bug 25524
+# (sem_open support)
+test-xfail-tst-sem4 = yes
+test-xfail-tst-sem7 = yes
+test-xfail-tst-sem8 = yes
+test-xfail-tst-sem9 = yes
+
+# For bug 25563
+# (robust support against dead threads)
+test-xfail-tst-robust1 = yes
+test-xfail-tst-robust2 = yes
+test-xfail-tst-robust3 = yes
+test-xfail-tst-robust4 = yes
+test-xfail-tst-robust5 = yes
+test-xfail-tst-robust6 = yes
+test-xfail-tst-robust7 = yes
+test-xfail-tst-robust9 = yes
 endif
 
 ifeq ($(subdir),elf)

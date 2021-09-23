@@ -107,6 +107,7 @@ endif
 		--build=$$configure_build --prefix=/usr \
 		--enable-add-ons=$(standard-add-ons)"$(call xx,add-ons)" \
 		--without-selinux \
+		--disable-crypt \
 		--enable-stackguard-randomization \
 		--enable-stack-protector=strong \
 		--with-pkgversion="Debian GLIBC $(DEB_VERSION)" \
@@ -114,7 +115,6 @@ endif
 		$(if $(filter $(pt_chown),yes),--enable-pt_chown) \
 		$(if $(filter $(threads),no),--disable-nscd) \
 		$(if $(filter $(call xx,mvec),no),--disable-mathvec) \
-		$(if $(filter $(call xx,crypt),no),--disable-crypt) \
 		$(call xx,with_headers) $(call xx,extra_config_options)
 	touch $@
 

@@ -165,13 +165,13 @@ extern void _hurd_sigstate_delete (thread_t thread);
 _HURD_SIGNAL_H_EXTERN_INLINE struct hurd_sigstate *
 _hurd_self_sigstate (void)
 {
-  if (THREAD_SELF->_hurd_sigstate == NULL)
+  if (THREAD_GETMEM (THREAD_SELF, _hurd_sigstate) == NULL)
     {
       thread_t self = __mach_thread_self ();
-      THREAD_SELF->_hurd_sigstate = _hurd_thread_sigstate (self);
+      THREAD_SETMEM (THREAD_SELF, _hurd_sigstate, _hurd_thread_sigstate (self));
       __mach_port_deallocate (__mach_task_self (), self);
     }
-  return THREAD_SELF->_hurd_sigstate;
+  return THREAD_GETMEM (THREAD_SELF, _hurd_sigstate);
 }
 # endif
 #endif
@@ -215,7 +215,7 @@ _hurd_critical_section_lock (void)
     return NULL;
 #endif
 
-  ss = THREAD_SELF->_hurd_sigstate;
+  ss = THREAD_GETMEM (THREAD_SELF, _hurd_sigstate);
   if (ss == NULL)
     {
       thread_t self = __mach_thread_self ();
@@ -224,7 +224,8 @@ _hurd_critical_section_lock (void)
 	 asked for it.  In this case, the critical section flag cannot
 	 possible already be set.  Look up our sigstate structure the slow
 	 way.  */
-      ss = THREAD_SELF->_hurd_sigstate = _hurd_thread_sigstate (self);
+      ss = _hurd_thread_sigstate (self);
+      THREAD_SETMEM (THREAD_SELF, _hurd_sigstate, ss);
       __mach_port_deallocate (__mach_task_self (), self);
     }
 

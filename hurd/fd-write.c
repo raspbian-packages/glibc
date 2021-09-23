@@ -33,7 +33,7 @@ _hurd_fd_write (struct hurd_fd *fd,
       return __io_write (port, buf, *nbytes, offset, &wrote);
     }
 
-  err = HURD_FD_PORT_USE (fd, _hurd_ctty_output (port, ctty, writefd));
+  err = HURD_FD_PORT_USE_CANCEL (fd, _hurd_ctty_output (port, ctty, writefd));
 
   if (! err)
     *nbytes = wrote;

@@ -29,6 +29,8 @@
 #include <sys/stat.h>
 /* For ssize_t and off64_t.  */
 #include <sys/types.h>
+/* For locale_t.  */
+#include <locale.h>
 
 __BEGIN_DECLS
 
@@ -92,6 +94,8 @@ char *xasprintf (const char *format, ...)
 char *xstrdup (const char *);
 char *xstrndup (const char *, size_t);
 char *xsetlocale (int category, const char *locale);
+locale_t xnewlocale (int category_mask, const char *locale, locale_t base);
+char *xuselocale (locale_t newloc);
 
 /* These point to the TOP of the source/build tree, not your (or
    support's) subdirectory.  */
@@ -112,6 +116,8 @@ extern const char support_bindir_prefix[];
 extern const char support_sbindir_prefix[];
 /* Corresponds to the install's sbin/ directory (without prefix).  */
 extern const char support_install_rootsbindir[];
+/* Corresponds to the install's compiled locale directory.  */
+extern const char support_complocaledir_prefix[];
 
 extern ssize_t support_copy_file_range (int, off64_t *, int, off64_t *,
 					size_t, unsigned int);

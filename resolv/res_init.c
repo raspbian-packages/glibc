@@ -103,6 +103,7 @@
 #include <inet/net-internal.h>
 #include <errno.h>
 #include <resolv_conf.h>
+#include <file_change_detection.h>
 
 static uint32_t net_mask (struct in_addr);
 
@@ -508,7 +509,6 @@ res_vinit_1 (FILE *fp, struct resolv_conf_parser *parser)
               continue;
             }
         }
-      fclose (fp);
     }
   if (__glibc_unlikely (nameserver_list_size (&parser->nameserver_list) == 0))
     {
@@ -550,7 +550,8 @@ res_vinit_1 (FILE *fp, struct resolv_conf_parser *parser)
 }
 
 struct resolv_conf *
-__resolv_conf_load (struct __res_state *preinit)
+__resolv_conf_load (struct __res_state *preinit,
+                    struct file_change_detection *change)
 {
   /* Ensure that /etc/hosts.conf has been loaded (once).  */
   _res_hconf_init ();
@@ -578,7 +579,13 @@ __resolv_conf_load (struct __res_state *preinit)
   resolv_conf_parser_init (&parser, preinit);
 
   struct resolv_conf *conf = NULL;
-  if (res_vinit_1 (fp, &parser))
+  bool ok = res_vinit_1 (fp, &parser);
+  if (ok && change != NULL)
+    /* Update the file change information if the configuration was
+       loaded successfully.  */
+    ok = __file_change_detection_for_fp (change, fp);
+
+  if (ok)
     {
       parser.template.nameserver_list
         = nameserver_list_begin (&parser.nameserver_list);
@@ -592,6 +599,13 @@ __resolv_conf_load (struct __res_state *preinit)
       conf = __resolv_conf_allocate (&parser.template);
     }
   resolv_conf_parser_free (&parser);
+
+  if (fp != NULL)
+    {
+      int saved_errno = errno;
+      fclose (fp);
+      __set_errno (saved_errno);
+    }
 
   return conf;
 }
@@ -609,7 +623,7 @@ __res_vinit (res_state statp, int preinit)
   if (preinit && has_preinit_values (statp))
     /* For the preinit case, we cannot use the cached configuration
        because some settings could be different.  */
-    conf = __resolv_conf_load (statp);
+    conf = __resolv_conf_load (statp, NULL);
   else
     conf = __resolv_conf_get_current ();
   if (conf == NULL)

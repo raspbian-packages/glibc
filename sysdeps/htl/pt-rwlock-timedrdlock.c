@@ -27,13 +27,14 @@
    wait forever.  */
 int
 __pthread_rwlock_timedrdlock_internal (struct __pthread_rwlock *rwlock,
+				       clockid_t clockid,
 				       const struct timespec *abstime)
 {
   error_t err;
   int drain;
   struct __pthread *self;
 
-  __pthread_spin_lock (&rwlock->__lock);
+  __pthread_spin_wait (&rwlock->__lock);
   if (__pthread_spin_trylock (&rwlock->__held) == 0)
     /* Successfully acquired the lock.  */
     {
@@ -62,7 +63,10 @@ __pthread_rwlock_timedrdlock_internal (struct __pthread_rwlock *rwlock,
   assert (rwlock->__readers == 0);
 
   if (abstime != NULL && ! valid_nanoseconds (abstime->tv_nsec))
-    return EINVAL;
+    {
+      __pthread_spin_unlock (&rwlock->__lock);
+      return EINVAL;
+    }
 
   self = _pthread_self ();
 
@@ -72,14 +76,14 @@ __pthread_rwlock_timedrdlock_internal (struct __pthread_rwlock *rwlock,
 
   /* Block the thread.  */
   if (abstime != NULL)
-    err = __pthread_timedblock (self, abstime, CLOCK_REALTIME);
+    err = __pthread_timedblock (self, abstime, clockid);
   else
     {
       err = 0;
       __pthread_block (self);
     }
 
-  __pthread_spin_lock (&rwlock->__lock);
+  __pthread_spin_wait (&rwlock->__lock);
   if (self->prevp == NULL)
     /* Another thread removed us from the queue, which means a wakeup message
        has been sent.  It was either consumed while we were blocking, or
@@ -116,6 +120,15 @@ int
 __pthread_rwlock_timedrdlock (struct __pthread_rwlock *rwlock,
 			      const struct timespec *abstime)
 {
-  return __pthread_rwlock_timedrdlock_internal (rwlock, abstime);
+  return __pthread_rwlock_timedrdlock_internal (rwlock, CLOCK_REALTIME, abstime);
 }
 weak_alias (__pthread_rwlock_timedrdlock, pthread_rwlock_timedrdlock)
+
+int
+__pthread_rwlock_clockrdlock (struct __pthread_rwlock *rwlock,
+			      clockid_t clockid,
+			      const struct timespec *abstime)
+{
+  return __pthread_rwlock_timedrdlock_internal (rwlock, clockid, abstime);
+}
+weak_alias (__pthread_rwlock_clockrdlock, pthread_rwlock_clockrdlock)

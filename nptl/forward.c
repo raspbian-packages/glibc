@@ -56,20 +56,6 @@ name decl								      \
   FORWARD2 (name, int, decl, params, return defretval)
 
 
-FORWARD (pthread_attr_getschedpolicy,
-	 (const pthread_attr_t *attr, int *policy), (attr, policy), 0)
-FORWARD (pthread_attr_setschedpolicy, (pthread_attr_t *attr, int policy),
-	 (attr, policy), 0)
-
-FORWARD (pthread_attr_getscope,
-	 (const pthread_attr_t *attr, int *scope), (attr, scope), 0)
-FORWARD (pthread_attr_setscope, (pthread_attr_t *attr, int scope),
-	 (attr, scope), 0)
-
-
-FORWARD (pthread_condattr_destroy, (pthread_condattr_t *attr), (attr), 0)
-FORWARD (pthread_condattr_init, (pthread_condattr_t *attr), (attr), 0)
-
 #if SHLIB_COMPAT(libc, GLIBC_2_0, GLIBC_2_3_2)
 FORWARD2 (__pthread_cond_broadcast_2_0, int attribute_compat_text_section,
 	  (pthread_cond_2_0_t *cond), (cond), return 0)
@@ -79,27 +65,6 @@ compat_symbol (libc, __pthread_cond_broadcast_2_0, pthread_cond_broadcast,
 FORWARD (__pthread_cond_broadcast, (pthread_cond_t *cond), (cond), 0)
 versioned_symbol (libc, __pthread_cond_broadcast, pthread_cond_broadcast,
 		  GLIBC_2_3_2);
-
-#if SHLIB_COMPAT(libc, GLIBC_2_0, GLIBC_2_3_2)
-FORWARD2 (__pthread_cond_destroy_2_0, int attribute_compat_text_section,
-	  (pthread_cond_2_0_t *cond), (cond), return 0)
-compat_symbol (libc, __pthread_cond_destroy_2_0, pthread_cond_destroy,
-	       GLIBC_2_0);
-#endif
-FORWARD (__pthread_cond_destroy, (pthread_cond_t *cond), (cond), 0)
-versioned_symbol (libc, __pthread_cond_destroy, pthread_cond_destroy,
-		  GLIBC_2_3_2);
-
-#if SHLIB_COMPAT(libc, GLIBC_2_0, GLIBC_2_3_2)
-FORWARD2 (__pthread_cond_init_2_0, int attribute_compat_text_section,
-	  (pthread_cond_2_0_t *cond, const pthread_condattr_t *cond_attr),
-	  (cond, cond_attr), return 0)
-compat_symbol (libc, __pthread_cond_init_2_0, pthread_cond_init, GLIBC_2_0);
-#endif
-FORWARD (__pthread_cond_init,
-	 (pthread_cond_t *cond, const pthread_condattr_t *cond_attr),
-	 (cond, cond_attr), 0)
-versioned_symbol (libc, __pthread_cond_init, pthread_cond_init, GLIBC_2_3_2);
 
 #if SHLIB_COMPAT(libc, GLIBC_2_0, GLIBC_2_3_2)
 FORWARD2 (__pthread_cond_signal_2_0, int attribute_compat_text_section,
@@ -141,14 +106,6 @@ versioned_symbol (libc, __pthread_cond_timedwait, pthread_cond_timedwait,
 FORWARD_NORETURN (__pthread_exit, void, (void *retval), (retval),
 		  exit (EXIT_SUCCESS))
 strong_alias (__pthread_exit, pthread_exit);
-
-
-FORWARD (pthread_getschedparam,
-	 (pthread_t target_thread, int *policy, struct sched_param *param),
-	 (target_thread, policy, param), 0)
-FORWARD (pthread_setschedparam,
-	 (pthread_t target_thread, int policy,
-	  const struct sched_param *param), (target_thread, policy, param), 0)
 
 
 FORWARD (pthread_mutex_destroy, (pthread_mutex_t *mutex), (mutex), 0)

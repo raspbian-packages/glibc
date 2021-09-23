@@ -862,6 +862,7 @@ GLIBC_2.0 pthread_self F
 GLIBC_2.0 pthread_setcancelstate F
 GLIBC_2.0 pthread_setcanceltype F
 GLIBC_2.0 pthread_setschedparam F
+GLIBC_2.0 pthread_sigmask F
 GLIBC_2.0 ptrace F
 GLIBC_2.0 putc F
 GLIBC_2.0 putc_unlocked F
@@ -1907,6 +1908,7 @@ GLIBC_2.2.3 __rpc_thread_svc_fdset F
 GLIBC_2.2.3 __rpc_thread_svc_max_pollfd F
 GLIBC_2.2.3 __rpc_thread_svc_pollfd F
 GLIBC_2.2.3 fnmatch F
+GLIBC_2.2.3 pthread_getattr_np F
 GLIBC_2.2.3 sprofil F
 GLIBC_2.2.4 dl_iterate_phdr F
 GLIBC_2.2.4 getgrouplist F
@@ -2088,6 +2090,8 @@ GLIBC_2.3.3 inet6_option_space F
 GLIBC_2.3.3 nftw F
 GLIBC_2.3.3 nftw64 F
 GLIBC_2.3.3 posix_fadvise64 F
+GLIBC_2.3.3 pthread_attr_setaffinity_np F
+GLIBC_2.3.3 pthread_getaffinity_np F
 GLIBC_2.3.3 remap_file_pages F
 GLIBC_2.3.3 sched_getaffinity F
 GLIBC_2.3.3 sched_setaffinity F
@@ -2118,6 +2122,8 @@ GLIBC_2.3.4 __vsprintf_chk F
 GLIBC_2.3.4 __xpg_strerror_r F
 GLIBC_2.3.4 getipv4sourcefilter F
 GLIBC_2.3.4 getsourcefilter F
+GLIBC_2.3.4 pthread_attr_setaffinity_np F
+GLIBC_2.3.4 pthread_getaffinity_np F
 GLIBC_2.3.4 regexec F
 GLIBC_2.3.4 sched_getaffinity F
 GLIBC_2.3.4 sched_setaffinity F
@@ -2129,6 +2135,17 @@ GLIBC_2.30 getdents64 F
 GLIBC_2.30 gettid F
 GLIBC_2.30 tgkill F
 GLIBC_2.30 twalk_r F
+GLIBC_2.32 __libc_single_threaded D 0x1
+GLIBC_2.32 pthread_attr_getsigmask_np F
+GLIBC_2.32 pthread_attr_setaffinity_np F
+GLIBC_2.32 pthread_attr_setsigmask_np F
+GLIBC_2.32 pthread_getaffinity_np F
+GLIBC_2.32 pthread_getattr_np F
+GLIBC_2.32 pthread_sigmask F
+GLIBC_2.32 sigabbrev_np F
+GLIBC_2.32 sigdescr_np F
+GLIBC_2.32 strerrordesc_np F
+GLIBC_2.32 strerrorname_np F
 GLIBC_2.4 __confstr_chk F
 GLIBC_2.4 __fgets_chk F
 GLIBC_2.4 __fgets_unlocked_chk F

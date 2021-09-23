@@ -237,6 +237,8 @@ get_cached_stack (size_t *sizep, void **memp)
   /* No pending event.  */
   result->nextevent = NULL;
 
+  result->tls_state = (struct tls_internal_t) { 0 };
+
   /* Clear the DTV.  */
   dtv_t *dtv = GET_DTV (TLS_TPADJ (result));
   for (size_t cnt = 0; cnt < dtv[-1].counter; ++cnt)
@@ -425,7 +427,7 @@ allocate_stack (const struct pthread_attr *attr, struct pthread **pdp,
   else
     {
       lll_lock (__default_pthread_attr_lock, LLL_PRIVATE);
-      size = __default_pthread_attr.stacksize;
+      size = __default_pthread_attr.internal.stacksize;
       lll_unlock (__default_pthread_attr_lock, LLL_PRIVATE);
     }
 
@@ -1028,11 +1030,10 @@ setxid_signal_thread (struct xid_command *cmdp, struct pthread *t)
 
   int val;
   pid_t pid = __getpid ();
-  INTERNAL_SYSCALL_DECL (err);
-  val = INTERNAL_SYSCALL_CALL (tgkill, err, pid, t->tid, SIGSETXID);
+  val = INTERNAL_SYSCALL_CALL (tgkill, pid, t->tid, SIGSETXID);
 
   /* If this failed, it must have had not started yet or else exited.  */
-  if (!INTERNAL_SYSCALL_ERROR_P (val, err))
+  if (!INTERNAL_SYSCALL_ERROR_P (val))
     {
       atomic_increment (&cmdp->cntr);
       return 1;
@@ -1158,13 +1159,12 @@ __nptl_setxid (struct xid_command *cmdp)
 
   /* This must be last, otherwise the current thread might not have
      permissions to send SIGSETXID syscall to the other threads.  */
-  INTERNAL_SYSCALL_DECL (err);
-  result = INTERNAL_SYSCALL_NCS (cmdp->syscall_no, err, 3,
+  result = INTERNAL_SYSCALL_NCS (cmdp->syscall_no, 3,
 				 cmdp->id[0], cmdp->id[1], cmdp->id[2]);
   int error = 0;
-  if (__glibc_unlikely (INTERNAL_SYSCALL_ERROR_P (result, err)))
+  if (__glibc_unlikely (INTERNAL_SYSCALL_ERROR_P (result)))
     {
-      error = INTERNAL_SYSCALL_ERRNO (result, err);
+      error = INTERNAL_SYSCALL_ERRNO (result);
       __set_errno (error);
       result = -1;
     }

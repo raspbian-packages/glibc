@@ -4,6 +4,7 @@
 /* Some of these are defined as macros in the real string.h, so we must
    prototype them before including it.  */
 #include <sys/types.h>
+#include <locale.h>
 
 extern void *__memccpy (void *__dest, const void *__src,
 			int __c, size_t __n);
@@ -50,8 +51,10 @@ extern int __ffs (int __i) __attribute__ ((const));
 
 extern char *__strerror_r (int __errnum, char *__buf, size_t __buflen);
 
-/* Called as part of the thread shutdown sequence.  */
-void __strerror_thread_freeres (void) attribute_hidden;
+extern char *__strerror_l (int __errnum, locale_t __loc);
+
+extern const char *__sigdescr_np (int __errnum);
+libc_hidden_proto (__sigdescr_np)
 
 /* Get _STRING_ARCH_unaligned.  */
 #include <string_private.h>
@@ -113,6 +116,7 @@ libc_hidden_proto (memmem)
 extern __typeof (memmem) __memmem;
 libc_hidden_proto (__memmem)
 libc_hidden_proto (__ffs)
+libc_hidden_proto (__strerror_l)
 
 #if IS_IN (libc)
 /* Avoid hidden reference to IFUNC symbol __explicit_bzero_chk.  */

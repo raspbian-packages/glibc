@@ -13,7 +13,7 @@ Date:   Fri Dec 4 09:13:43 2020 +0100
 
 --- a/elf/cache.c
 +++ b/elf/cache.c
-@@ -152,6 +152,14 @@
+@@ -152,6 +152,14 @@ print_entry (const char *lib, int flag, unsigned int osversion,
    printf (") => %s\n", key);
  }
  
@@ -28,7 +28,7 @@ Date:   Fri Dec 4 09:13:43 2020 +0100
  
  /* Print the whole cache file, if a file contains the new cache format
     hidden in the old one, print the contents of the new format.  */
-@@ -193,6 +201,7 @@
+@@ -193,6 +201,7 @@ print_cache (const char *cache_name)
  	  || memcmp (cache_new->version, CACHE_VERSION,
  		      sizeof CACHE_VERSION - 1))
  	error (EXIT_FAILURE, 0, _("File is not a cache file.\n"));
@@ -36,7 +36,7 @@ Date:   Fri Dec 4 09:13:43 2020 +0100
        format = 1;
        /* This is where the strings start.  */
        cache_data = (const char *) cache_new;
-@@ -222,6 +231,7 @@
+@@ -222,6 +231,7 @@ print_cache (const char *cache_name)
  	      && memcmp (cache_new->version, CACHE_VERSION,
  			 sizeof CACHE_VERSION - 1) == 0)
  	    {
@@ -44,7 +44,7 @@ Date:   Fri Dec 4 09:13:43 2020 +0100
  	      cache_data = (const char *) cache_new;
  	      format = 1;
  	    }
-@@ -361,6 +371,7 @@
+@@ -361,6 +371,7 @@ save_cache (const char *cache_name)
  
        file_entries_new->nlibs = cache_entry_count;
        file_entries_new->len_strings = total_strlen;
@@ -54,9 +54,9 @@ Date:   Fri Dec 4 09:13:43 2020 +0100
    /* Pad for alignment of cache_file_new.  */
 --- a/elf/dl-cache.c
 +++ b/elf/dl-cache.c
-@@ -210,6 +210,11 @@
- 	       && memcmp (file, CACHEMAGIC_VERSION_NEW,
- 			  sizeof CACHEMAGIC_VERSION_NEW - 1) == 0)
+@@ -242,6 +242,11 @@ _dl_load_cache_lookup (const char *name)
+ 	  && ((cachesize - sizeof *cache_new) / sizeof (struct file_entry_new)
+ 	      >= ((struct cache_file_new *) file)->nlibs))
  	{
 +	  if (! cache_file_new_matches_endian (file))
 +	    {
@@ -66,7 +66,7 @@ Date:   Fri Dec 4 09:13:43 2020 +0100
  	  cache_new = file;
  	  cache = file;
  	}
-@@ -231,7 +236,20 @@
+@@ -263,7 +268,20 @@ _dl_load_cache_lookup (const char *name)
  	  if (cachesize < (offset + sizeof (struct cache_file_new))
  	      || memcmp (cache_new->magic, CACHEMAGIC_VERSION_NEW,
  			 sizeof CACHEMAGIC_VERSION_NEW - 1) != 0)
@@ -102,7 +102,7 @@ Date:   Fri Dec 4 09:13:43 2020 +0100
  #include <stdint.h>
  
  #ifndef _DL_CACHE_DEFAULT_ID
-@@ -83,17 +88,72 @@
+@@ -92,17 +97,72 @@ struct file_entry_new
    uint64_t hwcap;		/* Hwcap entry.	 */
  };
  
@@ -176,7 +176,7 @@ Date:   Fri Dec 4 09:13:43 2020 +0100
  
  /* Used to align cache_file_new.  */
  #define ALIGN_CACHE(addr)				\
-@@ -101,3 +161,5 @@
+@@ -110,3 +170,5 @@ struct cache_file_new
   & (~(__alignof__ (struct cache_file_new) - 1)))
  
  extern int _dl_cache_libcmp (const char *p1, const char *p2) attribute_hidden;

@@ -28,7 +28,9 @@ headers			:= nss.h
 routines		= nsswitch getnssent getnssent_r digits_dots \
 			  valid_field valid_list_field rewrite_field \
 			  $(addsuffix -lookup,$(databases)) \
-			  compat-lookup nss_hash
+			  compat-lookup nss_hash nss_files_fopen \
+			  nss_readline nss_parse_line_result \
+			  nss_fgetent_r
 
 # These are the databases that go through nss dispatch.
 # Caution: if you add a database here, you must add its real name
@@ -93,7 +95,8 @@ subdir-dirs = $(services:%=nss_%)
 vpath %.c $(subdir-dirs) ../locale/programs ../intl
 
 
-libnss_files-routines	:= $(addprefix files-,$(databases)) \
+libnss_files-routines	:= $(addprefix files-, \
+			     $(filter-out key, $(databases))) \
 			   files-initgroups files-init
 
 libnss_db-dbs		:= $(addprefix db-,\

@@ -15,43 +15,12 @@ kernel_compare_versions () {
 if [ "$type" != abort-upgrade ]
 then
     # Load debconf module if available and usable
-    if [ -f /usr/share/debconf/confmodule ]; then
-        # cdebconf has a working fallback mechanism in case dialog
-        # is not usable, so do not try to do anything smart here
-        if [ "$DEBCONF_USE_CDEBCONF" ] ; then
-            . /usr/share/debconf/confmodule
-            USE_DEBCONF=1
-        # debconf requires perl
-        elif perl -e "" 2>/dev/null ; then
-            . /usr/share/debconf/confmodule
-            # Check that the selected frontend will work
-            if [ -n "$DEBIAN_FRONTEND" ] ; then
-                frontend="$DEBIAN_FRONTEND"
-            else
-                db_version 2.0
-                db_get debconf/frontend || RET="Dialog"
-                frontend="$RET"
-            fi
-            frontend=`echo $frontend | tr '[:upper:]' '[:lower:]'`
-            case "$frontend" in
-            dialog)
-                # debconf uses whiptail by default unless dialog is available and
-                # $DEBCONF_FORCE_DIALOG is set
-                if [ -x "$(command -v whiptail)" ] && ! ( [ -n "$DEBCONF_FORCE_DIALOG" ] && [ -x "$(command -v dialog)" ] ); then
-                    frontend=whiptail
-                fi
-                # Only enable debconf if the whiptail/dialog are not available
-                # (in which case debconf has a fallback mechanism) or usable
-                if ! [ -x "$(command -v $frontend)" ] || $frontend --version > /dev/null 2>&1 ; then
-                    USE_DEBCONF=1
-                fi
-                ;;
-            *)
-                 # For now assume that all other frontends are fine
-                 USE_DEBCONF=1
-                ;;
-            esac
-        fi
+    if [ -f /usr/share/debconf/confmodule ] && \
+       ( [ "$DEBCONF_USE_CDEBCONF" ] || perl -e "" 2>/dev/null ) ; then
+        . /usr/share/debconf/confmodule
+        USE_DEBCONF=1
+    else
+        USE_DEBCONF=
     fi
 
     # See if LD_LIBRARY_PATH contains the traditional /lib, but not the
@@ -242,6 +211,33 @@ then
 	            exit 1
 		fi
 	    fi
+
+            # As long systemd-logind has not seen any login request since the system has been
+            # booted, it has not loaded any NSS module. In that condition if glibc is upgraded
+            # (that means with a non session shell or by some automation), the NSS modules are
+            # replaced by a new major version which might be incompatible (and definitely are
+            # for some versions).
+            #
+            # The solution implemented for most daemons is to restart them, but unfortunately
+            # it is not something supported with systemd-logind (see bug#91950).
+            #
+            # As a workaround, when detected that the system is using systemd and that the
+            # systemd-logind process has not not loaded any NSS module, force systemd-logind to
+            # load NSS modules. This is done by disabling lingering on a non-existing user. This
+            # has to be done by talking directly to systemd-logind through sd-bus, as loginctl
+            # first checks if the user actually exist. The nonexistent uid is chosen as
+            # 4294967294, which is reserved by Policy §9.2.2.
+            #
+            # Note that starting with glibc 2.34, the nss_files is builtin. When glibc >= 2.34
+            # ends-up in a stable release, this workaround can therefore be dropped.
+            if [ -d /run/systemd/system ]; then
+                if ! grep -q -E 'libnss_(compat|db|files)' /proc/$(systemctl show --property MainPID --value systemd-logind.service)/maps ; then
+                    echo "Forcing systemd-logind to load NSS modules..."
+                    busctl call --system org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager \
+                        SetUserLinger ubb 4294967294 false false >/dev/null 2>&1 || true
+                fi
+            fi
+
 	fi # end upgrading and $preversion lt GLIBC_VERSION
     fi # Upgrading
 

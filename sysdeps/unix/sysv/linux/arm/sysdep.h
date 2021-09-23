@@ -29,11 +29,6 @@
 
 #include <tls.h>
 
-/* In order to get __set_errno() definition in INLINE_SYSCALL.  */
-#ifndef __ASSEMBLER__
-#include <errno.h>
-#endif
-
 /* For Linux we can use the system call table in the header file
 	/usr/include/asm/unistd.h
    of the kernel.  But these symbols do not follow the SYS_* syntax
@@ -317,21 +312,6 @@ __local_syscall_error:						\
 
 #else /* not __ASSEMBLER__ */
 
-/* Define a macro which expands into the inline wrapper code for a system
-   call.  */
-#undef INLINE_SYSCALL
-#define INLINE_SYSCALL(name, nr, args...)				\
-  ({ unsigned int _sys_result = INTERNAL_SYSCALL (name, , nr, args);	\
-     if (__builtin_expect (INTERNAL_SYSCALL_ERROR_P (_sys_result, ), 0))	\
-       {								\
-	 __set_errno (INTERNAL_SYSCALL_ERRNO (_sys_result, ));		\
-	 _sys_result = (unsigned int) -1;				\
-       }								\
-     (int) _sys_result; })
-
-#undef INTERNAL_SYSCALL_DECL
-#define INTERNAL_SYSCALL_DECL(err) do { } while (0)
-
 #if defined(__thumb__)
 /* We can not expose the use of r7 to the compiler.  GCC (as
    of 4.5) uses r7 as the hard frame pointer for Thumb - although
@@ -348,7 +328,7 @@ __local_syscall_error:						\
    then unwinding will fail higher up the stack.  So we move the
    syscall out of line and provide its own unwind information.  */
 # undef INTERNAL_SYSCALL_RAW
-# define INTERNAL_SYSCALL_RAW(name, err, nr, args...)		\
+# define INTERNAL_SYSCALL_RAW(name, nr, args...)		\
   ({								\
       register int _a1 asm ("a1");				\
       int _nametmp = name;					\
@@ -361,7 +341,7 @@ __local_syscall_error:						\
       _a1; })
 #else /* ARM */
 # undef INTERNAL_SYSCALL_RAW
-# define INTERNAL_SYSCALL_RAW(name, err, nr, args...)		\
+# define INTERNAL_SYSCALL_RAW(name, nr, args...)		\
   ({								\
        register int _a1 asm ("r0"), _nr asm ("r7");		\
        LOAD_ARGS_##nr (args)					\
@@ -374,15 +354,8 @@ __local_syscall_error:						\
 #endif
 
 #undef INTERNAL_SYSCALL
-#define INTERNAL_SYSCALL(name, err, nr, args...)		\
-	INTERNAL_SYSCALL_RAW(SYS_ify(name), err, nr, args)
-
-#undef INTERNAL_SYSCALL_ERROR_P
-#define INTERNAL_SYSCALL_ERROR_P(val, err) \
-  ((unsigned int) (val) >= 0xfffff001u)
-
-#undef INTERNAL_SYSCALL_ERRNO
-#define INTERNAL_SYSCALL_ERRNO(val, err)	(-(val))
+#define INTERNAL_SYSCALL(name, nr, args...)			\
+	INTERNAL_SYSCALL_RAW(SYS_ify(name), nr, args)
 
 #define VDSO_NAME  "LINUX_2.6"
 #define VDSO_HASH  61765110
@@ -434,8 +407,8 @@ __local_syscall_error:						\
 
 /* For EABI, non-constant syscalls are actually pretty easy...  */
 #undef INTERNAL_SYSCALL_NCS
-#define INTERNAL_SYSCALL_NCS(number, err, nr, args...)          \
-  INTERNAL_SYSCALL_RAW (number, err, nr, args)
+#define INTERNAL_SYSCALL_NCS(number, nr, args...)              \
+  INTERNAL_SYSCALL_RAW (number, nr, args)
 
 #define SINGLE_THREAD_BY_GLOBAL	1
 

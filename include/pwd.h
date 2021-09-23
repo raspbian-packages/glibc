@@ -26,12 +26,6 @@ extern int __fgetpwent_r (FILE * __stream, struct passwd *__resultbuf,
 
 #include <nss.h>
 
-struct parser_data;
-extern int _nss_files_parse_pwent (char *line, struct passwd *result,
-				   struct parser_data *data,
-				   size_t datalen, int *errnop);
-libc_hidden_proto (_nss_files_parse_pwent)
-
 #define DECLARE_NSS_PROTOTYPES(service)					\
 extern enum nss_status _nss_ ## service ## _setpwent (int);		\
 extern enum nss_status _nss_ ## service ## _endpwent (void);		\
@@ -48,8 +42,6 @@ extern enum nss_status _nss_ ## service ##_getpwent_r			\
 DECLARE_NSS_PROTOTYPES (compat)
 DECLARE_NSS_PROTOTYPES (files)
 DECLARE_NSS_PROTOTYPES (hesiod)
-DECLARE_NSS_PROTOTYPES (nis)
-DECLARE_NSS_PROTOTYPES (nisplus)
 
 #undef DECLARE_NSS_PROTOTYPES
 #endif

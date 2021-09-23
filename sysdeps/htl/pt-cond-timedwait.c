@@ -24,6 +24,7 @@
 
 extern int __pthread_cond_timedwait_internal (pthread_cond_t *cond,
 					      pthread_mutex_t *mutex,
+					      clockid_t clockid,
 					      const struct timespec *abstime);
 
 int
@@ -31,10 +32,21 @@ __pthread_cond_timedwait (pthread_cond_t *cond,
 			  pthread_mutex_t *mutex,
 			  const struct timespec *abstime)
 {
-  return __pthread_cond_timedwait_internal (cond, mutex, abstime);
+  return __pthread_cond_timedwait_internal (cond, mutex, -1, abstime);
 }
 
-strong_alias (__pthread_cond_timedwait, pthread_cond_timedwait);
+weak_alias (__pthread_cond_timedwait, pthread_cond_timedwait);
+
+int
+__pthread_cond_clockwait (pthread_cond_t *cond,
+			  pthread_mutex_t *mutex,
+			  clockid_t clockid,
+			  const struct timespec *abstime)
+{
+  return __pthread_cond_timedwait_internal (cond, mutex, clockid, abstime);
+}
+
+weak_alias (__pthread_cond_clockwait, pthread_cond_clockwait);
 
 struct cancel_ctx
 {
@@ -50,7 +62,7 @@ cancel_hook (void *arg)
   pthread_cond_t *cond = ctx->cond;
   int unblock;
 
-  __pthread_spin_lock (&cond->__lock);
+  __pthread_spin_wait (&cond->__lock);
   /* The thread only needs to be awaken if it's blocking or about to block.
      If it was already unblocked, it's not queued any more.  */
   unblock = wakeup->prevp != NULL;
@@ -69,14 +81,24 @@ cancel_hook (void *arg)
 int
 __pthread_cond_timedwait_internal (pthread_cond_t *cond,
 				   pthread_mutex_t *mutex,
+				   clockid_t clockid,
 				   const struct timespec *abstime)
 {
   error_t err;
   int cancelled, oldtype, drain;
-  clockid_t clock_id = __pthread_default_condattr.__clock;
+  clockid_t clock_id;
+
+  if (clockid != -1)
+    clock_id = clockid;
+  else
+    clock_id = __pthread_default_condattr.__clock;
 
   if (abstime && ! valid_nanoseconds (abstime->tv_nsec))
     return EINVAL;
+
+  err = __pthread_mutex_checklocked (mutex);
+  if (err)
+    return err;
 
   struct __pthread *self = _pthread_self ();
   struct cancel_ctx ctx;
@@ -95,29 +117,30 @@ __pthread_cond_timedwait_internal (pthread_cond_t *cond,
   cancelled = (self->cancel_state == PTHREAD_CANCEL_ENABLE)
       && self->cancel_pending;
 
-  if (!cancelled)
-    {
-      self->cancel_hook = cancel_hook;
-      self->cancel_hook_arg = &ctx;
-      oldtype = self->cancel_type;
-
-      if (oldtype != PTHREAD_CANCEL_DEFERRED)
-	self->cancel_type = PTHREAD_CANCEL_DEFERRED;
-
-      /* Add ourselves to the list of waiters.  This is done while setting
-         the cancellation hook to simplify the cancellation procedure, i.e.
-         if the thread is queued, it can be cancelled, otherwise it is
-         already unblocked, progressing on the return path.  */
-      __pthread_spin_lock (&cond->__lock);
-      __pthread_enqueue (&cond->__queue, self);
-      if (cond->__attr != NULL)
-	clock_id = cond->__attr->__clock;
-      __pthread_spin_unlock (&cond->__lock);
-    }
-  __pthread_mutex_unlock (&self->cancel_lock);
-
   if (cancelled)
-    __pthread_exit (PTHREAD_CANCELED);
+    {
+      __pthread_mutex_unlock (&self->cancel_lock);
+      __pthread_exit (PTHREAD_CANCELED);
+    }
+
+  self->cancel_hook = cancel_hook;
+  self->cancel_hook_arg = &ctx;
+  oldtype = self->cancel_type;
+
+  if (oldtype != PTHREAD_CANCEL_DEFERRED)
+    self->cancel_type = PTHREAD_CANCEL_DEFERRED;
+
+  /* Add ourselves to the list of waiters.  This is done while setting
+     the cancellation hook to simplify the cancellation procedure, i.e.
+     if the thread is queued, it can be cancelled, otherwise it is
+     already unblocked, progressing on the return path.  */
+  __pthread_spin_wait (&cond->__lock);
+  __pthread_enqueue (&cond->__queue, self);
+  if (cond->__attr != NULL && clockid == -1)
+    clock_id = cond->__attr->__clock;
+  __pthread_spin_unlock (&cond->__lock);
+
+  __pthread_mutex_unlock (&self->cancel_lock);
 
   /* Release MUTEX before blocking.  */
   __pthread_mutex_unlock (mutex);
@@ -135,7 +158,7 @@ __pthread_cond_timedwait_internal (pthread_cond_t *cond,
       __pthread_block (self);
     }
 
-  __pthread_spin_lock (&cond->__lock);
+  __pthread_spin_wait (&cond->__lock);
   if (self->prevp == NULL)
     {
       /* Another thread removed us from the list of waiters, which means a

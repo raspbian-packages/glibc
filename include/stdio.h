@@ -2,20 +2,48 @@
 # if !defined _ISOMAC && defined _IO_MTSAFE_IO
 #  include <stdio-lock.h>
 # endif
+
+/* Workaround PR90731 with GCC 9 when using ldbl redirects in C++.  */
+# include <bits/floatn.h>
+# if defined __cplusplus && __LDOUBLE_REDIRECTS_TO_FLOAT128_ABI == 1
+#  if __GNUC_PREREQ (9, 0) && !__GNUC_PREREQ (9, 3)
+#    pragma GCC system_header
+#  endif
+# endif
+
 # include <libio/stdio.h>
 # ifndef _ISOMAC
+
 #  define _LIBC_STDIO_H 1
 #  include <libio/libio.h>
 
 /* Now define the internal interfaces.  */
 
+/*  Some libc_hidden_ldbl_proto's do not map to a unique symbol when
+    redirecting ldouble to _Float128 variants.  We can therefore safely
+    directly alias them to their internal name.  */
+# if __LDOUBLE_REDIRECTS_TO_FLOAT128_ABI == 1 && IS_IN (libc)
+#  define stdio_hidden_ldbl_proto(p, f) \
+  extern __typeof (p ## f) p ## f __asm (__ASMNAME ("___ieee128_" #f));
+# elif __LDOUBLE_REDIRECTS_TO_FLOAT128_ABI == 1
+#  define stdio_hidden_ldbl_proto(p,f) __LDBL_REDIR1_DECL (p ## f, p ## f ## ieee128)
+# else
+#  define stdio_hidden_ldbl_proto(p,f) libc_hidden_proto (p ## f)
+# endif
+
+/* Set the error indicator on FP.  */
+static inline void
+fseterr_unlocked (FILE *fp)
+{
+  fp->_flags |= _IO_ERR_SEEN;
+}
+
 extern int __fcloseall (void) attribute_hidden;
 extern int __snprintf (char *__restrict __s, size_t __maxlen,
 		       const char *__restrict __format, ...)
      __attribute__ ((__format__ (__printf__, 3, 4)));
-#  if __LONG_DOUBLE_USES_FLOAT128 == 0
-libc_hidden_proto (__snprintf)
-#  endif
+stdio_hidden_ldbl_proto (__, snprintf)
+
 extern int __vfscanf (FILE *__restrict __s,
 		      const char *__restrict __format,
 		      __gnuc_va_list __arg)
@@ -66,6 +94,7 @@ extern int __isoc99_vscanf (const char *__restrict __format,
 extern int __isoc99_vsscanf (const char *__restrict __s,
 			     const char *__restrict __format,
 			     __gnuc_va_list __arg) __THROW;
+
 libc_hidden_proto (__isoc99_sscanf)
 libc_hidden_proto (__isoc99_vsscanf)
 libc_hidden_proto (__isoc99_vfscanf)
@@ -74,10 +103,23 @@ libc_hidden_proto (__isoc99_vfscanf)
    Unfortunately, symbol redirection is not transitive, so the
    __REDIRECT in the public header does not link up with the above
    libc_hidden_proto.  Bridge the gap with a macro.  */
-#  if !__GLIBC_USE (DEPRECATED_SCANF) \
-      && __LONG_DOUBLE_USES_FLOAT128 == 0
+#  if !__GLIBC_USE (DEPRECATED_SCANF)
 #   undef sscanf
 #   define sscanf __isoc99_sscanf
+#  endif
+
+#  if __LDOUBLE_REDIRECTS_TO_FLOAT128_ABI == 1  && IS_IN (libc)
+/* These are implemented as redirects to other public API.
+   Therefore, the usual redirection fails to avoid PLT.  */
+extern __typeof (__isoc99_sscanf) ___ieee128_isoc99_sscanf __THROW;
+extern __typeof (__isoc99_vsscanf) ___ieee128_isoc99_vsscanf __THROW;
+extern __typeof (__isoc99_vfscanf) ___ieee128_isoc99_vfscanf __THROW;
+libc_hidden_proto (___ieee128_isoc99_sscanf)
+libc_hidden_proto (___ieee128_isoc99_vsscanf)
+libc_hidden_proto (___ieee128_isoc99_vfscanf)
+#define __isoc99_sscanf ___ieee128_isoc99_sscanf
+#define __isoc99_vsscanf ___ieee128_isoc99_vsscanf
+#define __isoc99_vfscanf ___ieee128_isoc99_vfscanf
 #  endif
 
 /* Prototypes for compatibility functions.  */
@@ -137,25 +179,12 @@ int __vfxprintf (FILE *__fp, const char *__fmt, __gnuc_va_list,
 		 unsigned int)
   attribute_hidden;
 
-/* Read the next line from FP into BUFFER, of LENGTH bytes.  LINE will
-   include the line terminator and a NUL terminator.  On success,
-   return the length of the line, including the line terminator, but
-   excluding the NUL termintor.  On EOF, return zero and write a NUL
-   terminator.  On error, return -1 and set errno.  If the total byte
-   count (line and both terminators) exceeds LENGTH, return -1 and set
-   errno to ERANGE (but do not mark the stream as failed).
-
-   The behavior is undefined if FP is not seekable, or if the stream
-   is already in an error state.  */
-ssize_t __libc_readline_unlocked (FILE *fp, char *buffer, size_t length);
-libc_hidden_proto (__libc_readline_unlocked);
-
 extern const char *const _sys_errlist_internal[] attribute_hidden;
-extern int _sys_nerr_internal attribute_hidden;
+extern const char *__get_errlist (int) attribute_hidden;
+extern const char *__get_errname (int) attribute_hidden;
 
-#if __LONG_DOUBLE_USES_FLOAT128 == 0
-libc_hidden_proto (__asprintf)
-#endif
+libc_hidden_ldbl_proto (__asprintf)
+
 #  if IS_IN (libc)
 extern FILE *_IO_new_fopen (const char*, const char*);
 #   define fopen(fname, mode) _IO_new_fopen (fname, mode)
@@ -178,13 +207,11 @@ extern int _IO_new_fgetpos (FILE *, __fpos_t *);
 
 extern __typeof (dprintf) __dprintf
      __attribute__ ((__format__ (__printf__, 2, 3)));
-libc_hidden_proto (__dprintf)
-#if __LONG_DOUBLE_USES_FLOAT128 == 0
-libc_hidden_proto (dprintf)
-libc_hidden_proto (fprintf)
-libc_hidden_proto (vfprintf)
-libc_hidden_proto (sprintf)
-#endif
+stdio_hidden_ldbl_proto (__, dprintf)
+libc_hidden_ldbl_proto (dprintf)
+libc_hidden_ldbl_proto (fprintf)
+libc_hidden_ldbl_proto (vfprintf)
+libc_hidden_ldbl_proto (sprintf)
 libc_hidden_proto (fwrite)
 libc_hidden_proto (perror)
 libc_hidden_proto (remove)

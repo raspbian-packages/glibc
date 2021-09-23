@@ -21,6 +21,13 @@
 
 #include <pt-internal.h>
 
+static void
+clear_once_control (void *arg)
+{
+  pthread_once_t *once_control = arg;
+  __pthread_spin_unlock (&once_control->__lock);
+}
+
 int
 __pthread_once (pthread_once_t *once_control, void (*init_routine) (void))
 {
@@ -29,11 +36,14 @@ __pthread_once (pthread_once_t *once_control, void (*init_routine) (void))
   atomic_full_barrier ();
   if (once_control->__run == 0)
     {
-      __pthread_spin_lock (&once_control->__lock);
+      __pthread_spin_wait (&once_control->__lock);
 
       if (once_control->__run == 0)
 	{
+	  pthread_cleanup_push (clear_once_control, once_control);
 	  init_routine ();
+	  pthread_cleanup_pop (0);
+
 	  atomic_full_barrier ();
 	  once_control->__run = 1;
 	}
@@ -43,4 +53,4 @@ __pthread_once (pthread_once_t *once_control, void (*init_routine) (void))
 
   return 0;
 }
-strong_alias (__pthread_once, pthread_once);
+weak_alias (__pthread_once, pthread_once);

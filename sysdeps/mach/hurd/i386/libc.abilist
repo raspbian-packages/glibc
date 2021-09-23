@@ -2182,6 +2182,17 @@ GLIBC_2.3.4 setsourcefilter F
 GLIBC_2.3.4 xdr_quad_t F
 GLIBC_2.3.4 xdr_u_quad_t F
 GLIBC_2.30 twalk_r F
+GLIBC_2.32 __libc_single_threaded D 0x1
+GLIBC_2.32 mach_print F
+GLIBC_2.32 mremap F
+GLIBC_2.32 sigabbrev_np F
+GLIBC_2.32 sigdescr_np F
+GLIBC_2.32 strerrordesc_np F
+GLIBC_2.32 strerrorname_np F
+GLIBC_2.32 thrd_current F
+GLIBC_2.32 thrd_equal F
+GLIBC_2.32 thrd_sleep F
+GLIBC_2.32 thrd_yield F
 GLIBC_2.4 __confstr_chk F
 GLIBC_2.4 __fgets_chk F
 GLIBC_2.4 __fgets_unlocked_chk F

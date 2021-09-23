@@ -123,20 +123,24 @@ if 'CFLAGS' is specified it must enable optimization.  For example:
      executables (PIE) by default.
 
 '--enable-cet'
+'--enable-cet=permissive'
      Enable Intel Control-flow Enforcement Technology (CET) support.
-     When the GNU C Library is built with '--enable-cet', the resulting
-     library is protected with indirect branch tracking (IBT) and shadow
-     stack (SHSTK).  When CET is enabled, the GNU C Library is
-     compatible with all existing executables and shared libraries.
-     This feature is currently supported on i386, x86_64 and x32 with
-     GCC 8 and binutils 2.29 or later.  Note that when CET is enabled,
-     the GNU C Library requires CPUs capable of multi-byte NOPs, like
-     x86-64 processors as well as Intel Pentium Pro or newer.
+     When the GNU C Library is built with '--enable-cet' or
+     '--enable-cet=permissive', the resulting library is protected with
+     indirect branch tracking (IBT) and shadow stack (SHSTK).  When CET
+     is enabled, the GNU C Library is compatible with all existing
+     executables and shared libraries.  This feature is currently
+     supported on i386, x86_64 and x32 with GCC 8 and binutils 2.29 or
+     later.  Note that when CET is enabled, the GNU C Library requires
+     CPUs capable of multi-byte NOPs, like x86-64 processors as well as
+     Intel Pentium Pro or newer.  With '--enable-cet', it is an error to
+     dlopen a non CET enabled shared library in CET enabled application.
+     With '--enable-cet=permissive', CET is disabled when dlopening a
+     non CET enabled shared library in CET enabled application.
 
      NOTE: '--enable-cet' has been tested for i686, x86_64 and x32 on
-     non-CET processors.  '--enable-cet' has been tested for x86_64 and
-     x32 on CET SDVs, but Intel CET support hasn't been validated for
-     i686.
+     non-CET processors.  '--enable-cet' has been tested for i686,
+     x86_64 and x32 on CET processors.
 
 '--disable-profile'
      Don't build libraries with profiling information.  You may want to
@@ -222,15 +226,6 @@ if 'CFLAGS' is specified it must enable optimization.  For example:
           tunables.  This frontend allows users to specify tunables as a
           colon-separated list in a single environment variable
           'GLIBC_TUNABLES'.
-
-'--enable-obsolete-nsl'
-     By default, libnsl is only built as shared library for backward
-     compatibility and the NSS modules libnss_compat, libnss_nis and
-     libnss_nisplus are not built at all.  Use this option to enable
-     libnsl with all depending NSS modules and header files.  For
-     architectures and ABIs that have been added after version 2.28 of
-     the GNU C Library this option is not available, and the libnsl
-     compatibility library is not built.
 
 '--disable-crypt'
      Do not install the passphrase-hashing library 'libcrypt' or the
@@ -467,6 +462,16 @@ build the GNU C Library:
      better code.  As of release time, GCC 9.2.1 is the newest compiler
      verified to work to build the GNU C Library.
 
+     For PowerPC 64-bits little-endian (powerpc64le), a GCC version with
+     support for '-mno-gnu-attribute', '-mabi=ieeelongdouble', and
+     '-mabi=ibmlondouble' is required.  Likewise, the compiler must also
+     support passing '-mlong-double-128' with the preceding options.  As
+     of release, this implies GCC 7.4 and newer (excepting GCC 7.5.0,
+     see GCC PR94200).  These additional features are required for
+     building the GNU C Library with support for IEEE long double.
+
+     For ARC architecture builds, GCC 8.3 or higher is needed.
+
      For multi-arch support it is recommended to use a GCC which has
      been built with support for GNU indirect functions.  This ensures
      that correct debugging information is generated for functions
@@ -488,6 +493,13 @@ build the GNU C Library:
      No other assembler or linker has the necessary functionality at the
      moment.  As of release time, GNU 'binutils' 2.32 is the newest
      verified to work to build the GNU C Library.
+
+     For PowerPC 64-bits little-endian (powerpc64le), 'objcopy' is
+     required to support '--update-section'.  This option requires
+     binutils 2.26 or newer.
+
+     ARC architecture needs 'binutils' 2.32 or higher for TLS related
+     fixes.
 
    * GNU 'texinfo' 4.7 or later
 

@@ -20,9 +20,16 @@ libc {
   GLIBC_2.22 {
     __register_atfork;
   }
+
+  # C11 thread symbols.
+  GLIBC_2.32 {
+    thrd_current; thrd_equal; thrd_sleep; thrd_yield;
+  }
+
   GLIBC_PRIVATE {
     __libc_alloca_cutoff;
     __libc_pthread_init;
+    __pthread_cleanup_stack;
   }
 }
 
@@ -32,15 +39,9 @@ libpthread {
     __errno_location; __h_errno_location;
   }
   GLIBC_2.12 {
-    __pthread_errorcheck_mutexattr; __pthread_recursive_mutexattr;
-
     __pthread_get_cleanup_stack;
 
     __pthread_mutex_transfer_np;
-
-    _pthread_mutex_destroy; _pthread_mutex_init;
-    _pthread_mutex_lock; _pthread_mutex_trylock; _pthread_mutex_unlock;
-    _pthread_rwlock_destroy; _pthread_rwlock_init;
 
     _cthread_init_routine;
 
@@ -142,6 +143,30 @@ libpthread {
     pthread_hurd_cond_wait_np;
     pthread_hurd_cond_timedwait_np;
   }
+
+  GLIBC_2.32 {
+    # C11 thread symbols.
+    thrd_create; thrd_detach; thrd_exit; thrd_join;
+    mtx_init; mtx_lock; mtx_timedlock; mtx_trylock; mtx_unlock; mtx_destroy;
+    call_once;
+    cnd_broadcast; cnd_destroy; cnd_init; cnd_signal; cnd_timedwait; cnd_wait;
+    tss_create; tss_delete; tss_get; tss_set;
+
+    pthread_cond_clockwait;
+
+    pthread_mutexattr_getrobust; pthread_mutexattr_getrobust_np;
+    pthread_mutexattr_setrobust; pthread_mutexattr_setrobust_np;
+
+    pthread_mutex_consistent; pthread_mutex_consistent_np;
+    pthread_mutex_clocklock;
+
+    pthread_rwlock_clockrdlock; pthread_rwlock_clockwrlock;
+
+    pthread_tryjoin_np; pthread_timedjoin_np; pthread_clockjoin_np;
+
+    sem_clockwait;
+  }
+
   GLIBC_PRIVATE {
     __shm_directory;
     __pthread_threads;
@@ -157,6 +182,13 @@ libpthread {
     __pthread_setspecific;
     __pthread_getattr_np;
     __pthread_attr_getstack;
+    __pthread_mutex_init;
+    __pthread_mutex_destroy;
     __pthread_mutex_timedlock;
+    __pthread_enable_asynccancel;
+    __pthread_disable_asynccancel;
+
+    _pthread_mutex_lock; _pthread_mutex_trylock; _pthread_mutex_unlock;
+    _pthread_rwlock_destroy; _pthread_rwlock_init;
   }
 }

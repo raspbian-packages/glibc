@@ -35,6 +35,8 @@ libsupport-routines = \
   ignore_stderr \
   next_to_fault \
   oom_error \
+  resolv_response_context_duplicate \
+  resolv_response_context_free \
   resolv_test \
   set_fortify_handler \
   support-xfstat \
@@ -56,6 +58,7 @@ libsupport-routines = \
   support_format_hostent \
   support_format_netent \
   support_isolate_in_subprocess \
+  support_process_state \
   support_ptrace \
   support_openpty \
   support_paths \
@@ -95,9 +98,11 @@ libsupport-routines = \
   xfopen \
   xfork \
   xftruncate \
+  xgetline \
   xgetsockname \
   xlisten \
   xlseek \
+  xlstat \
   xmalloc \
   xmemstream \
   xmkdir \
@@ -105,6 +110,7 @@ libsupport-routines = \
   xmmap \
   xmprotect \
   xmunmap \
+  xnewlocale \
   xopen \
   xpipe \
   xpoll \
@@ -127,6 +133,8 @@ libsupport-routines = \
   xpthread_create \
   xpthread_detach \
   xpthread_join \
+  xpthread_key_create \
+  xpthread_key_delete \
   xpthread_mutex_consistent \
   xpthread_mutex_destroy \
   xpthread_mutex_init \
@@ -168,6 +176,7 @@ libsupport-routines = \
   xsymlink \
   xsysconf \
   xunlink \
+  xuselocale \
   xwaitpid \
   xwrite \
 
@@ -186,7 +195,15 @@ CFLAGS-support_paths.c = \
 		-DLIBDIR_PATH=\"$(libdir)\" \
 		-DBINDIR_PATH=\"$(bindir)\" \
 		-DSBINDIR_PATH=\"$(sbindir)\" \
-		-DROOTSBINDIR_PATH=\"$(rootsbindir)\"
+		-DROOTSBINDIR_PATH=\"$(rootsbindir)\" \
+		-DCOMPLOCALEDIR_PATH=\"$(complocaledir)\"
+
+# In support_timespec_check_in_range we may be passed a very tight
+# range for which we should produce a correct result for expected
+# being withing the observed range.  The code uses double internally
+# in support_timespec_check_in_range and for that computation we use
+# -fexcess-precision=standard.
+CFLAGS-timespec.c += -fexcess-precision=standard
 
 ifeq (,$(CXX))
 LINKS_DSO_PROGRAM = links-dso-program-c
@@ -223,12 +240,14 @@ tests = \
   tst-support_capture_subprocess \
   tst-support_descriptors \
   tst-support_format_dns_packet \
+  tst-support-process_state \
   tst-support_quote_blob \
   tst-support_quote_string \
   tst-support_record_failure \
   tst-test_compare \
   tst-test_compare_blob \
   tst-test_compare_string \
+  tst-timespec \
   tst-xreadlink \
   tst-xsigstack \
 

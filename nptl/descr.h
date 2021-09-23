@@ -34,6 +34,7 @@
 #include <unwind.h>
 #include <bits/types/res_state.h>
 #include <kernel-features.h>
+#include <tls-internal-struct.h>
 
 #ifndef TCB_ALIGNMENT
 # define TCB_ALIGNMENT	sizeof (double)
@@ -338,9 +339,8 @@ struct pthread
   /* True if thread must stop at startup time.  */
   bool stopped_start;
 
-  /* The parent's cancel handling at the time of the pthread_create
-     call.  This might be needed to undo the effects of a cancellation.  */
-  int parent_cancelhandling;
+  /* Formerly used for dealing with cancellation.  */
+  int parent_cancelhandling_unsed;
 
   /* Lock to synchronize access to the descriptor.  */
   int lock;
@@ -397,8 +397,16 @@ struct pthread
   /* Resolver state.  */
   struct __res_state res;
 
+  /* Signal mask for the new thread.  Used during thread startup to
+     restore the signal mask.  (Threads are launched with all signals
+     masked.)  */
+  sigset_t sigmask;
+
   /* Indicates whether is a C11 thread created by thrd_creat.  */
   bool c11;
+
+  /* Used on strsignal.  */
+  struct tls_internal_t tls_state;
 
   /* This member must be last.  */
   char end_padding[];

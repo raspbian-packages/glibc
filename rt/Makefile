@@ -44,9 +44,11 @@ tests := tst-shm tst-timer tst-timer2 \
 	 tst-aio7 tst-aio8 tst-aio9 tst-aio10 \
 	 tst-mqueue1 tst-mqueue2 tst-mqueue3 tst-mqueue4 \
 	 tst-mqueue5 tst-mqueue6 tst-mqueue7 tst-mqueue8 tst-mqueue9 \
+	 tst-bz28213 \
 	 tst-timer3 tst-timer4 tst-timer5 \
 	 tst-cpuclock2 tst-cputimer1 tst-cputimer2 tst-cputimer3 \
 	 tst-shm-cancel
+tests-internal := tst-timer-sigmask
 
 extra-libs := librt
 extra-libs-others := $(extra-libs)
@@ -63,9 +65,11 @@ LDFLAGS-rt.so = -Wl,--enable-new-dtags,-z,nodelete
 $(objpfx)librt.so: $(shared-thread-library)
 
 ifeq (yes,$(build-shared))
-$(addprefix $(objpfx),$(tests)): $(objpfx)librt.so $(shared-thread-library)
+$(addprefix $(objpfx),$(tests) $(tests-internal)): \
+	$(objpfx)librt.so $(shared-thread-library)
 else
-$(addprefix $(objpfx),$(tests)): $(objpfx)librt.a $(static-thread-library)
+$(addprefix $(objpfx),$(tests)) $(tests-internal): \
+	$(objpfx)librt.a $(static-thread-library)
 endif
 
 tst-mqueue7-ARGS = -- $(host-test-program-cmd)

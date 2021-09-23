@@ -25,7 +25,7 @@ headers		= elf.h bits/elfclass.h link.h bits/link.h
 routines	= $(all-dl-routines) dl-support dl-iteratephdr \
 		  dl-addr dl-addr-obj enbl-secure dl-profstub \
 		  dl-origin dl-libc dl-sym dl-sysdep dl-error \
-		  dl-reloc-static-pie
+		  dl-reloc-static-pie libc_early_init
 
 # The core dynamic linking functions are in libc for the static and
 # profiled libraries.
@@ -33,7 +33,8 @@ dl-routines	= $(addprefix dl-,load lookup object reloc deps hwcaps \
 				  runtime init fini debug misc \
 				  version profile tls origin scope \
 				  execstack open close trampoline \
-				  exception sort-maps)
+				  exception sort-maps lookup-direct \
+				  call-libc-early-init)
 ifeq (yes,$(use-ldconfig))
 dl-routines += dl-cache
 endif
@@ -97,7 +98,7 @@ ld-map		= $(common-objpfx)ld.map
 endif
 
 ifeq (yes,$(build-shared))
-extra-objs	= $(all-rtld-routines:%=%.os) soinit.os sofini.os interp.os
+extra-objs	= $(all-rtld-routines:%=%.os) sofini.os interp.os
 generated	+= librtld.os dl-allobjs.os ld.so ldd
 install-others	= $(inst_rtlddir)/$(rtld-installed-name)
 install-bin-script = ldd
@@ -154,7 +155,9 @@ endif
 tests-static-normal := tst-leaks1-static tst-array1-static tst-array5-static \
 	       tst-dl-iter-static \
 	       tst-tlsalign-static tst-tlsalign-extern-static \
-	       tst-linkall-static tst-env-setuid tst-env-setuid-tunables
+	       tst-linkall-static tst-env-setuid tst-env-setuid-tunables \
+	       tst-single_threaded-static tst-single_threaded-pthread-static
+
 tests-static-internal := tst-tls1-static tst-tls2-static \
 	       tst-ptrguard1-static tst-stackguard1-static \
 	       tst-tls1-static-non-pie tst-libc_dlvsym-static
@@ -173,9 +176,11 @@ tests-internal := tst-tls1 tst-tls2 $(tests-static-internal)
 tests-static := $(tests-static-normal) $(tests-static-internal)
 
 ifeq (yes,$(build-shared))
-tests-static += tst-tls9-static
-tst-tls9-static-ENV = \
-       LD_LIBRARY_PATH=$(ld-library-path):$(common-objpfx)dlfcn
+tests-static += tst-tls9-static tst-single_threaded-static-dlopen
+static-dlopen-environment = \
+  LD_LIBRARY_PATH=$(ld-library-path):$(common-objpfx)dlfcn
+tst-tls9-static-ENV = $(static-dlopen-environment)
+tst-single_threaded-static-dlopen-ENV = $(static-dlopen-environment)
 
 tests += restest1 preloadtest loadfail multiload origtest resolvfail \
 	 constload1 order noload filter \
@@ -202,13 +207,16 @@ tests += restest1 preloadtest loadfail multiload origtest resolvfail \
 	 tst-sonamemove-link tst-sonamemove-dlopen tst-dlopen-tlsmodid \
 	 tst-dlopen-self tst-auditmany tst-initfinilazyfail tst-dlopenfail \
 	 tst-dlopenfail-2 \
+	 tst-filterobj tst-filterobj-dlopen tst-auxobj tst-auxobj-dlopen \
+	 tst-audit14 tst-audit15 tst-audit16 \
+	 tst-single_threaded tst-single_threaded-pthread \
 	 tst-tls-ie tst-tls-ie-dlmopen
 #	 reldep9
 tests-internal += loadtest unload unload2 circleload1 \
 	 neededtest neededtest2 neededtest3 neededtest4 \
 	 tst-tls3 tst-tls6 tst-tls7 tst-tls8 tst-dlmopen2 \
 	 tst-ptrguard1 tst-stackguard1 tst-libc_dlvsym \
-	 tst-create_format1
+	 tst-create_format1 tst-tls-surplus
 tests-container += tst-pldd tst-dlopen-tlsmodid-container \
   tst-dlopen-self-container
 test-srcs = tst-pathopt
@@ -314,6 +322,10 @@ modules-names = testobj1 testobj2 testobj3 testobj4 testobj5 testobj6 \
 		tst-initlazyfailmod tst-finilazyfailmod \
 		tst-dlopenfailmod1 tst-dlopenfaillinkmod tst-dlopenfailmod2 \
 		tst-dlopenfailmod3 tst-ldconfig-ld-mod \
+		tst-filterobj-flt tst-filterobj-aux tst-filterobj-filtee \
+		tst-auditlogmod-1 tst-auditlogmod-2 tst-auditlogmod-3 \
+		tst-single_threaded-mod1 tst-single_threaded-mod2 \
+		tst-single_threaded-mod3 tst-single_threaded-mod4 \
 		tst-tls-ie-mod0 tst-tls-ie-mod1 tst-tls-ie-mod2 \
 		tst-tls-ie-mod3 tst-tls-ie-mod4 tst-tls-ie-mod5 \
 		tst-tls-ie-mod6
@@ -405,6 +417,7 @@ tests-special += $(objpfx)tst-pathopt.out $(objpfx)tst-rtld-load-self.out \
 		 $(objpfx)tst-rtld-preload.out
 endif
 tests-special += $(objpfx)check-textrel.out $(objpfx)check-execstack.out \
+		 $(objpfx)check-wx-segment.out \
 		 $(objpfx)check-localplt.out $(objpfx)check-initfini.out
 endif
 
@@ -487,28 +500,37 @@ $(objpfx)dl-allobjs.os: $(all-rtld-routines:%=$(objpfx)%.os)
 # are compiled with special flags, and puts these modules into rtld-libc.a
 # for us.  Then we do the real link using rtld-libc.a instead of libc_pic.a.
 
-# If the compiler can do SSP, build the mapfile with dummy __stack_chk_fail
-# and __stack_chk_fail_local symbols defined, to prevent the real things
-# being dragged into rtld even though rtld is never built with stack-
-# protection.
+# These symbols need to be stubbed out during symbol discovery because
+# their implementation is provided differently in rtld, and the symbol
+# discovery mechanism is not compatible with the libc implementation
+# when compiled for libc.
+rtld-stubbed-symbols = \
+  calloc \
+  free \
+  malloc \
+  realloc \
+
+# The GCC arguments that implement $(rtld-stubbed-symbols).
+rtld-stubbed-symbols-args = \
+  $(patsubst %,-Wl$(comma)--defsym=%=0, $(rtld-stubbed-symbols))
 
 ifeq ($(have-ssp),yes)
-dummy-stack-chk-fail := -Wl,--defsym='__stack_chk_fail=0' \
-			-Wl,--defsym='__stack_chk_fail_local=0'
-else
-dummy-stack-chk-fail :=
+# rtld is not built with the stack protector, so these references will
+# go away in the rebuilds.
+rtld-stubbed-symbols += __stack_chk_fail __stack_chk_fail_local
 endif
 
 $(objpfx)librtld.map: $(objpfx)dl-allobjs.os $(common-objpfx)libc_pic.a
 	@-rm -f $@T
-	$(reloc-link) -o $@.o $(dummy-stack-chk-fail) \
+	$(reloc-link) -o $@.o $(rtld-stubbed-symbols-args) \
 		'-Wl,-(' $^ -lgcc '-Wl,-)' -Wl,-Map,$@T
 	rm -f $@.o
 	mv -f $@T $@
 
+# For lld, skip preceding addresses and values before matching the archive and the member.
 $(objpfx)librtld.mk: $(objpfx)librtld.map Makefile
 	LC_ALL=C \
-	sed -n 's@^$(common-objpfx)\([^(]*\)(\([^)]*\.os\)) *.*$$@\1 \2@p' \
+	sed -n 's@^[0-9a-f ]*$(common-objpfx)\([^(]*\)(\([^)]*\.os\)) *.*$$@\1 \2@p' \
 	    $< | \
 	while read lib file; do \
 	  case $$lib in \
@@ -1175,6 +1197,12 @@ $(objpfx)check-execstack.out: $(..)scripts/check-execstack.awk \
 	$(evaluate-test)
 generated += check-execstack.out
 
+$(objpfx)check-wx-segment.out: $(..)scripts/check-wx-segment.py \
+			      $(all-built-dso:=.phdr)
+	$(PYTHON) $^ --xfail="$(check-wx-segment-xfail)" > $@; \
+	$(evaluate-test)
+generated += check-wx-segment.out
+
 $(objpfx)tst-dlmodcount: $(libdl)
 $(objpfx)tst-dlmodcount.out: $(test-modules)
 
@@ -1488,6 +1516,22 @@ $(objpfx)tst-auditmany.out: $(objpfx)tst-auditmanymod1.so \
 tst-auditmany-ENV = \
   LD_AUDIT=tst-auditmanymod1.so:tst-auditmanymod2.so:tst-auditmanymod3.so:tst-auditmanymod4.so:tst-auditmanymod5.so:tst-auditmanymod6.so:tst-auditmanymod7.so:tst-auditmanymod8.so:tst-auditmanymod9.so
 
+LDFLAGS-tst-audit14 = -Wl,--audit=tst-auditlogmod-1.so
+$(objpfx)tst-auditlogmod-1.so: $(libsupport)
+$(objpfx)tst-audit14.out: $(objpfx)tst-auditlogmod-1.so
+LDFLAGS-tst-audit15 = \
+  -Wl,--audit=tst-auditlogmod-1.so,--depaudit=tst-auditlogmod-2.so
+$(objpfx)tst-auditlogmod-2.so: $(libsupport)
+$(objpfx)tst-audit15.out: \
+  $(objpfx)tst-auditlogmod-1.so $(objpfx)tst-auditlogmod-2.so
+LDFLAGS-tst-audit16 = \
+  -Wl,--audit=tst-auditlogmod-1.so:tst-auditlogmod-2.so \
+  -Wl,--depaudit=tst-auditlogmod-3.so
+$(objpfx)tst-auditlogmod-3.so: $(libsupport)
+$(objpfx)tst-audit16.out: \
+  $(objpfx)tst-auditlogmod-1.so $(objpfx)tst-auditlogmod-2.so \
+  $(objpfx)tst-auditlogmod-3.so
+
 # tst-sonamemove links against an older implementation of the library.
 LDFLAGS-tst-sonamemove-linkmod1.so = \
   -Wl,--version-script=tst-sonamemove-linkmod1.map \
@@ -1705,6 +1749,32 @@ LDFLAGS-tst-dlopen-nodelete-reloc-mod17.so = -Wl,--no-as-needed
 $(objpfx)tst-ldconfig-ld_so_conf-update.out: $(objpfx)tst-ldconfig-ld-mod.so
 $(objpfx)tst-ldconfig-ld_so_conf-update: $(libdl)
 
+LDFLAGS-tst-filterobj-flt.so = -Wl,--filter=$(objpfx)tst-filterobj-filtee.so
+$(objpfx)tst-filterobj: $(objpfx)tst-filterobj-flt.so
+$(objpfx)tst-filterobj-dlopen: $(libdl)
+$(objpfx)tst-filterobj.out: $(objpfx)tst-filterobj-filtee.so
+$(objpfx)tst-filterobj-dlopen.out: $(objpfx)tst-filterobj-filtee.so
+
+LDFLAGS-tst-filterobj-aux.so = -Wl,--auxiliary=$(objpfx)tst-filterobj-filtee.so
+$(objpfx)tst-auxobj: $(objpfx)tst-filterobj-aux.so
+$(objpfx)tst-auxobj-dlopen: $(libdl)
+$(objpfx)tst-auxobj.out: $(objpfx)tst-filterobj-filtee.so
+$(objpfx)tst-auxobj-dlopen.out: $(objpfx)tst-filterobj-filtee.so
+
+$(objpfx)tst-single_threaded: $(objpfx)tst-single_threaded-mod1.so $(libdl)
+$(objpfx)tst-single_threaded.out: \
+  $(objpfx)tst-single_threaded-mod2.so $(objpfx)tst-single_threaded-mod3.so
+$(objpfx)tst-single_threaded-static-dlopen: \
+  $(objpfx)tst-single_threaded-mod1.o $(common-objpfx)dlfcn/libdl.a
+$(objpfx)tst-single_threaded-static-dlopen.out: \
+  $(objpfx)tst-single_threaded-mod2.so
+$(objpfx)tst-single_threaded-pthread: \
+  $(objpfx)tst-single_threaded-mod1.so $(libdl) $(shared-thread-library)
+$(objpfx)tst-single_threaded-pthread.out: \
+  $(objpfx)tst-single_threaded-mod2.so $(objpfx)tst-single_threaded-mod3.so \
+  $(objpfx)tst-single_threaded-mod4.so
+$(objpfx)tst-single_threaded-pthread-static: $(static-thread-library)
+
 $(objpfx)tst-tls-ie: $(libdl) $(shared-thread-library)
 $(objpfx)tst-tls-ie.out: \
   $(objpfx)tst-tls-ie-mod0.so \
@@ -1724,3 +1794,5 @@ $(objpfx)tst-tls-ie-dlmopen.out: \
   $(objpfx)tst-tls-ie-mod4.so \
   $(objpfx)tst-tls-ie-mod5.so \
   $(objpfx)tst-tls-ie-mod6.so
+
+$(objpfx)tst-tls-surplus: $(libdl)

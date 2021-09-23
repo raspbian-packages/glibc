@@ -77,5 +77,5 @@ __pthread_detach (pthread_t thread)
 
   return err;
 }
-strong_alias (__pthread_detach, pthread_detach)
+weak_alias (__pthread_detach, pthread_detach)
 hidden_def (__pthread_detach)

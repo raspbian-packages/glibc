@@ -35,7 +35,7 @@
 # define READ_THREAD_POINTER() (__builtin_thread_pointer ())
 #else
 /* Note: rd must be $v1 to be ABI-conformant.  */
-# if __mips_isa_rev >= 2
+# if defined (__mips_isa_rev) &&  __mips_isa_rev >= 2
 #  define READ_THREAD_POINTER() \
      ({ void *__result;							      \
         asm volatile ("rdhwr\t%0, $29" : "=v" (__result));	      	      \
@@ -120,11 +120,10 @@ typedef struct
    special attention since 'errno' is not yet available and if the
    operation can cause a failure 'errno' must not be touched.  */
 # define TLS_INIT_TP(tcbp) \
-  ({ INTERNAL_SYSCALL_DECL (err);					\
-     long result_var;							\
-     result_var = INTERNAL_SYSCALL (set_thread_area, err, 1,		\
+  ({ long int result_var;						\
+     result_var = INTERNAL_SYSCALL_CALL (set_thread_area, 		\
 				    (char *) (tcbp) + TLS_TCB_OFFSET);	\
-     INTERNAL_SYSCALL_ERROR_P (result_var, err)				\
+     INTERNAL_SYSCALL_ERROR_P (result_var)				\
        ? "unknown error" : NULL; })
 
 /* Value passed to 'clone' for initialization of the thread register.  */

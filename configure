@@ -673,8 +673,6 @@ base_machine
 have_tunables
 build_pt_chown
 build_nscd
-build_obsolete_nsl
-link_obsolete_rpc
 libc_cv_static_nss_crypt
 libc_cv_nss_crypt
 build_crypt
@@ -785,8 +783,6 @@ enable_multi_arch
 enable_experimental_malloc
 enable_crypt
 enable_nss_crypt
-enable_obsolete_rpc
-enable_obsolete_nsl
 enable_systemtap
 enable_build_nscd
 enable_nscd
@@ -1457,10 +1453,6 @@ Optional Features:
   --disable-crypt         do not build nor install the passphrase hashing
                           library, libcrypt
   --enable-nss-crypt      enable libcrypt to use nss
-  --enable-obsolete-rpc   build and install the obsolete RPC code for
-                          link-time usage
-  --enable-obsolete-nsl   build and install the obsolete libnsl library and
-                          depending NSS modules
   --enable-systemtap      enable systemtap static probe points [default=no]
   --disable-build-nscd    disable building and installing the nscd daemon
   --disable-nscd          library functions will not contact the nscd daemon
@@ -3640,34 +3632,6 @@ fi
 
 
 
-# Check whether --enable-obsolete-rpc was given.
-if test "${enable_obsolete_rpc+set}" = set; then :
-  enableval=$enable_obsolete_rpc; link_obsolete_rpc=$enableval
-else
-  link_obsolete_rpc=no
-fi
-
-
-
-if test "$link_obsolete_rpc" = yes; then
-  $as_echo "#define LINK_OBSOLETE_RPC 1" >>confdefs.h
-
-fi
-
-# Check whether --enable-obsolete-nsl was given.
-if test "${enable_obsolete_nsl+set}" = set; then :
-  enableval=$enable_obsolete_nsl; build_obsolete_nsl=$enableval
-else
-  build_obsolete_nsl=no
-fi
-
-
-
-if test "$build_obsolete_nsl" = yes; then
-  $as_echo "#define LINK_OBSOLETE_NSL 1" >>confdefs.h
-
-fi
-
 # Check whether --enable-systemtap was given.
 if test "${enable_systemtap+set}" = set; then :
   enableval=$enable_systemtap; systemtap=$enableval
@@ -3785,7 +3749,7 @@ main ()
 {
 
 #ifndef __CET__
-#error no CET compiler support
+# error no CET compiler support
 #endif
   ;
   return 0;
@@ -4226,7 +4190,8 @@ mach=
 tail=$machine${submachine:+/$submachine}
 while m=`echo $tail | sed 's@^\(.*\)/\([^/]*\)$@& \1@'`; test -n "$m"; do
   set $m
-  # Prepend the machine's FPU directory unless --without-fp.
+  # Prepend the machine's FPU directory unless the architecture specific
+  # preconfigure disables it.
   if test "$libc_cv_with_fp" = yes; then
     maybe_fpu=/fpu
   else
@@ -5751,59 +5716,6 @@ fi
 $as_echo "$libc_cv_have_sdata_section" >&6; }
 if test $libc_cv_have_sdata_section = yes; then
   $as_echo "#define HAVE_SDATA_SECTION 1" >>confdefs.h
-
-fi
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to use .ctors/.dtors header and trailer" >&5
-$as_echo_n "checking whether to use .ctors/.dtors header and trailer... " >&6; }
-if ${libc_cv_ctors_header+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-    libc_cv_ctors_header=yes
-  cat > conftest.c <<EOF
-int _start (void) { return 0; }
-int __start (void) { return 0; }
-
-__attribute__ ((constructor)) void ctor (void) { asm (""); }
-__attribute__ ((destructor))  void dtor (void) { asm (""); }
-
-EOF
-if { ac_try='${CC-cc} $CFLAGS $CPPFLAGS $LDFLAGS $no_ssp -o conftest
-		       conftest.c -static -nostartfiles -nostdlib
-		       1>&5'
-  { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_try\""; } >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; }; then :
-        if $READELF -WS conftest$ac_exeext | $AWK '
-	{ gsub(/\[ */, "[") }
-	$2 == ".ctors" || $2 == ".dtors" {
-	  size = strtonum("0x" $6)
-	  align = strtonum("0x" $NF)
-	  seen[$2] = 1
-	  stub[$2] = size == align * 2
-	}
-	END {
-	  ctors_ok = !seen[".ctors"] || stub[".ctors"]
-	  dtors_ok = !seen[".dtors"] || stub[".dtors"]
-	  exit ((ctors_ok && dtors_ok) ? 0 : 1)
-	}
-      '; then :
-  libc_cv_ctors_header=no
-fi
-
-else
-        as_fn_error $? "missing __attribute__ ((constructor)) support??" "$LINENO" 5
-
-fi
-rm -f conftest*
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $libc_cv_ctors_header" >&5
-$as_echo "$libc_cv_ctors_header" >&6; }
-if test $libc_cv_ctors_header = no; then
-  $as_echo "#define NO_CTORS_DTORS_SECTIONS 1" >>confdefs.h
 
 fi
 

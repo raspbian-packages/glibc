@@ -337,6 +337,10 @@ struct rtld_global
        recursive dlopen calls from ELF constructors.  */
     unsigned int _ns_global_scope_pending_adds;
 
+    /* Once libc.so has been loaded into the namespace, this points to
+       its link map.  */
+    struct link_map *libc_map;
+
     /* Search table for unique objects.  */
     struct unique_sym_table
     {
@@ -756,24 +760,19 @@ _dl_dprintf (int fd, const char *fmt, ...)
 
 /* Write a message on the specified descriptor standard output.  The
    parameters are interpreted as for a `printf' call.  */
-#define _dl_printf(fmt, args...) \
-  _dl_dprintf (STDOUT_FILENO, fmt, ##args)
+void _dl_printf (const char *fmt, ...)
+  attribute_hidden __attribute__ ((__format__ (__printf__, 1, 2)));
 
 /* Write a message on the specified descriptor standard error.  The
    parameters are interpreted as for a `printf' call.  */
-#define _dl_error_printf(fmt, args...) \
-  _dl_dprintf (STDERR_FILENO, fmt, ##args)
+void _dl_error_printf (const char *fmt, ...)
+  attribute_hidden __attribute__ ((__format__ (__printf__, 1, 2)));
 
 /* Write a message on the specified descriptor standard error and exit
    the program.  The parameters are interpreted as for a `printf' call.  */
-#define _dl_fatal_printf(fmt, args...) \
-  do									      \
-    {									      \
-      _dl_dprintf (STDERR_FILENO, fmt, ##args);				      \
-      _exit (127);							      \
-    }									      \
-  while (1)
-
+void _dl_fatal_printf (const char *fmt, ...)
+  __attribute__ ((__format__ (__printf__, 1, 2), __noreturn__));
+rtld_hidden_proto (_dl_fatal_printf)
 
 /* An exception raised by the _dl_signal_error function family and
    caught by _dl_catch_error function family.  Exceptions themselves
@@ -920,6 +919,11 @@ extern void _dl_setup_hash (struct link_map *map) attribute_hidden;
 extern void _dl_rtld_di_serinfo (struct link_map *loader,
 				 Dl_serinfo *si, bool counting);
 
+/* Process PT_GNU_PROPERTY program header PH in module L after
+   PT_LOAD segments are mapped from file FD.  */
+void _dl_process_pt_gnu_property (struct link_map *l, int fd,
+				  const ElfW(Phdr) *ph);
+
 
 /* Search loaded objects' symbol tables for a definition of the symbol
    referred to by UNDEF.  *SYM is the symbol table entry containing the
@@ -954,6 +958,19 @@ extern lookup_t _dl_lookup_symbol_x (const char *undef,
 				     struct link_map *skip_map)
      attribute_hidden;
 
+
+/* Restricted version of _dl_lookup_symbol_x.  Searches MAP (and only
+   MAP) for the symbol UNDEF_NAME, with GNU hash NEW_HASH (computed
+   with dl_new_hash), symbol version VERSION, and symbol version hash
+   VERSION_HASH (computed with _dl_elf_hash).  Returns a pointer to
+   the symbol table entry in MAP on success, or NULL on failure.  MAP
+   must have symbol versioning information, or otherwise the result is
+   undefined.  */
+const ElfW(Sym) *_dl_lookup_direct (struct link_map *map,
+				    const char *undef_name,
+				    uint32_t new_hash,
+				    const char *version,
+				    uint32_t version_hash) attribute_hidden;
 
 /* Add the new link_map NEW to the end of the namespace list.  */
 extern void _dl_add_to_namespace_list (struct link_map *new, Lmid_t nsid)

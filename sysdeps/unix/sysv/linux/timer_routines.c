@@ -42,16 +42,9 @@ struct thread_start_data
 static void *
 timer_sigev_thread (void *arg)
 {
-  /* The parent thread has all signals blocked.  This is a bit
-     surprising for user code, although valid.  We unblock all
-     signals.  */
-  sigset_t ss;
-  sigemptyset (&ss);
-  INTERNAL_SYSCALL_DECL (err);
-  INTERNAL_SYSCALL (rt_sigprocmask, err, 4, SIG_SETMASK, &ss, NULL, _NSIG / 8);
+  __libc_signal_unblock_sigtimer (NULL);
 
   struct thread_start_data *td = (struct thread_start_data *) arg;
-
   void (*thrfunc) (sigval_t) = td->thrfunc;
   sigval_t sival = td->sival;
 
@@ -69,65 +62,49 @@ timer_sigev_thread (void *arg)
 static void *
 timer_helper_thread (void *arg)
 {
-  /* Wait for the SIGTIMER signal, allowing the setXid signal, and
-     none else.  */
-  sigset_t ss;
-  sigemptyset (&ss);
-  __sigaddset (&ss, SIGTIMER);
-
   /* Endless loop of waiting for signals.  The loop is only ended when
      the thread is canceled.  */
   while (1)
     {
       siginfo_t si;
 
-      /* sigwaitinfo cannot be used here, since it deletes
-	 SIGCANCEL == SIGTIMER from the set.  */
-
-      /* XXX The size argument hopefully will have to be changed to the
-	 real size of the user-level sigset_t.  */
-      int result = SYSCALL_CANCEL (rt_sigtimedwait, &ss, &si, NULL, _NSIG / 8);
-
-      if (result > 0)
+      while (sigwaitinfo (&sigtimer_set, &si) < 0);
+      if (si.si_code == SI_TIMER)
 	{
-	  if (si.si_code == SI_TIMER)
+	  struct timer *tk = (struct timer *) si.si_ptr;
+
+	  /* Check the timer is still used and will not go away
+	     while we are reading the values here.  */
+	  pthread_mutex_lock (&__active_timer_sigev_thread_lock);
+
+	  struct timer *runp = __active_timer_sigev_thread;
+	  while (runp != NULL)
+	    if (runp == tk)
+	      break;
+	  else
+	    runp = runp->next;
+
+	  if (runp != NULL)
 	    {
-	      struct timer *tk = (struct timer *) si.si_ptr;
+	      struct thread_start_data *td = malloc (sizeof (*td));
 
-	      /* Check the timer is still used and will not go away
-		 while we are reading the values here.  */
-	      pthread_mutex_lock (&__active_timer_sigev_thread_lock);
-
-	      struct timer *runp = __active_timer_sigev_thread;
-	      while (runp != NULL)
-		if (runp == tk)
-		  break;
-		else
-		  runp = runp->next;
-
-	      if (runp != NULL)
+	      /* There is not much we can do if the allocation fails.  */
+	      if (td != NULL)
 		{
-		  struct thread_start_data *td = malloc (sizeof (*td));
+		  /* This is the signal we are waiting for.  */
+		  td->thrfunc = tk->thrfunc;
+		  td->sival = tk->sival;
 
-		  /* There is not much we can do if the allocation fails.  */
-		  if (td != NULL)
-		    {
-		      /* This is the signal we are waiting for.  */
-		      td->thrfunc = tk->thrfunc;
-		      td->sival = tk->sival;
-
-		      pthread_t th;
-		      (void) pthread_create (&th, &tk->attr,
-					     timer_sigev_thread, td);
-		    }
+		  pthread_t th;
+		  pthread_create (&th, &tk->attr, timer_sigev_thread, td);
 		}
-
-	      pthread_mutex_unlock (&__active_timer_sigev_thread_lock);
 	    }
-	  else if (si.si_code == SI_TKILL)
-	    /* The thread is canceled.  */
-	    pthread_exit (NULL);
+
+	  pthread_mutex_unlock (&__active_timer_sigev_thread_lock);
 	}
+      else if (si.si_code == SI_TKILL)
+	/* The thread is canceled.  */
+	pthread_exit (NULL);
     }
 }
 
@@ -159,28 +136,23 @@ __start_helper_thread (void)
   (void) pthread_attr_init (&attr);
   (void) pthread_attr_setstacksize (&attr, __pthread_get_minstack (&attr));
 
-  /* Block all signals in the helper thread but SIGSETXID.  To do this
-     thoroughly we temporarily have to block all signals here.  The
-     helper can lose wakeups if SIGCANCEL is not blocked throughout,
-     but sigfillset omits it SIGSETXID.  So, we add SIGCANCEL back
-     explicitly here.  */
+  /* Block all signals in the helper thread but SIGSETXID.  */
   sigset_t ss;
-  sigset_t oss;
-  sigfillset (&ss);
-  __sigaddset (&ss, SIGCANCEL);
-  INTERNAL_SYSCALL_DECL (err);
-  INTERNAL_SYSCALL (rt_sigprocmask, err, 4, SIG_SETMASK, &ss, &oss, _NSIG / 8);
+  __sigfillset (&ss);
+  __sigdelset (&ss, SIGSETXID);
+  int res = __pthread_attr_setsigmask_internal (&attr, &ss);
+  if (res != 0)
+    {
+      pthread_attr_destroy (&attr);
+      return;
+    }
 
   /* Create the helper thread for this timer.  */
   pthread_t th;
-  int res = pthread_create (&th, &attr, timer_helper_thread, NULL);
+  res = pthread_create (&th, &attr, timer_helper_thread, NULL);
   if (res == 0)
     /* We managed to start the helper thread.  */
     __helper_tid = ((struct pthread *) th)->tid;
-
-  /* Restore the signal mask.  */
-  INTERNAL_SYSCALL (rt_sigprocmask, err, 4, SIG_SETMASK, &oss, NULL,
-		    _NSIG / 8);
 
   /* No need for the attribute anymore.  */
   (void) pthread_attr_destroy (&attr);

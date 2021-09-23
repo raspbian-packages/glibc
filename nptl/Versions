@@ -16,9 +16,13 @@ libc {
     pthread_mutex_lock; pthread_mutex_unlock;
     pthread_self;
     pthread_setcancelstate; pthread_setcanceltype;
+    pthread_sigmask;
   }
   GLIBC_2.1 {
     pthread_attr_init;
+  }
+  GLIBC_2.2.3 {
+    pthread_getattr_np;
   }
   GLIBC_2.3.2 {
     __register_atfork;
@@ -28,9 +32,24 @@ libc {
     pthread_cond_wait; pthread_cond_signal;
     pthread_cond_broadcast; pthread_cond_timedwait;
   }
+  GLIBC_2.3.3 {
+    pthread_attr_setaffinity_np;
+    pthread_getaffinity_np;
+  }
+  GLIBC_2.3.4 {
+    pthread_attr_setaffinity_np;
+  }
   # C11 thread symbols.
   GLIBC_2.28 {
     thrd_current; thrd_equal; thrd_sleep; thrd_yield;
+  }
+  GLIBC_2.32 {
+    pthread_attr_getsigmask_np;
+    pthread_attr_setaffinity_np;
+    pthread_attr_setsigmask_np;
+    pthread_getaffinity_np;
+    pthread_getattr_np;
+    pthread_sigmask;
   }
   GLIBC_PRIVATE {
     __libc_alloca_cutoff;
@@ -39,6 +58,13 @@ libc {
     __libc_pthread_init;
     __libc_current_sigrtmin_private; __libc_current_sigrtmax_private;
     __libc_allocate_rtsig_private;
+    # Used by the C11 threads implementation.
+    __pthread_cond_destroy; __pthread_cond_init;
+    __pthread_attr_setaffinity_np;
+    __pthread_attr_init; __pthread_attr_destroy;
+    __pthread_attr_copy;
+    __pthread_getattr_default_np;
+    __pthread_attr_setsigmask_internal;
   }
 }
 
@@ -47,21 +73,13 @@ libpthread {
     pthread_create; pthread_join;
     pthread_exit; pthread_detach;
 
-    pthread_getschedparam; pthread_setschedparam;
-
-    pthread_attr_getschedpolicy; pthread_attr_setschedpolicy;
-    pthread_attr_getscope; pthread_attr_setscope;
-
     pthread_mutex_init; pthread_mutex_destroy;
     pthread_mutex_lock; pthread_mutex_trylock; pthread_mutex_unlock;
 
     pthread_mutexattr_init; pthread_mutexattr_destroy;
 
-    pthread_cond_init; pthread_cond_destroy;
     pthread_cond_wait; pthread_cond_timedwait;
     pthread_cond_signal; pthread_cond_broadcast;
-
-    pthread_condattr_destroy; pthread_condattr_init;
 
     pthread_cancel; pthread_testcancel;
     pthread_setcancelstate; pthread_setcanceltype;
@@ -188,8 +206,7 @@ libpthread {
   }
 
   GLIBC_2.2.3 {
-    # Extensions.
-    pthread_getattr_np;
+    __libpthread_version_placeholder;
   }
 
   GLIBC_2.2.6 {
@@ -198,7 +215,7 @@ libpthread {
 
   GLIBC_2.3.2 {
     # Changed pthread_cond_t.
-    pthread_cond_init; pthread_cond_destroy;
+    pthread_cond_init;
     pthread_cond_wait; pthread_cond_timedwait;
     pthread_cond_signal; pthread_cond_broadcast;
   }
@@ -220,14 +237,14 @@ libpthread {
     __pthread_cleanup_routine;
 
     # affinity interfaces without size parameter
-    pthread_getaffinity_np; pthread_setaffinity_np;
-    pthread_attr_getaffinity_np; pthread_attr_setaffinity_np;
+    pthread_setaffinity_np;
+    pthread_attr_getaffinity_np;
   }
 
   GLIBC_2.3.4 {
     # New affinity interfaces.
     pthread_getaffinity_np; pthread_setaffinity_np;
-    pthread_attr_getaffinity_np; pthread_attr_setaffinity_np;
+    pthread_attr_getaffinity_np;
 
     pthread_setschedprio;
   }

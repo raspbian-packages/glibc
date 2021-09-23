@@ -20,6 +20,9 @@
 /* On powerpc64, use overlapping .opd entries.  */
 #undef  USE_PPC64_OVERLAPPING_OPD
 
+/* On powerpc64, use @notoc.  */
+#undef  USE_PPC64_NOTOC
+
 /* Define if _Unwind_Find_FDE should be exported from glibc.  */
 #undef  EXPORT_UNWIND_FIND_FDE
 
@@ -109,6 +112,15 @@
 /* AArch64 big endian ABI */
 #undef HAVE_AARCH64_BE
 
+/* AArch64 BTI support enabled.  */
+#define HAVE_AARCH64_BTI 0
+
+/* AArch64 PAC-RET code generation is enabled.  */
+#define HAVE_AARCH64_PAC_RET 0
+
+/* ARC big endian ABI */
+#undef HAVE_ARC_BE
+
 /* C-SKY ABI version.  */
 #undef CSKYABI
 
@@ -159,17 +171,6 @@
 
 /* Define if multi-arch DSOs should be generated.  */
 #undef USE_MULTIARCH
-
-/* Define if `.ctors' and `.dtors' sections shouldn't be used.  */
-#undef	NO_CTORS_DTORS_SECTIONS
-
-/* Define if obsolete RPC code should be made available for user-level code
-   to link against.  */
-#undef LINK_OBSOLETE_RPC
-
-/* Define if obsolete libnsl code should be made available for user-level
-   code to link against.  */
-#undef LINK_OBSOLETE_NSL
 
 /* Define if Systemtap <sys/sdt.h> probes should be defined.  */
 #undef USE_STAP_PROBE
@@ -264,5 +265,8 @@
 /* Some compiler options may now allow to use ebp in __asm__ (used mainly
    in i386 6 argument syscall issue).  */
 #define CAN_USE_REGISTER_ASM_EBP 0
+
+/* The default value of x86 CET control.  */
+#define DEFAULT_DL_X86_CET_CONTROL cet_elf_property
 
 #endif

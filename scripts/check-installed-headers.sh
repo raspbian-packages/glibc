@@ -74,11 +74,6 @@ for header in "$@"; do
         (finclude/*)
             continue;;
 
-	# sys/sysctl.h produces a deprecation warning and therefore
-	# fails compilation with -Werror.
-	(sys/sysctl.h)
-	    continue;;
-
         # sys/vm86.h is "unsupported on x86-64" and errors out on that target.
         (sys/vm86.h)
             case "$is_x86_64" in
@@ -123,7 +118,8 @@ $expanded_lib_mode
 #include <$header>
 int avoid_empty_translation_unit;
 EOF
-            if $cc_cmd -fsyntax-only $lang_mode "$cih_test_c" 2>&1
+            if $cc_cmd -finput-charset=ascii -fsyntax-only $lang_mode \
+		       "$cih_test_c" 2>&1
             then :
             else failed=1
             fi

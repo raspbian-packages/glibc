@@ -51,7 +51,7 @@ routines  = backtrace backtracesyms backtracesymsfd noophooks \
 	    explicit_bzero_chk \
 	    stack_chk_fail fortify_fail \
 	    $(static-only-routines)
-static-only-routines := warning-nop stack_chk_fail_local
+static-only-routines := stack_chk_fail_local
 
 # Don't add stack_chk_fail_local.o to libc.a since __stack_chk_fail_local
 # is an alias of __stack_chk_fail in stack_chk_fail.o.
@@ -188,6 +188,17 @@ LOCALES := de_DE.UTF-8
 include ../gen-locales.mk
 
 $(objpfx)tst-chk1.out: $(gen-locales)
+$(objpfx)tst-chk2.out: $(gen-locales)
+$(objpfx)tst-chk3.out: $(gen-locales)
+$(objpfx)tst-chk4.out: $(gen-locales)
+$(objpfx)tst-chk5.out: $(gen-locales)
+$(objpfx)tst-chk6.out: $(gen-locales)
+$(objpfx)tst-lfschk1.out: $(gen-locales)
+$(objpfx)tst-lfschk2.out: $(gen-locales)
+$(objpfx)tst-lfschk3.out: $(gen-locales)
+$(objpfx)tst-lfschk4.out: $(gen-locales)
+$(objpfx)tst-lfschk5.out: $(gen-locales)
+$(objpfx)tst-lfschk6.out: $(gen-locales)
 endif
 
 sLIBdir := $(shell echo $(slibdir) | sed 's,lib\(\|64\)$$,\\\\$$LIB,')

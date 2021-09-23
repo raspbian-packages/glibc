@@ -27,7 +27,12 @@ BENCH_DURATION.
 
 The benchmark suite does function call measurements using architecture-specific
 high precision timing instructions whenever available.  When such support is
-not available, it uses clock_gettime (CLOCK_MONOTONIC).
+not available, it uses clock_gettime (CLOCK_MONOTONIC).  One can force the
+benchmark to use clock_gettime by invoking make as follows:
+
+  $ make USE_CLOCK_GETTIME=1 bench
+
+Again, one must run `make bench-clean' before changing the measurement method.
 
 On x86 processors, RDTSCP instruction provides more precise timing data
 than RDTSC instruction.  All x86 processors since 2010 support RDTSCP
@@ -120,16 +125,24 @@ math functions perform computations at different levels of precision (64-bit vs
 performance of these functions.  One could separate inputs for these domains in
 the same file by using the `name' directive that looks something like this:
 
-  ##name: 240bit
+  ##name: 240bits
 
-See the pow-inputs file for an example of what such a partitioned input file
-would look like.
+All inputs after the ##name: 240bits directive and until the next `name'
+directive (or the end of file) are part of the "240bits" benchmark and
+will be output separately in benchtests/bench.out.  See the pow-inputs file
+for an example of what such a partitioned input file would look like.
 
-It is also possible to measure throughput of a (partial) trace extracted from
-a real workload.  In this case the whole trace is iterated over multiple times
-rather than repeating every input multiple times.  This can be done via:
+It is also possible to measure latency and reciprocal throughput of a
+(partial) trace extracted from a real workload.  In this case the whole trace
+is iterated over multiple times rather than repeating every input multiple
+times.  This can be done via:
 
   ##name: workload-<name>
+
+where <name> is simply used to distinguish between different traces in the
+same file.  To create such a trace, you can simply extract using printf()
+values uses for a specific application, or generate random values in some
+interval.  See the expf-inputs file for an example of this workload mechanism.
 
 Benchmark Sets:
 ==============

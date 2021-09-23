@@ -57,7 +57,8 @@ routines = hurdstartup hurdinit \
 	   errno-loc \
 	   hurdlock \
 	   sysvshm \
-	   $(sig) $(dtable) $(inlines) port-cleanup report-wait xattr
+	   $(sig) $(dtable) $(inlines) \
+	   fd-cleanup port-cleanup report-wait xattr
 sig	= hurdsig hurdfault siginfo hurd-raise preempt-sig \
 	  trampoline longjmp-ts catch-exc exc2signal hurdkill sigunwind \
 	  thread-self thread-cancel intr-msg catch-signal

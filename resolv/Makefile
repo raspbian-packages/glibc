@@ -61,6 +61,11 @@ tests += \
   tst-resolv-search \
   tst-resolv-trailing \
 
+# This test calls __res_context_send directly, which is not exported
+# from libresolv.
+tests-internal += tst-resolv-txnid-collision
+tests-static += tst-resolv-txnid-collision
+
 # These tests need libdl.
 ifeq (yes,$(build-shared))
 tests += \
@@ -124,13 +129,6 @@ tests-special += $(objpfx)mtrace-tst-leaks.out
 xtests-special += $(objpfx)mtrace-tst-leaks2.out
 tests-special += $(objpfx)mtrace-tst-resolv-res_ninit.out
 endif
-endif
-
-ifeq (,$(filter sunrpc,$(subdirs)))
-# The netdb.h we install does '#include <rpc/netdb.h>', so one must exist.
-# If sunrpc/ is built in this configuration, it installs a real <rpc/netdb.h>.
-# If that's not going to happen, install our dummy file.
-headers += rpc/netdb.h
 endif
 
 generated += mtrace-tst-leaks.out tst-leaks.mtrace \
@@ -198,6 +196,8 @@ $(objpfx)tst-resolv-search: $(objpfx)libresolv.so $(shared-thread-library)
 $(objpfx)tst-resolv-trailing: $(objpfx)libresolv.so $(shared-thread-library)
 $(objpfx)tst-resolv-threads: \
   $(libdl) $(objpfx)libresolv.so $(shared-thread-library)
+$(objpfx)tst-resolv-txnid-collision: $(objpfx)libresolv.a \
+  $(static-thread-library)
 $(objpfx)tst-resolv-canonname: \
   $(libdl) $(objpfx)libresolv.so $(shared-thread-library)
 $(objpfx)tst-resolv-trustad: $(objpfx)libresolv.so $(shared-thread-library)

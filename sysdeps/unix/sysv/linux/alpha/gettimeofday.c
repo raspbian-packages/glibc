@@ -18,5 +18,9 @@
 
 /* We can use the generic implementation, but we have to override its
    default symbol version.  */
-#define VERSION_gettimeofday GLIBC_2.1
+#define SET_VERSION
 #include <time/gettimeofday.c>
+
+weak_alias (___gettimeofday, __wgettimeofday);
+default_symbol_version (___gettimeofday, __gettimeofday, GLIBC_2.1);
+default_symbol_version (__wgettimeofday,   gettimeofday, GLIBC_2.1);

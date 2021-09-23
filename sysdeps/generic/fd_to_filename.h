@@ -1,4 +1,4 @@
-/* Query filename corresponding to an open FD.  Generic version.
+/* Query filename corresponding to an open FD.
    Copyright (C) 2001-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -16,12 +16,22 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#define FD_TO_FILENAME_SIZE 0
+#ifndef _FD_TO_FILENAME_H
+#define _FD_TO_FILENAME_H
 
-/* In general there is no generic way to query filename for an open
-   file descriptor.  */
-static inline const char *
-fd_to_filename (int fd, char *buf)
+#include <arch-fd_to_filename.h>
+#include <intprops.h>
+
+struct fd_to_filename
 {
-  return NULL;
-}
+  /* A positive int value has at most 10 decimal digits.  */
+  char buffer[sizeof (FD_TO_FILENAME_PREFIX) + INT_STRLEN_BOUND (int)];
+};
+
+/* Writes a /proc/self/fd-style path for DESCRIPTOR to *STORAGE and
+   returns a pointer to the start of the string.  DESCRIPTOR must be
+   non-negative.  */
+char *__fd_to_filename (int descriptor, struct fd_to_filename *storage)
+  attribute_hidden;
+
+#endif /* _FD_TO_FILENAME_H */

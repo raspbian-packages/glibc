@@ -82,3 +82,52 @@ Index: glibc-upstream/sysdeps/posix/clock_getres.c
        || !valid_nanoseconds (req->tv_nsec)
        || (flags != 0 && flags != TIMER_ABSTIME))
      return EINVAL;
+Index: glibc-2.32/hurd/hurdlock.c
+===================================================================
+--- glibc-2.32.orig/hurd/hurdlock.c
++++ glibc-2.32/hurd/hurdlock.c
+@@ -47,7 +47,7 @@ int
+ __lll_abstimed_wait (void *ptr, int val,
+   const struct timespec *tsp, int flags, int clk)
+ {
+-  if (clk != CLOCK_REALTIME)
++  if (clk != CLOCK_REALTIME && clk != CLOCK_MONOTONIC)
+     return EINVAL;
+ 
+   int mlsec = compute_reltime (tsp, clk);
+@@ -59,7 +59,7 @@ int
+ __lll_abstimed_wait_intr (void *ptr, int val,
+   const struct timespec *tsp, int flags, int clk)
+ {
+-  if (clk != CLOCK_REALTIME)
++  if (clk != CLOCK_REALTIME && clk != CLOCK_MONOTONIC)
+     return EINVAL;
+ 
+   int mlsec = compute_reltime (tsp, clk);
+@@ -79,7 +79,7 @@ int
+ __lll_abstimed_xwait (void *ptr, int lo, int hi,
+   const struct timespec *tsp, int flags, int clk)
+ {
+-  if (clk != CLOCK_REALTIME)
++  if (clk != CLOCK_REALTIME && clk != CLOCK_MONOTONIC)
+     return EINVAL;
+ 
+   int mlsec = compute_reltime (tsp, clk);
+@@ -91,7 +91,7 @@ int
+ __lll_abstimed_lock (void *ptr,
+   const struct timespec *tsp, int flags, int clk)
+ {
+-  if (clk != CLOCK_REALTIME)
++  if (clk != CLOCK_REALTIME && clk != CLOCK_MONOTONIC)
+     return EINVAL;
+ 
+   if (__lll_trylock (ptr) == 0)
+@@ -177,7 +177,7 @@ __lll_robust_abstimed_lock (void *ptr,
+   int wait_time = 25;
+   unsigned int val;
+ 
+-  if (clk != CLOCK_REALTIME)
++  if (clk != CLOCK_REALTIME && clk != CLOCK_MONOTONIC)
+     return EINVAL;
+ 
+   while (1)

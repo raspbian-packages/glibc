@@ -13,10 +13,6 @@ ifeq ($(subdir),math)
 CFLAGS-e_gamma_r.c += -DMATH_SET_BOTH_ROUNDING_MODES
 endif
 
-ifeq ($(subdir),string)
-sysdep_routines += cacheinfo
-endif
-
 ifeq ($(subdir),gmon)
 sysdep_routines += i386-mcount
 endif
@@ -31,10 +27,6 @@ ifeq ($(subdir),csu)
 gen-as-const-headers += link-defines.sym
 else
 stack-align-test-flags += -malign-double
-endif
-
-ifneq (,$(filter -mno-tls-direct-seg-refs,$(CFLAGS)))
-defines += -DNO_TLS_DIRECT_SEG_REFS
 endif
 
 ifeq ($(subdir),elf)

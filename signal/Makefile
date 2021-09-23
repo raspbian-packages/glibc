@@ -23,7 +23,7 @@ subdir	:= signal
 include ../Makeconfig
 
 headers := signal.h sys/signal.h \
-	   bits/signum.h bits/signum-generic.h \
+	   bits/signum-generic.h bits/signum-arch.h \
 	   bits/sigcontext.h bits/sigaction.h \
 	   bits/sigevent-consts.h bits/siginfo-consts.h \
 	   bits/sigstack.h bits/sigthread.h bits/ss_flags.h \
@@ -49,6 +49,7 @@ tests		:= tst-signal tst-sigset tst-sigsimple tst-raise tst-sigset2 \
 		   tst-sigwait-eintr tst-sigaction \
 		   tst-minsigstksz-1 tst-minsigstksz-2 tst-minsigstksz-3 \
 		   tst-minsigstksz-3a tst-minsigstksz-4 \
+		   tst-sigisemptyset
 
 include ../Rules
 

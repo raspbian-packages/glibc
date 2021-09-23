@@ -23,8 +23,9 @@ subdir := benchtests
 include ../Makeconfig
 bench-math := acos acosh asin asinh atan atanh cos cosh exp exp2 log log2 \
 	      modf pow rint sin sincos sinh sqrt tan tanh fmin fmax fminf \
-	      fmaxf powf trunc truncf expf exp2f logf log2f sincosf sinf \
-	      cosf isnan isinf isfinite hypot logb logbf
+	      fmaxf powf trunc truncf roundeven roundevenf expf exp2f logf \
+	      log2f sincosf sinf cosf isnan isinf isfinite hypot logb logbf \
+	      exp10f
 
 bench-pthread := pthread_once thread_create
 
@@ -88,6 +89,8 @@ CFLAGS-bench-fmax.c += -fno-builtin
 CFLAGS-bench-fmaxf.c += -fno-builtin
 CFLAGS-bench-trunc.c += -fno-builtin
 CFLAGS-bench-truncf.c += -fno-builtin
+CFLAGS-bench-roundeven.c += -fno-builtin
+CFLAGS-bench-roundevenf.c += -fno-builtin
 CFLAGS-bench-isnan.c += -fsignaling-nans
 CFLAGS-bench-isinf.c += -fsignaling-nans
 CFLAGS-bench-isfinite.c += -fsignaling-nans
@@ -130,10 +133,16 @@ endif
 
 CPPFLAGS-nonlib += -DDURATION=$(BENCH_DURATION) -D_ISOMAC
 
+# Use clock_gettime to measure performance of functions.  The default is
+# to use the architecture-specific high precision timing instructions.
+ifdef USE_CLOCK_GETTIME
+CPPFLAGS-nonlib += -DUSE_CLOCK_GETTIME
+else
 # On x86 processors, use RDTSCP, instead of RDTSC, to measure performance
 # of functions.  All x86 processors since 2010 support RDTSCP instruction.
 ifdef USE_RDTSCP
 CPPFLAGS-nonlib += -DUSE_RDTSCP
+endif
 endif
 
 DETAILED_OPT :=

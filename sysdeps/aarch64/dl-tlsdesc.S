@@ -74,6 +74,7 @@
 	cfi_startproc
 	.align 2
 _dl_tlsdesc_return:
+	BTI_C
 	DELOUSE (0)
 	ldr	PTR_REG (0), [x0, #PTR_SIZE]
 	RET
@@ -95,6 +96,7 @@ _dl_tlsdesc_return:
 	cfi_startproc
 	.align  2
 _dl_tlsdesc_undefweak:
+	BTI_C
 	str	x1, [sp, #-16]!
 	cfi_adjust_cfa_offset (16)
 	DELOUSE (0)
@@ -142,6 +144,7 @@ _dl_tlsdesc_undefweak:
 	cfi_startproc
 	.align 2
 _dl_tlsdesc_dynamic:
+	BTI_C
 	DELOUSE (0)
 
 	/* Save just enough registers to support fast path, if we fall
@@ -180,6 +183,10 @@ _dl_tlsdesc_dynamic:
 	   callee will trash.  */
 
 	/* Save the remaining registers that we must treat as caller save.  */
+# if HAVE_AARCH64_PAC_RET
+	PACIASP
+	cfi_window_save
+# endif
 # define NSAVEXREGPAIRS 8
 	stp	x29, x30, [sp,#-16*NSAVEXREGPAIRS]!
 	cfi_adjust_cfa_offset (16*NSAVEXREGPAIRS)
@@ -230,6 +237,10 @@ _dl_tlsdesc_dynamic:
 	cfi_adjust_cfa_offset (-16*NSAVEXREGPAIRS)
 	cfi_restore (x29)
 	cfi_restore (x30)
+# if HAVE_AARCH64_PAC_RET
+	AUTIASP
+	cfi_window_save
+# endif
 	b	1b
 	cfi_endproc
 	.size	_dl_tlsdesc_dynamic, .-_dl_tlsdesc_dynamic

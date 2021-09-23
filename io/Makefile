@@ -55,7 +55,7 @@ routines :=								\
 	posix_fadvise posix_fadvise64					\
 	posix_fallocate posix_fallocate64				\
 	sendfile sendfile64 copy_file_range 				\
-	utimensat futimens
+	utimensat futimens file_change_detection
 
 # These routines will be omitted from the libc shared object.
 # Instead the static object files will be included in a special archive
@@ -74,7 +74,7 @@ tests		:= test-utime test-stat test-stat2 test-lfs tst-getcwd \
 		   tst-posix_fallocate tst-posix_fallocate64 \
 		   tst-fts tst-fts-lfs tst-open-tmpfile \
 		   tst-copy_file_range tst-getcwd-abspath tst-lockf \
-		   tst-ftw-lnk
+		   tst-ftw-lnk tst-file_change_detection tst-lchmod
 
 # Likewise for statx, but we do not need static linking here.
 tests-internal += tst-statx

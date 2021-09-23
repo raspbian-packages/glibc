@@ -25,7 +25,7 @@ __pthread_cond_destroy (pthread_cond_t *cond)
   /* Set the wake request flag. */
   unsigned int wrefs = atomic_fetch_or_acquire (&cond->__wrefs, 1);
 
-  __pthread_spin_lock (&cond->__lock);
+  __pthread_spin_wait (&cond->__lock);
   if (cond->__queue)
     {
       __pthread_spin_unlock (&cond->__lock);
@@ -44,4 +44,4 @@ __pthread_cond_destroy (pthread_cond_t *cond)
   return 0;
 }
 
-strong_alias (__pthread_cond_destroy, pthread_cond_destroy);
+weak_alias (__pthread_cond_destroy, pthread_cond_destroy);

@@ -191,6 +191,14 @@ __sem_wait_32_finish (struct new_sem *isem)
 #endif
 
 int
+__sem_clockwait (sem_t *sem, clockid_t clockid,
+		 const struct timespec *restrict timeout)
+{
+  return __sem_timedwait_internal (sem, clockid, timeout);
+}
+weak_alias (__sem_clockwait, sem_clockwait);
+
+int
 __sem_timedwait (sem_t *restrict sem, const struct timespec *restrict timeout)
 {
   return __sem_timedwait_internal (sem, CLOCK_REALTIME, timeout);

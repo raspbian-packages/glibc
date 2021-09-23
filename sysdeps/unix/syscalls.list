@@ -25,12 +25,10 @@ getgid		-	getgid		Ei:	__getgid	getgid
 getgroups	-	getgroups	i:ip	__getgroups	getgroups
 gethostid	-	gethostid	i:	gethostid
 gethostname	-	gethostname	i:bn	__gethostname	gethostname
-getitimer	-	getitimer	i:ip	__getitimer	getitimer
 getpeername	-	getpeername	i:ibN	__getpeername	getpeername
 getpid		-	getpid		Ei:	__getpid	getpid
 getpriority	-	getpriority	i:ii	__getpriority	getpriority
 getrlimit	-	getrlimit	i:ip	__getrlimit	getrlimit
-getrusage	-	getrusage	i:ip	__getrusage	getrusage
 getsockname	-	getsockname	i:ibN	__getsockname	getsockname
 getsockopt	-	getsockopt	i:iiiBN	getsockopt
 getuid		-	getuid		Ei:	__getuid	getuid
@@ -67,7 +65,6 @@ setgid		-	setgid		i:i	__setgid	setgid
 setgroups	-	setgroups	i:ip	setgroups
 sethostid	-	sethostid	i:i	sethostid
 sethostname	-	sethostname	i:pi	sethostname
-setitimer	-	setitimer	i:ipp	__setitimer	setitimer
 setpgid		-	setpgrp		i:ii	__setpgid	setpgid
 setpriority	-	setpriority	i:iii	__setpriority	setpriority
 setregid	-	setregid	i:ii	__setregid	setregid
@@ -81,7 +78,6 @@ sigaction	-	sigaction	i:ipp	__sigaction	sigaction
 sigsuspend	-	sigsuspend	Ci:p	sigsuspend
 socket		-	socket		i:iii	__socket	socket
 socketpair	-	socketpair	i:iiif	socketpair
-sstk		-	sstk		b:i	sstk
 statfs		-	statfs		i:sp	__statfs	statfs
 swapoff		-	swapoff		i:s	swapoff
 swapon		-	swapon		i:s	swapon

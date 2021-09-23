@@ -20,7 +20,7 @@
 #include <pt-internal.h>
 
 extern int __sem_timedwait_internal (sem_t *restrict sem,
-				     clockid_t clock_id,
+				     clockid_t clockid,
 				     const struct timespec *restrict timeout);
 
 int

@@ -5,39 +5,186 @@ See the end for copying conditions.
 Please send GNU C library bug reports via <https://sourceware.org/bugzilla/>
 using `glibc' in the "product" field.
 
-Version 2.31.1
-
 The following bugs are resolved with this release:
-  [19519] iconv(1) with -c option hangs on illegal multi-byte sequences
-    (CVE-2016-10228)
+
   [20019] NULL pointer dereference in libc.so.6 IFUNC due to uninitialized GOT
-  [20543] Please move from .gnu.linkonce to comdat
-  [23296] Data race in setting function descriptor during lazy binding
-  [24973] iconv encounters segmentation fault when converting 0x00 0xfe in
-    EUC-KR to UTF-8 (CVE-2019-25013)
-  [25487] sinl() stack corruption from crafted input (CVE-2020-10029)
-  [25523] MIPS/Linux inline syscall template is miscompiled
-  [25623] test-sysvmsg, test-sysvsem, test-sysvshm fail with 2.31 on 32 bit and
-    old kernel
-  [25635] arm: Wrong sysdep order selection for soft-fp
-  [25639] localedata: Some names of days and months wrongly spelt in
-    Occitan
-  [25715] system() returns wrong errors when posix_spawn fails
-  [25810] x32: Incorrect syscall entries with pointer, off_t and size_t
-  [25896] Incorrect prctl
-  [25902] Bad LOADARGS_N
-  [25933] Off by one error in __strncmp_avx2
-  [25966] Incorrect access of __x86_shared_non_temporal_threshold for x32
-  [25976] nss_compat: internal_end*ent may clobber errno, hiding ERANGE
   [26224] iconv hangs when converting some invalid inputs from several IBM
     character sets (CVE-2020-27618)
-  [26248] Incorrect argument types for INLINE_SETXID_SYSCALL
-  [26332] Incorrect cache line size load causes memory corruption in memset
-  [26383] bind_textdomain_codeset doesn't accept //TRANSLIT anymore
-  [26923] Assertion failure in iconv when converting invalid UCS4 (CVE-2020-29562)
+  [26534] libm.so 2.32 SIGILL in pow() due to FMA4 instruction on non-FMA4
+    system
+  [26555] string: strerrorname_np does not return the documented value
+  [26600] Transaction ID collisions cause slow DNS lookups in getaddrinfo
+  [26636] libc: 32-bit shmctl(IPC_INFO) crashes when shminfo struct is
+    at the end of a memory mapping
+  [26637] libc: semctl SEM_STAT_ANY fails to pass the buffer specified
+    by the caller to the kernel
+  [26639] libc: msgctl IPC_INFO and MSG_INFO return garbage
+  [26853] aarch64: Missing unwind information in statically linked startup code
   [26932] libc: sh: Multiple floating point functions defined as stubs only
   [27130] "rep movsb" performance issue
   [27177] GLIBC_TUNABLES=glibc.cpu.x86_ibt=on:glibc.cpu.x86_shstk=on doesn't work
+
+Version 2.32
+
+Major new features:
+
+* Unicode 13.0.0 Support: Character encoding, character type info, and
+  transliteration tables are all updated to Unicode 13.0.0, using
+  generator scripts contributed by Mike FABIAN (Red Hat).
+
+* New locale added: ckb_IQ (Kurdish/Sorani spoken in Iraq)
+
+* Support for Synopsys ARC HS cores (ARCv2 ISA) running Linux has been
+  added. This port requires at least binutils-2.32, gcc-8.3 and Linux-5.1.
+  Three ABIs are supported:
+
+     - arc-linux-gnu
+     - arc-linux-gnuhf
+     - arceb-linux-gnu
+
+  The arc* ABI is little-endian while arceb is big-endian. All ABIs use
+  64-bit time (y2038 safe) and 64-bit file offsets (LFS default).
+
+* The GNU C Library now loads audit modules listed in the DT_AUDIT and
+  DT_DEPAUDIT dynamic section entries of the main executable.
+
+* powerpc64le supports IEEE128 long double libm/libc redirects when
+  using the -mabi=ieeelongdouble to compile C code on supported GCC
+  toolchains.  It is recommended to use GCC 8 or newer when testing
+  this option.
+
+* To help detect buffer overflows and other out-of-bounds accesses
+  several APIs have been annotated with GCC 'access' attribute.  This
+  should help GCC 10 issue better warnings.
+
+* On Linux, functions the pthread_attr_setsigmask_np and
+  pthread_attr_getsigmask_np have been added.  They allow applications
+  to specify the signal mask of a thread created with pthread_create.
+
+* The GNU C Library now provides the header file <sys/single_threaded.h>
+  which declares the variable __libc_single_threaded.  Applications are
+  encouraged to use this variable for single-thread optimizations,
+  instead of weak references to symbols historically defined in
+  libpthread.
+
+* The functions sigabbrev_np and sigdescr_np have been added.  The
+  sigabbrev_np returns the abbreviated signal name (e.g. "HUP" for SIGHUP)
+  while sigdescr_np returns a string describing the signal number (e.g
+  "Hangup" for SIGHUP).  Different than strsignal, sigdescr_np does not
+  attempt to translate the return description, both functions return
+  NULL for an invalid signal number.
+
+  They should be used instead of sys_siglist or sys_sigabbrev and they
+  are both thread and async-signal safe.  These functions are GNU extensions.
+
+* The functions strerrorname_np and strerrordesc_np have been added.  The
+  strerroname_np returns error number name (e.g. "EINVAL" for EINVAL) while
+  strerrordesc_np returns string describing error number
+  (e.g "Invalid argument" for EINVAL).  Different than strerror,
+  strerrordesc_np does not attempt to translate the return description, both
+  functions return NULL for an invalid error number.
+
+  They should be used instead of sys_errlist and sys_nerr, both are
+  thread and async-signal safe.  These functions are GNU extensions.
+
+* AArch64 now supports standard branch protection security hardening
+  in glibc when it is built with a GCC that is configured with
+  --enable-standard-branch-protection (or if -mbranch-protection=standard
+  flag is passed when building both GCC target libraries and glibc,
+  in either case a custom GCC is needed).  This includes branch target
+  identification (BTI) and pointer authentication for return addresses
+  (PAC-RET).  They require armv8.5-a and armv8.3-a architecture
+  extensions respectively for the protection to be effective,
+  otherwise the used instructions are nops.  User code can use PAC-RET
+  without libc support, but BTI requires a libc that is built with BTI
+  support, otherwise runtime objects linked into user code will not be
+  BTI compatible.
+
+Deprecated and removed features, and other changes affecting compatibility:
+
+* Remove configure option --enable-obsolete-rpc.  Sun RPC is removed
+  from glibc.  This includes the rpcgen program, librpcsvc, and the Sun
+  RPC header files.  Backward compatibility for old programs is kept
+  only for architectures and ABIs that have been added in or before
+  glibc 2.31.  New programs need to use TI-RPC
+  <http://git.linux-nfs.org/?p=steved/libtirpc.git;a=summary> and
+  rpcsvc-proto <https://github.com/thkukuk/rpcsvc-proto>.
+
+* Remove configure option --enable-obsolete-nsl.  libnsl is only built
+  as shared library for backward compatibility and the NSS modules "nis"
+  and "nisplus" are not built at all and libnsl's headers aren't
+  installed.  This compatibility is kept only for architectures and ABIs
+  that have been added in or before version 2.28.  Replacement
+  implementations based on TI-RPC, which additionally support IPv6, are
+  available from <https://github.com/thkukuk/>.  This change does not
+  affect the "compat" NSS module, which does not depended on libnsl
+  since 2.27 and thus can be used without NIS.
+
+* The deprecated <sys/sysctl.h> header and the sysctl function have been
+  removed.  To support old binaries, the sysctl function continues to
+  exist as a compatibility symbol (on those architectures which had it),
+  but always fails with ENOSYS.  This reflects the removal of the system
+  call from all architectures, starting with Linux 5.5.
+
+* The sstk function is no longer available to newly linked binaries.
+  Its implementation always returned with a failure, and the function
+  was not declared in any header file.
+
+* The legacy signal handling functions siginterrupt, sigpause, sighold,
+  sigrelse, sigignore and sigset, and the sigmask macro have been
+  deprecated.  Applications should use the sigsuspend, sigprocmask and
+  sigaction functions instead.
+
+* ldconfig now defaults to the new format for ld.so.cache. glibc has
+  already supported this format for almost 20 years.
+
+* The deprecated arrays sys_siglist, _sys_siglist, and sys_sigabbrev
+  are no longer available to newly linked binaries, and their declarations
+  have been removed from <string.h>.  They are exported solely as
+  compatibility symbols to support old binaries.  All programs should use
+  strsignal instead.
+
+* The deprecated symbols sys_errlist, _sys_errlist, sys_nerr, and _sys_nerr
+  are no longer available to newly linked binaries, and their declarations
+  have been removed from from <stdio.h>.  They are exported solely as
+  compatibility symbols to support old binaries.  All programs should use
+  strerror or strerror_r instead.
+
+* Both strerror and strerror_l now share the same internal buffer in the
+  calling thread, meaning that the returned string pointer may be invalided
+  or contents might be overwritten on subsequent calls in the same thread or
+  if the thread is terminated.  It makes strerror MT-safe.
+
+* Using weak references to libpthread functions such as pthread_create
+  or pthread_key_create to detect the singled-threaded nature of a
+  program is an obsolescent feature.  Future versions of glibc will
+  define pthread_create within libc.so.6 itself, so such checks will
+  always flag the program as multi-threaded.  Applications should check
+  the __libc_single_threaded variable declared in
+  <sys/single_threaded.h> instead.
+
+* The "files" NSS module no longer supports the "key" database (used for
+  secure RPC).  The contents of the /etc/publickey file will be ignored,
+  regardless of the settings in /etc/nsswitch.conf.  (This method of
+  storing RPC keys only supported the obsolete and insecure AUTH_DES
+  flavor of secure RPC.)
+
+* The __morecore and __after_morecore_hook malloc hooks and the default
+  implementation __default_morecore have been deprecated.  Applications
+  should use malloc interposition to change malloc behavior, and mmap to
+  allocate anonymous memory.  A future version of glibc may require that
+  applications which use the malloc hooks must preload a special shared
+  object, to enable the hooks.
+
+* The hesiod NSS module has been deprecated and will be removed in a
+  future version of glibc.  System administrators are encouraged to
+  switch to other approaches for networked account databases, such as
+  LDAP.
+
+Changes to build and runtime requirements:
+
+* powerpc64le requires GCC 7.4 or newer.  This is required for supporting
+  long double redirects.
 
 Security related changes:
 
@@ -48,9 +195,6 @@ Security related changes:
   CVE-2020-10029: Trigonometric functions on x86 targets suffered from stack
   corruption when they were passed a pseudo-zero argument.  Reported by Guido
   Vranken / ForAllSecure Mayhem.
-
-  CVE-2020-1751: A defect in the PowerPC backtrace function could cause an
-  out-of-bounds write when executed in a signal frame context.
 
   CVE-2020-1752: A use-after-free vulnerability in the glob function when
   expanding ~user has been fixed.
@@ -64,8 +208,122 @@ Security related changes:
   invoked with input containing redundant shift sequences in the IBM1364,
   IBM1371, IBM1388, IBM1390, or IBM1399 character sets.
 
-  CVE-2020-29562: An assertion failure has been fixed in the iconv function
-  when invoked with UCS4 input containing an invalid character.
+  CVE-2021-33574: The mq_notify function has a potential use-after-free
+  issue when using a notification type of SIGEV_THREAD and a thread
+  attribute with a non-default affinity mask.
+
+The following bugs are resolved with this release:
+
+  [9809] localedata: ckb_IQ: new Kurdish Sorani locale
+  [10441] manual: Backtraces code example lacks error checking
+  [10815] librt: [timer_create / SIGEV_THREAD] signalmask of
+    timer_sigev_thread dangerous
+  [14231] stdio: stdio-common tests memory requirements
+  [14578] libc: /proc-based emulation for lchmod, fchmodat
+  [16272] dynamic-link: dlopen()ing a DT_FILTER library crashes if
+    filtee has constructor
+  [19519] locale: iconv(1) with -c option hangs on illegal multi-byte
+    sequences (CVE-2016-10228)
+  [19737] admin: Doc page “20.5.2 Infinity and NaN” has incorrect HTML
+    character entities for infinity & pi
+  [20338] libc: Parsing of /etc/gshadow can return bad pointers causing
+    segfaults in applications
+  [20543] libc: Please move from .gnu.linkonce to comdat
+  [22489] network: gcc warns about implicit convertion in
+    ICMP6_FILTER_SETPASS with -Wsign-conversion
+  [22525] localedata: or_IN  LC_COLLATE does not use copy "iso14651_t1"
+  [23294] math: Complex _FloatN functions are redirected to the wrong
+    function with -mlong-double-64
+  [23296] libc: Data race in setting function descriptor during lazy
+    binding
+  [23668] dynamic-link: ldconfig: Default to the new format for
+    ld.so.cache
+  [23819] hurd: hurd: Add C11 thread support
+  [23990] build: test-container error out on failure to exec child.
+  [23991] build: shell-container typo in run_command_array
+  [24638] manual: Error in example of parsing a template string
+  [24654] manual: Wrong declaration of wcschr in libc manual
+  [24943] dynamic-link: Support DT_AUDIT, DT_DEPAUDIT in the dynamic
+    linker
+  [25051] dynamic-link: aarch64, powerpc64 uses surplus static tls for
+    dynamically loaded dsos
+  [25098] nptl: nptl: ctype classification functions are not AS-Safe
+  [25219] libc: improve out-of-bounds checking with GCC 10 attribute
+    access
+  [25262] libc: getcontext/setcontext/swapcontext unnecessarily save and
+    restore EAX, ECX and EDX
+  [25397] dynamic-link: Legacy bitmap doesn't cover jitted code
+  [25414] glob: 'glob' use-after-free bug (CVE-2020-1752)
+  [25420] network: Race condition in resolv_conf.c can result in caching
+    stale configuration forever
+  [25487] math: sinl() stack corruption from crafted input
+    (CVE-2020-10029)
+  [25506] build: configure: broken detection of STT_GNU_IFUNC when GCC
+    defaults to PIE
+  [25523] libc: MIPS/Linux inline syscall template is miscompiled
+  [25620] libc: Signed comparison vulnerability in the ARMv7 memcpy()
+    (CVE-2020-6096)
+  [25623] libc: test-sysvmsg, test-sysvsem, test-sysvshm fail with 2.31
+    on 32 bit and old kernel
+  [25635] libc: arm: Wrong sysdep order selection for soft-fp
+  [25639] localedata: Some names of days and months wrongly spelt in
+    Occitan
+  [25657] libc: sigprocmask() and sigisemptyset() manipulate different
+    amount of sigset_t bytes
+  [25691] stdio: printf: memory leak when printing long multibyte
+    strings
+  [25715] libc: system() returns wrong errors when posix_spawn fails
+  [25733] malloc: mallopt(M_MXFAST) can set global_max_fast to 0
+  [25734] locale: mbrtowc with Big5-HKSCS fails to reset conversion
+    state for conversions that produce two Unicode code points
+  [25765] nptl: Incorrect futex syscall in __pthread_disable_asynccancel
+    for linux x86_64 leads to livelock
+  [25788] dynamic-link: [i386] -fno-omit-frame-pointer in CFLAGS causes
+    test failures, invalid instruction in ld.so
+  [25790] glob: Typo in tst-fnmatch.input
+  [25810] libc: x32: Incorrect syscall entries with pointer, off_t and
+    size_t
+  [25819] localedata: Update locale data to Unicode 13.0.0
+  [25824] libc: Abnormal function of strnlen in aarch64
+  [25887] dynamic-link: Wasted space in _dl_x86_feature_1[1]
+  [25896] libc: Incorrect prctl
+  [25902] libc: Bad LOADARGS_N
+  [25905] dynamic-link: VSX registers are corrupted during PLT
+    resolution when glibc is built with --disable-multi-arch and --with-
+    cpu=power9
+  [25933] string: Off by one error in __strncmp_avx2 when
+    length=VEC_SIZE*4 and strings are at page boundaries can cause a
+    segfault
+  [25942] nptl: Deadlock on stack_cache_lock between __nptl_setxid and
+    exiting detached thread
+  [25966] libc: Incorrect access of __x86_shared_non_temporal_threshold
+    for x32
+  [25976] nss: internal_end*ent in nss_compat may clobber errno, hiding
+    ERANGE
+  [25999] nptl: Use-after-free issue in pthread_getaddr_default_np
+  [26073] math: getpayload() has wrong return value
+  [26076] dynamic-link: dlmopen crashes after failing to load
+    dependencies in audit mode
+  [26120] localedata: column width of  of some Korean
+    JUNGSEONG/JONGSEONG characters wrong (should be 0)
+  [26128] libc: Incorrect bit_cpu_CLFLUSHOPT
+  [26133] libc: Incorrect need_arch_feature_F16C
+  [26137] libc: strtod() triggers exception FE_INEXACT on reasonable
+    input
+  [26149] libc: PKU is usable only if OSPKE is set
+  [26173] libc: powerpc64*: Add @notoc to calls to functions that do not
+    preserve r2
+  [26208] libc: Incorrect bit_cpu_CLFSH
+  [26210] network: Incorrect use of hidden symbols for global sunrpc
+    variables
+  [26211] stdio: printf integer overflow calculating allocation size
+  [26214] stdio: printf_fp double free
+  [26215] stdio: printf_fp memory leak
+  [26232] time: FAIL: support/tst-timespec for 32-bit targets
+  [26258] nss: nss_compat should not read input files with mmap
+  [26332] string: Incorrect cache line size load causes memory
+    corruption in memset
+
 
 Version 2.31
 
@@ -204,6 +462,9 @@ Changes to build and runtime requirements:
   ChangeLog.N where the highest N has the latest entries.
 
 Security related changes:
+
+  CVE-2020-1751: A defect in the PowerPC backtrace function could cause an
+  out-of-bounds write when executed in a signal frame context.
 
   CVE-2019-19126: ld.so failed to ignore the LD_PREFER_MAP_32BIT_EXEC
   environment variable during program execution after a security
@@ -3846,7 +4107,7 @@ Version 2.16
 * Support for the x32 ABI on x86-64 added.  The x32 target is selected by
   configuring glibc with:
 	BUILD_CC='gcc' CC='gcc -mx32' CXX='g++ -mx32'
-  Visit <http://sites.google.com/site/x32abi/> for more x32 ABI info.
+  Visit <https://sites.google.com/site/x32abi/> for more x32 ABI info.
   Implemented by H.J. Lu.
 
 * ISO C11 support:
@@ -5922,5 +6183,5 @@ Copyright (C) 1992-2020 Free Software Foundation, Inc.
 
 Local variables:
 version-control: never
-fill-column: 76
+fill-column: 72
 End:

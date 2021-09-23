@@ -7,7 +7,7 @@
     # all optimized packages. Due to multiarch, this has to be done
     # independently of the architecture of the package.
     all_upgraded=yes
-    for pkg in libc6.1-alphaev67 libc6-xen ; do
+    for pkg in libc6.1-alphaev67 ; do
         ver=$(dpkg-query -l $pkg 2>/dev/null | sed -e '/^[a-z][a-z]\s/!d;/^.[nc]/d;' -e "s/^..\s\+$pkg[0-9a-z:]*\s\+//;s/\s.*//g")
         if [ -n "$ver" ] && [ "$ver" != "CURRENT_VER" ]; then
             all_upgraded=no

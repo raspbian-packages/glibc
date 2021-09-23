@@ -32,6 +32,12 @@ check out (<component>-<version), for 'checkout', or, for actions
 other than 'checkout' and 'bot-cycle', name configurations for which
 compilers or glibc are to be built.
 
+The 'list-compilers' command prints the name of each available
+compiler configuration, without building anything.  The 'list-glibcs'
+command prints the name of each glibc compiler configuration, followed
+by the space, followed by the name of the compiler configuration used
+for building this glibc variant.
+
 """
 
 import argparse
@@ -80,7 +86,7 @@ class Context(object):
     """The global state associated with builds in a given directory."""
 
     def __init__(self, topdir, parallelism, keep, replace_sources, strip,
-                 full_gcc, action):
+                 full_gcc, action, shallow=False):
         """Initialize the context."""
         self.topdir = topdir
         self.parallelism = parallelism
@@ -88,6 +94,7 @@ class Context(object):
         self.replace_sources = replace_sources
         self.strip = strip
         self.full_gcc = full_gcc
+        self.shallow = shallow
         self.srcdir = os.path.join(topdir, 'src')
         self.versions_json = os.path.join(self.srcdir, 'versions.json')
         self.build_state_json = os.path.join(topdir, 'build-state.json')
@@ -102,7 +109,7 @@ class Context(object):
         self.wrapper = os.path.join(self.builddir, 'wrapper')
         self.save_logs = os.path.join(self.builddir, 'save-logs')
         self.script_text = self.get_script_text()
-        if action != 'checkout':
+        if action not in ('checkout', 'list-compilers', 'list-glibcs'):
             self.build_triplet = self.get_build_triplet()
             self.glibc_version = self.get_glibc_version()
         self.configs = {}
@@ -155,6 +162,15 @@ class Context(object):
                                        'cfg': ['--disable-multi-arch']}])
         self.add_config(arch='aarch64_be',
                         os_name='linux-gnu')
+        self.add_config(arch='arc',
+                        os_name='linux-gnu',
+                        gcc_cfg=['--disable-multilib', '--with-cpu=hs38'])
+        self.add_config(arch='arc',
+                        os_name='linux-gnuhf',
+                        gcc_cfg=['--disable-multilib', '--with-cpu=hs38_linux'])
+        self.add_config(arch='arceb',
+                        os_name='linux-gnu',
+                        gcc_cfg=['--disable-multilib', '--with-cpu=hs38'])
         self.add_config(arch='alpha',
                         os_name='linux-gnu')
         self.add_config(arch='arm',
@@ -388,9 +404,6 @@ class Context(object):
                                 {'arch': 'i686', 'ccopts': '-m32 -march=i686'}],
                         extra_glibcs=[{'variant': 'disable-multi-arch',
                                        'cfg': ['--disable-multi-arch']},
-                                      {'variant': 'enable-obsolete',
-                                       'cfg': ['--enable-obsolete-rpc',
-                                               '--enable-obsolete-nsl']},
                                       {'variant': 'static-pie',
                                        'cfg': ['--enable-static-pie']},
                                       {'variant': 'x32-static-pie',
@@ -404,11 +417,6 @@ class Context(object):
                                        'arch': 'i686',
                                        'ccopts': '-m32 -march=i686',
                                        'cfg': ['--disable-multi-arch']},
-                                      {'variant': 'enable-obsolete',
-                                       'arch': 'i686',
-                                       'ccopts': '-m32 -march=i686',
-                                       'cfg': ['--enable-obsolete-rpc',
-                                               '--enable-obsolete-nsl']},
                                       {'arch': 'i486',
                                        'ccopts': '-m32 -march=i486'},
                                       {'arch': 'i586',
@@ -477,9 +485,19 @@ class Context(object):
                 exit(1)
             self.bot()
             return
-        if action == 'host-libraries' and configs:
-            print('error: configurations specified for host-libraries')
+        if action in ('host-libraries', 'list-compilers',
+                      'list-glibcs') and configs:
+            print('error: configurations specified for ' + action)
             exit(1)
+        if action == 'list-compilers':
+            for name in sorted(self.configs.keys()):
+                print(name)
+            return
+        if action == 'list-glibcs':
+            for config in sorted(self.glibc_configs.values(),
+                                 key=lambda c: c.name):
+                print(config.name, config.compiler.name)
+            return
         self.clear_last_build_state(action)
         build_time = datetime.datetime.utcnow()
         if action == 'host-libraries':
@@ -729,13 +747,13 @@ class Context(object):
 
     def checkout(self, versions):
         """Check out the desired component versions."""
-        default_versions = {'binutils': 'vcs-2.33',
-                            'gcc': 'vcs-9',
+        default_versions = {'binutils': 'vcs-2.35',
+                            'gcc': 'vcs-10',
                             'glibc': 'vcs-mainline',
-                            'gmp': '6.1.2',
-                            'linux': '5.4',
+                            'gmp': '6.2.0',
+                            'linux': '5.7',
                             'mpc': '1.1.0',
-                            'mpfr': '4.0.2',
+                            'mpfr': '4.1.0',
                             'mig': 'vcs-mainline',
                             'gnumach': 'vcs-mainline',
                             'hurd': 'vcs-mainline'}
@@ -852,7 +870,12 @@ class Context(object):
             subprocess.run(['git', 'pull', '-q'],
                            cwd=self.component_srcdir(component), check=True)
         else:
-            subprocess.run(['git', 'clone', '-q', '-b', git_branch, git_url,
+            if self.shallow:
+                depth_arg = ('--depth', '1')
+            else:
+                depth_arg = ()
+            subprocess.run(['git', 'clone', '-q', '-b', git_branch,
+                            *depth_arg, git_url,
                             self.component_srcdir(component)], check=True)
         r = subprocess.run(['git', 'rev-parse', 'HEAD'],
                            cwd=self.component_srcdir(component),
@@ -870,8 +893,7 @@ class Context(object):
         # Some other files have such dependencies but do not need to
         # be touched because nothing in a build depends on the files
         # in question.
-        for f in ('sysdeps/gnu/errlist.c',
-                  'sysdeps/mach/hurd/bits/errno.h'):
+        for f in ('sysdeps/mach/hurd/bits/errno.h',):
             to_touch = os.path.join(srcdir, f)
             subprocess.run(['touch', '-c', to_touch], check=True)
         for dirpath, dirnames, filenames in os.walk(srcdir):
@@ -1202,6 +1224,7 @@ def install_linux_headers(policy, cmdlist):
     """Install Linux kernel headers."""
     arch_map = {'aarch64': 'arm64',
                 'alpha': 'alpha',
+                'arc': 'arc',
                 'arm': 'arm',
                 'csky': 'csky',
                 'hppa': 'parisc',
@@ -1290,6 +1313,7 @@ class Config(object):
         cmdlist.use_path(self.bindir)
         self.build_cross_tool(cmdlist, 'binutils', 'binutils',
                               ['--disable-gdb',
+                               '--disable-gdbserver',
                                '--disable-libdecnumber',
                                '--disable-readline',
                                '--disable-sim'])
@@ -1770,13 +1794,16 @@ def get_parser():
                         help='Strip installed glibc libraries')
     parser.add_argument('--full-gcc', action='store_true',
                         help='Build GCC with all languages and libsanitizer')
+    parser.add_argument('--shallow', action='store_true',
+                        help='Do not download Git history during checkout')
     parser.add_argument('topdir',
                         help='Toplevel working directory')
     parser.add_argument('action',
                         help='What to do',
                         choices=('checkout', 'bot-cycle', 'bot',
                                  'host-libraries', 'compilers', 'glibcs',
-                                 'update-syscalls'))
+                                 'update-syscalls', 'list-compilers',
+                                 'list-glibcs'))
     parser.add_argument('configs',
                         help='Versions to check out or configurations to build',
                         nargs='*')
@@ -1789,7 +1816,8 @@ def main(argv):
     opts = parser.parse_args(argv)
     topdir = os.path.abspath(opts.topdir)
     ctx = Context(topdir, opts.parallelism, opts.keep, opts.replace_sources,
-                  opts.strip, opts.full_gcc, opts.action)
+                  opts.strip, opts.full_gcc, opts.action,
+                  shallow=opts.shallow)
     ctx.run_builds(opts.action, opts.configs)
 
 

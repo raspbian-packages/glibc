@@ -15,12 +15,6 @@ struct etherent
   struct ether_addr e_addr;
 };
 
-struct parser_data;
-extern int _nss_files_parse_etherent (char *line, struct etherent *result,
-				      struct parser_data *data,
-				      size_t datalen, int *errnop);
-libnss_files_hidden_proto (_nss_files_parse_etherent)
-
 #define DECLARE_NSS_PROTOTYPES(service)					      \
 extern enum nss_status _nss_ ## service ## _setetherent (int __stayopen);     \
 extern enum nss_status _nss_ ## service ## _endetherent (void);		      \
@@ -36,8 +30,6 @@ extern enum nss_status _nss_ ## service ## _getntohost_r		      \
 			char *buffer, size_t buflen, int *errnop);
 
 DECLARE_NSS_PROTOTYPES (files)
-DECLARE_NSS_PROTOTYPES (nis)
-DECLARE_NSS_PROTOTYPES (nisplus)
 
 #undef DECLARE_NSS_PROTOTYPES
 

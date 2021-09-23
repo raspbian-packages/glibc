@@ -145,7 +145,7 @@ Index: glibc-2.31/sysdeps/htl/sem-open.c
 -sem_t *
 -__sem_open (const char *name, int open_flags, ...)
 -{
--  errno = EOPNOTSUPP;
+-  errno = ENOSYS;
 -  return SEM_FAILED;
 -}
 -

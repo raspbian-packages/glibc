@@ -21,7 +21,7 @@ Index: glibc-2.31/htl/pt-create.c
 @@ -80,6 +80,7 @@ __pthread_create (pthread_t * thread, co
    return err;
  }
- strong_alias (__pthread_create, pthread_create)
+ weak_alias (__pthread_create, pthread_create)
 +hidden_def (__pthread_create)
  
  /* Internal version of pthread_create.  See comment in
@@ -33,7 +33,7 @@ Index: glibc-2.31/htl/pt-detach.c
 @@ -78,3 +78,4 @@ __pthread_detach (pthread_t thread)
    return err;
  }
- strong_alias (__pthread_detach, pthread_detach)
+ weak_alias (__pthread_detach, pthread_detach)
 +hidden_def (__pthread_detach)
 Index: glibc-2.31/sysdeps/htl/pthreadP.h
 ===================================================================

@@ -61,7 +61,6 @@ libpthread-routines := pt-attr pt-attr-destroy pt-attr-getdetachstate	    \
 	pt-testcancel							    \
 	pt-cancel							    \
 									    \
-	pt-mutexattr							    \
 	pt-mutexattr-destroy pt-mutexattr-init				    \
 	pt-mutexattr-getprioceiling pt-mutexattr-getprotocol		    \
 	pt-mutexattr-getpshared pt-mutexattr-gettype			    \
@@ -69,7 +68,7 @@ libpthread-routines := pt-attr pt-attr-destroy pt-attr-getdetachstate	    \
 	pt-mutexattr-setpshared pt-mutexattr-settype			    \
 	pt-mutexattr-getrobust pt-mutexattr-setrobust			    \
 									    \
-	pt-mutex-init pt-mutex-destroy					    \
+	pt-mutex-init pt-mutex-destroy pt-mutex-checklocked		    \
 	pt-mutex-lock pt-mutex-trylock pt-mutex-timedlock		    \
 	pt-mutex-unlock							    \
 	pt-mutex-transfer-np						    \
@@ -135,6 +134,7 @@ libpthread-routines := pt-attr pt-attr-destroy pt-attr-getdetachstate	    \
 									    \
 	shm-directory							    \
 									    \
+	cancellation							    \
 	cthreads-compat							    \
 	herrno								    \
 	$(SYSDEPS)
@@ -215,7 +215,7 @@ $(addprefix $(objpfx), \
   $(filter-out $(tests-static) $(xtests-static) $(tests-reverse) \
     $(tests-nolibpthread), \
     $(tests) $(tests-internal) $(xtests) $(test-srcs) $(tests-container))): \
-       $(objpfx)libpthread.so
+	$(objpfx)libpthread.so
 $(objpfx)tst-unload: $(libdl)
 # $(objpfx)../libc.so is used instead of $(common-objpfx)libc.so,
 # since otherwise libpthread.so comes before libc.so when linking.

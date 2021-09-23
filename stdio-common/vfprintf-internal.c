@@ -31,6 +31,7 @@
 #include <locale/localeinfo.h>
 #include <stdio.h>
 #include <scratch_buffer.h>
+#include <intprops.h>
 
 /* This code is shared between the standard stdio implementation found
    in GNU C library and the libio implementation originally found in
@@ -45,10 +46,6 @@
 #include <wctype.h>
 #endif
 
-/* In some cases we need extra space for all the output which is not
-   counted in the width of the string. We assume 32 characters is
-   enough.  */
-#define EXTSIZ		32
 #define ARGCHECK(S, Format) \
   do									      \
     {									      \
@@ -119,22 +116,38 @@
   while (0)
 #endif
 
-#define done_add(val) \
-  do {									      \
-    unsigned int _val = val;						      \
-    assert ((unsigned int) done < (unsigned int) INT_MAX);		      \
-    if (__glibc_unlikely (INT_MAX - done < _val))			      \
-      {									      \
-	done = -1;							      \
-	 __set_errno (EOVERFLOW);					      \
-	goto all_done;							      \
-      }									      \
-    done += _val;							      \
-  } while (0)
+/* Add LENGTH to DONE.  Return the new value of DONE, or -1 on
+   overflow (and set errno accordingly).  */
+static inline int
+done_add_func (size_t length, int done)
+{
+  if (done < 0)
+    return done;
+  int ret;
+  if (INT_ADD_WRAPV (done, length, &ret))
+    {
+      __set_errno (EOVERFLOW);
+      return -1;
+    }
+  return ret;
+}
+
+#define done_add(val)							\
+  do									\
+    {									\
+      /* Ensure that VAL has a type similar to int.  */			\
+      _Static_assert (sizeof (val) == sizeof (int), "value int size");	\
+      _Static_assert ((__typeof__ (val)) -1 < 0, "value signed");	\
+      done = done_add_func ((val), done);				\
+      if (done < 0)							\
+	goto all_done;							\
+    }									\
+  while (0)
 
 #ifndef COMPILE_WPRINTF
 # define vfprintf	__vfprintf_internal
 # define CHAR_T		char
+# define OTHER_CHAR_T   wchar_t
 # define UCHAR_T	unsigned char
 # define INT_T		int
 typedef const char *THOUSANDS_SEP_T;
@@ -143,25 +156,14 @@ typedef const char *THOUSANDS_SEP_T;
 # define STR_LEN(Str)	strlen (Str)
 
 # define PUT(F, S, N)	_IO_sputn ((F), (S), (N))
-# define PAD(Padchar) \
-  do {									      \
-    if (width > 0)							      \
-      {									      \
-	ssize_t written = _IO_padn (s, (Padchar), width);		      \
-	if (__glibc_unlikely (written != width))			      \
-	  {								      \
-	    done = -1;							      \
-	    goto all_done;						      \
-	  }								      \
-	done_add (written);						      \
-      }									      \
-  } while (0)
 # define PUTC(C, F)	_IO_putc_unlocked (C, F)
 # define ORIENT		if (_IO_vtable_offset (s) == 0 && _IO_fwide (s, -1) != -1)\
 			  return -1
+# define CONVERT_FROM_OTHER_STRING __wcsrtombs
 #else
 # define vfprintf	__vfwprintf_internal
 # define CHAR_T		wchar_t
+# define OTHER_CHAR_T   char
 /* This is a hack!!!  There should be a type uwchar_t.  */
 # define UCHAR_T	unsigned int /* uwchar_t */
 # define INT_T		wint_t
@@ -173,21 +175,9 @@ typedef wchar_t THOUSANDS_SEP_T;
 # include <_itowa.h>
 
 # define PUT(F, S, N)	_IO_sputn ((F), (S), (N))
-# define PAD(Padchar) \
-  do {									      \
-    if (width > 0)							      \
-      {									      \
-	ssize_t written = _IO_wpadn (s, (Padchar), width);		      \
-	if (__glibc_unlikely (written != width))			      \
-	  {								      \
-	    done = -1;							      \
-	    goto all_done;						      \
-	  }								      \
-	done_add (written);						      \
-      }									      \
-  } while (0)
 # define PUTC(C, F)	_IO_putwc_unlocked (C, F)
 # define ORIENT		if (_IO_fwide (s, 1) != 1) return -1
+# define CONVERT_FROM_OTHER_STRING __mbsrtowcs
 
 # undef _itoa
 # define _itoa(Val, Buf, Base, Case) _itowa (Val, Buf, Base, Case)
@@ -195,6 +185,33 @@ typedef wchar_t THOUSANDS_SEP_T;
 # undef EOF
 # define EOF WEOF
 #endif
+
+static inline int
+pad_func (FILE *s, CHAR_T padchar, int width, int done)
+{
+  if (width > 0)
+    {
+      ssize_t written;
+#ifndef COMPILE_WPRINTF
+      written = _IO_padn (s, padchar, width);
+#else
+      written = _IO_wpadn (s, padchar, width);
+#endif
+      if (__glibc_unlikely (written != width))
+	return -1;
+      return done_add_func (width, done);
+    }
+  return done;
+}
+
+#define PAD(Padchar)							\
+  do									\
+    {									\
+      done = pad_func (s, (Padchar), width, done);			\
+      if (done < 0)							\
+	goto all_done;							\
+    }									\
+  while (0)
 
 #include "_i18n_number.h"
 
@@ -215,24 +232,115 @@ typedef wchar_t THOUSANDS_SEP_T;
     }									      \
   while (0)
 
-#define outstring(String, Len)						      \
-  do									      \
-    {									      \
-      assert ((size_t) done <= (size_t) INT_MAX);			      \
-      if ((size_t) PUT (s, (String), (Len)) != (size_t) (Len))		      \
-	{								      \
-	  done = -1;							      \
-	  goto all_done;						      \
-	}								      \
-      if (__glibc_unlikely (INT_MAX - done < (Len)))			      \
-      {									      \
-	done = -1;							      \
-	 __set_errno (EOVERFLOW);					      \
-	goto all_done;							      \
-      }									      \
-      done += (Len);							      \
-    }									      \
-  while (0)
+static inline int
+outstring_func (FILE *s, const UCHAR_T *string, size_t length, int done)
+{
+  assert ((size_t) done <= (size_t) INT_MAX);
+  if ((size_t) PUT (s, string, length) != (size_t) (length))
+    return -1;
+  return done_add_func (length, done);
+}
+
+#define outstring(String, Len)						\
+  do									\
+    {									\
+      const void *string_ = (String);					\
+      done = outstring_func (s, string_, (Len), done);			\
+      if (done < 0)							\
+	goto all_done;							\
+    }									\
+   while (0)
+
+/* Write the string SRC to S.  If PREC is non-negative, write at most
+   PREC bytes.  If LEFT is true, perform left justification.  */
+static int
+outstring_converted_wide_string (FILE *s, const OTHER_CHAR_T *src, int prec,
+				 int width, bool left, int done)
+{
+  /* Use a small buffer to combine processing of multiple characters.
+     CONVERT_FROM_OTHER_STRING expects the buffer size in (wide)
+     characters, and buf_length counts that.  */
+  enum { buf_length = 256 / sizeof (CHAR_T) };
+  CHAR_T buf[buf_length];
+  _Static_assert (sizeof (buf) > MB_LEN_MAX,
+		  "buffer is large enough for a single multi-byte character");
+
+  /* Add the initial padding if needed.  */
+  if (width > 0 && !left)
+    {
+      /* Make a first pass to find the output width, so that we can
+	 add the required padding.  */
+      mbstate_t mbstate = { 0 };
+      const OTHER_CHAR_T *src_copy = src;
+      size_t total_written;
+      if (prec < 0)
+	total_written = CONVERT_FROM_OTHER_STRING
+	  (NULL, &src_copy, 0, &mbstate);
+      else
+	{
+	  /* The source might not be null-terminated.  Enforce the
+	     limit manually, based on the output length.  */
+	  total_written = 0;
+	  size_t limit = prec;
+	  while (limit > 0 && src_copy != NULL)
+	    {
+	      size_t write_limit = buf_length;
+	      if (write_limit > limit)
+		write_limit = limit;
+	      size_t written = CONVERT_FROM_OTHER_STRING
+		(buf, &src_copy, write_limit, &mbstate);
+	      if (written == (size_t) -1)
+		return -1;
+	      if (written == 0)
+		break;
+	      total_written += written;
+	      limit -= written;
+	    }
+	}
+
+      /* Output initial padding.  */
+      if (total_written < width)
+	{
+	  done = pad_func (s, L_(' '), width - total_written, done);
+	  if (done < 0)
+	    return done;
+	}
+    }
+
+  /* Convert the input string, piece by piece.  */
+  size_t total_written = 0;
+  {
+    mbstate_t mbstate = { 0 };
+    /* If prec is negative, remaining is not decremented, otherwise,
+      it serves as the write limit.  */
+    size_t remaining = -1;
+    if (prec >= 0)
+      remaining = prec;
+    while (remaining > 0 && src != NULL)
+      {
+	size_t write_limit = buf_length;
+	if (remaining < write_limit)
+	  write_limit = remaining;
+	size_t written = CONVERT_FROM_OTHER_STRING
+	  (buf, &src, write_limit, &mbstate);
+	if (written == (size_t) -1)
+	  return -1;
+	if (written == 0)
+	  break;
+	done = outstring_func (s, (const UCHAR_T *) buf, written, done);
+	if (done < 0)
+	  return done;
+	total_written += written;
+	if (prec >= 0)
+	  remaining -= written;
+      }
+  }
+
+  /* Add final padding.  */
+  if (width > 0 && left && total_written < width)
+    return pad_func (s, L_(' '), width - total_written, done);
+  return done;
+}
 
 /* For handling long_double and longlong we use the same flag.  If
    `long' and `long long' are effectively the same type define it to
@@ -1022,7 +1130,6 @@ static const uint8_t jump_table[] =
     LABEL (form_string):						      \
       {									      \
 	size_t len;							      \
-	int string_malloced;						      \
 									      \
 	/* The string argument could in fact be `char *' or `wchar_t *'.      \
 	   But this should not make a difference here.  */		      \
@@ -1034,7 +1141,6 @@ static const uint8_t jump_table[] =
 	/* Entry point for printing other strings.  */			      \
       LABEL (print_string):						      \
 									      \
-	string_malloced = 0;						      \
 	if (string == NULL)						      \
 	  {								      \
 	    /* Write "(null)" if there's space.  */			      \
@@ -1051,41 +1157,12 @@ static const uint8_t jump_table[] =
 	  }								      \
 	else if (!is_long && spec != L_('S'))				      \
 	  {								      \
-	    /* This is complicated.  We have to transform the multibyte	      \
-	       string into a wide character string.  */			      \
-	    const char *mbs = (const char *) string;			      \
-	    mbstate_t mbstate;						      \
-									      \
-	    len = prec != -1 ? __strnlen (mbs, (size_t) prec) : strlen (mbs); \
-									      \
-	    /* Allocate dynamically an array which definitely is long	      \
-	       enough for the wide character version.  Each byte in the	      \
-	       multi-byte string can produce at most one wide character.  */  \
-	    if (__glibc_unlikely (len > SIZE_MAX / sizeof (wchar_t)))	      \
-	      {								      \
-		__set_errno (EOVERFLOW);				      \
-		done = -1;						      \
-		goto all_done;						      \
-	      }								      \
-	    else if (__libc_use_alloca (len * sizeof (wchar_t)))	      \
-	      string = (CHAR_T *) alloca (len * sizeof (wchar_t));	      \
-	    else if ((string = (CHAR_T *) malloc (len * sizeof (wchar_t)))    \
-		     == NULL)						      \
-	      {								      \
-		done = -1;						      \
-		goto all_done;						      \
-	      }								      \
-	    else							      \
-	      string_malloced = 1;					      \
-									      \
-	    memset (&mbstate, '\0', sizeof (mbstate_t));		      \
-	    len = __mbsrtowcs (string, &mbs, len, &mbstate);		      \
-	    if (len == (size_t) -1)					      \
-	      {								      \
-		/* Illegal multibyte character.  */			      \
-		done = -1;						      \
-		goto all_done;						      \
-	      }								      \
+	    done = outstring_converted_wide_string			      \
+	      (s, (const char *) string, prec, width, left, done);	      \
+	    if (done < 0)						      \
+	      goto all_done;						      \
+	    /* The padding has already been written.  */		      \
+	    break;							      \
 	  }								      \
 	else								      \
 	  {								      \
@@ -1108,8 +1185,6 @@ static const uint8_t jump_table[] =
 	outstring (string, len);					      \
 	if (left)							      \
 	  PAD (L' ');							      \
-	if (__glibc_unlikely (string_malloced))				      \
-	  free (string);						      \
       }									      \
       break;
 #else
@@ -1158,7 +1233,6 @@ static const uint8_t jump_table[] =
     LABEL (form_string):						      \
       {									      \
 	size_t len;							      \
-	int string_malloced;						      \
 									      \
 	/* The string argument could in fact be `char *' or `wchar_t *'.      \
 	   But this should not make a difference here.  */		      \
@@ -1170,7 +1244,6 @@ static const uint8_t jump_table[] =
 	/* Entry point for printing other strings.  */			      \
       LABEL (print_string):						      \
 									      \
-	string_malloced = 0;						      \
 	if (string == NULL)						      \
 	  {								      \
 	    /* Write "(null)" if there's space.  */			      \
@@ -1196,51 +1269,12 @@ static const uint8_t jump_table[] =
 	  }								      \
 	else								      \
 	  {								      \
-	    const wchar_t *s2 = (const wchar_t *) string;		      \
-	    mbstate_t mbstate;						      \
-									      \
-	    memset (&mbstate, '\0', sizeof (mbstate_t));		      \
-									      \
-	    if (prec >= 0)						      \
-	      {								      \
-		/* The string `s2' might not be NUL terminated.  */	      \
-		if (__libc_use_alloca (prec))				      \
-		  string = (char *) alloca (prec);			      \
-		else if ((string = (char *) malloc (prec)) == NULL)	      \
-		  {							      \
-		    done = -1;						      \
-		    goto all_done;					      \
-		  }							      \
-		else							      \
-		  string_malloced = 1;					      \
-		len = __wcsrtombs (string, &s2, prec, &mbstate);	      \
-	      }								      \
-	    else							      \
-	      {								      \
-		len = __wcsrtombs (NULL, &s2, 0, &mbstate);		      \
-		if (len != (size_t) -1)					      \
-		  {							      \
-		    assert (__mbsinit (&mbstate));			      \
-		    s2 = (const wchar_t *) string;			      \
-		    if (__libc_use_alloca (len + 1))			      \
-		      string = (char *) alloca (len + 1);		      \
-		    else if ((string = (char *) malloc (len + 1)) == NULL)    \
-		      {							      \
-			done = -1;					      \
-			goto all_done;					      \
-		      }							      \
-		    else						      \
-		      string_malloced = 1;				      \
-		    (void) __wcsrtombs (string, &s2, len + 1, &mbstate);      \
-		  }							      \
-	      }								      \
-									      \
-	    if (len == (size_t) -1)					      \
-	      {								      \
-		/* Illegal wide-character string.  */			      \
-		done = -1;						      \
-		goto all_done;						      \
-	      }								      \
+	    done = outstring_converted_wide_string			      \
+	      (s, (const wchar_t *) string, prec, width, left, done);	      \
+	    if (done < 0)						      \
+	      goto all_done;						      \
+	    /* The padding has already been written.  */		      \
+	    break;							      \
 	  }								      \
 									      \
 	if ((width -= len) < 0)						      \
@@ -1254,8 +1288,6 @@ static const uint8_t jump_table[] =
 	outstring (string, len);					      \
 	if (left)							      \
 	  PAD (' ');							      \
-	if (__glibc_unlikely (string_malloced))			              \
-	  free (string);						      \
       }									      \
       break;
 #endif
@@ -1307,7 +1339,6 @@ vfprintf (FILE *s, const CHAR_T *format, va_list ap, unsigned int mode_flags)
 
   /* Buffer intermediate results.  */
   CHAR_T work_buffer[WORK_BUFFER_SIZE];
-  CHAR_T *workstart = NULL;
   CHAR_T *workend;
 
   /* We have to save the original argument pointer.  */
@@ -1416,7 +1447,6 @@ vfprintf (FILE *s, const CHAR_T *format, va_list ap, unsigned int mode_flags)
       UCHAR_T pad = L_(' ');/* Padding character.  */
       CHAR_T spec;
 
-      workstart = NULL;
       workend = work_buffer + WORK_BUFFER_SIZE;
 
       /* Get current character in format string.  */
@@ -1508,31 +1538,6 @@ vfprintf (FILE *s, const CHAR_T *format, va_list ap, unsigned int mode_flags)
 	    pad = L_(' ');
 	    left = 1;
 	  }
-
-	if (__glibc_unlikely (width >= INT_MAX / sizeof (CHAR_T) - EXTSIZ))
-	  {
-	    __set_errno (EOVERFLOW);
-	    done = -1;
-	    goto all_done;
-	  }
-
-	if (width >= WORK_BUFFER_SIZE - EXTSIZ)
-	  {
-	    /* We have to use a special buffer.  */
-	    size_t needed = ((size_t) width + EXTSIZ) * sizeof (CHAR_T);
-	    if (__libc_use_alloca (needed))
-	      workend = (CHAR_T *) alloca (needed) + width + EXTSIZ;
-	    else
-	      {
-		workstart = (CHAR_T *) malloc (needed);
-		if (workstart == NULL)
-		  {
-		    done = -1;
-		    goto all_done;
-		  }
-		workend = workstart + width + EXTSIZ;
-	      }
-	  }
       }
       JUMP (*f, step1_jumps);
 
@@ -1540,31 +1545,13 @@ vfprintf (FILE *s, const CHAR_T *format, va_list ap, unsigned int mode_flags)
     LABEL (width):
       width = read_int (&f);
 
-      if (__glibc_unlikely (width == -1
-			    || width >= INT_MAX / sizeof (CHAR_T) - EXTSIZ))
+      if (__glibc_unlikely (width == -1))
 	{
 	  __set_errno (EOVERFLOW);
 	  done = -1;
 	  goto all_done;
 	}
 
-      if (width >= WORK_BUFFER_SIZE - EXTSIZ)
-	{
-	  /* We have to use a special buffer.  */
-	  size_t needed = ((size_t) width + EXTSIZ) * sizeof (CHAR_T);
-	  if (__libc_use_alloca (needed))
-	    workend = (CHAR_T *) alloca (needed) + width + EXTSIZ;
-	  else
-	    {
-	      workstart = (CHAR_T *) malloc (needed);
-	      if (workstart == NULL)
-		{
-		  done = -1;
-		  goto all_done;
-		}
-	      workend = workstart + width + EXTSIZ;
-	    }
-	}
       if (*f == L_('$'))
 	/* Oh, oh.  The argument comes from a positional parameter.  */
 	goto do_positional;
@@ -1613,34 +1600,6 @@ vfprintf (FILE *s, const CHAR_T *format, va_list ap, unsigned int mode_flags)
 	}
       else
 	prec = 0;
-      if (prec > width && prec > WORK_BUFFER_SIZE - EXTSIZ)
-	{
-	  /* Deallocate any previously allocated buffer because it is
-	     too small.  */
-	  if (__glibc_unlikely (workstart != NULL))
-	    free (workstart);
-	  workstart = NULL;
-	  if (__glibc_unlikely (prec >= INT_MAX / sizeof (CHAR_T) - EXTSIZ))
-	    {
-	      __set_errno (EOVERFLOW);
-	      done = -1;
-	      goto all_done;
-	    }
-	  size_t needed = ((size_t) prec + EXTSIZ) * sizeof (CHAR_T);
-
-	  if (__libc_use_alloca (needed))
-	    workend = (CHAR_T *) alloca (needed) + prec + EXTSIZ;
-	  else
-	    {
-	      workstart = (CHAR_T *) malloc (needed);
-	      if (workstart == NULL)
-		{
-		  done = -1;
-		  goto all_done;
-		}
-	      workend = workstart + prec + EXTSIZ;
-	    }
-	}
       JUMP (*f, step2_jumps);
 
       /* Process 'h' modifier.  There might another 'h' following.  */
@@ -1704,10 +1663,6 @@ vfprintf (FILE *s, const CHAR_T *format, va_list ap, unsigned int mode_flags)
       /* The format is correctly handled.  */
       ++nspecs_done;
 
-      if (__glibc_unlikely (workstart != NULL))
-	free (workstart);
-      workstart = NULL;
-
       /* Look for next format specifier.  */
 #ifdef COMPILE_WPRINTF
       f = __find_specwc ((end_of_spec = ++f));
@@ -1725,18 +1680,11 @@ vfprintf (FILE *s, const CHAR_T *format, va_list ap, unsigned int mode_flags)
 
   /* Hand off processing for positional parameters.  */
 do_positional:
-  if (__glibc_unlikely (workstart != NULL))
-    {
-      free (workstart);
-      workstart = NULL;
-    }
   done = printf_positional (s, format, readonly_format, ap, &ap_save,
 			    done, nspecs_done, lead_str_end, work_buffer,
 			    save_errno, grouping, thousands_sep, mode_flags);
 
  all_done:
-  if (__glibc_unlikely (workstart != NULL))
-    free (workstart);
   /* Unlock the stream.  */
   _IO_funlockfile (s);
   _IO_cleanup_region_end (0);
@@ -1779,8 +1727,6 @@ printf_positional (FILE *s, const CHAR_T *format, int readonly_format,
 
   /* Just a counter.  */
   size_t cnt;
-
-  CHAR_T *workstart = NULL;
 
   if (grouping == (const char *) -1)
     {
@@ -1974,7 +1920,6 @@ printf_positional (FILE *s, const CHAR_T *format, int readonly_format,
       char pad = specs[nspecs_done].info.pad;
       CHAR_T spec = specs[nspecs_done].info.spec;
 
-      workstart = NULL;
       CHAR_T *workend = work_buffer + WORK_BUFFER_SIZE;
 
       /* Fill in last information.  */
@@ -2006,27 +1951,6 @@ printf_positional (FILE *s, const CHAR_T *format, int readonly_format,
 	    specs[nspecs_done].info.prec = -1;
 
 	  prec = specs[nspecs_done].info.prec;
-	}
-
-      /* Maybe the buffer is too small.  */
-      if (MAX (prec, width) + EXTSIZ > WORK_BUFFER_SIZE)
-	{
-	  if (__libc_use_alloca ((MAX (prec, width) + EXTSIZ)
-				 * sizeof (CHAR_T)))
-	    workend = ((CHAR_T *) alloca ((MAX (prec, width) + EXTSIZ)
-					  * sizeof (CHAR_T))
-		       + (MAX (prec, width) + EXTSIZ));
-	  else
-	    {
-	      workstart = (CHAR_T *) malloc ((MAX (prec, width) + EXTSIZ)
-					     * sizeof (CHAR_T));
-	      if (workstart == NULL)
-		{
-		  done = -1;
-		  goto all_done;
-		}
-	      workend = workstart + (MAX (prec, width) + EXTSIZ);
-	    }
 	}
 
       /* Process format specifiers.  */
@@ -2102,18 +2026,12 @@ printf_positional (FILE *s, const CHAR_T *format, int readonly_format,
 	  break;
 	}
 
-      if (__glibc_unlikely (workstart != NULL))
-	free (workstart);
-      workstart = NULL;
-
       /* Write the following constant string.  */
       outstring (specs[nspecs_done].end_of_fmt,
 		 specs[nspecs_done].next_fmt
 		 - specs[nspecs_done].end_of_fmt);
     }
  all_done:
-  if (__glibc_unlikely (workstart != NULL))
-    free (workstart);
   scratch_buffer_free (&argsbuf);
   scratch_buffer_free (&specsbuf);
   return done;

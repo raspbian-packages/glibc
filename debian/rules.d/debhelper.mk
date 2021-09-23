@@ -84,9 +84,6 @@ endif
 	dh_installdeb -p$(curpass)
 	dh_shlibdeps -p$(curpass)
 	dh_gencontrol -p$(curpass)
-	if [ $(curpass) = nscd ] ; then \
-		sed -i -e "s/\(Depends:.*libc[0-9.]\+\)-[a-z0-9]\+/\1/" debian/nscd/DEBIAN/control ; \
-	fi
 	dh_md5sums -p$(curpass)
 
 	# We adjust the compression format depending on the package:
@@ -207,6 +204,7 @@ $(stamp)debhelper_%: $(stamp)debhelper-common $(stamp)install_%
 		-e "s#SLIBDIR#$$slibdir#g" \
 		-e "s#LIBDIR#$$libdir#g" \
 		-e "/gdb/d" \
+		-e "/audit/d" \
 	      $$t; \
 	  done ; \
 	done
@@ -249,7 +247,6 @@ $(stamp)debhelper_%: $(stamp)debhelper-common $(stamp)install_%
 	    sed -e "s#RTLD_SO#$$rtld_so#g" -i $$t ; \
 	    sed -e "s#MULTIARCHDIR#$$DEB_HOST_MULTIARCH#g" -i $$t ; \
 	    $(if $(filter $(call xx,mvec),no),sed -e "/libmvec/d" -e "/libm-\*\.a/d" -i $$t ;) \
-	    $(if $(filter $(call xx,crypt),no),sed -e "/libcrypt/d" -i $$t ;) \
 	    $(if $(filter-out $(DEB_HOST_ARCH_OS),linux),sed -e "/gdb/d" -i $$t ;) \
 	  done ; \
 	done

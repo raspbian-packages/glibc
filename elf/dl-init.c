@@ -16,8 +16,10 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
+#include <assert.h>
 #include <stddef.h>
 #include <ldsodefs.h>
+#include <elf-initfini.h>
 
 
 /* Type of the initializer.  */
@@ -27,6 +29,11 @@ typedef void (*init_t) (int, char **, char **);
 static void
 call_init (struct link_map *l, int argc, char **argv, char **env)
 {
+  /* If the object has not been relocated, this is a bug.  The
+     function pointers are invalid in this case.  (Executables do not
+     need relocation, and neither do proxy objects.)  */
+  assert (l->l_real->l_relocated || l->l_real->l_type == lt_executable);
+
   if (l->l_init_called)
     /* This object is all done.  */
     return;
@@ -40,11 +47,6 @@ call_init (struct link_map *l, int argc, char **argv, char **env)
       && l->l_type == lt_executable)
     return;
 
-  /* Are there any constructors?  */
-  if (l->l_info[DT_INIT] == NULL
-      && __builtin_expect (l->l_info[DT_INIT_ARRAY] == NULL, 1))
-    return;
-
   /* Print a debug message if wanted.  */
   if (__glibc_unlikely (GLRO(dl_debug_mask) & DL_DEBUG_IMPCALLS))
     _dl_debug_printf ("\ncalling init: %s\n\n",
@@ -54,7 +56,7 @@ call_init (struct link_map *l, int argc, char **argv, char **env)
      - the one named by DT_INIT
      - the others in the DT_INIT_ARRAY.
   */
-  if (l->l_info[DT_INIT] != NULL)
+  if (ELF_INITFINI && l->l_info[DT_INIT] != NULL)
     DL_CALL_DT_INIT(l, l->l_addr + l->l_info[DT_INIT]->d_un.d_ptr, argc, argv, env);
 
   /* Next see whether there is an array with initialization functions.  */

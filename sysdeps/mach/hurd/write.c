@@ -15,16 +15,17 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <errno.h>
-#include <unistd.h>
-#include <hurd/fd.h>
+#include <sysdep-cancel.h>
+#include <not-cancel.h>
 
 ssize_t
 __libc_write (int fd, const void *buf, size_t nbytes)
 {
-  error_t err = HURD_FD_USE (fd, _hurd_fd_write (descriptor,
-						 buf, &nbytes, -1));
-  return err ? __hurd_dfail (fd, err) : nbytes;
+  ssize_t ret;
+  int cancel_oldtype = LIBC_CANCEL_ASYNC();
+  ret = __write_nocancel (fd, buf, nbytes);
+  LIBC_CANCEL_RESET (cancel_oldtype);
+  return ret;
 }
 libc_hidden_def (__libc_write)
 weak_alias (__libc_write, __write)

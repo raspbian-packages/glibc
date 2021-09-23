@@ -44,11 +44,15 @@
 
 #include <dl-procinfo.h>
 
-#ifdef _DL_FIRST_PLATFORM
-# define _DL_FIRST_EXTRA (_DL_FIRST_PLATFORM + _DL_PLATFORMS_COUNT)
-#else
-# define _DL_FIRST_EXTRA _DL_HWCAP_COUNT
-#endif
+/* This subpath in search path entries is always supported and
+   included in the cache for backwards compatibility.  */
+#define TLS_SUBPATH "tls"
+
+/* The MSB of the hwcap field is set for objects in TLS_SUBPATH
+   directories.  There is always TLS support in glibc, so the dynamic
+   loader does not check the bit directly.  But more hwcap bits make a
+   an object more preferred, so the bit still has meaning.  */
+#define TLS_HWCAP_BIT 63
 
 #ifndef LD_SO_CONF
 # define LD_SO_CONF SYSCONFDIR "/ld.so.conf"
@@ -94,6 +98,8 @@ struct dir_entry
   int flag;
   ino64_t ino;
   dev_t dev;
+  const char *from_file;
+  int from_line;
   struct dir_entry *next;
 };
 
@@ -139,9 +145,6 @@ static const char *config_file;
 
 /* Mask to use for important hardware capabilities.  */
 static unsigned long int hwcap_mask = HWCAP_IMPORTANT;
-
-/* Configuration-defined capabilities defined in kernel vDSOs.  */
-static const char *hwcap_extra[64 - _DL_FIRST_EXTRA];
 
 /* Name and version of program.  */
 static void print_version (FILE *stream, struct argp_state *state);
@@ -199,12 +202,9 @@ is_hwcap_platform (const char *name)
   if (hwcap_idx != -1)
     return 1;
 
-  /* Is this one of the extra pseudo-hwcaps that we map beyond
-     _DL_FIRST_EXTRA like "tls", or "nosegneg?"  */
-  for (hwcap_idx = _DL_FIRST_EXTRA; hwcap_idx < 64; ++hwcap_idx)
-    if (hwcap_extra[hwcap_idx - _DL_FIRST_EXTRA] != NULL
-	&& !strcmp (name, hwcap_extra[hwcap_idx - _DL_FIRST_EXTRA]))
-      return 1;
+  /* Backwards-compatibility for the "tls" subdirectory.  */
+  if (strcmp (name, TLS_SUBPATH) == 0)
+    return 1;
 
   return 0;
 }
@@ -239,11 +239,9 @@ path_hwcap (const char *path)
 	  h = _dl_string_platform (ptr + 1);
 	  if (h == (uint64_t) -1)
 	    {
-	      for (h = _DL_FIRST_EXTRA; h < 64; ++h)
-		if (hwcap_extra[h - _DL_FIRST_EXTRA] != NULL
-		    && !strcmp (ptr + 1, hwcap_extra[h - _DL_FIRST_EXTRA]))
-		  break;
-	      if (h == 64)
+	      if (strcmp (ptr + 1, TLS_SUBPATH) == 0)
+		h = TLS_HWCAP_BIT;
+	      else
 		break;
 	    }
 	}
@@ -359,7 +357,12 @@ add_single_dir (struct dir_entry *entry, int verbose)
       if (ptr->ino == entry->ino && ptr->dev == entry->dev)
 	{
 	  if (opt_verbose && verbose)
-	    error (0, 0, _("Path `%s' given more than once"), entry->path);
+	    {
+	      error (0, 0, _("Path `%s' given more than once"), entry->path);
+	      fprintf (stderr, _("(from %s:%d and %s:%d)\n"),
+		       entry->from_file, entry->from_line,
+		       ptr->from_file, ptr->from_line);
+	    }
 	  /* Use the newer information.  */
 	  ptr->flag = entry->flag;
 	  free (entry->path);
@@ -378,11 +381,14 @@ add_single_dir (struct dir_entry *entry, int verbose)
 
 /* Add one directory to the list of directories to process.  */
 static void
-add_dir (const char *line)
+add_dir_1 (const char *line, const char *from_file, int from_line)
 {
   unsigned int i;
   struct dir_entry *entry = xmalloc (sizeof (struct dir_entry));
   entry->next = NULL;
+
+  entry->from_file = strdup (from_file);
+  entry->from_line = from_line;
 
   /* Search for an '=' sign.  */
   entry->path = xstrdup (line);
@@ -443,6 +449,11 @@ add_dir (const char *line)
     free (path);
 }
 
+static void
+add_dir (const char *line)
+{
+  add_dir_1 (line, "<builtin>", 0);
+}
 
 static int
 chroot_stat (const char *real_path, const char *path, struct stat64 *st)
@@ -719,9 +730,10 @@ search_dir (const struct dir_entry *entry)
   if (opt_verbose)
     {
       if (hwcap != 0)
-	printf ("%s: (hwcap: %#.16" PRIx64 ")\n", entry->path, hwcap);
+	printf ("%s: (hwcap: %#.16" PRIx64 ")", entry->path, hwcap);
       else
-	printf ("%s:\n", entry->path);
+	printf ("%s:", entry->path);
+      printf (_(" (from %s:%d)\n"), entry->from_file, entry->from_line);
     }
 
   char *dir_name;
@@ -862,6 +874,8 @@ search_dir (const struct dir_entry *entry)
 	  struct dir_entry *new_entry;
 
 	  new_entry = xmalloc (sizeof (struct dir_entry));
+	  new_entry->from_file = entry->from_file;
+	  new_entry->from_line = entry->from_line;
 	  new_entry->path = xstrdup (file_name);
 	  new_entry->flag = entry->flag;
 	  new_entry->next = NULL;
@@ -1175,54 +1189,9 @@ Warning: ignoring configuration file that cannot be opened: %s"),
 	      parse_conf_include (filename, lineno, do_chroot, dir);
 	}
       else if (!strncasecmp (cp, "hwcap", 5) && isblank (cp[5]))
-	{
-	  cp += 6;
-	  char *p, *name = NULL;
-	  unsigned long int n = strtoul (cp, &cp, 0);
-	  if (cp != NULL && isblank (*cp))
-	    while ((p = strsep (&cp, " \t")) != NULL)
-	      if (p[0] != '\0')
-		{
-		  if (name == NULL)
-		    name = p;
-		  else
-		    {
-		      name = NULL;
-		      break;
-		    }
-		}
-	  if (name == NULL)
-	    {
-	      error (EXIT_FAILURE, 0, _("%s:%u: bad syntax in hwcap line"),
-		     filename, lineno);
-	      break;
-	    }
-	  if (n >= (64 - _DL_FIRST_EXTRA))
-	    error (EXIT_FAILURE, 0,
-		   _("%s:%u: hwcap index %lu above maximum %u"),
-		   filename, lineno, n, 64 - _DL_FIRST_EXTRA - 1);
-	  if (hwcap_extra[n] == NULL)
-	    {
-	      for (unsigned long int h = 0; h < (64 - _DL_FIRST_EXTRA); ++h)
-		if (hwcap_extra[h] != NULL && !strcmp (name, hwcap_extra[h]))
-		  error (EXIT_FAILURE, 0,
-			 _("%s:%u: hwcap index %lu already defined as %s"),
-			 filename, lineno, h, name);
-	      hwcap_extra[n] = xstrdup (name);
-	    }
-	  else
-	    {
-	      if (strcmp (name, hwcap_extra[n]))
-		error (EXIT_FAILURE, 0,
-		       _("%s:%u: hwcap index %lu already defined as %s"),
-		       filename, lineno, n, hwcap_extra[n]);
-	      if (opt_verbose)
-		error (0, 0, _("%s:%u: duplicate hwcap %lu %s"),
-		       filename, lineno, n, name);
-	    }
-	}
+	error (0, 0, _("%s:%u: hwcap directive ignored"), filename, lineno);
       else
-	add_dir (cp);
+	add_dir_1 (cp, filename, lineno);
     }
   while (!feof_unlocked (file));
 
@@ -1330,14 +1299,8 @@ main (int argc, char **argv)
 		 _("relative path `%s' used to build cache"),
 		 argv[i]);
 	else
-	  add_dir (argv[i]);
+	  add_dir_1 (argv[i], "<cmdline>", 0);
     }
-
-  /* The last entry in hwcap_extra is reserved for the "tls" pseudo-hwcap which
-     indicates support for TLS.  This pseudo-hwcap is only used by old versions
-     under which TLS support was optional.  The entry is no longer needed, but
-     must remain for compatibility.  */
-  hwcap_extra[63 - _DL_FIRST_EXTRA] = "tls";
 
   set_hwcap ();
 

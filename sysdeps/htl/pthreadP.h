@@ -19,7 +19,15 @@
 #ifndef _PTHREADP_H
 #define _PTHREADP_H	1
 
+#define __PTHREAD_HTL
+
 #include <pthread.h>
+#include <link.h>
+
+/* Attribute to indicate thread creation was issued from C11 thrd_create.  */
+#define ATTR_C11_THREAD ((void*)(uintptr_t)-1)
+
+extern void __pthread_init_static_tls (struct link_map *) attribute_hidden;
 
 /* These represent the interface used by glibc itself.  */
 
@@ -27,13 +35,30 @@ extern pthread_t __pthread_self (void);
 extern int __pthread_kill (pthread_t threadid, int signo);
 extern struct __pthread **__pthread_threads;
 
-extern int _pthread_mutex_init (pthread_mutex_t *mutex, const pthread_mutexattr_t *attr);
+extern int __pthread_mutex_init (pthread_mutex_t *__mutex, const pthread_mutexattr_t *__attr);
+extern int __pthread_mutex_destroy (pthread_mutex_t *__mutex);
 extern int __pthread_mutex_lock (pthread_mutex_t *__mutex);
+extern int __pthread_mutex_trylock (pthread_mutex_t *_mutex);
 extern int __pthread_mutex_timedlock (pthread_mutex_t *__mutex,
      const struct timespec *__abstime);
 extern int __pthread_mutex_unlock (pthread_mutex_t *__mutex);
+extern int __pthread_mutexattr_init (pthread_mutexattr_t *attr);
+extern int __pthread_mutexattr_settype (pthread_mutexattr_t *attr, int kind);
 
+extern int __pthread_cond_init (pthread_cond_t *cond,
+				const pthread_condattr_t *cond_attr);
+extern int __pthread_cond_signal (pthread_cond_t *cond);
 extern int __pthread_cond_broadcast (pthread_cond_t *cond);
+extern int __pthread_cond_wait (pthread_cond_t *cond, pthread_mutex_t *mutex);
+extern int __pthread_cond_timedwait (pthread_cond_t *cond,
+				     pthread_mutex_t *mutex,
+				     const struct timespec *abstime);
+extern int __pthread_cond_clockwait (pthread_cond_t *cond,
+				     pthread_mutex_t *mutex,
+				     clockid_t clockid,
+				     const struct timespec *abstime)
+  __nonnull ((1, 2, 4));
+extern int __pthread_cond_destroy (pthread_cond_t *cond);
 
 typedef struct __cthread *__cthread_t;
 typedef int __cthread_key_t;
@@ -54,6 +79,8 @@ int __cthread_setspecific (__cthread_key_t, void *);
 int __pthread_key_create (pthread_key_t *key, void (*destr) (void *));
 void *__pthread_getspecific (pthread_key_t key);
 int __pthread_setspecific (pthread_key_t key, const void *value);
+int __pthread_key_delete (pthread_key_t key);
+int __pthread_once (pthread_once_t *once_control, void (*init_routine) (void));
 
 int __pthread_setcancelstate (int state, int *oldstate);
 
@@ -75,7 +102,9 @@ hidden_proto (__pthread_detach)
 hidden_proto (__pthread_key_create)
 hidden_proto (__pthread_getspecific)
 hidden_proto (__pthread_setspecific)
-hidden_proto (_pthread_mutex_init)
+hidden_proto (__pthread_mutex_init)
+hidden_proto (__pthread_mutex_destroy)
+hidden_proto (__pthread_mutex_timedlock)
 hidden_proto (__pthread_get_cleanup_stack)
 #endif
 

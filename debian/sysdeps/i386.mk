@@ -1,31 +1,6 @@
 # configuration options for all flavours
 extra_config_options = --enable-multi-arch --enable-static-pie
 
-ifeq (,$(filter stage1 stage2, $(DEB_BUILD_PROFILES)))
-# We use -mno-tls-direct-seg-refs to not wrap-around segments, as it
-# greatly increase the speed when running under the 32bit Xen hypervisor.
-GLIBC_PASSES += xen
-DEB_ARCH_REGULAR_PACKAGES += libc6-xen
-xen_extra_cflags = -mno-tls-direct-seg-refs
-xen_slibdir = /lib/$(DEB_HOST_MULTIARCH)/i686/nosegneg
-
-define libc6-xen_extra_pkg_install
-mkdir -p debian/libc6-xen/etc/ld.so.conf.d
-echo '# This directive teaches ldconfig to search in nosegneg subdirectories' >  debian/libc6-xen/etc/ld.so.conf.d/libc6-xen.conf
-echo '# and cache the DSOs there with extra bit 1 set in their hwcap match'   >> debian/libc6-xen/etc/ld.so.conf.d/libc6-xen.conf
-echo '# fields. In Xen guest kernels, the vDSO tells the dynamic linker to'   >> debian/libc6-xen/etc/ld.so.conf.d/libc6-xen.conf
-echo '# search in nosegneg subdirectories and to match this extra hwcap bit'  >> debian/libc6-xen/etc/ld.so.conf.d/libc6-xen.conf
-echo '# in the ld.so.cache file.'                                             >> debian/libc6-xen/etc/ld.so.conf.d/libc6-xen.conf
-echo 'hwcap 1 nosegneg'                                                       >> debian/libc6-xen/etc/ld.so.conf.d/libc6-xen.conf
-endef
-
-define libc6-dev_extra_pkg_install
-mkdir -p debian/libc6-dev/$(libdir)/xen
-cp -af debian/tmp-xen/$(libdir)/*.a \
-	debian/libc6-dev/$(libdir)/xen
-endef
-endif
-
 # multilib flavours
 ifeq (,$(filter nobiarch, $(DEB_BUILD_PROFILES)))
 

@@ -30,6 +30,7 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <gnu/lib-names.h>
 
 /* Type for the buffer we put the ELF header and hopefully the program
    header.  This buffer does not really have to be too large.  In most
@@ -852,6 +853,79 @@ lose (int code, int fd, const char *name, char *realname, struct link_map *l,
 }
 
 
+/* Process PT_GNU_PROPERTY program header PH in module L after
+   PT_LOAD segments are mapped.  Only one NT_GNU_PROPERTY_TYPE_0
+   note is handled which contains processor specific properties.
+   FD is -1 for the kernel mapped main executable otherwise it is
+   the fd used for loading module L.  */
+
+void
+_dl_process_pt_gnu_property (struct link_map *l, int fd, const ElfW(Phdr) *ph)
+{
+  const ElfW(Nhdr) *note = (const void *) (ph->p_vaddr + l->l_addr);
+  const ElfW(Addr) size = ph->p_memsz;
+  const ElfW(Addr) align = ph->p_align;
+
+  /* The NT_GNU_PROPERTY_TYPE_0 note must be aligned to 4 bytes in
+     32-bit objects and to 8 bytes in 64-bit objects.  Skip notes
+     with incorrect alignment.  */
+  if (align != (__ELF_NATIVE_CLASS / 8))
+    return;
+
+  const ElfW(Addr) start = (ElfW(Addr)) note;
+  unsigned int last_type = 0;
+
+  while ((ElfW(Addr)) (note + 1) - start < size)
+    {
+      /* Find the NT_GNU_PROPERTY_TYPE_0 note.  */
+      if (note->n_namesz == 4
+	  && note->n_type == NT_GNU_PROPERTY_TYPE_0
+	  && memcmp (note + 1, "GNU", 4) == 0)
+	{
+	  /* Check for invalid property.  */
+	  if (note->n_descsz < 8
+	      || (note->n_descsz % sizeof (ElfW(Addr))) != 0)
+	    return;
+
+	  /* Start and end of property array.  */
+	  unsigned char *ptr = (unsigned char *) (note + 1) + 4;
+	  unsigned char *ptr_end = ptr + note->n_descsz;
+
+	  do
+	    {
+	      unsigned int type = *(unsigned int *) ptr;
+	      unsigned int datasz = *(unsigned int *) (ptr + 4);
+
+	      /* Property type must be in ascending order.  */
+	      if (type < last_type)
+		return;
+
+	      ptr += 8;
+	      if ((ptr + datasz) > ptr_end)
+		return;
+
+	      last_type = type;
+
+	      /* Target specific property processing.  */
+	      if (_dl_process_gnu_property (l, fd, type, datasz, ptr) == 0)
+		return;
+
+	      /* Check the next property item.  */
+	      ptr += ALIGN_UP (datasz, sizeof (ElfW(Addr)));
+	    }
+	  while ((ptr_end - ptr) >= 8);
+
+	  /* Only handle one NT_GNU_PROPERTY_TYPE_0.  */
+	  return;
+	}
+
+      note = ((const void *) note
+	      + ELF_NOTE_NEXT_OFFSET (note->n_namesz, note->n_descsz,
+				      align));
+    }
+}
+
+
 /* Map in the shared object NAME, actually located in REALNAME, and already
    opened on FD.  */
 
@@ -1144,14 +1218,6 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 	  l->l_relro_addr = ph->p_vaddr;
 	  l->l_relro_size = ph->p_memsz;
 	  break;
-
-	case PT_NOTE:
-	  if (_dl_process_pt_note (l, ph, fd, fbp))
-	    {
-	      errstring = N_("cannot process note segment");
-	      goto call_lose;
-	    }
-	  break;
 	}
 
     if (__glibc_unlikely (nloadcmds == 0))
@@ -1298,6 +1364,21 @@ cannot enable executable stack as shared object requires");
   if (l->l_tls_initimage != NULL)
     l->l_tls_initimage = (char *) l->l_tls_initimage + l->l_addr;
 
+  /* Process program headers again after load segments are mapped in
+     case processing requires accessing those segments.  Scan program
+     headers backward so that PT_NOTE can be skipped if PT_GNU_PROPERTY
+     exits.  */
+  for (ph = &l->l_phdr[l->l_phnum]; ph != l->l_phdr; --ph)
+    switch (ph[-1].p_type)
+      {
+      case PT_NOTE:
+	_dl_process_pt_note (l, fd, &ph[-1]);
+	break;
+      case PT_GNU_PROPERTY:
+	_dl_process_pt_gnu_property (l, fd, &ph[-1]);
+	break;
+      }
+
   /* We are done mapping in the file.  We no longer need the descriptor.  */
   if (__glibc_unlikely (__close_nocancel (fd) != 0))
     {
@@ -1373,6 +1454,14 @@ cannot enable executable stack as shared object requires");
       && l->l_info[DT_SONAME] != NULL)
     add_name_to_object (l, ((const char *) D_PTR (l, l_info[DT_STRTAB])
 			    + l->l_info[DT_SONAME]->d_un.d_val));
+
+  /* If we have newly loaded libc.so, update the namespace
+     description.  */
+  if (GL(dl_ns)[nsid].libc_map == NULL
+      && l->l_info[DT_SONAME] != NULL
+      && strcmp (((const char *) D_PTR (l, l_info[DT_STRTAB])
+		  + l->l_info[DT_SONAME]->d_un.d_val), LIBC_SO) == 0)
+    GL(dl_ns)[nsid].libc_map = l;
 
   /* _dl_close can only eventually undo the module ID assignment (via
      remove_slotinfo) if this function returns a pointer to a link

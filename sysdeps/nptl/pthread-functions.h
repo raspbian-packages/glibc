@@ -30,33 +30,18 @@ struct xid_command;
    the thread functions.  */
 struct pthread_functions
 {
-  int (*ptr_pthread_attr_getschedpolicy) (const pthread_attr_t *, int *);
-  int (*ptr_pthread_attr_setschedpolicy) (pthread_attr_t *, int);
-  int (*ptr_pthread_attr_getscope) (const pthread_attr_t *, int *);
-  int (*ptr_pthread_attr_setscope) (pthread_attr_t *, int);
-  int (*ptr_pthread_condattr_destroy) (pthread_condattr_t *);
-  int (*ptr_pthread_condattr_init) (pthread_condattr_t *);
   int (*ptr___pthread_cond_broadcast) (pthread_cond_t *);
-  int (*ptr___pthread_cond_destroy) (pthread_cond_t *);
-  int (*ptr___pthread_cond_init) (pthread_cond_t *,
-				  const pthread_condattr_t *);
   int (*ptr___pthread_cond_signal) (pthread_cond_t *);
   int (*ptr___pthread_cond_wait) (pthread_cond_t *, pthread_mutex_t *);
   int (*ptr___pthread_cond_timedwait) (pthread_cond_t *, pthread_mutex_t *,
 				       const struct timespec *);
   int (*ptr___pthread_cond_broadcast_2_0) (pthread_cond_2_0_t *);
-  int (*ptr___pthread_cond_destroy_2_0) (pthread_cond_2_0_t *);
-  int (*ptr___pthread_cond_init_2_0) (pthread_cond_2_0_t *,
-				      const pthread_condattr_t *);
   int (*ptr___pthread_cond_signal_2_0) (pthread_cond_2_0_t *);
   int (*ptr___pthread_cond_wait_2_0) (pthread_cond_2_0_t *, pthread_mutex_t *);
   int (*ptr___pthread_cond_timedwait_2_0) (pthread_cond_2_0_t *,
 					   pthread_mutex_t *,
 					   const struct timespec *);
   void (*ptr___pthread_exit) (void *) __attribute__ ((__noreturn__));
-  int (*ptr_pthread_getschedparam) (pthread_t, int *, struct sched_param *);
-  int (*ptr_pthread_setschedparam) (pthread_t, int,
-				    const struct sched_param *);
   int (*ptr_pthread_mutex_destroy) (pthread_mutex_t *);
   int (*ptr_pthread_mutex_init) (pthread_mutex_t *,
 				 const pthread_mutexattr_t *);

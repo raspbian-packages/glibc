@@ -11,3 +11,7 @@ LIBC: shared-lib-without-dependency-information */ld-GLIBC_VERSION.so
 
 # dependency on debconf is not needed, as glibc has a fallback to tty 
 LIBC: missing-debconf-dependency-for-preinst
+
+# The call to systemctl in postinst is not about restarting services,
+# but restarting systemd.
+LIBC: maintainer-script-calls-systemctl
