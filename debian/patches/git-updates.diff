@@ -6192,8 +6192,6 @@ index 0000000000..42c795d2a8
 @@ -0,0 +1 @@
 +#include <setjmp/tst-setjmp.c>
 diff --git a/sysdeps/x86_64/configure b/sysdeps/x86_64/configure
-old mode 100644
-new mode 100755
 index 84f82c2406..fc1840e23f
 --- a/sysdeps/x86_64/configure
 +++ b/sysdeps/x86_64/configure

@@ -3,13 +3,13 @@ glibc (2.32-4+rpi1) bookworm-staging; urgency=medium
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
 
-  [changes introduced in 2.29-9+rpi1 by Peter Michale Green]
-  * Change mode on scripts/check-obsolete-constructs.py to 644, 
-    dgit does not like mode 755 files created by patches and the
-    script does not seem to be used for anything in the Debian
-    package.
+  [changes introduced in 2.32-4+rpi1 by Peter Michale Green]
+  * Change mode on sysdeps/x86_64/configure to 644, dgit does
+    like modes being changed by patches, the corresponding files
+    for other architectures are all 644 and we don't really care
+    about x86-64 in raspbian anyway.
 
- -- Raspbian forward porter <root@raspbian.org>  Thu, 23 Sep 2021 19:01:55 +0000
+ -- Peter Michael Green <plugwash@raspbian.org>  Sat, 25 Sep 2021 12:22:52 +0000
 
 glibc (2.32-4) unstable; urgency=medium
 
