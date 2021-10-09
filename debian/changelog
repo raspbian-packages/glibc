@@ -1,4 +1,4 @@
-glibc (2.31-13+rpi1) bullseye-staging; urgency=medium
+glibc (2.31-13+rpi1+deb11u2) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -9,7 +9,28 @@ glibc (2.31-13+rpi1) bullseye-staging; urgency=medium
     script does not seem to be used for anything in the Debian
     package.
 
- -- Raspbian forward porter <root@raspbian.org>  Sat, 07 Aug 2021 01:10:32 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Sat, 09 Oct 2021 14:29:47 +0000
+
+glibc (2.31-13+deb11u2) bullseye; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/debhelper.in/libc.preinst: do not try to detect if debconf is
+    available when the debconf frontend has already been loaded.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sat, 02 Oct 2021 14:47:40 +0200
+
+glibc (2.31-13+deb11u1) bullseye; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/script.in/nsscheck.sh: restart openssh-server even if it has been
+    deconfigured during the upgrade.  Closes: #990069.
+  * debian/debhelper.in/libc.preinst: fix text fallback when debconf is
+    unusable, the current debconf configuration should be queried without
+    first sourcing the confmodule to avoid losing control of the tty. Big
+    thanks to Colin Watson for the help diagnosing the issue and for providing
+    an easy reproducer.  Closes: #994042.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Thu, 30 Sep 2021 22:47:49 +0200
 
 glibc (2.31-13) unstable; urgency=medium
 

@@ -21,23 +21,27 @@ kfreebsd_compare_versions () {
 
 if [ "$type" != abort-upgrade -a -z "$DPKG_ROOT" ]
 then
-    # Load debconf module if available and usable
-    if [ -f /usr/share/debconf/confmodule ]; then
+    # Check if the debconf module is available and usable
+    USE_DEBCONF=
+    if [ "$DEBIAN_HAS_FRONTEND" ]; then
+        # Debconf is already loaded, so we already checked if the frontend
+        # is usable or not
+        USE_DEBCONF=1
+    elif [ -f /usr/share/debconf/confmodule ]; then
         # cdebconf has a working fallback mechanism in case dialog
         # is not usable, so do not try to do anything smart here
         if [ "$DEBCONF_USE_CDEBCONF" ] ; then
-            . /usr/share/debconf/confmodule
             USE_DEBCONF=1
         # debconf requires perl
         elif perl -e "" 2>/dev/null ; then
-            . /usr/share/debconf/confmodule
             # Check that the selected frontend will work
             if [ -n "$DEBIAN_FRONTEND" ] ; then
                 frontend="$DEBIAN_FRONTEND"
             else
-                db_version 2.0
-                db_get debconf/frontend || RET="Dialog"
-                frontend="$RET"
+                # Query the frontend without first sourcing the confmodule to avoid
+                # losing control of the tty. This snippet must not be copied blindly.
+                frontend="$(echo 'GET debconf/frontend' | debconf-communicate | sed '/^0 /!d;s/^0 //')"
+                frontend="${frontend:-Dialog}"
             fi
             frontend=`echo $frontend | tr '[:upper:]' '[:lower:]'`
             case "$frontend" in
@@ -59,6 +63,11 @@ then
                 ;;
             esac
         fi
+    fi
+
+    # Load debconf module if available and usable
+    if [ "$USE_DEBCONF" ]; then
+        . /usr/share/debconf/confmodule
     fi
 
     # See if LD_LIBRARY_PATH contains the traditional /lib, but not the
