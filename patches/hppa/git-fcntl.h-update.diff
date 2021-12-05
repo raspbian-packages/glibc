@@ -1,0 +1,68 @@
+Index: glibc-2.31/sysdeps/unix/sysv/linux/hppa/bits/fcntl.h
+===================================================================
+--- glibc-2.31.orig/sysdeps/unix/sysv/linux/hppa/bits/fcntl.h
++++ glibc-2.31/sysdeps/unix/sysv/linux/hppa/bits/fcntl.h
+@@ -24,14 +24,11 @@
+ #define O_EXCL		00002000 /* not fcntl */
+ #define O_NOCTTY	00400000 /* not fcntl */
+ #define O_APPEND	00000010
+-#define O_NONBLOCK	00200004 /* HPUX has separate NDELAY & NONBLOCK */
++#define O_NONBLOCK	00200000
+ #define __O_DSYNC	01000000
+-#define __O_RSYNC	02000000 /* HPUX only */
+ #define __O_SYNC	00100000
+ #define O_SYNC		(__O_SYNC|__O_DSYNC)
+ 
+-#define O_BLKSEEK	00000100 /* HPUX only */
+-
+ #define __O_DIRECTORY	000010000 /* Must be a directory.  */
+ #define __O_NOFOLLOW	000000200 /* Do not follow links.  */
+ #define __O_CLOEXEC	010000000 /* Set close_on_exec.  */
+Index: glibc-2.31/sysdeps/unix/sysv/linux/hppa/bits/eventfd.h
+===================================================================
+--- glibc-2.31.orig/sysdeps/unix/sysv/linux/hppa/bits/eventfd.h
++++ glibc-2.31/sysdeps/unix/sysv/linux/hppa/bits/eventfd.h
+@@ -26,6 +26,6 @@ enum
+ #define EFD_SEMAPHORE EFD_SEMAPHORE
+     EFD_CLOEXEC = 010000000,
+ #define EFD_CLOEXEC EFD_CLOEXEC
+-    EFD_NONBLOCK = 00200004 /* HPUX has separate NDELAY & NONBLOCK */
++    EFD_NONBLOCK = 00200000
+ #define EFD_NONBLOCK EFD_NONBLOCK
+   };
+Index: glibc-2.31/sysdeps/unix/sysv/linux/hppa/bits/inotify.h
+===================================================================
+--- glibc-2.31.orig/sysdeps/unix/sysv/linux/hppa/bits/inotify.h
++++ glibc-2.31/sysdeps/unix/sysv/linux/hppa/bits/inotify.h
+@@ -24,6 +24,6 @@ enum
+   {
+     IN_CLOEXEC = 010000000,
+ #define IN_CLOEXEC IN_CLOEXEC
+-    IN_NONBLOCK = 000200004 /* HPUX has separate NDELAY & NONBLOCK */
++    IN_NONBLOCK = 000200000
+ #define IN_NONBLOCK IN_NONBLOCK
+   };
+Index: glibc-2.31/sysdeps/unix/sysv/linux/hppa/bits/signalfd.h
+===================================================================
+--- glibc-2.31.orig/sysdeps/unix/sysv/linux/hppa/bits/signalfd.h
++++ glibc-2.31/sysdeps/unix/sysv/linux/hppa/bits/signalfd.h
+@@ -24,6 +24,6 @@ enum
+   {
+     SFD_CLOEXEC = 010000000,
+ #define SFD_CLOEXEC SFD_CLOEXEC
+-    SFD_NONBLOCK = 00200004 /* HPUX has separate NDELAY & NONBLOCK */
++    SFD_NONBLOCK = 00200000
+ #define SFD_NONBLOCK SFD_NONBLOCK
+   };
+Index: glibc-2.31/sysdeps/unix/sysv/linux/hppa/bits/timerfd.h
+===================================================================
+--- glibc-2.31.orig/sysdeps/unix/sysv/linux/hppa/bits/timerfd.h
++++ glibc-2.31/sysdeps/unix/sysv/linux/hppa/bits/timerfd.h
+@@ -24,6 +24,6 @@ enum
+   {
+     TFD_CLOEXEC = 010000000,
+ #define TFD_CLOEXEC TFD_CLOEXEC
+-    TFD_NONBLOCK = 000200004 /* HPUX has separate NDELAY & NONBLOCK */
++    TFD_NONBLOCK = 000200000
+ #define TFD_NONBLOCK TFD_NONBLOCK
+   };
