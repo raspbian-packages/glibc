@@ -35,6 +35,8 @@ libsupport-routines = \
   ignore_stderr \
   next_to_fault \
   oom_error \
+  resolv_response_context_duplicate \
+  resolv_response_context_free \
   resolv_test \
   set_fortify_handler \
   support-xfstat \
@@ -133,6 +135,7 @@ libsupport-routines = \
   xpthread_join \
   xpthread_key_create \
   xpthread_key_delete \
+  xpthread_kill \
   xpthread_mutex_consistent \
   xpthread_mutex_destroy \
   xpthread_mutex_init \

@@ -43,11 +43,9 @@
  */
 
 	.text
-	.globl _start
-	.type _start,#function
-_start:
-	BTI_C
+ENTRY(_start)
 	/* Create an initial frame with 0 LR and FP */
+	cfi_undefined (x30)
 	mov	x29, #0
 	mov	x30, #0
 
@@ -101,8 +99,10 @@ _start:
 	   because crt1.o and rcrt1.o share code and the later must avoid the
 	   use of GOT relocations before __libc_start_main is called.  */
 __wrap_main:
+	BTI_C
 	b	main
 #endif
+END(_start)
 
 	/* Define a symbol for the first piece of initialized data.  */
 	.data
