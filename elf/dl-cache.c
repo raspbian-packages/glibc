@@ -26,6 +26,9 @@
 #include <_itoa.h>
 #include <dl-hwcaps.h>
 #include <dl-isa-level.h>
+#include <fcntl.h>
+#include <sysdep.h>
+#include <not-errno.h>
 
 #ifndef _DL_PLATFORMS_COUNT
 # define _DL_PLATFORMS_COUNT 0
@@ -216,6 +219,11 @@ search_cache (const char *string_table, uint32_t string_table_size,
 #ifdef SHARED
   uint32_t best_priority = 0;
 #endif
+  int disable_hwcap = 0;
+#ifdef NEED_LD_SO_NOHWCAP
+  if (__access_noerrno ("/etc/ld.so.nohwcap", F_OK) == 0)
+    disable_hwcap = 1;
+#endif
 
   while (left <= right)
     {
@@ -301,6 +309,8 @@ search_cache (const char *string_table, uint32_t string_table_size,
 			    continue;
 			  if (GLRO (dl_osversion)
 			      && libnew->osversion > GLRO (dl_osversion))
+			    continue;
+			  if (disable_hwcap && libnew->hwcap != 0)
 			    continue;
 			  if (_DL_PLATFORMS_COUNT
 			      && (libnew->hwcap & _DL_HWCAP_PLATFORM) != 0
