@@ -63,6 +63,8 @@ ENTRY(__setcontext)
 	cfi_offset (esi, oESI)
 	cfi_offset (ebp, oEBP)
 	cfi_offset (ebx, oEBX)
+	cfi_offset (edx, oEDX)
+	cfi_offset (ecx, oECX)
 	movl	oESP(%eax), %esp
 
 #if SHSTK_ENABLED
@@ -165,14 +167,15 @@ L(no_shstk):
 	/* Push the return address on the new stack so we can return there.  */
 	pushl	%ecx
 
-	/* Load the values of all the preserved registers (except ESP).  */
+	/* Load the values of all the 32-bit registers (except ESP).
+	   Since we are loading from EAX, it must be last.  */
 	movl	oEDI(%eax), %edi
 	movl	oESI(%eax), %esi
 	movl	oEBP(%eax), %ebp
 	movl	oEBX(%eax), %ebx
-
-	/* All done, return 0 for success.  */
-	xorl	%eax, %eax
+	movl	oEDX(%eax), %edx
+	movl	oECX(%eax), %ecx
+	movl	oEAX(%eax), %eax
 
 	/* End FDE here, we fall into another context.  */
 	cfi_endproc
