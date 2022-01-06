@@ -51,6 +51,14 @@ static td_thr_events_t __nptl_threads_events __attribute_used__;
 /* Pointer to descriptor with the last event.  */
 static struct pthread *__nptl_last_event __attribute_used__;
 
+#ifdef SHARED
+/* This variable is used to access _rtld_global from libthread_db.  If
+   GDB loads libpthread before ld.so, it is not possible to resolve
+   _rtld_global directly during libpthread initialization.  */
+static struct rtld_global *__nptl_rtld_global __attribute_used__
+  = &_rtld_global;
+#endif
+
 /* Number of threads running.  */
 unsigned int __nptl_nthreads = 1;
 
@@ -426,8 +434,6 @@ START_THREAD_DEFN
   unwind_buf.priv.data.prev = NULL;
   unwind_buf.priv.data.cleanup = NULL;
 
-  __libc_signal_restore_set (&pd->sigmask);
-
   /* Allow setxid from now onwards.  */
   if (__glibc_unlikely (atomic_exchange_acq (&pd->setxid_futex, 0) == -2))
     futex_wake (&pd->setxid_futex, 1, FUTEX_PRIVATE);
@@ -436,6 +442,8 @@ START_THREAD_DEFN
     {
       /* Store the new cleanup handler info.  */
       THREAD_SETMEM (pd, cleanup_jmp_buf, &unwind_buf);
+
+      __libc_signal_restore_set (&pd->sigmask);
 
       /* We are either in (a) or (b), and in either case we either own
          PD already (2) or are about to own PD (1), and so our only
