@@ -298,11 +298,7 @@ __ieee754_asin(double x){
   else
   if (k>0x7ff00000 || (k == 0x7ff00000 && u.i[LOW_HALF] != 0)) return x + x;
   else {
-    u.i[HIGH_HALF]=0x7ff00000;
-    v.i[HIGH_HALF]=0x7ff00000;
-    u.i[LOW_HALF]=0;
-    v.i[LOW_HALF]=0;
-    return u.x/v.x;  /* NaN */
+    return (x-x)/(x-x);  /* NaN */
  }
 }
 #ifndef __ieee754_asin
@@ -591,11 +587,7 @@ __ieee754_acos(double x)
   else
   if (k>0x7ff00000 || (k == 0x7ff00000 && u.i[LOW_HALF] != 0)) return x + x;
   else {
-    u.i[HIGH_HALF]=0x7ff00000;
-    v.i[HIGH_HALF]=0x7ff00000;
-    u.i[LOW_HALF]=0;
-    v.i[LOW_HALF]=0;
-    return u.x/v.x;
+    return (x-x)/(x-x);
   }
 }
 #ifndef __ieee754_acos
