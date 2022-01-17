@@ -154,7 +154,14 @@ svcunix_create (int sock, u_int sendsize, u_int recvsize, char *path)
   SVCXPRT *xprt;
   struct unix_rendezvous *r;
   struct sockaddr_un addr;
-  socklen_t len = sizeof (struct sockaddr_in);
+  socklen_t len = sizeof (addr);
+  size_t path_length = strlen(path);
+
+  if (path_length >= sizeof(addr.sun_path))
+    {
+      __set_errno (EINVAL);     /* Error code used by the kernel.  */
+      return NULL;
+    }
 
   if (sock == RPC_ANYSOCK)
     {
@@ -165,11 +172,8 @@ svcunix_create (int sock, u_int sendsize, u_int recvsize, char *path)
 	}
       madesock = TRUE;
     }
-  memset (&addr, '\0', sizeof (addr));
   addr.sun_family = AF_UNIX;
-  len = strlen (path) + 1;
-  memcpy (addr.sun_path, path, len);
-  len += sizeof (addr.sun_family);
+  memcpy(addr.sun_path, path, path_length + 1);
 
   __bind (sock, (struct sockaddr *) &addr, len);
 
