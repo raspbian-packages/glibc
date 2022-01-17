@@ -57,9 +57,17 @@ clnt_create (const char *hostname, u_long prog, u_long vers,
 
   if (strcmp (proto, "unix") == 0)
     {
-      memset ((char *)&sun, 0, sizeof (sun));
+      size_t name_length = strlen(hostname);
+      if (name_length >= sizeof(sun.sun_path))
+	{
+	  struct rpc_createerr *ce = &get_rpc_createerr ();
+	  ce->cf_stat = RPC_SYSTEMERROR;
+	  __set_errno (EINVAL);     /* Error code used by the kernel.  */
+	  ce->cf_error.re_errno = errno;
+	  return NULL;
+	}
       sun.sun_family = AF_UNIX;
-      strcpy (sun.sun_path, hostname);
+      memcpy(sun.sun_path, hostname, name_length + 1);
       sock = RPC_ANYSOCK;
       client = clntunix_create (&sun, prog, vers, &sock, 0, 0);
       if (client == NULL)
