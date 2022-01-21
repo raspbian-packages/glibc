@@ -239,6 +239,13 @@ __getcwd (char *buf, size_t size)
   int fd = AT_FDCWD;
 
   char *path;
+  /* A size of 1 byte is never useful.  */
+  if (size == 1)
+    {
+      __set_errno (ERANGE);
+      return NULL;
+    }
+
 #ifndef NO_ALLOCATION
   size_t allocated = size;
   if (size == 0)
