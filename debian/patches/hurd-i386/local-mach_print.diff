@@ -1,0 +1,43 @@
+TODO: glibc 2.32 will provide it. Once it is uploaded, rebuild binaries
+which might be referencing the 2.21-versioned symbol, and drop this
+patch.
+
+---
+ mach/mach_init.c                    |   11 +++++++++++
+ sysdeps/mach/hurd/i386/libc.abilist |    1 +
+ 2 files changed, 12 insertions(+)
+
+--- a/sysdeps/mach/hurd/i386/libc.abilist
++++ b/sysdeps/mach/hurd/i386/libc.abilist
+@@ -1946,6 +1946,7 @@ GLIBC_2.2.6 xprt_register F
+ GLIBC_2.2.6 xprt_unregister F
+ GLIBC_2.21 __mach_host_self_ D 0x4
+ GLIBC_2.21 __pthread_get_cleanup_stack F
++GLIBC_2.21 mach_print F
+ GLIBC_2.21 pthread_attr_destroy F
+ GLIBC_2.21 pthread_attr_getdetachstate F
+ GLIBC_2.21 pthread_attr_getinheritsched F
+--- a/mach/mach_init.c
++++ b/mach/mach_init.c
+@@ -18,6 +18,7 @@
+ #include <mach.h>
+ #include <mach/mig_support.h>
+ #include <unistd.h>
++#include <shlib-compat.h>
+ 
+ mach_port_t __mach_task_self_;
+ mach_port_t __mach_host_self_;
+@@ -51,3 +52,13 @@ __mach_init (void)
+ #endif
+ }
+ weak_alias (__mach_init, mach_init)
++
++#if SHLIB_COMPAT (libc, GLIBC_2_21, GLIBC_2_32)
++extern void __mach_print(const char *s);
++void
++__mach_print_2_21 (const char *str)
++{
++	__mach_print (str);
++}
++compat_symbol (libc, __mach_print_2_21, mach_print, GLIBC_2_21);
++#endif
