@@ -1,6 +1,6 @@
-/* Copyright (C) 2002-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
-   Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
+   Ulrich Drepper <drepper@redhat.com>, 2002.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -29,7 +29,7 @@ struct inuse_sem
   ino_t ino;
   int refcnt;
   sem_t *sem;
-  char name[0];
+  char name[];
 };
 
 
@@ -67,3 +67,16 @@ extern int __new_sem_wait (sem_t *sem);
 extern int __old_sem_wait (sem_t *sem);
 extern int __new_sem_trywait (sem_t *sem);
 extern int __new_sem_getvalue (sem_t *sem, int *sval);
+
+#if __TIMESIZE == 64
+# define __sem_clockwait64 __sem_clockwait
+# define __sem_timedwait64 __sem_timedwait
+#else
+extern int
+__sem_clockwait64 (sem_t *sem, clockid_t clockid,
+                   const struct __timespec64 *abstime);
+libpthread_hidden_proto (__sem_clockwait64)
+extern int
+__sem_timedwait64 (sem_t *sem, const struct __timespec64 *abstime);
+libpthread_hidden_proto (__sem_timedwait64)
+#endif

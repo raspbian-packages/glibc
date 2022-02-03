@@ -1,5 +1,5 @@
 /* Overflow tests for stat, statfs, and lseek functions.
-   Copyright (C) 2011-2020 Free Software Foundation, Inc.
+   Copyright (C) 2011-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Chris Metcalf <cmetcalf@tilera.com>, 2011.
 
@@ -19,6 +19,7 @@
 
 #include <sys/stat.h>
 #include <sys/statfs.h>
+#include <sys/types.h>
 
 /* Test for overflows of structures where we ask the kernel to fill them
    in with standard 64-bit syscalls but return them through APIs that

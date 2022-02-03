@@ -1,5 +1,5 @@
 /* Template for error handling for runtime dynamic linker.
-   Copyright (C) 1995-2020 Free Software Foundation, Inc.
+   Copyright (C) 1995-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -248,4 +248,19 @@ _dl_receive_error (receiver_fct fct, void (*operate) (void *), void *args)
   catch_hook = old_catch;
   receiver = old_receiver;
 }
+
+/* Forwarder used for initializing _dl_catch_error_ptr.  */
+int
+_rtld_catch_error (const char **objname, const char **errstring,
+		   bool *mallocedp, void (*operate) (void *),
+		   void *args)
+{
+  /* The reference to _dl_catch_error will eventually be relocated to
+     point to the implementation in libc.so.  */
+  return _dl_catch_error (objname, errstring, mallocedp, operate, args);
+}
+
+__typeof (_dl_catch_error) *_dl_catch_error_ptr = _rtld_catch_error;
+rtld_hidden_data_def (_dl_catch_error_ptr);
+
 #endif /* DL_ERROR_BOOTSTRAP */

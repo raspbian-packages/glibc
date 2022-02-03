@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2020 Free Software Foundation, Inc.
+# Copyright (C) 1991-2021 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -121,11 +121,11 @@ tst-printf-fp-leak-ENV = \
   MALLOC_TRACE=$(objpfx)tst-printf-fp-leak.mtrace
 
 $(objpfx)tst-unbputc.out: tst-unbputc.sh $(objpfx)tst-unbputc
-	$(SHELL) $< $(common-objpfx) '$(test-program-prefix)' > $@; \
+	$(SHELL) $< $(common-objpfx) '$(test-program-prefix)'; \
 	$(evaluate-test)
 
 $(objpfx)tst-printf.out: tst-printf.sh $(objpfx)tst-printf
-	$(SHELL) $< $(common-objpfx) '$(test-program-prefix)' > $@; \
+	$(SHELL) $< $(common-objpfx) '$(test-program-prefix)'; \
 	$(evaluate-test)
 
 $(objpfx)tst-printfsz-islongdouble.out: \

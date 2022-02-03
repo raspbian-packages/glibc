@@ -1,5 +1,5 @@
 /* File identity for the dynamic linker.  Generic POSIX.1 version.
-   Copyright (C) 2015-2020 Free Software Foundation, Inc.
+   Copyright (C) 2015-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -34,7 +34,7 @@ _dl_get_file_id (int fd, struct r_file_id *id)
 {
   struct stat64 st;
 
-  if (__glibc_unlikely (__fxstat64 (_STAT_VER, fd, &st) < 0))
+  if (__glibc_unlikely (__fstat64 (fd, &st) < 0))
     return false;
 
   id->dev = st.st_dev;

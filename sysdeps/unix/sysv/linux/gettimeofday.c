@@ -1,5 +1,5 @@
 /* gettimeofday - set time.  Linux version.
-   Copyright (C) 2020 Free Software Foundation, Inc.
+   Copyright (C) 2020-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,15 +16,16 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
+#include <time.h>
+#include <string.h>
+
 /* Optimize the function call by setting the PLT directly to vDSO symbol.  */
 #ifdef USE_IFUNC_GETTIMEOFDAY
-# include <time.h>
-# include <string.h>
 # include <sysdep.h>
 # include <sysdep-vdso.h>
 
 # ifdef SHARED
-#  include <dl-vdso.h>
+# include <dl-vdso.h>
 # include <libc-vdso.h>
 
 static int

@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -162,7 +162,8 @@ struct pthread
     void *__padding[24];
   };
 
-  /* This descriptor's link on the `stack_used' or `__stack_user' list.  */
+  /* This descriptor's link on the GL (dl_stack_used) or
+     GL (dl_stack_user) list.  */
   list_t list;
 
   /* Thread ID - which is also a 'is this thread descriptor (and

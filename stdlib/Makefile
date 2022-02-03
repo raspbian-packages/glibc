@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2020 Free Software Foundation, Inc.
+# Copyright (C) 1991-2021 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -56,7 +56,6 @@ routines	:=							      \
 	system canonicalize						      \
 	a64l l64a							      \
 	rpmatch strfmon strfmon_l getsubopt xpg_basename fmtmsg		      \
-	strtoimax strtoumax wcstoimax wcstoumax				      \
 	getcontext setcontext makecontext swapcontext
 aux =	grouping groupingwc tens_in_limb
 
@@ -87,7 +86,8 @@ tests		:= tst-strtol tst-strtod testmb testrand testsort testdiv   \
 		   tst-makecontext-align test-bz22786 tst-strtod-nan-sign \
 		   tst-swapcontext1 tst-setcontext4 tst-setcontext5 \
 		   tst-setcontext6 tst-setcontext7 tst-setcontext8 \
-		   tst-setcontext9 tst-bz20544
+		   tst-setcontext9 tst-bz20544 tst-canon-bz26341 \
+		   tst-realpath-toolong
 
 tests-internal	:= tst-strtod1i tst-strtod3 tst-strtod4 tst-strtod5i \
 		   tst-tls-atexit tst-tls-atexit-nodelete
@@ -102,6 +102,7 @@ LDLIBS-test-atexit-race = $(shared-thread-library)
 LDLIBS-test-at_quick_exit-race = $(shared-thread-library)
 LDLIBS-test-cxa_atexit-race = $(shared-thread-library)
 LDLIBS-test-on_exit-race = $(shared-thread-library)
+LDLIBS-tst-canon-bz26341 = $(shared-thread-library)
 
 LDLIBS-test-dlclose-exit-race = $(shared-thread-library) $(libdl)
 LDFLAGS-test-dlclose-exit-race = $(LDFLAGS-rdynamic)
@@ -208,7 +209,7 @@ $(objpfx)isomac: isomac.c
 $(objpfx)tst-fmtmsg.out: tst-fmtmsg.sh $(objpfx)tst-fmtmsg
 	$(SHELL) $< $(common-objpfx) '$(test-program-prefix-before-env)' \
 		 '$(run-program-env)' '$(test-program-prefix-after-env)' \
-		 $(common-objpfx)stdlib/ > $@; \
+		 $(common-objpfx)stdlib/; \
 	$(evaluate-test)
 
 $(objpfx)tst-putenv: $(objpfx)tst-putenvmod.so
@@ -239,7 +240,7 @@ $(objpfx)tst-tls-atexit-nodelete.out: $(objpfx)tst-tls-atexit-lib.so
 $(objpfx)tst-setcontext3.out: tst-setcontext3.sh $(objpfx)tst-setcontext3
 	$(SHELL) $< $(common-objpfx) '$(test-program-prefix-before-env)' \
 		 '$(run-program-env)' '$(test-program-prefix-after-env)' \
-		 $(common-objpfx)stdlib/ > $@; \
+		 $(common-objpfx)stdlib/; \
 	$(evaluate-test)
 
 $(objpfx)tst-makecontext: $(libdl)

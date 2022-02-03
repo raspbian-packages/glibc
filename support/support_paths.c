@@ -1,5 +1,5 @@
 /* Various paths that might be needed.
-   Copyright (C) 2018-2020 Free Software Foundation, Inc.
+   Copyright (C) 2018-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -70,6 +70,13 @@ const char support_bindir_prefix[] = BINDIR_PATH;
 const char support_sbindir_prefix[] = SBINDIR_PATH;
 #else
 # error please -DSBINDIR_PATH=something in the Makefile
+#endif
+
+#ifdef SLIBDIR_PATH
+/* Corresponds to the system /lib or /lib64 directory.  */
+const char support_slibdir_prefix[] = SLIBDIR_PATH;
+#else
+# error please -DSLIBDIR_PATH=something in the Makefile
 #endif
 
 #ifdef ROOTSBINDIR_PATH

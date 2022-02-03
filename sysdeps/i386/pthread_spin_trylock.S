@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -20,17 +20,11 @@
 #include <errno.h>
 
 
-#ifdef UP
-# define LOCK
-#else
-# define LOCK lock
-#endif
-
 ENTRY (pthread_spin_trylock)
 	movl	4(%esp), %edx
 	movl	$1, %eax
 	xorl	%ecx, %ecx
-	LOCK
+	lock
 	cmpxchgl %ecx, (%edx)
 	movl	$EBUSY, %eax
 #ifdef HAVE_CMOV

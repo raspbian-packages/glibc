@@ -4,7 +4,7 @@
  * There are two sets of procedures here.  The xprt routines are
  * for handling transport handles.  The svc routines handle the
  * list of service routines.
- *  Copyright (C) 2002-2020 Free Software Foundation, Inc.
+ *  Copyright (C) 2002-2021 Free Software Foundation, Inc.
  *  This file is part of the GNU C Library.
  *  Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
  *
@@ -545,6 +545,13 @@ svc_getreq_common (const int fd)
 }
 libc_hidden_nolink_sunrpc (svc_getreq_common, GLIBC_2_2)
 
+void
+__svc_wait_on_error (void)
+{
+  struct timespec ts = { .tv_sec = 0, .tv_nsec = 50000000 };
+  __nanosleep (&ts, NULL);
+}
+
 /* If there are no file descriptors available, then accept will fail.
    We want to delay here so the connection request can be dequeued;
    otherwise we can bounce between polling and accepting, never giving the
@@ -555,8 +562,7 @@ __svc_accept_failed (void)
 {
   if (errno == EMFILE)
     {
-      struct timespec ts = { .tv_sec = 0, .tv_nsec = 50000000 };
-      __nanosleep (&ts, NULL);
+      __svc_wait_on_error ();
     }
 }
 

@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2020 Free Software Foundation, Inc.
+# Copyright (C) 1995-2021 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -226,7 +226,7 @@ endif
 
 $(objpfx)test-freopen.out: test-freopen.sh $(objpfx)test-freopen
 	$(SHELL) $< $(common-objpfx) '$(test-program-prefix)'	\
-	$(common-objpfx)libio/ > $@; \
+	$(common-objpfx)libio/; \
 	$(evaluate-test)
 
 $(objpfx)tst-fopenloc-cmp.out: ../iconvdata/testdata/ISO-8859-1..UTF8 \

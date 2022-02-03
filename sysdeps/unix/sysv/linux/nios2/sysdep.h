@@ -1,5 +1,5 @@
 /* Assembler macros for Nios II.
-   Copyright (C) 2000-2020 Free Software Foundation, Inc.
+   Copyright (C) 2000-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -218,6 +218,9 @@
 #define ASM_ARGS_6      ASM_ARGS_5, "r" (_r9)
 
 #define __SYSCALL_CLOBBERS "memory"
+
+#undef HAVE_INTERNAL_BRK_ADDR_SYMBOL
+#define HAVE_INTERNAL_BRK_ADDR_SYMBOL 1
 
 #endif /* __ASSEMBLER__ */
 

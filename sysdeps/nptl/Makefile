@@ -1,4 +1,4 @@
-# Copyright (C) 2002-2020 Free Software Foundation, Inc.
+# Copyright (C) 2002-2021 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 # Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -17,7 +17,8 @@
 # <https://www.gnu.org/licenses/>.
 
 ifeq ($(subdir),nptl)
-libpthread-sysdep_routines += errno-loc
+libpthread-sysdep_routines += errno-loc futex-internal
+CFLAGS-futex-internal.c += -fexceptions -fasynchronous-unwind-tables
 endif
 
 ifeq ($(subdir),rt)

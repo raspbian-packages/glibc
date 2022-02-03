@@ -21,9 +21,9 @@
  
  #: argp/argp-help.c:1600
  msgid "Usage:"
-@@ -5655,7 +5655,7 @@
+@@ -5651,7 +5651,7 @@
  #. TRANS modes on an ordinary file.
- #: sysdeps/gnu/errlist.h:173
+ #: sysdeps/gnu/errlist.h:170
  msgid "Inappropriate ioctl for device"
 -msgstr "Ioctl() inappropré pour un périphérique"
 +msgstr "Ioctl() inapproprié pour un périphérique"

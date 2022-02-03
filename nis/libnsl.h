@@ -1,4 +1,4 @@
-/* Copyright (C) 2005-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2005-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,12 +16,6 @@
    <https://www.gnu.org/licenses/>.  */
 
 #include <rpcsvc/nis.h>
-
-#define NSS_FLAG_NETID_AUTHORITATIVE	1
-#define NSS_FLAG_SERVICES_AUTHORITATIVE	2
-#define NSS_FLAG_SETENT_BATCH_READ	4
-#define NSS_FLAG_ADJUNCT_AS_SHADOW	8
-
 
 /* Set up everything for a call to __do_niscall3.  */
 extern nis_error __prepare_niscall (const_nis_name name, directory_obj **dirp,

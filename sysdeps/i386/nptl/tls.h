@@ -1,5 +1,5 @@
 /* Definition for thread-local data handling.  nptl/i386 version.
-   Copyright (C) 2002-2020 Free Software Foundation, Inc.
+   Copyright (C) 2002-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -155,13 +155,7 @@ union user_desc_init
 # define INIT_SYSINFO
 #endif
 
-#ifndef LOCK_PREFIX
-# ifdef UP
-#  define LOCK_PREFIX  /* nothing */
-# else
-#  define LOCK_PREFIX "lock;"
-# endif
-#endif
+#define LOCK_PREFIX "lock;"
 
 static inline void __attribute__ ((unused, always_inline))
 tls_fill_user_desc (union user_desc_init *desc,
@@ -240,11 +234,16 @@ tls_fill_user_desc (union user_desc_init *desc,
    assignments like
 	pthread_descr self = thread_self();
    do not get optimized away.  */
-# define THREAD_SELF \
+# if __GNUC_PREREQ (6, 0)
+#  define THREAD_SELF \
+  (*(struct pthread *__seg_gs *) offsetof (struct pthread, header.self))
+# else
+#  define THREAD_SELF \
   ({ struct pthread *__self;						      \
      asm ("movl %%gs:%c1,%0" : "=r" (__self)				      \
 	  : "i" (offsetof (struct pthread, header.self)));		      \
      __self;})
+# endif
 
 /* Magic for libthread_db to know how to do THREAD_SELF.  */
 # define DB_THREAD_SELF \
@@ -393,8 +392,6 @@ tls_fill_user_desc (union user_desc_init *desc,
   while (0)
 #define THREAD_GSCOPE_SET_FLAG() \
   THREAD_SETMEM (THREAD_SELF, header.gscope_flag, THREAD_GSCOPE_FLAG_USED)
-#define THREAD_GSCOPE_WAIT() \
-  GL(dl_wait_lookup_done) ()
 
 #endif /* __ASSEMBLER__ */
 

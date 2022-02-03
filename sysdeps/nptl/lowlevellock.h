@@ -1,5 +1,5 @@
 /* Low-level lock implementation.  Generic futex-based version.
-   Copyright (C) 2005-2020 Free Software Foundation, Inc.
+   Copyright (C) 2005-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -120,38 +120,6 @@ extern void __lll_lock_wait (int *futex, int private) attribute_hidden;
        __lll_lock_wait (__futex, private);                              \
    }))
 #define lll_cond_lock(futex, private) __lll_cond_lock (&(futex), private)
-
-
-extern int __lll_clocklock_wait (int *futex, int val, clockid_t,
-				 const struct timespec *,
-				 int private) attribute_hidden;
-
-#define lll_timedwait(futex, val, clockid, abstime, private)		\
-  __lll_clocklock_wait (futex, val, clockid, abstime, private)
-
-/* As __lll_lock, but with an absolute timeout measured against the clock
-   specified in CLOCKID.  If the timeout occurs then return ETIMEDOUT. If
-   ABSTIME is invalid, return EINVAL.  */
-#define __lll_clocklock(futex, clockid, abstime, private)       \
-  ({                                                            \
-    int *__futex = (futex);                                     \
-    int __val = 0;                                              \
-                                                                \
-    if (__glibc_unlikely                                        \
-        (atomic_compare_and_exchange_bool_acq (__futex, 1, 0))) \
-      {								\
-	while (atomic_exchange_acq (futex, 2) != 0)		\
-	  {							\
-	    __val = __lll_clocklock_wait (__futex, 2, clockid, 	\
-					  abstime, private);	\
-	    if (__val == EINVAL || __val == ETIMEDOUT)		\
-	      break;						\
-	  }							\
-      }								\
-    __val;                                                      \
-  })
-#define lll_clocklock(futex, clockid, abstime, private)         \
-  __lll_clocklock (&(futex), clockid, abstime, private)
 
 
 /* This is an expression rather than a statement even though its value is

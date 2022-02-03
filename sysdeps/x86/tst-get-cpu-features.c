@@ -1,5 +1,5 @@
-/* Test case for x86 __get_cpu_features interface
-   Copyright (C) 2015-2020 Free Software Foundation, Inc.
+/* Test case for <sys/platform/x86.h> interface
+   Copyright (C) 2015-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -18,7 +18,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <cpu-features.h>
+#include <sys/platform/x86.h>
 #include <support/check.h>
 
 #define CHECK_CPU_FEATURE(name)		\
@@ -33,36 +33,9 @@
       printf ("  " #name "\n");		\
   }
 
-static const char * const cpu_kinds[] =
-{
-  "Unknown",
-  "Intel",
-  "AMD",
-  "ZHAOXIN",
-  "Other",
-};
-
 static int
 do_test (void)
 {
-  const struct cpu_features *cpu_features = __get_cpu_features ();
-
-  switch (cpu_features->basic.kind)
-    {
-    case arch_kind_intel:
-    case arch_kind_amd:
-    case arch_kind_zhaoxin:
-    case arch_kind_other:
-      printf ("Vendor: %s\n", cpu_kinds[cpu_features->basic.kind]);
-      printf ("Family: 0x%x\n", cpu_features->basic.family);
-      printf ("Model: 0x%x\n", cpu_features->basic.model);
-      printf ("Stepping: 0x%x\n", cpu_features->basic.stepping);
-      break;
-
-    default:
-      abort ();
-    }
-
 #ifdef __SSE2__
   TEST_VERIFY_EXIT (HAS_CPU_FEATURE (SSE2));
 #endif
@@ -75,7 +48,7 @@ do_test (void)
   CHECK_CPU_FEATURE (DS_CPL);
   CHECK_CPU_FEATURE (VMX);
   CHECK_CPU_FEATURE (SMX);
-  CHECK_CPU_FEATURE (EST);
+  CHECK_CPU_FEATURE (EIST);
   CHECK_CPU_FEATURE (TM2);
   CHECK_CPU_FEATURE (SSSE3);
   CHECK_CPU_FEATURE (CNXT_ID);
@@ -138,10 +111,10 @@ do_test (void)
   CHECK_CPU_FEATURE (ERMS);
   CHECK_CPU_FEATURE (INVPCID);
   CHECK_CPU_FEATURE (RTM);
-  CHECK_CPU_FEATURE (PQM);
+  CHECK_CPU_FEATURE (RDT_M);
   CHECK_CPU_FEATURE (DEPR_FPU_CS_DS);
   CHECK_CPU_FEATURE (MPX);
-  CHECK_CPU_FEATURE (PQE);
+  CHECK_CPU_FEATURE (RDT_A);
   CHECK_CPU_FEATURE (AVX512F);
   CHECK_CPU_FEATURE (AVX512DQ);
   CHECK_CPU_FEATURE (RDSEED);
@@ -172,6 +145,7 @@ do_test (void)
   CHECK_CPU_FEATURE (AVX512_BITALG);
   CHECK_CPU_FEATURE (AVX512_VPOPCNTDQ);
   CHECK_CPU_FEATURE (RDPID);
+  CHECK_CPU_FEATURE (KL);
   CHECK_CPU_FEATURE (CLDEMOTE);
   CHECK_CPU_FEATURE (MOVDIRI);
   CHECK_CPU_FEATURE (MOVDIR64B);
@@ -181,6 +155,7 @@ do_test (void)
   CHECK_CPU_FEATURE (AVX512_4VNNIW);
   CHECK_CPU_FEATURE (AVX512_4FMAPS);
   CHECK_CPU_FEATURE (FSRM);
+  CHECK_CPU_FEATURE (UINTR);
   CHECK_CPU_FEATURE (AVX512_VP2INTERSECT);
   CHECK_CPU_FEATURE (MD_CLEAR);
   CHECK_CPU_FEATURE (SERIALIZE);
@@ -189,6 +164,7 @@ do_test (void)
   CHECK_CPU_FEATURE (PCONFIG);
   CHECK_CPU_FEATURE (IBT);
   CHECK_CPU_FEATURE (AMX_BF16);
+  CHECK_CPU_FEATURE (AVX512_FP16);
   CHECK_CPU_FEATURE (AMX_TILE);
   CHECK_CPU_FEATURE (AMX_INT8);
   CHECK_CPU_FEATURE (IBRS_IBPB);
@@ -218,7 +194,15 @@ do_test (void)
   CHECK_CPU_FEATURE (XFD);
   CHECK_CPU_FEATURE (INVARIANT_TSC);
   CHECK_CPU_FEATURE (WBNOINVD);
+  CHECK_CPU_FEATURE (AVX_VNNI);
   CHECK_CPU_FEATURE (AVX512_BF16);
+  CHECK_CPU_FEATURE (FZLRM);
+  CHECK_CPU_FEATURE (FSRS);
+  CHECK_CPU_FEATURE (FSRCS);
+  CHECK_CPU_FEATURE (HRESET);
+  CHECK_CPU_FEATURE (LAM);
+  CHECK_CPU_FEATURE (AESKLE);
+  CHECK_CPU_FEATURE (WIDE_KL);
 
   printf ("Usable CPU features:\n");
   CHECK_CPU_FEATURE_USABLE (SSE3);
@@ -228,7 +212,7 @@ do_test (void)
   CHECK_CPU_FEATURE_USABLE (DS_CPL);
   CHECK_CPU_FEATURE_USABLE (VMX);
   CHECK_CPU_FEATURE_USABLE (SMX);
-  CHECK_CPU_FEATURE_USABLE (EST);
+  CHECK_CPU_FEATURE_USABLE (EIST);
   CHECK_CPU_FEATURE_USABLE (TM2);
   CHECK_CPU_FEATURE_USABLE (SSSE3);
   CHECK_CPU_FEATURE_USABLE (CNXT_ID);
@@ -291,10 +275,10 @@ do_test (void)
   CHECK_CPU_FEATURE_USABLE (ERMS);
   CHECK_CPU_FEATURE_USABLE (INVPCID);
   CHECK_CPU_FEATURE_USABLE (RTM);
-  CHECK_CPU_FEATURE_USABLE (PQM);
+  CHECK_CPU_FEATURE_USABLE (RDT_M);
   CHECK_CPU_FEATURE_USABLE (DEPR_FPU_CS_DS);
   CHECK_CPU_FEATURE_USABLE (MPX);
-  CHECK_CPU_FEATURE_USABLE (PQE);
+  CHECK_CPU_FEATURE_USABLE (RDT_A);
   CHECK_CPU_FEATURE_USABLE (AVX512F);
   CHECK_CPU_FEATURE_USABLE (AVX512DQ);
   CHECK_CPU_FEATURE_USABLE (RDSEED);
@@ -325,6 +309,7 @@ do_test (void)
   CHECK_CPU_FEATURE_USABLE (AVX512_BITALG);
   CHECK_CPU_FEATURE_USABLE (AVX512_VPOPCNTDQ);
   CHECK_CPU_FEATURE_USABLE (RDPID);
+  CHECK_CPU_FEATURE_USABLE (KL);
   CHECK_CPU_FEATURE_USABLE (CLDEMOTE);
   CHECK_CPU_FEATURE_USABLE (MOVDIRI);
   CHECK_CPU_FEATURE_USABLE (MOVDIR64B);
@@ -342,6 +327,7 @@ do_test (void)
   CHECK_CPU_FEATURE_USABLE (PCONFIG);
   CHECK_CPU_FEATURE_USABLE (IBT);
   CHECK_CPU_FEATURE_USABLE (AMX_BF16);
+  CHECK_CPU_FEATURE_USABLE (AVX512_FP16);
   CHECK_CPU_FEATURE_USABLE (AMX_TILE);
   CHECK_CPU_FEATURE_USABLE (AMX_INT8);
   CHECK_CPU_FEATURE_USABLE (IBRS_IBPB);
@@ -371,7 +357,13 @@ do_test (void)
   CHECK_CPU_FEATURE_USABLE (XFD);
   CHECK_CPU_FEATURE_USABLE (INVARIANT_TSC);
   CHECK_CPU_FEATURE_USABLE (WBNOINVD);
+  CHECK_CPU_FEATURE_USABLE (AVX_VNNI);
   CHECK_CPU_FEATURE_USABLE (AVX512_BF16);
+  CHECK_CPU_FEATURE_USABLE (FZLRM);
+  CHECK_CPU_FEATURE_USABLE (FSRS);
+  CHECK_CPU_FEATURE_USABLE (FSRCS);
+  CHECK_CPU_FEATURE_USABLE (AESKLE);
+  CHECK_CPU_FEATURE_USABLE (WIDE_KL);
 
   return 0;
 }

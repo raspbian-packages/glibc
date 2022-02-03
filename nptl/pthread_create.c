@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -26,6 +26,7 @@
 #include <hp-timing.h>
 #include <ldsodefs.h>
 #include <atomic.h>
+#include <libc-diag.h>
 #include <libc-internal.h>
 #include <resolv.h>
 #include <kernel-features.h>
@@ -49,6 +50,14 @@ static td_thr_events_t __nptl_threads_events __attribute_used__;
 
 /* Pointer to descriptor with the last event.  */
 static struct pthread *__nptl_last_event __attribute_used__;
+
+#ifdef SHARED
+/* This variable is used to access _rtld_global from libthread_db.  If
+   GDB loads libpthread before ld.so, it is not possible to resolve
+   _rtld_global directly during libpthread initialization.  */
+static struct rtld_global *__nptl_rtld_global __attribute_used__
+  = &_rtld_global;
+#endif
 
 /* Number of threads running.  */
 unsigned int __nptl_nthreads = 1;
@@ -212,9 +221,9 @@ __find_in_stack_list (struct pthread *pd)
   list_t *entry;
   struct pthread *result = NULL;
 
-  lll_lock (stack_cache_lock, LLL_PRIVATE);
+  lll_lock (GL (dl_stack_cache_lock), LLL_PRIVATE);
 
-  list_for_each (entry, &stack_used)
+  list_for_each (entry, &GL (dl_stack_used))
     {
       struct pthread *curp;
 
@@ -227,7 +236,7 @@ __find_in_stack_list (struct pthread *pd)
     }
 
   if (result == NULL)
-    list_for_each (entry, &__stack_user)
+    list_for_each (entry, &GL (dl_stack_user))
       {
 	struct pthread *curp;
 
@@ -239,7 +248,7 @@ __find_in_stack_list (struct pthread *pd)
 	  }
       }
 
-  lll_unlock (stack_cache_lock, LLL_PRIVATE);
+  lll_unlock (GL (dl_stack_cache_lock), LLL_PRIVATE);
 
   return result;
 }
@@ -400,7 +409,16 @@ START_THREAD_DEFN
   struct pthread_unwind_buf unwind_buf;
 
   int not_first_call;
+  DIAG_PUSH_NEEDS_COMMENT;
+#if __GNUC_PREREQ (7, 0)
+  /* This call results in a -Wstringop-overflow warning because struct
+     pthread_unwind_buf is smaller than jmp_buf.  setjmp and longjmp
+     do not use anything beyond the common prefix (they never access
+     the saved signal mask), so that is a false positive.  */
+  DIAG_IGNORE_NEEDS_COMMENT (11, "-Wstringop-overflow=");
+#endif
   not_first_call = setjmp ((struct __jmp_buf_tag *) unwind_buf.cancel_jmp_buf);
+  DIAG_POP_NEEDS_COMMENT;
 
   /* No previous handlers.  NB: This must be done after setjmp since the
      private space in the unwind jump buffer may overlap space used by
@@ -416,8 +434,6 @@ START_THREAD_DEFN
   unwind_buf.priv.data.prev = NULL;
   unwind_buf.priv.data.cleanup = NULL;
 
-  __libc_signal_restore_set (&pd->sigmask);
-
   /* Allow setxid from now onwards.  */
   if (__glibc_unlikely (atomic_exchange_acq (&pd->setxid_futex, 0) == -2))
     futex_wake (&pd->setxid_futex, 1, FUTEX_PRIVATE);
@@ -426,6 +442,8 @@ START_THREAD_DEFN
     {
       /* Store the new cleanup handler info.  */
       THREAD_SETMEM (pd, cleanup_jmp_buf, &unwind_buf);
+
+      __libc_signal_restore_set (&pd->sigmask);
 
       /* We are either in (a) or (b), and in either case we either own
          PD already (2) or are about to own PD (1), and so our only

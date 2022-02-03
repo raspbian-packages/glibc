@@ -1,5 +1,5 @@
 /* Operating system support for run-time dynamic linker.  Generic Unix version.
-   Copyright (C) 1995-2020 Free Software Foundation, Inc.
+   Copyright (C) 1995-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -58,8 +58,6 @@ ElfW(Addr) _dl_base_addr;
 #endif
 int __libc_enable_secure attribute_relro = 0;
 rtld_hidden_data_def (__libc_enable_secure)
-int __libc_multiple_libcs = 0;	/* Defining this here avoids the inclusion
-				   of init-first.  */
 /* This variable contains the lowest stack address ever used.  */
 void *__libc_stack_end attribute_relro = NULL;
 rtld_hidden_data_def(__libc_stack_end)

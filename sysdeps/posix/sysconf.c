@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -1216,7 +1216,7 @@ __sysconf_check_spec (const char *spec)
 	  spec, speclen + 1);
 
   struct stat64 st;
-  long int ret = __xstat64 (_STAT_VER, name, &st) >= 0 ? 1 : -1;
+  long int ret = __stat64 (name, &st) >= 0 ? 1 : -1;
 
   __set_errno (save_errno);
   return ret;

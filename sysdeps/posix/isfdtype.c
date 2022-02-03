@@ -1,5 +1,5 @@
 /* Determine whether descriptor has given property.
-   Copyright (C) 1996-2020 Free Software Foundation, Inc.
+   Copyright (C) 1996-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -29,7 +29,7 @@ isfdtype (int fildes, int fdtype)
 
   {
     int save_error = errno;
-    result = fstat64 (fildes, &st);
+    result = __fstat64 (fildes, &st);
     __set_errno (save_error);
   }
 

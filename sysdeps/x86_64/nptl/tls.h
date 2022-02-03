@@ -1,5 +1,5 @@
 /* Definition for thread-local data handling.  nptl/x86_64 version.
-   Copyright (C) 2002-2020 Free Software Foundation, Inc.
+   Copyright (C) 2002-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -99,13 +99,7 @@ _Static_assert (offsetof (tcbhead_t, __glibc_unused2) == 0x80,
 /* Get system call information.  */
 # include <sysdep.h>
 
-#ifndef LOCK_PREFIX
-# ifdef UP
-#  define LOCK_PREFIX	/* nothing */
-# else
-#  define LOCK_PREFIX	"lock;"
-# endif
-#endif
+#define LOCK_PREFIX "lock;"
 
 /* This is the size of the initial TCB.  Can't be just sizeof (tcbhead_t),
    because NPTL getpid, __libc_alloca_cutoff etc. need (almost) the whole
@@ -186,11 +180,16 @@ _Static_assert (offsetof (tcbhead_t, __glibc_unused2) == 0x80,
    assignments like
 	pthread_descr self = thread_self();
    do not get optimized away.  */
-# define THREAD_SELF \
+# if __GNUC_PREREQ (6, 0)
+#  define THREAD_SELF \
+  (*(struct pthread *__seg_fs *) offsetof (struct pthread, header.self))
+# else
+#  define THREAD_SELF \
   ({ struct pthread *__self;						      \
      asm ("mov %%fs:%c1,%0" : "=r" (__self)				      \
 	  : "i" (offsetof (struct pthread, header.self)));	 	      \
      __self;})
+# endif
 
 /* Magic for libthread_db to know how to do THREAD_SELF.  */
 # define DB_THREAD_SELF_INCLUDE  <sys/reg.h> /* For the FS constant.  */
@@ -338,8 +337,6 @@ _Static_assert (offsetof (tcbhead_t, __glibc_unused2) == 0x80,
   while (0)
 # define THREAD_GSCOPE_SET_FLAG() \
   THREAD_SETMEM (THREAD_SELF, header.gscope_flag, THREAD_GSCOPE_FLAG_USED)
-# define THREAD_GSCOPE_WAIT() \
-  GL(dl_wait_lookup_done) ()
 
 #endif /* __ASSEMBLER__ */
 

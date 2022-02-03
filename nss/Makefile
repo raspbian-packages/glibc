@@ -1,4 +1,4 @@
-# Copyright (C) 1996-2020 Free Software Foundation, Inc.
+# Copyright (C) 1996-2021 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -30,7 +30,8 @@ routines		= nsswitch getnssent getnssent_r digits_dots \
 			  $(addsuffix -lookup,$(databases)) \
 			  compat-lookup nss_hash nss_files_fopen \
 			  nss_readline nss_parse_line_result \
-			  nss_fgetent_r
+			  nss_fgetent_r nss_module nss_action \
+			  nss_action_parse nss_database
 
 # These are the databases that go through nss dispatch.
 # Caution: if you add a database here, you must add its real name
@@ -65,7 +66,8 @@ tests-container = \
 			  tst-nss-test3 \
 			  tst-nss-files-hosts-long \
 			  tst-nss-db-endpwent \
-			  tst-nss-db-endgrent
+			  tst-nss-db-endgrent \
+			  tst-reload1 tst-reload2
 
 # Tests which need libdl
 ifeq (yes,$(build-shared))

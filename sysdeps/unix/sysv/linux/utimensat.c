@@ -1,5 +1,5 @@
 /* Change access and modification times of open file.  Linux version.
-   Copyright (C) 2007-2020 Free Software Foundation, Inc.
+   Copyright (C) 2007-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -28,20 +28,21 @@ int
 __utimensat64_helper (int fd, const char *file,
                       const struct __timespec64 tsp64[2], int flags)
 {
-#ifdef __ASSUME_TIME64_SYSCALLS
-# ifndef __NR_utimensat_time64
-#  define __NR_utimensat_time64 __NR_utimensat
-# endif
-  return INLINE_SYSCALL (utimensat_time64, 4, fd, file, &tsp64[0], flags);
-#else
-# ifdef __NR_utimensat_time64
-  int ret = INLINE_SYSCALL (utimensat_time64, 4, fd, file, &tsp64[0], flags);
+#ifndef __NR_utimensat_time64
+# define __NR_utimensat_time64 __NR_utimensat
+#endif
+  int ret = INLINE_SYSCALL_CALL (utimensat_time64, fd, file, &tsp64[0], flags);
+#ifndef __ASSUME_TIME64_SYSCALLS
   if (ret == 0 || errno != ENOSYS)
     return ret;
-# endif
-  if (tsp64
-      && (! in_time_t_range (tsp64[0].tv_sec)
-          || ! in_time_t_range (tsp64[1].tv_sec)))
+
+  /* For UTIME_NOW and UTIME_OMIT the value of tv_sec field is ignored.  */
+# define TS_VALID(ns) \
+  ((((ns).tv_nsec == UTIME_NOW || (ns).tv_nsec == UTIME_OMIT) \
+   || in_time_t_range ((ns).tv_sec)))
+
+  if (tsp64 != NULL
+      && (!TS_VALID (tsp64[0]) || !TS_VALID (tsp64[1])))
     {
       __set_errno (EOVERFLOW);
       return -1;
@@ -54,10 +55,10 @@ __utimensat64_helper (int fd, const char *file,
       tsp32[1] = valid_timespec64_to_timespec (tsp64[1]);
     }
 
-  return INLINE_SYSCALL (utimensat, 4, fd, file, tsp64 ? &tsp32[0] : NULL,
-                         flags);
+  ret = INLINE_SYSCALL_CALL (utimensat, fd, file, tsp64 ? &tsp32[0] : NULL,
+			     flags);
 #endif
-
+  return ret;
 }
 libc_hidden_def (__utimensat64_helper)
 

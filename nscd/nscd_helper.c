@@ -1,4 +1,4 @@
-/* Copyright (C) 1998-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1998-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1998.
 
@@ -325,7 +325,7 @@ __nscd_get_mapping (request_type type, const char *key,
   if (__glibc_unlikely (n == keylen))
     {
       struct stat64 st;
-      if (__builtin_expect (fstat64 (mapfd, &st) != 0, 0)
+      if (__builtin_expect (__fstat64 (mapfd, &st) != 0, 0)
 	  || __builtin_expect (st.st_size < sizeof (struct database_pers_head),
 			       0))
 	goto out_close;

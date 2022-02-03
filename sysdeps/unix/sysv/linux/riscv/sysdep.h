@@ -22,6 +22,32 @@
 #include <sysdeps/unix/sysv/linux/generic/sysdep.h>
 #include <tls.h>
 
+#undef SYS_ify
+#define SYS_ify(syscall_name)	__NR_##syscall_name
+
+#if __WORDSIZE == 32
+
+/* Workarounds for generic code needing to handle 64-bit time_t.  */
+
+/* Fix sysdeps/unix/sysv/linux/clock_getcpuclockid.c.  */
+#define __NR_clock_getres	__NR_clock_getres_time64
+/* Fix sysdeps/nptl/lowlevellock-futex.h.  */
+#define __NR_futex		__NR_futex_time64
+/* Fix sysdeps/unix/sysv/linux/pause.c.  */
+#define __NR_ppoll		__NR_ppoll_time64
+/* Fix sysdeps/unix/sysv/linux/select.c.  */
+#define __NR_pselect6		__NR_pselect6_time64
+/* Fix sysdeps/unix/sysv/linux/recvmmsg.c.  */
+#define __NR_recvmmsg		__NR_recvmmsg_time64
+/* Fix sysdeps/unix/sysv/linux/sigtimedwait.c.  */
+#define __NR_rt_sigtimedwait	__NR_rt_sigtimedwait_time64
+/* Fix sysdeps/unix/sysv/linux/semtimedop.c.  */
+#define __NR_semtimedop		__NR_semtimedop_time64
+/* Hack sysdeps/unix/sysv/linux/generic/utimes.c.  */
+#define __NR_utimensat		__NR_utimensat_time64
+
+#endif /* __WORDSIZE == 32 */
+
 #ifdef __ASSEMBLER__
 
 # include <sys/asm.h>
@@ -107,28 +133,30 @@
 # undef ret_ERRVAL
 # define ret_ERRVAL ret
 
-#endif /* __ASSEMBLER__ */
+#else /* !__ASSEMBLER__ */
 
-/* In order to get __set_errno() definition in INLINE_SYSCALL.  */
-#ifndef __ASSEMBLER__
-# include <errno.h>
-#endif
+# if __WORDSIZE == 64
+#  define VDSO_NAME	"LINUX_4.15"
+#  define VDSO_HASH	182943605
 
-#include <sysdeps/unix/sysdep.h>
+/* List of system calls which are supported as vsyscalls only
+   for RV64.  */
+#  define HAVE_CLOCK_GETRES64_VSYSCALL	"__vdso_clock_getres"
+#  define HAVE_CLOCK_GETTIME64_VSYSCALL	"__vdso_clock_gettime"
+#  define HAVE_GETTIMEOFDAY_VSYSCALL	"__vdso_gettimeofday"
+# else
+#  define VDSO_NAME	"LINUX_5.4"
+#  define VDSO_HASH	61765876
 
-#undef SYS_ify
-#define SYS_ify(syscall_name)	__NR_##syscall_name
+/* RV32 does not support the gettime VDSO syscalls.  */
+# endif
 
-#ifndef __ASSEMBLER__
-
-# define VDSO_NAME  "LINUX_4.15"
-# define VDSO_HASH  182943605
-
-/* List of system calls which are supported as vsyscalls.  */
-# define HAVE_CLOCK_GETRES64_VSYSCALL	"__vdso_clock_getres"
-# define HAVE_CLOCK_GETTIME64_VSYSCALL	"__vdso_clock_gettime"
-# define HAVE_GETTIMEOFDAY_VSYSCALL	"__vdso_gettimeofday"
+/* List of system calls which are supported as vsyscalls (for RV32 and
+   RV64).  */
 # define HAVE_GETCPU_VSYSCALL		"__vdso_getcpu"
+
+# undef HAVE_INTERNAL_BRK_ADDR_SYMBOL
+# define HAVE_INTERNAL_BRK_ADDR_SYMBOL 1
 
 # define INTERNAL_SYSCALL(name, nr, args...) \
 	internal_syscall##nr (SYS_ify (name), args)

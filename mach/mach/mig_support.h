@@ -1,4 +1,4 @@
-/* Copyright (C) 1993-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1993-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -54,19 +54,6 @@ extern void mig_reply_setup (const mach_msg_header_t *__request,
 extern vm_size_t mig_strncpy (char *__dst, const char *__src, vm_size_t __len);
 extern vm_size_t __mig_strncpy (char *__dst, const char *__src, vm_size_t);
 
-#if defined __USE_EXTERN_INLINES && defined _LIBC
-__extern_inline vm_size_t
-__mig_strncpy (char *__dst, const char *__src, vm_size_t __len)
-{
-  return __stpncpy (__dst, __src, __len) - __dst;
-}
-__extern_inline vm_size_t
-mig_strncpy (char *__dst, const char *__src, vm_size_t __len)
-{
-  return __mig_strncpy (__dst, __src, __len);
-}
-#endif
-
-
+extern void *__mig_memcpy (void *__dst, const void *__src, vm_size_t __len);
 
 #endif	/* mach/mig_support.h */

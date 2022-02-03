@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2020 Free Software Foundation, Inc.
+# Copyright (C) 1991-2021 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -31,6 +31,10 @@ routines := fgetgrent initgroups setgroups \
 
 tests := testgrp tst-putgrent
 
+tests-container = \
+	tst-initgroups1 \
+	tst-initgroups2
+
 ifeq (yes,$(build-shared))
 test-srcs :=  tst_fgetgrent
 ifeq ($(run-built-tests),yes)
@@ -59,7 +63,7 @@ ifeq ($(run-built-tests),yes)
 # tst_fgetgrent currently only works with shared libraries
 ifeq (yes,$(build-shared))
 $(objpfx)tst_fgetgrent.out: tst_fgetgrent.sh $(objpfx)tst_fgetgrent
-	$(SHELL) $< $(common-objpfx) '$(test-program-prefix)' > $@; \
+	$(SHELL) $< $(common-objpfx) '$(test-program-prefix)'; \
 	$(evaluate-test)
 
 endif

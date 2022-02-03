@@ -1,6 +1,6 @@
 #!/bin/sh
 # Merge test results of individual tests or subdirectories.
-# Copyright (C) 2014-2020 Free Software Foundation, Inc.
+# Copyright (C) 2014-2021 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -35,7 +35,12 @@ case $type in
     subdir=${subdir:+$subdir/}
     for t in "$@"; do
       if [ -s "$objpfx$t.test-result" ]; then
-	head -n1 "$objpfx$t.test-result"
+	# This loop is called thousands of times even when there's
+	# nothing to do.  Avoid using non-built-in commands (like
+	# /bin/head) where possible.  We assume "echo" is typically a
+	# built-in.
+	IFS= read -r line < "$objpfx$t.test-result"
+	echo "$line"
       else
 	echo "UNRESOLVED: $subdir$t"
       fi

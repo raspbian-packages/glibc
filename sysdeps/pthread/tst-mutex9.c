@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2003-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2003.
 
@@ -29,6 +29,10 @@
 #include <support/check.h>
 #include <support/timespec.h>
 #include <support/xunistd.h>
+
+#ifdef ENABLE_PP
+#include "tst-tpp.h"
+#endif
 
 
 /* A bogus clock value that tells run_test to use pthread_mutex_timedlock
@@ -73,8 +77,11 @@ do_test_clock (clockid_t clockid)
 
   TEST_COMPARE (pthread_mutexattr_settype (&a, PTHREAD_MUTEX_RECURSIVE), 0);
 
-#ifdef ENABLE_PI
+#if defined ENABLE_PI
   TEST_COMPARE (pthread_mutexattr_setprotocol (&a, PTHREAD_PRIO_INHERIT), 0);
+#elif defined ENABLE_PP
+  TEST_COMPARE (pthread_mutexattr_setprotocol (&a, PTHREAD_PRIO_PROTECT), 0);
+  TEST_COMPARE (pthread_mutexattr_setprioceiling (&a, 6), 0);
 #endif
 
   int e;
@@ -131,9 +138,15 @@ do_test_clock (clockid_t clockid)
 static int
 do_test (void)
 {
+#ifdef ENABLE_PP
+  init_tpp_test ();
+#endif
+
   do_test_clock (CLOCK_USE_TIMEDLOCK);
   do_test_clock (CLOCK_REALTIME);
+#ifndef ENABLE_PI
   do_test_clock (CLOCK_MONOTONIC);
+#endif
   return 0;
 }
 

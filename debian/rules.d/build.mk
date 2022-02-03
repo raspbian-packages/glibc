@@ -268,6 +268,12 @@ ifeq ($(DEB_HOST_ARCH_OS),linux)
 	perl -pe 'BEGIN {undef $$/; open(IN, "$(DEB_BUILDDIR)/nptl/nptl_lock_constants.py"); $$j=<IN>;} s/from nptl_lock_constants import \*/$$j/g;' \
 		$(CURDIR)/nptl/nptl-printers.py > $(CURDIR)/debian/tmp-$(curpass)/usr/share/gdb/auto-load/$(call xx,slibdir)/libpthread-$(GLIBC_VERSION).so-gdb.py
 endif
+
+ifeq ($(DEB_HOST_ARCH_OS),linux)
+	# Install an empty libpthread_nonshared.a to support broken closed
+	# source software.
+	ar crv $(CURDIR)/debian/tmp-$(curpass)/$(call xx,libdir)/libpthread_nonshared.a
+endif
 endif
 
 	# Create the multiarch directories, and the configuration file in /etc/ld.so.conf.d

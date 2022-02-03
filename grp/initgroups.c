@@ -1,4 +1,4 @@
-/* Copyright (C) 1989, 1991-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1989, 1991-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -63,7 +63,6 @@ internal_getgrouplist (const char *user, gid_t group, long int *size,
 #endif
 
   enum nss_status status = NSS_STATUS_UNAVAIL;
-  int no_more = 0;
 
   /* Never store more than the starting *SIZE number of elements.  */
   assert (*size > 0);
@@ -71,28 +70,25 @@ internal_getgrouplist (const char *user, gid_t group, long int *size,
   /* Start is one, because we have the first group as parameter.  */
   long int start = 1;
 
-  if (__nss_initgroups_database == NULL)
-    {
-      if (__nss_database_lookup2 ("initgroups", NULL, "",
-				  &__nss_initgroups_database) < 0)
-	{
-	  if (__nss_group_database == NULL)
-	    no_more = __nss_database_lookup2 ("group", NULL, "files",
-					      &__nss_group_database);
+  nss_action_list nip;
 
-	  __nss_initgroups_database = __nss_group_database;
-	}
-      else
-	use_initgroups_entry = true;
+  if (__nss_database_get (nss_database_initgroups, &nip)
+      && nip != NULL)
+    {
+      use_initgroups_entry = true;
+    }
+  else if (__nss_database_get (nss_database_group, &nip)
+	   && nip != NULL)
+    {
+      use_initgroups_entry = false;
     }
   else
-    /* __nss_initgroups_database might have been set through
-       __nss_configure_lookup in which case use_initgroups_entry was
-       not set here.  */
-    use_initgroups_entry = __nss_initgroups_database != __nss_group_database;
+    {
+      nip = __nss_action_parse ("files");
+      use_initgroups_entry = false;
+    }
 
-  service_user *nip = __nss_initgroups_database;
-  while (! no_more)
+  while (nip && nip->module)
     {
       long int prev_start = start;
 
@@ -134,10 +130,7 @@ internal_getgrouplist (const char *user, gid_t group, long int *size,
 	  && nss_next_action (nip, status) == NSS_ACTION_RETURN)
 	 break;
 
-      if (nip->next == NULL)
-	no_more = -1;
-      else
-	nip = nip->next;
+      nip++;
     }
 
   return start;

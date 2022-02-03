@@ -1,5 +1,5 @@
 /* pthread_attr_setstacksize.  Generic version.
-   Copyright (C) 2002-2020 Free Software Foundation, Inc.
+   Copyright (C) 2002-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -25,4 +25,4 @@ __pthread_attr_setstacksize (pthread_attr_t *attr, size_t stacksize)
   attr->__stacksize = stacksize;
   return 0;
 }
-strong_alias (__pthread_attr_setstacksize, pthread_attr_setstacksize)
+weak_alias (__pthread_attr_setstacksize, pthread_attr_setstacksize)

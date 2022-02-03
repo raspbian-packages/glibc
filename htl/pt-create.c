@@ -1,5 +1,5 @@
 /* Thread creation.
-   Copyright (C) 2000-2020 Free Software Foundation, Inc.
+   Copyright (C) 2000-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -46,6 +46,8 @@ unsigned int __pthread_total;
 static void
 entry_point (struct __pthread *self, void *(*start_routine) (void *), void *arg)
 {
+  int err;
+
   ___pthread_self = self;
   __resp = &self->res_state;
 
@@ -59,6 +61,10 @@ entry_point (struct __pthread *self, void *(*start_routine) (void *), void *arg)
 #endif
 
   __pthread_startup ();
+
+  /* We can now unleash signals.  */
+  err = __pthread_sigstate (self, SIG_SETMASK, &self->init_sigset, 0, 0);
+  assert_perror (err);
 
   if (self->c11)
     {
@@ -202,11 +208,16 @@ __pthread_create_internal (struct __pthread **thread,
      shall be empty."  If the currnet thread is not a pthread then we
      just inherit the process' sigmask.  */
   if (__pthread_num_threads == 1)
-    err = __sigprocmask (0, 0, &sigset);
+    err = __sigprocmask (0, 0, &pthread->init_sigset);
   else
-    err = __pthread_sigstate (_pthread_self (), 0, 0, &sigset, 0);
+    err = __pthread_sigstate (_pthread_self (), 0, 0, &pthread->init_sigset, 0);
   assert_perror (err);
 
+  if (start_routine)
+    /* But block the signals for now, until the thread is fully initialized.  */
+    __sigfillset (&sigset);
+  else
+    sigset = pthread->init_sigset;
   err = __pthread_sigstate (pthread, SIG_SETMASK, &sigset, 0, 1);
   assert_perror (err);
 
@@ -245,7 +256,10 @@ __pthread_create_internal (struct __pthread **thread,
 failed_starting:
   /* If joinable, a reference was added for the caller.  */
   if (pthread->state == PTHREAD_JOINABLE)
-    __pthread_dealloc (pthread);
+    {
+      __pthread_dealloc (pthread);
+      __pthread_dealloc_finish (pthread);
+    }
 
   __pthread_setid (pthread->thread, NULL);
   atomic_decrement (&__pthread_total);
@@ -267,6 +281,7 @@ failed_thread_alloc:
 			      / __vm_page_size) * __vm_page_size + stacksize);
 failed_stack_alloc:
   __pthread_dealloc (pthread);
+  __pthread_dealloc_finish (pthread);
 failed:
   return err;
 }

@@ -1,4 +1,4 @@
-/* Copyright (C) 1999-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1999-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Written by Jes Sorensen, <Jes.Sorensen@cern.ch>, April 1999.
    Based on code originally written by David Mosberger-Tang
@@ -171,6 +171,9 @@
 #define ret_ERRVAL		ret
 
 #else /* not __ASSEMBLER__ */
+
+#undef HAVE_INTERNAL_BRK_ADDR_SYMBOL
+#define HAVE_INTERNAL_BRK_ADDR_SYMBOL 1
 
 #define BREAK_INSN_1(num) "break " #num ";;\n\t"
 #define BREAK_INSN(num) BREAK_INSN_1(num)

@@ -1,5 +1,5 @@
 /* Load the dependencies of a mapped object.
-   Copyright (C) 1996-2020 Free Software Foundation, Inc.
+   Copyright (C) 1996-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -611,7 +611,12 @@ Filters not supported with LD_TRACE_PRELINKING"));
     memcpy (l_initfini, map->l_searchlist.r_list,
 	    nlist * sizeof (struct link_map *));
 
-  _dl_sort_maps (&l_initfini[1], nlist - 1, NULL, false);
+  /* If libc.so.6 is the main map, it participates in the sort, so
+     that the relocation order is correct regarding libc.so.6.  */
+  if (l_initfini[0] == GL (dl_ns)[l_initfini[0]->l_ns].libc_map)
+    _dl_sort_maps (l_initfini, nlist, NULL, false);
+  else
+    _dl_sort_maps (&l_initfini[1], nlist - 1, NULL, false);
 
   /* Terminate the list of dependencies.  */
   l_initfini[nlist] = NULL;

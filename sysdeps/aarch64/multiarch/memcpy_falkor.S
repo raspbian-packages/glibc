@@ -1,5 +1,5 @@
 /* Optimized memcpy for Qualcomm Falkor processor.
-   Copyright (C) 2017-2020 Free Software Foundation, Inc.
+   Copyright (C) 2017-2021 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -73,9 +73,9 @@
 #if IS_IN (libc)
 ENTRY_ALIGN (__memcpy_falkor, 6)
 
-	DELOUSE (0)
-	DELOUSE (1)
-	DELOUSE (2)
+	PTR_ARG (0)
+	PTR_ARG (1)
+	SIZE_ARG (2)
 
 	cmp	count, 32
 	add	srcend, src, count
@@ -218,9 +218,9 @@ libc_hidden_builtin_def (__memcpy_falkor)
 
 ENTRY_ALIGN (__memmove_falkor, 6)
 
-	DELOUSE (0)
-	DELOUSE (1)
-	DELOUSE (2)
+	PTR_ARG (0)
+	PTR_ARG (1)
+	SIZE_ARG (2)
 
 	cmp	count, 32
 	add	srcend, src, count

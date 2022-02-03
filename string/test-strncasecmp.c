@@ -1,5 +1,5 @@
 /* Test and measure strncasecmp functions.
-   Copyright (C) 1999-2020 Free Software Foundation, Inc.
+   Copyright (C) 1999-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Written by Jakub Jelinek <jakub@redhat.com>, 1999.
 
@@ -135,6 +135,48 @@ do_test (size_t align1, size_t align2, size_t n, size_t len, int max_char,
 
   FOR_EACH_IMPL (impl, 0)
     do_one_test (impl, s1, s2, n, exp_result);
+}
+
+static void
+do_page_tests (void)
+{
+  char *s1, *s2;
+  int exp_result;
+  const size_t maxoffset = 64;
+
+  s1 = (char *) buf1 + BUF1PAGES * page_size - maxoffset;
+  memset (s1, 'a', maxoffset - 1);
+  s1[maxoffset - 1] = '\0';
+
+  s2 = (char *) buf2 + page_size - maxoffset;
+  memset (s2, 'a', maxoffset - 1);
+  s2[maxoffset - 1] = '\0';
+
+  /* At this point s1 and s2 point to distinct memory regions containing
+     "aa..." with size of 63 plus '\0'.  Also, both strings are bounded to a
+     page with read/write access and the next page is protected with PROT_NONE
+     (meaning that any access outside of the page regions will trigger an
+     invalid memory access).
+
+     The loop checks for all possible offsets up to maxoffset for both
+     inputs with a size larger than the string (so memory access outside
+     the expected memory regions might trigger invalid access).  */
+
+  for (size_t off1 = 0; off1 < maxoffset; off1++)
+    {
+      for (size_t off2 = 0; off2 < maxoffset; off2++)
+	{
+	  exp_result = (off1 == off2)
+			? 0
+			: off1 < off2
+			  ? 'a'
+			  : -'a';
+
+	  FOR_EACH_IMPL (impl, 0)
+	    check_result (impl, s1 + off1, s2 + off2, maxoffset + 1,
+			  exp_result);
+	}
+    }
 }
 
 static void
@@ -334,6 +376,7 @@ test_locale (const char *locale)
     }
 
   do_random_tests ();
+  do_page_tests ();
 }
 
 int

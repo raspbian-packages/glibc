@@ -1,4 +1,4 @@
-/* Copyright (C) 2020 Free Software Foundation, Inc.
+/* Copyright (C) 2020-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -19,6 +19,7 @@
 
 /* Needed to elide the itemized copy code in common xstatconv.c.  */
 #define STAT_IS_KERNEL_STAT 1
+#define STAT64_IS_KERNEL_STAT64 1
 
 /* Nice side-effect of 64-bit time_t switch is these are same.  */
 #define XSTAT_IS_XSTAT64 1

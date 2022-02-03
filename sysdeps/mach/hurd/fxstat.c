@@ -1,4 +1,4 @@
-/* Copyright (C) 1992-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1992-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -18,15 +18,20 @@
 #include <errno.h>
 #include <stddef.h>
 #include <sys/stat.h>
+#include <hurd.h>
+#include <shlib-compat.h>
 
-#include "xstatconv.c"
+#if LIB_COMPAT(libc, GLIBC_2_0, GLIBC_2_33)
 
 /* Get information about the file descriptor FD in BUF.  */
 int
 __fxstat (int vers, int fd, struct stat *buf)
 {
-  struct stat64 buf64;
-  return __fxstat64 (vers, fd, &buf64) ?: xstat64_conv (buf, &buf64);
+  if (vers != _STAT_VER)
+    return __hurd_fail (EINVAL);
+
+  return __fstat (fd, buf);
 }
-hidden_def (__fxstat)
 weak_alias (__fxstat, _fxstat)
+
+#endif /* LIB_COMPAT  */

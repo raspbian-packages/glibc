@@ -24,8 +24,8 @@
 -	case $ret in
 -	[02]) RTLD=${rtld}; break;;
 -	esac
-+	dummy=`$rtld 2>&1` 
-+	if test $? = 127; then
++	dummy=`$rtld --version 2>&1`
++	if test $? = 0; then
 +	  verify_out=`${rtld} --verify "$file"`
 +	  ret=$?
 +	  case $ret in

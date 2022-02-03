@@ -271,6 +271,15 @@ extern struct tm *__tz_convert (__time64_t timer, int use_localtime,
 extern int __nanosleep (const struct timespec *__requested_time,
 			struct timespec *__remaining);
 hidden_proto (__nanosleep)
+#if __TIMESIZE == 64
+# define __nanosleep64 __nanosleep
+#else
+extern int __nanosleep64 (const struct __timespec64 *__requested_time,
+			  struct __timespec64 *__remaining);
+hidden_proto (__nanosleep64)
+#endif
+
+
 extern int __getdate_r (const char *__string, struct tm *__resbufp)
   attribute_hidden;
 
@@ -306,6 +315,13 @@ extern int __clock_gettime64 (clockid_t clock_id, struct __timespec64 *tp);
 libc_hidden_proto (__clock_gettime64)
 extern int __timespec_get64 (struct __timespec64 *ts, int base);
 libc_hidden_proto (__timespec_get64)
+#endif
+
+#if __TIMESIZE == 64
+# define __time64 __time
+#else
+extern __time64_t __time64 (__time64_t *timer);
+libc_hidden_proto (__time64)
 #endif
 
 /* Use in the clock_* functions.  Size of the field representing the
@@ -464,6 +480,12 @@ valid_timespec_to_timeval32 (const struct timespec ts)
   return (struct __timeval32) { (time_t) ts.tv_sec, ts.tv_nsec / 1000 };
 }
 
+static inline struct __timeval64
+valid_timespec_to_timeval64 (const struct timespec ts)
+{
+  return (struct __timeval64) { (time_t) ts.tv_sec, ts.tv_nsec / 1000 };
+}
+
 /* Check if a value is in the valid nanoseconds range. Return true if
    it is, false otherwise.  */
 static inline bool
@@ -480,6 +502,11 @@ time_now (void)
   __clock_gettime (TIME_CLOCK_GETTIME_CLOCKID, &ts);
   return ts.tv_sec;
 }
+
+#define NSEC_PER_SEC    1000000000L  /* Nanoseconds per second.  */
+#define USEC_PER_SEC    1000000L     /* Microseconds per second.  */
+#define NSEC_PER_USEC   1000L        /* Nanoseconds per microsecond.  */
+
 #endif
 
 #endif

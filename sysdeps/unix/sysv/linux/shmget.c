@@ -1,4 +1,4 @@
-/* Copyright (C) 1995-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1995-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, August 1995.
 
@@ -17,9 +17,9 @@
    <https://www.gnu.org/licenses/>.  */
 
 #include <sys/msg.h>
+#include <stddef.h>
 #include <ipc_priv.h>
 #include <sysdep.h>
-#include <errno.h>
 
 /* Return an identifier for an shared memory segment of at least size SIZE
    which is associated with KEY.  */

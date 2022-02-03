@@ -1,5 +1,5 @@
 /* Test for reading directories with getdents64.
-   Copyright (C) 2019-2020 Free Software Foundation, Inc.
+   Copyright (C) 2019-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -76,8 +76,18 @@ large_buffer_checks (int fd)
     }
 }
 
-static int
-do_test (void)
+static void
+do_test_large_size (void)
+{
+  int fd = xopen (".", O_RDONLY | O_DIRECTORY, 0);
+  TEST_VERIFY (fd >= 0);
+  large_buffer_checks (fd);
+
+  xclose (fd);
+}
+
+static void
+do_test_by_size (size_t buffer_size)
 {
   /* The test compares the iteration order with readdir64.  */
   DIR *reference = opendir (".");
@@ -98,7 +108,7 @@ do_test (void)
              non-existing data.  */
           struct
           {
-            char buffer[1024];
+            char buffer[buffer_size];
             struct dirent64 pad;
           } data;
 
@@ -153,10 +163,19 @@ do_test (void)
       rewinddir (reference);
     }
 
-  large_buffer_checks (fd);
-
   xclose (fd);
   closedir (reference);
+}
+
+static int
+do_test (void)
+{
+  do_test_by_size (512);
+  do_test_by_size (1024);
+  do_test_by_size (4096);
+
+  do_test_large_size ();
+
   return 0;
 }
 

@@ -1,4 +1,4 @@
-/* Copyright (C) 2000-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2000-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -15,32 +15,22 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#ifndef RTLD_STAT64		/* dl-xstat64.c, but we don't want it.  */
-
 #include <errno.h>
 #include <stddef.h>
 #include <sys/stat.h>
 #include <hurd.h>
+#include <shlib-compat.h>
+
+#if LIB_COMPAT(libc, GLIBC_2_1, GLIBC_2_33)
 
 /* Get information about the file descriptor FD in BUF.  */
 int
 __xstat64 (int vers, const char *file, struct stat64 *buf)
 {
-  error_t err;
-  file_t port;
-
   if (vers != _STAT_VER)
     return __hurd_fail (EINVAL);
 
-  port = __file_name_lookup (file, 0, 0);
-  if (port == MACH_PORT_NULL)
-    return -1;
-  err = __io_stat (port, buf);
-  __mach_port_deallocate (__mach_task_self (), port);
-  if (err)
-    return __hurd_fail (err);
-  return 0;
+  return __stat64 (file, buf);
 }
-hidden_def (__xstat64)
 
 #endif

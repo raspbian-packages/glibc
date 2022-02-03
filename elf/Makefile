@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2020 Free Software Foundation, Inc.
+# Copyright (C) 1995-2021 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -29,12 +29,13 @@ routines	= $(all-dl-routines) dl-support dl-iteratephdr \
 
 # The core dynamic linking functions are in libc for the static and
 # profiled libraries.
-dl-routines	= $(addprefix dl-,load lookup object reloc deps hwcaps \
+dl-routines	= $(addprefix dl-,load lookup object reloc deps \
 				  runtime init fini debug misc \
 				  version profile tls origin scope \
 				  execstack open close trampoline \
 				  exception sort-maps lookup-direct \
-				  call-libc-early-init)
+				  call-libc-early-init write \
+				  thread_gscope_wait)
 ifeq (yes,$(use-ldconfig))
 dl-routines += dl-cache
 endif
@@ -43,6 +44,10 @@ ifneq (no,$(have-tunables))
 dl-routines += dl-tunables
 tunables-type = $(addprefix TUNABLES_FRONTEND_,$(have-tunables))
 CPPFLAGS-dl-tunables.c += -DTUNABLES_FRONTEND=$(tunables-type)
+
+ifeq (yesyes,$(build-shared)$(run-built-tests))
+tests-special += $(objpfx)list-tunables.out
+endif
 
 # Make sure that the compiler does not insert any library calls in tunables
 # code paths.
@@ -54,12 +59,14 @@ endif
 all-dl-routines = $(dl-routines) $(sysdep-dl-routines)
 # But they are absent from the shared libc, because that code is in ld.so.
 elide-routines.os = $(all-dl-routines) dl-support enbl-secure dl-origin \
-		    dl-sysdep dl-exception dl-reloc-static-pie
+		    dl-sysdep dl-exception dl-reloc-static-pie \
+		    thread_gscope_wait
 
 # ld.so uses those routines, plus some special stuff for being the program
 # interpreter and operating independent of libc.
 rtld-routines	= rtld $(all-dl-routines) dl-sysdep dl-environ dl-minimal \
-  dl-error-minimal dl-conflict
+  dl-error-minimal dl-conflict dl-hwcaps dl-hwcaps_split dl-hwcaps-subdirs \
+  dl-usage dl-diagnostics dl-diagnostics-kernel dl-diagnostics-cpu
 all-rtld-routines = $(rtld-routines) $(sysdep-rtld-routines)
 
 CFLAGS-dl-runtime.c += -fexceptions -fasynchronous-unwind-tables
@@ -117,7 +124,8 @@ others-static	+= ldconfig
 others		+= ldconfig
 install-rootsbin += ldconfig
 
-ldconfig-modules := cache readlib xmalloc xstrdup chroot_canon static-stubs
+ldconfig-modules := cache readlib xmalloc xstrdup chroot_canon static-stubs \
+  stringtable
 extra-objs	+= $(ldconfig-modules:=.o)
 others-extras   = $(ldconfig-modules)
 endif
@@ -156,7 +164,8 @@ tests-static-normal := tst-leaks1-static tst-array1-static tst-array5-static \
 	       tst-dl-iter-static \
 	       tst-tlsalign-static tst-tlsalign-extern-static \
 	       tst-linkall-static tst-env-setuid tst-env-setuid-tunables \
-	       tst-single_threaded-static tst-single_threaded-pthread-static
+	       tst-single_threaded-static tst-single_threaded-pthread-static \
+	       tst-dst-static
 
 tests-static-internal := tst-tls1-static tst-tls2-static \
 	       tst-ptrguard1-static tst-stackguard1-static \
@@ -169,9 +178,15 @@ tests-container := \
 			  tst-ldconfig-bad-aux-cache \
 			  tst-ldconfig-ld_so_conf-update
 
+ifeq (no,$(build-hardcoded-path-in-tests))
+# This is an ld.so.cache test, and RPATH/RUNPATH in the executable
+# interferes with its test objectives.
+tests-container += tst-glibc-hwcaps-prepend-cache
+endif
+
 tests := tst-tls9 tst-leaks1 \
 	tst-array1 tst-array2 tst-array3 tst-array4 tst-array5 \
-	tst-auxv
+	tst-auxv tst-stringtable
 tests-internal := tst-tls1 tst-tls2 $(tests-static-internal)
 tests-static := $(tests-static-normal) $(tests-static-internal)
 
@@ -210,15 +225,17 @@ tests += restest1 preloadtest loadfail multiload origtest resolvfail \
 	 tst-filterobj tst-filterobj-dlopen tst-auxobj tst-auxobj-dlopen \
 	 tst-audit14 tst-audit15 tst-audit16 \
 	 tst-single_threaded tst-single_threaded-pthread \
-	 tst-tls-ie tst-tls-ie-dlmopen
+	 tst-tls-ie tst-tls-ie-dlmopen argv0test \
+	 tst-glibc-hwcaps tst-glibc-hwcaps-prepend tst-glibc-hwcaps-mask \
+	 tst-dlmopen-dlerror tst-dlmopen-gethostbyname
 #	 reldep9
 tests-internal += loadtest unload unload2 circleload1 \
 	 neededtest neededtest2 neededtest3 neededtest4 \
 	 tst-tls3 tst-tls6 tst-tls7 tst-tls8 tst-dlmopen2 \
 	 tst-ptrguard1 tst-stackguard1 tst-libc_dlvsym \
-	 tst-create_format1 tst-tls-surplus
+	 tst-create_format1 tst-tls-surplus tst-dl-hwcaps_split
 tests-container += tst-pldd tst-dlopen-tlsmodid-container \
-  tst-dlopen-self-container
+  tst-dlopen-self-container tst-preload-pthread-libc
 test-srcs = tst-pathopt
 selinux-enabled := $(shell cat /selinux/enforce 2> /dev/null)
 ifneq ($(selinux-enabled),1)
@@ -229,7 +246,7 @@ tests += $(tests-execstack-$(have-z-execstack))
 ifeq ($(run-built-tests),yes)
 tests-special += $(objpfx)tst-leaks1-mem.out \
 		 $(objpfx)tst-leaks1-static-mem.out $(objpfx)noload-mem.out \
-		 $(objpfx)tst-ldconfig-X.out
+		 $(objpfx)tst-ldconfig-X.out $(objpfx)tst-rtld-help.out
 endif
 tlsmod17a-suffixes = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19
 tlsmod18a-suffixes = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19
@@ -328,7 +345,11 @@ modules-names = testobj1 testobj2 testobj3 testobj4 testobj5 testobj6 \
 		tst-single_threaded-mod3 tst-single_threaded-mod4 \
 		tst-tls-ie-mod0 tst-tls-ie-mod1 tst-tls-ie-mod2 \
 		tst-tls-ie-mod3 tst-tls-ie-mod4 tst-tls-ie-mod5 \
-		tst-tls-ie-mod6
+		tst-tls-ie-mod6 libmarkermod1-1 libmarkermod1-2 libmarkermod1-3 \
+		libmarkermod2-1 libmarkermod2-2 \
+		libmarkermod3-1 libmarkermod3-2 libmarkermod3-3 \
+		libmarkermod4-1 libmarkermod4-2 libmarkermod4-3 libmarkermod4-4 \
+		tst-dlmopen-dlerror-mod tst-dlmopen-gethostbyname-mod \
 
 # Most modules build with _ISOMAC defined, but those filtered out
 # depend on internal headers.
@@ -414,7 +435,8 @@ endif
 ifeq (yes,$(build-shared))
 ifeq ($(run-built-tests),yes)
 tests-special += $(objpfx)tst-pathopt.out $(objpfx)tst-rtld-load-self.out \
-		 $(objpfx)tst-rtld-preload.out
+		 $(objpfx)tst-rtld-preload.out $(objpfx)argv0test.out \
+		 $(objpfx)tst-rtld-help.out
 endif
 tests-special += $(objpfx)check-textrel.out $(objpfx)check-execstack.out \
 		 $(objpfx)check-wx-segment.out \
@@ -439,12 +461,10 @@ update-all-abi: update-all-abi-ld
 
 ifeq ($(have-glob-dat-reloc),yes)
 tests += tst-prelink
+tests-internal += tst-prelink-cmp
 # Don't compile tst-prelink.c with PIE for GLOB_DAT relocation.
 CFLAGS-tst-prelink.c += -fno-pie
 tst-prelink-no-pie = yes
-ifeq ($(run-built-tests),yes)
-tests-special += $(objpfx)tst-prelink-cmp.out
-endif
 endif
 
 # The test requires shared _and_ PIE because the executable
@@ -617,6 +637,12 @@ ldso_install: $(inst_rtlddir)/$(rtld-installed-name)
 endif
 
 
+# Workarounds for ${exec_prefix} expansion in configure variables.
+# config.status cannot be used directly for processing ldd.bash.in or
+# expanding variables such as sysconfdir because the expansion
+# contains the literal string ${exec_prefix}, which is not valid in C
+# headers or installed shell scripts.
+
 ldd-rewrite = -e 's%@RTLD@%$(rtlddir)/$(rtld-installed-name)%g' \
 	      -e 's%@VERSION@%$(version)%g' \
 	      -e 's|@PKGVERSION@|$(PKGVERSION)|g' \
@@ -654,6 +680,11 @@ libof-ldconfig = ldconfig
 CFLAGS-dl-cache.c += $(SYSCONF-FLAGS)
 CFLAGS-cache.c += $(SYSCONF-FLAGS)
 CFLAGS-rtld.c += $(SYSCONF-FLAGS)
+CFLAGS-dl-usage.c += $(SYSCONF-FLAGS) \
+  -D'RTLD="$(rtlddir)/$(rtld-installed-name)"'
+CFLAGS-dl-diagnostics.c += $(SYSCONF-FLAGS) \
+  -D'PREFIX="$(prefix)"' \
+  -D'RTLD="$(rtlddir)/$(rtld-installed-name)"'
 
 cpp-srcs-left := $(all-rtld-routines:=.os)
 lib := rtld
@@ -946,7 +977,7 @@ $(objpfx)tst-pathopt: $(libdl)
 $(objpfx)tst-pathopt.out: tst-pathopt.sh $(objpfx)tst-pathopt \
 			  $(objpfx)pathoptobj.so
 	$(SHELL) $< $(common-objpfx) '$(test-wrapper-env)' \
-		 '$(run-program-env)' > $@; \
+		 '$(run-program-env)'; \
 	$(evaluate-test)
 
 $(objpfx)tst-rtld-load-self.out: tst-rtld-load-self.sh $(objpfx)ld.so
@@ -1554,6 +1585,10 @@ $(objpfx)tst-sonamemove-dlopen.out: \
   $(objpfx)tst-sonamemove-runmod1.so \
   $(objpfx)tst-sonamemove-runmod2.so
 
+$(objpfx)tst-dlmopen-dlerror: $(libdl)
+$(objpfx)tst-dlmopen-dlerror-mod.so: $(libdl) $(libsupport)
+$(objpfx)tst-dlmopen-dlerror.out: $(objpfx)tst-dlmopen-dlerror-mod.so
+
 # Override -z defs, so that we can reference an undefined symbol.
 # Force lazy binding for the same reason.
 LDFLAGS-tst-latepthreadmod.so = \
@@ -1579,10 +1614,7 @@ tst-prelink-ENV = LD_TRACE_PRELINKING=1
 $(objpfx)tst-prelink-conflict.out: $(objpfx)tst-prelink.out
 	grep stdout $< | grep conflict | $(AWK) '{ print $$10, $$11 }' > $@
 
-$(objpfx)tst-prelink-cmp.out: tst-prelink.exp \
-			      $(objpfx)tst-prelink-conflict.out
-	cmp $^ > $@; \
-	$(evaluate-test)
+$(objpfx)tst-prelink-cmp.out: $(objpfx)tst-prelink-conflict.out
 
 $(objpfx)tst-ldconfig-X.out : tst-ldconfig-X.sh $(objpfx)ldconfig
 	$(SHELL) $< '$(common-objpfx)' '$(test-wrapper-env)' \
@@ -1697,7 +1729,7 @@ $(objpfx)tst-dlopenfailmod1.so: \
 LDFLAGS-tst-dlopenfaillinkmod.so = -Wl,-soname,tst-dlopenfail-missingmod.so
 $(objpfx)tst-dlopenfailmod2.so: $(shared-thread-library)
 $(objpfx)tst-dlopenfail-2: $(libdl)
-$(objpfx)tst-dlopenfail.out: \
+$(objpfx)tst-dlopenfail-2.out: \
   $(objpfx)tst-dlopenfailmod1.so $(objpfx)tst-dlopenfailmod2.so \
   $(objpfx)tst-dlopenfailmod3.so
 
@@ -1796,3 +1828,104 @@ $(objpfx)tst-tls-ie-dlmopen.out: \
   $(objpfx)tst-tls-ie-mod6.so
 
 $(objpfx)tst-tls-surplus: $(libdl)
+
+$(objpfx)argv0test.out: tst-rtld-argv0.sh $(objpfx)ld.so \
+			$(objpfx)argv0test
+	$(SHELL) $< $(objpfx)ld.so $(objpfx)argv0test \
+            '$(test-wrapper-env)' '$(run_program_env)' \
+            '$(rpath-link)' 'test-argv0' > $@; \
+    $(evaluate-test)
+
+# A list containing the name of the most likely searched subdirectory
+# of the glibc-hwcaps directory, for each supported architecture (in
+# other words, the oldest hardware level recognized by the
+# glibc-hwcaps mechanism for this architecture).  Used to obtain test
+# coverage for some glibc-hwcaps tests for the widest possible range
+# of systems.
+glibc-hwcaps-first-subdirs-for-tests = power9 x86-64-v2 z13
+
+# The test modules are parameterized by preprocessor macros.
+LDFLAGS-libmarkermod1-1.so += -Wl,-soname,libmarkermod1.so
+LDFLAGS-libmarkermod2-1.so += -Wl,-soname,libmarkermod2.so
+LDFLAGS-libmarkermod3-1.so += -Wl,-soname,libmarkermod3.so
+LDFLAGS-libmarkermod4-1.so += -Wl,-soname,libmarkermod4.so
+$(objpfx)libmarkermod%.os : markermodMARKER-VALUE.c
+	$(compile-command.c) \
+	  -DMARKER=marker$(firstword $(subst -, ,$*)) \
+	  -DVALUE=$(lastword $(subst -, ,$*))
+$(objpfx)libmarkermod1.so: $(objpfx)libmarkermod1-1.so
+	cp $< $@
+$(objpfx)libmarkermod2.so: $(objpfx)libmarkermod2-1.so
+	cp $< $@
+$(objpfx)libmarkermod3.so: $(objpfx)libmarkermod3-1.so
+	cp $< $@
+$(objpfx)libmarkermod4.so: $(objpfx)libmarkermod4-1.so
+	cp $< $@
+
+# tst-glibc-hwcaps-prepend checks that --glibc-hwcaps-prepend is
+# preferred over auto-detected subdirectories.
+$(objpfx)tst-glibc-hwcaps-prepend: $(objpfx)libmarkermod1-1.so
+$(objpfx)glibc-hwcaps/prepend-markermod1/libmarkermod1.so: \
+  $(objpfx)libmarkermod1-2.so
+	$(make-target-directory)
+	cp $< $@
+$(objpfx)glibc-hwcaps/%/libmarkermod1.so: $(objpfx)libmarkermod1-3.so
+	$(make-target-directory)
+	cp $< $@
+$(objpfx)tst-glibc-hwcaps-prepend.out: \
+  $(objpfx)tst-glibc-hwcaps-prepend $(objpfx)libmarkermod1.so \
+  $(patsubst %,$(objpfx)glibc-hwcaps/%/libmarkermod1.so,prepend-markermod1 \
+    $(glibc-hwcaps-first-subdirs-for-tests))
+	$(test-wrapper) $(rtld-prefix) \
+	  --glibc-hwcaps-prepend prepend-markermod1 \
+	  $< > $@; \
+	$(evaluate-test)
+
+# Like tst-glibc-hwcaps-prepend, but uses a container and loads the
+# library via ld.so.cache.  Test setup is contained in the test
+# itself.
+$(objpfx)tst-glibc-hwcaps-prepend-cache: $(libdl)
+$(objpfx)tst-glibc-hwcaps-prepend-cache.out: \
+  $(objpfx)tst-glibc-hwcaps-prepend-cache $(objpfx)libmarkermod1-1.so \
+  $(objpfx)libmarkermod1-2.so $(objpfx)libmarkermod1-3.so
+
+# tst-glibc-hwcaps-mask checks that --glibc-hwcaps-mask can be used to
+# suppress all auto-detected subdirectories.
+$(objpfx)tst-glibc-hwcaps-mask: $(objpfx)libmarkermod1-1.so
+$(objpfx)tst-glibc-hwcaps-mask.out: \
+  $(objpfx)tst-glibc-hwcaps-mask $(objpfx)libmarkermod1.so \
+  $(patsubst %,$(objpfx)glibc-hwcaps/%/libmarkermod1.so,\
+    $(glibc-hwcaps-first-subdirs-for-tests))
+	$(test-wrapper) $(rtld-prefix) \
+	  --glibc-hwcaps-mask does-not-exist \
+	  $< > $@; \
+	$(evaluate-test)
+
+# Generic dependency for sysdeps implementation of
+# tst-glibc-hwcaps-cache.
+$(objpfx)tst-glibc-hwcaps-cache.out: $(objpfx)tst-glibc-hwcaps
+
+$(objpfx)list-tunables.out: tst-rtld-list-tunables.sh $(objpfx)ld.so
+	$(SHELL) $< $(objpfx)ld.so '$(test-wrapper-env)' \
+	    '$(run_program_env)' > $(objpfx)/tst-rtld-list-tunables.out
+	cmp tst-rtld-list-tunables.exp \
+	    $(objpfx)/tst-rtld-list-tunables.out > $@; \
+	$(evaluate-test)
+
+tst-dst-static-ENV = LD_LIBRARY_PATH='$$ORIGIN'
+
+$(objpfx)tst-rtld-help.out: $(objpfx)ld.so
+	$(test-wrapper) $(rtld-prefix) --help > $@; \
+	status=$$?; \
+	echo "info: ld.so exit status: $$status" >> $@; \
+	if ! grep -q 'Legacy HWCAP subdirectories under library search path directories' $@; then \
+	  echo "error: missing subdirectory pattern" >> $@; \
+	  if test $$status -eq 0; then \
+	    status=1; \
+	  fi; \
+	fi; \
+	(exit $$status); \
+	$(evaluate-test)
+
+$(objpfx)tst-dlmopen-gethostbyname: $(libdl)
+$(objpfx)tst-dlmopen-gethostbyname.out: $(objpfx)tst-dlmopen-gethostbyname-mod.so

@@ -1,4 +1,4 @@
-/* Copyright (C) 2005-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2005-2021 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -17,6 +17,7 @@
    <https://www.gnu.org/licenses/>.  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sysdep.h>
 #include <signal.h>

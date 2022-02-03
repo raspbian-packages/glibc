@@ -1,5 +1,5 @@
 /* Support functionality for using threads.
-   Copyright (C) 2016-2020 Free Software Foundation, Inc.
+   Copyright (C) 2016-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -75,6 +75,10 @@ void xpthread_attr_setstacksize (pthread_attr_t *attr,
 void xpthread_attr_setguardsize (pthread_attr_t *attr,
 				 size_t guardsize);
 
+void xpthread_kill (pthread_t thr, int signo);
+
+/* Return the stack size used on support_set_small_thread_stack_size.  */
+size_t support_small_thread_stack_size (void);
 /* Set the stack size in ATTR to a small value, but still large enough
    to cover most internal glibc stack usage.  */
 void support_set_small_thread_stack_size (pthread_attr_t *attr);

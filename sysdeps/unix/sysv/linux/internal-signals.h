@@ -1,5 +1,5 @@
 /* Special use of signals internally.  Linux version.
-   Copyright (C) 2014-2020 Free Software Foundation, Inc.
+   Copyright (C) 2014-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -23,6 +23,7 @@
 #include <sigsetops.h>
 #include <stdbool.h>
 #include <limits.h>
+#include <stddef.h>
 #include <sysdep.h>
 
 /* The signal used for asynchronous cancelation.  */

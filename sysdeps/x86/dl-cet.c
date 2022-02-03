@@ -1,5 +1,5 @@
 /* x86 CET initializers function.
-   Copyright (C) 2018-2020 Free Software Foundation, Inc.
+   Copyright (C) 2018-2021 Free Software Foundation, Inc.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -79,10 +79,12 @@ dl_cet_check (struct link_map *m, const char *program)
 	   */
 	  enable_ibt &= (CPU_FEATURE_USABLE (IBT)
 			 && (enable_ibt_type == cet_always_on
-			     || (m->l_cet & lc_ibt) != 0));
+			     || (m->l_x86_feature_1_and
+				 & GNU_PROPERTY_X86_FEATURE_1_IBT) != 0));
 	  enable_shstk &= (CPU_FEATURE_USABLE (SHSTK)
 			   && (enable_shstk_type == cet_always_on
-			       || (m->l_cet & lc_shstk) != 0));
+			       || (m->l_x86_feature_1_and
+				   & GNU_PROPERTY_X86_FEATURE_1_SHSTK) != 0));
 	}
 
       /* ld.so is CET-enabled by kernel.  But shared objects may not
@@ -114,7 +116,8 @@ dl_cet_check (struct link_map *m, const char *program)
 	      /* IBT is enabled only if it is enabled in executable as
 		 well as all shared objects.  */
 	      enable_ibt &= (enable_ibt_type == cet_always_on
-			     || (l->l_cet & lc_ibt) != 0);
+			     || (l->l_x86_feature_1_and
+				 & GNU_PROPERTY_X86_FEATURE_1_IBT) != 0);
 	      if (!found_ibt_legacy && enable_ibt != ibt_enabled)
 		{
 		  found_ibt_legacy = true;
@@ -124,7 +127,8 @@ dl_cet_check (struct link_map *m, const char *program)
 	      /* SHSTK is enabled only if it is enabled in executable as
 		 well as all shared objects.  */
 	      enable_shstk &= (enable_shstk_type == cet_always_on
-			       || (l->l_cet & lc_shstk) != 0);
+			       || (l->l_x86_feature_1_and
+				   & GNU_PROPERTY_X86_FEATURE_1_SHSTK) != 0);
 	      if (enable_shstk != shstk_enabled)
 		{
 		  found_shstk_legacy = true;

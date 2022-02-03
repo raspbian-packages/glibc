@@ -60,7 +60,11 @@ sysdep_routines += adjtimex clone umount umount2 readahead sysctl \
 		   personality epoll_wait tee vmsplice splice \
 		   open_by_handle_at mlock2 pkey_mprotect pkey_set pkey_get \
 		   timerfd_gettime timerfd_settime prctl \
-		   process_vm_readv process_vm_writev clock_adjtime
+		   process_vm_readv process_vm_writev clock_adjtime \
+		   time64-support pselect32 \
+		   xstat fxstat lxstat xstat64 fxstat64 lxstat64 \
+		   fxstatat fxstatat64 \
+		   xmknod xmknodat
 
 CFLAGS-gethostid.c = -fexceptions
 CFLAGS-tee.c = -fexceptions -fasynchronous-unwind-tables
@@ -68,6 +72,7 @@ CFLAGS-vmsplice.c = -fexceptions -fasynchronous-unwind-tables
 CFLAGS-splice.c = -fexceptions -fasynchronous-unwind-tables
 CFLAGS-open_by_handle_at.c = -fexceptions -fasynchronous-unwind-tables
 CFLAGS-sync_file_range.c = -fexceptions -fasynchronous-unwind-tables
+CFLAGS-pselect32.c = -fexceptions -fasynchronous-unwind-tables
 CFLAGS-tst-writev.c += "-DARTIFICIAL_LIMIT=(0x80000000-sysconf(_SC_PAGESIZE))"
 
 sysdep_headers += sys/mount.h sys/acct.h \
@@ -94,7 +99,8 @@ sysdep_headers += sys/mount.h sys/acct.h \
 		  bits/types/struct_semid_ds.h \
 		  bits/types/struct_msqid_ds.h \
 		  bits/types/struct_shmid_ds.h \
-		  bits/ipc-perm.h
+		  bits/ipc-perm.h \
+		  bits/struct_stat.h
 
 tests += tst-clone tst-clone2 tst-clone3 tst-fanotify tst-personality \
 	 tst-quota tst-sync_file_range tst-sysconf-iov_max tst-ttyname \
@@ -272,16 +278,20 @@ sysdep_routines += xstatconv internal_statvfs internal_statvfs64 \
 		   open_nocancel open64_nocancel \
 		   openat_nocancel openat64_nocancel \
 		   read_nocancel pread64_nocancel \
-		   write_nocancel statx_cp
+		   write_nocancel statx_cp stat_t64_cp
 
 sysdep_headers += bits/fcntl-linux.h
 
-tests += tst-fallocate tst-fallocate64 tst-o_path-locks
+tests += \
+  tst-fallocate \
+  tst-fallocate64 \
+  tst-getcwd-smallbuff \
+  tst-o_path-locks \
+# tests
 endif
 
 ifeq ($(subdir),elf)
-sysdep-rtld-routines += dl-brk dl-sbrk dl-getcwd dl-openat64 dl-opendir \
-			dl-fxstatat64
+sysdep-rtld-routines += dl-brk dl-sbrk dl-getcwd dl-openat64 dl-opendir
 
 libof-lddlibc4 = lddlibc4
 

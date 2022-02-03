@@ -1,5 +1,5 @@
 /* Basic tests for SYSV semaphore functions.
-   Copyright (C) 2016-2020 Free Software Foundation, Inc.
+   Copyright (C) 2016-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,6 +24,8 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
+
+#include <test-sysvipc.h>
 
 #include <support/support.h>
 #include <support/check.h>
@@ -79,6 +81,9 @@ do_test (void)
 	FAIL_UNSUPPORTED ("msgget not supported");
       FAIL_EXIT1 ("semget failed (errno=%d)", errno);
     }
+
+  TEST_COMPARE (semctl (semid, 0, first_sem_invalid_cmd (), NULL), -1);
+  TEST_COMPARE (errno, EINVAL);
 
   /* Get semaphore kernel information and do some sanity checks.  */
   struct semid_ds seminfo;

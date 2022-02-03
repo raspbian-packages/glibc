@@ -1,5 +1,5 @@
 /* C11 threads thread sleep tests.
-   Copyright (C) 2018-2020 Free Software Foundation, Inc.
+   Copyright (C) 2018-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -27,7 +27,7 @@ static int
 sleep_thrd (void *arg)
 {
   struct timespec const *tl = (struct timespec const *) arg;
-  if (thrd_sleep (tl, NULL) != thrd_success)
+  if (thrd_sleep (tl, NULL) != 0)
     FAIL_EXIT1 ("thrd_sleep failed");
 
   thrd_exit (thrd_success);

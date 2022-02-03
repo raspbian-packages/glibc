@@ -1,5 +1,5 @@
 /* ID for functions called via socketcall system call.
-   Copyright (C) 1995-2020 Free Software Foundation, Inc.
+   Copyright (C) 1995-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -18,6 +18,8 @@
 
 #ifndef _SYS_SOCKETCALL_H
 #define _SYS_SOCKETCALL_H	1
+
+#include <sysdep.h>
 
 /* Define unique numbers for the operations permitted on socket.  Linux
    uses a single system call for all these functions.  The relevant code

@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -26,6 +26,7 @@
 #include <support/check.h>
 #include <support/temp_file.h>
 #include <support/support.h>
+#include <support/xunistd.h>
 
 static char *tmpdir;
 static long int namemax;
@@ -136,6 +137,22 @@ do_test (void)
     result = support_capture_subprocess (call_system,
 					 &(struct args) { "exit 1", 1 });
     support_capture_subprocess_check (&result, "system", 0, sc_allow_none);
+  }
+
+  {
+    struct stat64 st;
+    xstat (_PATH_BSHELL, &st);
+    mode_t mode = st.st_mode;
+    xchmod (_PATH_BSHELL, mode & ~(S_IXUSR | S_IXGRP | S_IXOTH));
+
+    struct support_capture_subprocess result;
+    result = support_capture_subprocess (call_system,
+					 &(struct args) {
+					   "exit 1", 127, 0
+					 });
+    support_capture_subprocess_check (&result, "system", 0, sc_allow_none);
+
+    xchmod (_PATH_BSHELL, st.st_mode);
   }
 
   TEST_COMPARE (system (""), 0);

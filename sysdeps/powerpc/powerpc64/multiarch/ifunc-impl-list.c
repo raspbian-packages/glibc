@@ -1,5 +1,5 @@
 /* Enumerate available IFUNC implementations of a function.  PowerPC64 version.
-   Copyright (C) 2013-2020 Free Software Foundation, Inc.
+   Copyright (C) 2013-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -99,7 +99,7 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
   /* Support sysdeps/powerpc/powerpc64/multiarch/stpcpy.c.  */
   IFUNC_IMPL (i, name, stpcpy,
 #ifdef __LITTLE_ENDIAN__
-	      IFUNC_IMPL_ADD (array, i, strncmp, hwcap2 & PPC_FEATURE2_ARCH_3_00,
+	      IFUNC_IMPL_ADD (array, i, stpcpy, hwcap2 & PPC_FEATURE2_ARCH_3_00,
 			      __stpcpy_power9)
 #endif
 	      IFUNC_IMPL_ADD (array, i, stpcpy, hwcap2 & PPC_FEATURE2_ARCH_2_07,
@@ -112,7 +112,7 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
   /* Support sysdeps/powerpc/powerpc64/multiarch/strlen.c.  */
   IFUNC_IMPL (i, name, strlen,
 #ifdef __LITTLE_ENDIAN__
-	      IFUNC_IMPL_ADD (array, i, strcpy, hwcap2 & PPC_FEATURE2_ARCH_3_00,
+	      IFUNC_IMPL_ADD (array, i, strlen, hwcap2 & PPC_FEATURE2_ARCH_3_00,
 			      __strlen_power9)
 #endif
 	      IFUNC_IMPL_ADD (array, i, strlen, hwcap2 & PPC_FEATURE2_ARCH_2_07,
@@ -301,6 +301,12 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 
   /* Support sysdeps/powerpc/powerpc64/multiarch/strncpy.c.  */
   IFUNC_IMPL (i, name, strncpy,
+#ifdef __LITTLE_ENDIAN__
+	      IFUNC_IMPL_ADD (array, i, strncpy,
+			      (hwcap2 & PPC_FEATURE2_ARCH_3_00)
+			      && (hwcap & PPC_FEATURE_HAS_VSX),
+			      __strncpy_power9)
+#endif
 	      IFUNC_IMPL_ADD (array, i, strncpy,
 			      hwcap2 & PPC_FEATURE2_ARCH_2_07,
 			      __strncpy_power8)
@@ -312,6 +318,12 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 
   /* Support sysdeps/powerpc/powerpc64/multiarch/stpncpy.c.  */
   IFUNC_IMPL (i, name, stpncpy,
+#ifdef __LITTLE_ENDIAN__
+	      IFUNC_IMPL_ADD (array, i, stpncpy,
+			      (hwcap2 & PPC_FEATURE2_ARCH_3_00)
+			      && (hwcap & PPC_FEATURE_HAS_VSX),
+			      __stpncpy_power9)
+#endif
 	      IFUNC_IMPL_ADD (array, i, stpncpy,
 			      hwcap2 & PPC_FEATURE2_ARCH_2_07,
 			      __stpncpy_power8)

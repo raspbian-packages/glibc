@@ -1,5 +1,5 @@
 /* Support code for testing libm functions (driver).
-   Copyright (C) 1997-2020 Free Software Foundation, Inc.
+   Copyright (C) 1997-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -121,6 +121,16 @@ const char qtype_str[] = TYPE_STR;
 
 /* For nexttoward tests.  */
 #define snan_value_ld	__builtin_nansl ("")
+
+/* For pseudo-normal number tests.  */
+#if TEST_COND_intel96
+# include <math_ldbl.h>
+#define pseudo_inf { .parts = { 0x00000000, 0x00000000, 0x7fff }}
+#define pseudo_zero { .parts = { 0x00000000, 0x00000000, 0x0100 }}
+#define pseudo_qnan { .parts = { 0x00000001, 0x00000000, 0x7fff }}
+#define pseudo_snan { .parts = { 0x00000001, 0x40000000, 0x7fff }}
+#define pseudo_unnormal { .parts = { 0x00000001, 0x40000000, 0x0100 }}
+#endif
 
 /* Structures for each kind of test.  */
 /* Used for both RUN_TEST_LOOP_f_f and RUN_TEST_LOOP_fp_f.  */
@@ -316,6 +326,19 @@ struct test_f_i_data
     int exceptions;
   } rd, rn, rz, ru;
 };
+/* Used for RUN_TEST_LOOP_f_i_tg_u and RUN_TEST_LOOP_f_b_tg_u.  */
+#if TEST_COND_intel96
+struct test_j_i_data_u
+{
+  const char *arg_str;
+  ieee_long_double_shape_type arg;
+  struct
+  {
+    int expected;
+    int exceptions;
+  } rd, rn, rz, ru;
+};
+#endif
 /* Used for RUN_TEST_LOOP_ff_b, RUN_TEST_LOOP_fpfp_b and
    RUN_TEST_LOOP_ff_i_tg.  */
 struct test_ff_i_data
@@ -831,6 +854,22 @@ struct test_Ff_b1_data
       RUN_TEST_f_i_tg ((ARRAY)[i].arg_str, FUNC_NAME, (ARRAY)[i].arg,	\
 		       (ARRAY)[i].RM_##ROUNDING_MODE.expected,		\
 		       (ARRAY)[i].RM_##ROUNDING_MODE.exceptions);	\
+  ROUND_RESTORE_ ## ROUNDING_MODE
+#define RUN_TEST_LOOP_j_b_tg_u(FUNC_NAME, ARRAY, ROUNDING_MODE)		\
+  IF_ROUND_INIT_ ## ROUNDING_MODE					\
+  for (size_t i = 0; i < sizeof (ARRAY) / sizeof (ARRAY)[0]; i++)	\
+  RUN_TEST_f_b_tg ((ARRAY)[i].arg_str, FUNC_NAME,			\
+		   (FLOAT)(ARRAY)[i].arg.value,				\
+		   (ARRAY)[i].RM_##ROUNDING_MODE.expected,		\
+		   (ARRAY)[i].RM_##ROUNDING_MODE.exceptions);		\
+  ROUND_RESTORE_ ## ROUNDING_MODE
+#define RUN_TEST_LOOP_j_i_tg_u(FUNC_NAME, ARRAY, ROUNDING_MODE)		\
+  IF_ROUND_INIT_ ## ROUNDING_MODE					\
+  for (size_t i = 0; i < sizeof (ARRAY) / sizeof (ARRAY)[0]; i++)	\
+  RUN_TEST_f_i_tg ((ARRAY)[i].arg_str, FUNC_NAME,			\
+		   (FLOAT)(ARRAY)[i].arg.value,				\
+		   (ARRAY)[i].RM_##ROUNDING_MODE.expected,		\
+		   (ARRAY)[i].RM_##ROUNDING_MODE.exceptions);		\
   ROUND_RESTORE_ ## ROUNDING_MODE
 #define RUN_TEST_ff_b(ARG_STR, FUNC_NAME, ARG1, ARG2, EXPECTED,		\
 		      EXCEPTIONS)					\

@@ -978,6 +978,7 @@ libmachuser.so.1 #PACKAGE# #MINVER#
  __vm_protect@Base 2.11
  __vm_read@Base 2.11
  __vm_region@Base 2.11
+ __vm_region_create_proxy@Base 2.33-2~1
  __vm_set_default_memory_manager@Base 2.11
  __vm_statistics@Base 2.11
  __vm_wire@Base 2.11
@@ -1140,6 +1141,7 @@ libmachuser.so.1 #PACKAGE# #MINVER#
  vm_protect@Base 2.11
  vm_read@Base 2.11
  vm_region@Base 2.11
+ vm_region_create_proxy@Base 2.33-2~1
  vm_set_default_memory_manager@Base 2.11
  vm_statistics@Base 2.11
  vm_wire@Base 2.11

@@ -1,5 +1,5 @@
 /* Initialization function of thread debugger support library.
-   Copyright (C) 1999-2020 Free Software Foundation, Inc.
+   Copyright (C) 1999-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 1999.
 
@@ -28,4 +28,19 @@ td_init (void)
   /* XXX We have to figure out what has to be done.  */
   LOG ("td_init");
   return TD_OK;
+}
+
+bool
+__td_ta_rtld_global (td_thragent_t *ta)
+{
+  if (ta->ta_addr__rtld_global == 0)
+    {
+      psaddr_t rtldglobalp;
+      if (DB_GET_VALUE (rtldglobalp, ta, __nptl_rtld_global, 0) == TD_OK)
+        ta->ta_addr__rtld_global = rtldglobalp;
+      else
+        ta->ta_addr__rtld_global = (void *) -1;
+    }
+
+  return ta->ta_addr__rtld_global != (void *)-1;
 }

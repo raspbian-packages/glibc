@@ -1,5 +1,5 @@
 /* elision-timed.c: Lock elision timed lock.
-   Copyright (C) 2015-2020 Free Software Foundation, Inc.
+   Copyright (C) 2015-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -19,10 +19,11 @@
 #include <time.h>
 #include <elision-conf.h>
 #include "lowlevellock.h"
+#include "futex-internal.h"
 
 #define __lll_lock_elision __lll_clocklock_elision
-#define EXTRAARG clockid_t clockid, const struct timespec *t,
+#define EXTRAARG clockid_t clockid, const struct __timespec64 *t,
 #undef LLL_LOCK
-#define LLL_LOCK(a, b) lll_clocklock(a, clockid, t, b)
+#define LLL_LOCK(a, b) __futex_clocklock64 (&(a), clockid, t, b)
 
 #include "elision-lock.c"

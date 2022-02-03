@@ -1,4 +1,4 @@
-/* Copyright (C) 2005-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2005-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -40,7 +40,7 @@ __openat64 (int fd, const char *file, int oflag, ...)
     {
       /* Check FD is associated with a directory.  */
       struct stat64 st;
-      if (__fxstat64 (_STAT_VER, fd, &st) != 0)
+      if (__fstat64 (fd, &st) != 0)
 	return -1;
 
       if (!S_ISDIR (st.st_mode))

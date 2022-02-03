@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1997-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -18,6 +18,7 @@
 #include <errno.h>
 #include <sys/mman.h>
 #include <sys/types.h>
+#include <mach/port.h>
 
 /* Map addresses starting near ADDR and extending for LEN bytes.  From
    OFFSET into the file FD describes according to PROT and FLAGS.  If ADDR

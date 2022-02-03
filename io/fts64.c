@@ -1,5 +1,5 @@
 /* File tree traversal functions LFS version.
-   Copyright (C) 2015-2020 Free Software Foundation, Inc.
+   Copyright (C) 2015-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,7 +24,8 @@
 #define FTSOBJ FTS64
 #define FTSENTRY FTSENT64
 #define INO_T ino64_t
-#define STAT stat64
-#define LSTAT lstat64
+#define STRUCT_STAT stat64
+#define STAT __stat64
+#define LSTAT __lstat64
 
 #include "fts.c"

@@ -1,5 +1,5 @@
 /* Profiling of shared libraries.
-   Copyright (C) 1997-2020 Free Software Foundation, Inc.
+   Copyright (C) 1997-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
    Based on the BSD mcount implementation.
@@ -342,7 +342,7 @@ _dl_start_profile (void)
       return;
     }
 
-  if (__fxstat64 (_STAT_VER, fd, &st) < 0 || !S_ISREG (st.st_mode))
+  if (__fstat64 (fd, &st) < 0 || !S_ISREG (st.st_mode))
     {
       /* Not stat'able or not a regular file => don't use it.  */
       errstr = "%s: cannot stat file: %s\n";

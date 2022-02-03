@@ -1,5 +1,5 @@
 /* Host and service name lookups using Name Service Switch modules.
-   Copyright (C) 1996-2020 Free Software Foundation, Inc.
+   Copyright (C) 1996-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -307,7 +307,7 @@ convert_hostent_to_gaih_addrtuple (const struct addrinfo *req,
    memory allocation failure.  The returned string is allocated on the
    heap; the caller has to free it.  */
 static char *
-getcanonname (service_user *nip, struct gaih_addrtuple *at, const char *name)
+getcanonname (nss_action_list nip, struct gaih_addrtuple *at, const char *name)
 {
   nss_getcanonname_r *cfct = __nss_lookup_function (nip, "getcanonname_r");
   char *s = (char *) name;
@@ -538,7 +538,7 @@ gaih_inet (const char *name, const struct gaih_service *service,
 	  struct gaih_addrtuple **pat = &at;
 	  int no_data = 0;
 	  int no_inet6_data = 0;
-	  service_user *nip;
+	  nss_action_list nip;
 	  enum nss_status inet6_status = NSS_STATUS_UNAVAIL;
 	  enum nss_status status = NSS_STATUS_UNAVAIL;
 	  int no_more;
@@ -720,13 +720,9 @@ gaih_inet (const char *name, const struct gaih_service *service,
 	    }
 #endif
 
-	  if (__nss_hosts_database == NULL)
-	    no_more = __nss_database_lookup2 ("hosts", NULL,
-					      "dns [!UNAVAIL=return] files",
-					      &__nss_hosts_database);
-	  else
-	    no_more = 0;
-	  nip = __nss_hosts_database;
+	  no_more = __nss_database_lookup2 ("hosts", NULL,
+					    "dns [!UNAVAIL=return] files",
+					    &nip);
 
 	  /* If we are looking for both IPv4 and IPv6 address we don't
 	     want the lookup functions to automatically promote IPv4
@@ -905,10 +901,9 @@ gaih_inet (const char *name, const struct gaih_service *service,
 	      if (nss_next_action (nip, status) == NSS_ACTION_RETURN)
 		break;
 
-	      if (nip->next == NULL)
+	      nip++;
+	      if (nip->module == NULL)
 		no_more = -1;
-	      else
-		nip = nip->next;
 	    }
 
 	  __resolv_context_put (res_ctx);
@@ -1785,7 +1780,7 @@ gaiconf_init (void)
   if (fp != NULL)
     {
       struct stat64 st;
-      if (__fxstat64 (_STAT_VER, fileno (fp), &st) != 0)
+      if (__fstat64 (fileno (fp), &st) != 0)
 	{
 	  fclose (fp);
 	  goto no_file;
@@ -2138,7 +2133,7 @@ static void
 gaiconf_reload (void)
 {
   struct stat64 st;
-  if (__xstat64 (_STAT_VER, GAICONF_FNAME, &st) != 0
+  if (__stat64 (GAICONF_FNAME, &st) != 0
       || !check_gaiconf_mtime (&st))
     gaiconf_init ();
 }

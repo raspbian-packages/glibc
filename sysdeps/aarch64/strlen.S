@@ -1,4 +1,4 @@
-/* Copyright (C) 2012-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2012-2021 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -54,8 +54,7 @@
    string, counting trailing zeros identifies exactly which byte matched.  */
 
 ENTRY (STRLEN)
-	DELOUSE (0)
-	DELOUSE (1)
+	PTR_ARG (0)
 	bic	src, srcin, 15
 	mov	wtmp, 0xf00f
 	ld1	{vdata.16b}, [src]

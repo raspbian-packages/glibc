@@ -1,5 +1,5 @@
 # sysdeps makefile fragment for all pthread-supporting configurations.
-# Copyright (C) 2014-2020 Free Software Foundation, Inc.
+# Copyright (C) 2014-2021 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -54,6 +54,7 @@ tests += tst-cnd-basic tst-mtx-trylock tst-cnd-broadcast \
 	 tst-cancel-self tst-cancel-self-cancelstate \
 	 tst-cancel-self-canceltype tst-cancel-self-testcancel \
 	 tst-cancel1 tst-cancel2 tst-cancel3 \
+	 tst-cancel4 tst-cancel5 \
 	 tst-cancel6 tst-cancel8 tst-cancel9 tst-cancel10 tst-cancel11 \
 	 tst-cancel12 tst-cancel13 tst-cancel14 tst-cancel15 tst-cancel16 \
 	 tst-cancel18 tst-cancel19 tst-cancel20 tst-cancel21 \
@@ -76,7 +77,7 @@ tests += tst-cnd-basic tst-mtx-trylock tst-cnd-broadcast \
 	 tst-getpid3 \
 	 tst-join1 tst-join2 tst-join3 tst-join4 tst-join5 tst-join6 tst-join7 \
 	 tst-join8 tst-join9 tst-join10 tst-join11 tst-join12 tst-join13 \
-	 tst-join14 \
+	 tst-join14 tst-join15 \
 	 tst-key1 tst-key2 tst-key3 tst-key4 \
 	 tst-kill1 tst-kill2 tst-kill3 tst-kill4 tst-kill5 tst-kill6 \
 	 tst-locale1 tst-locale2 \
@@ -107,6 +108,7 @@ tests += tst-cnd-basic tst-mtx-trylock tst-cnd-broadcast \
 	 tst-unload \
 	 tst-unwind-thread \
 	 tst-pt-vfork1 tst-pt-vfork2 tst-vfork1x tst-vfork2x \
+	 tst-pthread-exit-signal \
 
 
 # Files which must not be linked with libpthread.
@@ -117,6 +119,7 @@ CFLAGS-tst-cleanup2.c += -fno-builtin
 CFLAGS-tst-cleanupx2.c += -fno-builtin
 
 tests += tst-cancelx2 tst-cancelx3 tst-cancelx6 tst-cancelx8 tst-cancelx9 \
+	 tst-cancelx4 tst-cancelx5 \
 	 tst-cancelx10 tst-cancelx11 tst-cancelx12 tst-cancelx13 tst-cancelx14 \
 	 tst-cancelx15 tst-cancelx16 tst-cancelx18 tst-cancelx20 tst-cancelx21 \
 	 tst-cleanupx0 tst-cleanupx1 tst-cleanupx2 tst-cleanupx3
@@ -143,7 +146,7 @@ tests-static += tst-locale1 tst-locale2 tst-cancel21-static
 tests += tst-cancel21-static tst-cond11-static
 
 # These tests are linked with libc before libpthread
-tests-reverse += tst-cancel23 tst-vfork1x tst-vfork2x
+tests-reverse += tst-cancel5 tst-cancel23 tst-vfork1x tst-vfork2x
 
 ifeq ($(run-built-tests),yes)
 ifeq ($(build-shared),yes)
@@ -151,10 +154,19 @@ tests-special += $(objpfx)tst-cleanup0-cmp.out
 endif
 endif
 
+# The sigmask macro is deprecated and triggers are compiler warning
+# which cannot be suppressed (as of GCC 9).
+CFLAGS-tst-cancel4.c += -Wno-error
+CFLAGS-tst-cancel5.c += -Wno-error
+CFLAGS-tst-cancelx4.c += -Wno-error
+CFLAGS-tst-cancelx5.c += -Wno-error
+
 # Run the cancellation and cleanup tests also for the modern, exception-based
 # implementation.  For this we have to pass the -fexceptions parameter.
 CFLAGS-tst-cancelx2.c += -fexceptions
 CFLAGS-tst-cancelx3.c += -fexceptions
+CFLAGS-tst-cancelx4.c += -fexceptions
+CFLAGS-tst-cancelx5.c += -fexceptions
 CFLAGS-tst-cancelx6.c += -fexceptions
 CFLAGS-tst-cancelx8.c += -fexceptions
 CFLAGS-tst-cancelx9.c += -fexceptions
@@ -220,7 +232,7 @@ generated += $(objpfx)tst-atfork2.mtrace \
 
 tests-internal += tst-cancel25 tst-robust8
 
-tests += tst-oncex3 tst-oncex4
+tests += tst-oncex3 tst-oncex4 tst-oncey3 tst-oncey4
 
 modules-names += tst-join7mod
 
@@ -231,6 +243,8 @@ endif
 
 CFLAGS-tst-oncex3.c += -fexceptions
 CFLAGS-tst-oncex4.c += -fexceptions
+CFLAGS-tst-oncey3.c += -fno-exceptions -fno-asynchronous-unwind-tables
+CFLAGS-tst-oncey4.c += -fno-exceptions -fno-asynchronous-unwind-tables
 
 $(objpfx)tst-join7: $(libdl) $(shared-thread-library)
 $(objpfx)tst-join7.out: $(objpfx)tst-join7mod.so

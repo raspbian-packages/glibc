@@ -1,5 +1,5 @@
 /* Multiple versions of stpncpy. PowerPC64 version.
-   Copyright (C) 2014-2020 Free Software Foundation, Inc.
+   Copyright (C) 2014-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -26,10 +26,18 @@
 extern __typeof (__stpncpy) __stpncpy_ppc attribute_hidden;
 extern __typeof (__stpncpy) __stpncpy_power7 attribute_hidden;
 extern __typeof (__stpncpy) __stpncpy_power8 attribute_hidden;
+# ifdef __LITTLE_ENDIAN__
+extern __typeof (__stpncpy) __stpncpy_power9 attribute_hidden;
+# endif
 # undef stpncpy
 # undef __stpncpy
 
 libc_ifunc_redirected (__redirect___stpncpy, __stpncpy,
+# ifdef __LITTLE_ENDIAN__
+		     (hwcap2 & PPC_FEATURE2_ARCH_3_00) &&
+		     (hwcap & PPC_FEATURE_HAS_VSX)
+		     ? __stpncpy_power9 :
+# endif
 		       (hwcap2 & PPC_FEATURE2_ARCH_2_07)
 		       ? __stpncpy_power8
 		       : (hwcap & PPC_FEATURE_HAS_VSX)

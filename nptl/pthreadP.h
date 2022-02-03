@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -207,13 +207,6 @@ extern void __default_pthread_attr_freeres (void) attribute_hidden;
 /* Size and alignment of static TLS block.  */
 extern size_t __static_tls_size attribute_hidden;
 extern size_t __static_tls_align_m1 attribute_hidden;
-
-/* Flag whether the machine is SMP or not.  */
-extern int __is_smp attribute_hidden;
-
-/* Thread descriptor handling.  */
-extern list_t __stack_user;
-hidden_proto (__stack_user)
 
 /* Attribute handling.  */
 extern struct pthread_attr *__attr_list attribute_hidden;
@@ -458,6 +451,58 @@ extern int __pthread_cond_init (pthread_cond_t *cond,
 libc_hidden_proto (__pthread_cond_init)
 extern int __pthread_cond_signal (pthread_cond_t *cond);
 extern int __pthread_cond_wait (pthread_cond_t *cond, pthread_mutex_t *mutex);
+
+#if __TIMESIZE == 64
+# define __pthread_clockjoin_np64 __pthread_clockjoin_np
+# define __pthread_timedjoin_np64 __pthread_timedjoin_np
+# define __pthread_cond_timedwait64 __pthread_cond_timedwait
+# define __pthread_cond_clockwait64 __pthread_cond_clockwait
+# define __pthread_rwlock_clockrdlock64 __pthread_rwlock_clockrdlock
+# define __pthread_rwlock_clockwrlock64 __pthread_rwlock_clockwrlock
+# define __pthread_rwlock_timedrdlock64 __pthread_rwlock_timedrdlock
+# define __pthread_rwlock_timedwrlock64 __pthread_rwlock_timedwrlock
+# define __pthread_mutex_clocklock64 __pthread_mutex_clocklock
+# define __pthread_mutex_timedlock64 __pthread_mutex_timedlock
+#else
+extern int __pthread_clockjoin_np64 (pthread_t threadid, void **thread_return,
+                                     clockid_t clockid,
+                                     const struct __timespec64 *abstime);
+libc_hidden_proto (__pthread_clockjoin_np64)
+extern int __pthread_timedjoin_np64 (pthread_t threadid, void **thread_return,
+                                     const struct __timespec64 *abstime);
+libc_hidden_proto (__pthread_timedjoin_np64)
+extern int __pthread_cond_timedwait64 (pthread_cond_t *cond,
+                                       pthread_mutex_t *mutex,
+                                       const struct __timespec64 *abstime);
+libpthread_hidden_proto (__pthread_cond_timedwait64)
+extern int __pthread_cond_clockwait64 (pthread_cond_t *cond,
+                                       pthread_mutex_t *mutex,
+                                       clockid_t clockid,
+                                       const struct __timespec64 *abstime);
+libpthread_hidden_proto (__pthread_cond_clockwait64)
+extern int __pthread_rwlock_clockrdlock64 (pthread_rwlock_t *rwlock,
+                                           clockid_t clockid,
+                                           const struct __timespec64 *abstime);
+libpthread_hidden_proto (__pthread_rwlock_clockrdlock64)
+extern int __pthread_rwlock_clockwrlock64 (pthread_rwlock_t *rwlock,
+                                           clockid_t clockid,
+                                           const struct __timespec64 *abstime);
+libpthread_hidden_proto (__pthread_rwlock_clockwrlock64)
+extern int __pthread_rwlock_timedrdlock64 (pthread_rwlock_t *rwlock,
+                                           const struct __timespec64 *abstime);
+libpthread_hidden_proto (__pthread_rwlock_timedrdlock64)
+extern int __pthread_rwlock_timedwrlock64 (pthread_rwlock_t *rwlock,
+                                           const struct __timespec64 *abstime);
+libpthread_hidden_proto (__pthread_rwlock_timedwrlock64)
+extern int __pthread_mutex_clocklock64 (pthread_mutex_t *mutex,
+                                        clockid_t clockid,
+                                        const struct __timespec64 *abstime);
+libpthread_hidden_proto (__pthread_mutex_clocklock64)
+extern int __pthread_mutex_timedlock64 (pthread_mutex_t *mutex,
+                                        const struct __timespec64 *abstime);
+libpthread_hidden_proto (__pthread_mutex_timedlock64)
+#endif
+
 extern int __pthread_cond_timedwait (pthread_cond_t *cond,
 				     pthread_mutex_t *mutex,
 				     const struct timespec *abstime);
@@ -488,7 +533,7 @@ extern int __pthread_enable_asynccancel (void) attribute_hidden;
 extern void __pthread_disable_asynccancel (int oldtype) attribute_hidden;
 extern void __pthread_testcancel (void);
 extern int __pthread_clockjoin_ex (pthread_t, void **, clockid_t,
-				   const struct timespec *, bool)
+				   const struct __timespec64 *, bool)
   attribute_hidden;
 extern int __pthread_sigmask (int, const sigset_t *, sigset_t *);
 libc_hidden_proto (__pthread_sigmask);
@@ -557,6 +602,67 @@ extern void __pthread_cleanup_pop (struct _pthread_cleanup_buffer *buffer,
 # undef pthread_cleanup_pop
 # define pthread_cleanup_pop(execute)                   \
   __pthread_cleanup_pop (&_buffer, (execute)); }
+
+# if defined __EXCEPTIONS && !defined __cplusplus
+/* Structure to hold the cleanup handler information.  */
+struct __pthread_cleanup_combined_frame
+{
+  void (*__cancel_routine) (void *);
+  void *__cancel_arg;
+  int __do_it;
+  struct _pthread_cleanup_buffer __buffer;
+};
+
+/* Special cleanup macros which register cleanup both using
+   __pthread_cleanup_{push,pop} and using cleanup attribute.  This is needed
+   for pthread_once, so that it supports both throwing exceptions from the
+   pthread_once callback (only cleanup attribute works there) and cancellation
+   of the thread running the callback if the callback or some routines it
+   calls don't have unwind information.  */
+
+static __always_inline void
+__pthread_cleanup_combined_routine (struct __pthread_cleanup_combined_frame
+				    *__frame)
+{
+  if (__frame->__do_it)
+    {
+      __frame->__cancel_routine (__frame->__cancel_arg);
+      __frame->__do_it = 0;
+      __pthread_cleanup_pop (&__frame->__buffer, 0);
+    }
+}
+
+static inline void
+__pthread_cleanup_combined_routine_voidptr (void *__arg)
+{
+  struct __pthread_cleanup_combined_frame *__frame
+    = (struct __pthread_cleanup_combined_frame *) __arg;
+  if (__frame->__do_it)
+    {
+      __frame->__cancel_routine (__frame->__cancel_arg);
+      __frame->__do_it = 0;
+    }
+}
+
+#  define pthread_cleanup_combined_push(routine, arg) \
+  do {									      \
+    void (*__cancel_routine) (void *) = (routine);			      \
+    struct __pthread_cleanup_combined_frame __clframe			      \
+      __attribute__ ((__cleanup__ (__pthread_cleanup_combined_routine)))      \
+      = { .__cancel_routine = __cancel_routine, .__cancel_arg = (arg),	      \
+	  .__do_it = 1 };						      \
+    __pthread_cleanup_push (&__clframe.__buffer,			      \
+			    __pthread_cleanup_combined_routine_voidptr,	      \
+			    &__clframe);
+
+#  define pthread_cleanup_combined_pop(execute) \
+    __pthread_cleanup_pop (&__clframe.__buffer, 0);			      \
+    __clframe.__do_it = 0;						      \
+    if (execute)							      \
+      __cancel_routine (__clframe.__cancel_arg);			      \
+  } while (0)
+
+# endif
 #endif
 
 extern void __pthread_cleanup_push_defer (struct _pthread_cleanup_buffer *buffer,

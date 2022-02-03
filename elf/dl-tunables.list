@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2020 Free Software Foundation, Inc.
+# Copyright (C) 2016-2021 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -21,12 +21,13 @@
 # minval: Optional minimum acceptable value
 # maxval: Optional maximum acceptable value
 # env_alias: An alias environment variable
-# security_level: Specify security level of the tunable.  Valid values are:
+# security_level: Specify security level of the tunable for AT_SECURE binaries.
+# 		  Valid values are:
 #
-# 	     SXID_ERASE: (default) Don't read for AT_SECURE binaries and
-# 	     		 removed so that child processes can't read it.
-# 	     SXID_IGNORE: Don't read for AT_SECURE binaries, but retained for
-# 	     		  non-AT_SECURE subprocesses.
+# 	     SXID_ERASE: (default) Do not read and do not pass on to
+# 	     child processes.
+# 	     SXID_IGNORE: Do not read, but retain for non-AT_SECURE
+# 	     subprocesses.
 # 	     NONE: Read all the time.
 
 glibc {
@@ -63,6 +64,7 @@ glibc {
       type: INT_32
       env_alias: MALLOC_MMAP_MAX_
       security_level: SXID_IGNORE
+      minval: 0
     }
     arena_max {
       type: SIZE_T
@@ -108,22 +110,27 @@ glibc {
     skip_lock_busy {
       type: INT_32
       default: 3
+      minval: 0
     }
     skip_lock_internal_abort {
       type: INT_32
       default: 3
+      minval: 0
     }
     skip_lock_after_retries {
       type: INT_32
       default: 3
+      minval: 0
     }
     tries {
       type: INT_32
       default: 3
+      minval: 0
     }
     skip_trylock_internal_abort {
       type: INT_32
       default: 3
+      minval: 0
     }
   }
 
@@ -138,6 +145,15 @@ glibc {
       type: SIZE_T
       minval: 0
       default: 512
+    }
+  }
+
+  mem {
+    tagging {
+      type: INT_32
+      minval: 0
+      maxval: 255
+      security_level: SXID_IGNORE
     }
   }
 }

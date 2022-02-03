@@ -277,10 +277,6 @@ test-xfail-tst-auditmany = yes
 # We always put LD_ORIGIN_PATH in the environment
 test-xfail-tst-execvpe5 = yes
 
-# libgcc_s support assumes non-SIGINFO signal handler parameters
-# Will be fixed in gcc-10 >> 10.2.1-6 upload, or gcc-11.
-test-xfail-tst-backtrace6 = yes
-
 # Crashes on dividing by a profiling period 0 (not initialized)
 test-xfail-tst-sprofil = yes
 
@@ -314,16 +310,11 @@ test-xfail-annexc = yes
 test-xfail-tst-waitid = yes
 test-xfail-tst-wait4 = yes
 
-# seems fixed in 2.24-3?
-test-xfail-tst-secure-getenv = yes
-
 # new in 2.25
 test-xfail-tst-posix_fallocate64 = yes
 test-xfail-tst-posix_fadvise = yes
 test-xfail-tst-posix_fadvise64 = yes
 test-xfail-tst-vfork3 = yes
-test-xfail-tst-env-setuid = yes
-test-xfail-tst-env-setuid-tunables = yes
 
 # new in 2.26
 test-xfail-tst-malloc-tcache-leak = yes
@@ -355,18 +346,13 @@ test-xfail-tst-mallocfork2-malloc-check = yes
 test-xfail-tst-updwtmpx = yes
 test-xfail-tst-lchmod = yes
 
-# new in 2.31
-test-xfail-tst-malloc-fork-deadlock-mcheck = yes
-
 # new in 2.32
-test-xfail-tst-safe-linking = yes
 # Assumes some linuxish strings
 test-xfail-tst-strerror = yes
 # We always have several threads
 test-xfail-tst-single_threaded-pthread = yes
 test-xfail-tst-latepthread = yes
 test-xfail-tst-initfinilazyfail = yes
-test-xfail-tst-kill6 = yes
 
 # new in 2.33
 test-xfail-tst-cpu-features-cpuinfo = yes
@@ -374,16 +360,12 @@ test-xfail-tst-cpu-features-support = yes
 # Mach misses getting adjtime without privileges
 test-xfail-tst-adjtime = yes
 test-xfail-tst-join15 = yes
+test-xfail-tst-reload1 = yes
+test-xfail-tst-reload2 = yes
 
 # fixed in 2.33
-test-xfail-tst-malloc-usable-static-tunables = yes
-test-xfail-tst-malloc-usable-static = yes
-test-xfail-tst-get-cpu-features = yes
-test-xfail-test-fenv-sse-2 = yes
-test-xfail-test-fesetexcept-traps = yes
-test-xfail-tst-ptsname = yes
-test-xfail-tst-spawn4 = yes
 test-xfail-tst-spawn4-compat = yes
+test-xfail-test-fesetexcept-traps = yes
 
 # new in 2.34
 test-xfail-tst-cpu-features-cpuinfo-static = yes
@@ -397,7 +379,20 @@ test-xfail-tst-spawn5 = yes
 
 # fixed in 2.34
 test-xfail-tst-res_hconf_reorder = yes
+test-xfail-tst-canon-bz26341 = yes
 
+# new in 2.35
+test-xfail-tst-pthread_kill-exited = yes
+test-xfail-tst-pthread_kill-exiting = yes
+test-xfail-tst-compathooks-on = yes
+test-xfail-tst-support-open-dev-null-range = yes
+test-xfail-tst-audit14-cmp = yes
+test-xfail-tst-audit15-cmp = yes
+test-xfail-tst-audit16-cmp = yes
+test-xfail-tst-sched_getaffinity = yes
+
+# fixed in 2.35
+test-xfail-tst-safe-linking = yes
 
 # actually never succeded
 test-xfail-tst-create_format1 = yes

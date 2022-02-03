@@ -1,4 +1,4 @@
-/* Copyright (C) 1992-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1992-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -93,7 +93,7 @@ _S_msg_get_init_ports (mach_port_t msgport, mach_port_t auth,
 
 kern_return_t
 _S_msg_set_init_ports (mach_port_t msgport, mach_port_t auth,
-		       mach_port_t *ports, mach_msg_type_number_t nports)
+		       const mach_port_t *ports, mach_msg_type_number_t nports)
 {
   mach_msg_type_number_t i;
   error_t err;
@@ -243,7 +243,7 @@ _S_msg_set_init_int (mach_port_t msgport, mach_port_t auth,
 
 kern_return_t
 _S_msg_set_init_ints (mach_port_t msgport, mach_port_t auth,
-		      int *values, mach_msg_type_number_t nvalues)
+		      const int *values, mach_msg_type_number_t nvalues)
 {
   error_t err;
   mach_msg_type_number_t i;
@@ -295,7 +295,7 @@ _S_msg_set_fd (mach_port_t msgport, mach_port_t auth,
 
 kern_return_t
 _S_msg_get_env_variable (mach_port_t msgport,
-			 char *variable,
+			 const_string_t variable, //
 			 char **data, mach_msg_type_number_t *datalen)
 {
   error_t err;
@@ -322,8 +322,8 @@ _S_msg_get_env_variable (mach_port_t msgport,
 
 kern_return_t
 _S_msg_set_env_variable (mach_port_t msgport, mach_port_t auth,
-			 char *variable,
-			 char *value,
+			 const_string_t variable, //
+			 const_string_t value, //
 			 int replace)
 {
   AUTHCHECK;
@@ -367,7 +367,7 @@ _S_msg_get_environment (mach_port_t msgport,
 
 kern_return_t
 _S_msg_set_environment (mach_port_t msgport, mach_port_t auth,
-			char *data, mach_msg_type_number_t datalen)
+			const char *data, mach_msg_type_number_t datalen)
 {
   int _hurd_split_args (char *, mach_msg_type_number_t, char **);
   int envc;
@@ -385,19 +385,62 @@ _S_msg_set_environment (mach_port_t msgport, mach_port_t auth,
 }
 
 
-/* XXX */
-
 kern_return_t
 _S_msg_get_dtable (mach_port_t process,
-		   mach_port_t refport,
+		   mach_port_t auth,
 		   portarray_t *dtable,
 		   mach_msg_type_name_t *dtablePoly,
 		   mach_msg_type_number_t *dtableCnt)
-{ return EOPNOTSUPP; }
+{
+  mach_port_t *ports;
+  mach_msg_type_number_t i;
+  error_t err;
+
+  AUTHCHECK;
+
+  HURD_CRITICAL_BEGIN;
+  __mutex_lock (&_hurd_dtable_lock);
+
+  if (err = __vm_allocate (__mach_task_self (), (vm_address_t *) &ports,
+			   _hurd_dtablesize * sizeof(mach_port_t), 1))
+    goto out;
+
+  for (i = 0; i < _hurd_dtablesize; i++)
+    {
+      struct hurd_fd *cell = _hurd_dtable[i];
+      if (cell == NULL)
+	ports[i] = MACH_PORT_NULL;
+      else
+	{
+	  __spin_lock (&cell->port.lock);
+	  if (cell->port.port == MACH_PORT_NULL)
+	    ports[i] = MACH_PORT_NULL;
+	  else
+	    {
+	      ports[i] = cell->port.port;
+	      /* We will move this send right.  */
+	      __mach_port_mod_refs (__mach_task_self (), ports[i],
+				    MACH_PORT_RIGHT_SEND, +1);
+	    }
+	  __spin_unlock (&cell->port.lock);
+	}
+    }
+
+  *dtable = ports;
+  *dtablePoly = MACH_MSG_TYPE_MOVE_SEND;
+  *dtableCnt = _hurd_dtablesize;
+
+out:
+  __mutex_unlock (&_hurd_dtable_lock);
+  HURD_CRITICAL_END;
+  return err;
+}
+
+/* XXX */
 
 kern_return_t
 _S_msg_set_dtable (mach_port_t process,
 		   mach_port_t refport,
-		   portarray_t dtable,
+		   const_portarray_t dtable,
 		   mach_msg_type_number_t dtableCnt)
 { return EOPNOTSUPP; }

@@ -1,4 +1,4 @@
-# Copyright (C) 1998-2020 Free Software Foundation, Inc.
+# Copyright (C) 1998-2021 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -32,7 +32,8 @@ generated += tzselect
 testdata = $(objpfx)testdata
 
 ifeq ($(enable-timezone-tools),yes)
-install-sbin := zic zdump
+install-sbin := zic
+install-bin := zdump
 install-bin-script = tzselect
 endif
 

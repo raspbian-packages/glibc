@@ -6,6 +6,8 @@ And upstream happens to have 32-byte alignment from
 0c76fc3c2b34 ('Linux: Perform rseq registration at C startup and thread
 creation') which just rounds up max_align to 32 anyway.
 
+To be dropped with glibc 2.35
+
 Index: glibc-2.31/sysdeps/mach/hurd/tls.h
 ===================================================================
 --- glibc-2.31.orig/sysdeps/mach/hurd/tls.h

@@ -123,10 +123,11 @@ libc_hidden_proto (__strerror_l)
 void __explicit_bzero_chk_internal (void *, size_t, size_t)
   __THROW __nonnull ((1)) attribute_hidden;
 # define explicit_bzero(buf, len) \
-  __explicit_bzero_chk_internal (buf, len, __bos0 (buf))
+  __explicit_bzero_chk_internal (buf, len, __glibc_objsize0 (buf))
 #elif !IS_IN (nonlib)
 void __explicit_bzero_chk (void *, size_t, size_t) __THROW __nonnull ((1));
-# define explicit_bzero(buf, len) __explicit_bzero_chk (buf, len, __bos0 (buf))
+# define explicit_bzero(buf, len) __explicit_bzero_chk (buf, len,	      \
+							__glibc_objsize0 (buf))
 #endif
 
 libc_hidden_builtin_proto (memchr)
@@ -150,7 +151,7 @@ libc_hidden_builtin_proto (strspn)
 libc_hidden_builtin_proto (strstr)
 libc_hidden_builtin_proto (ffs)
 
-#if IS_IN (rtld) && !defined NO_RTLD_HIDDEN
+#if IS_IN (rtld)
 extern __typeof (__stpcpy) __stpcpy attribute_hidden;
 extern __typeof (__strdup) __strdup attribute_hidden;
 extern __typeof (__strerror_r) __strerror_r attribute_hidden;

@@ -142,6 +142,20 @@ if 'CFLAGS' is specified it must enable optimization.  For example:
      non-CET processors.  '--enable-cet' has been tested for i686,
      x86_64 and x32 on CET processors.
 
+'--enable-memory-tagging'
+     Enable memory tagging support if the architecture supports it.
+     When the GNU C Library is built with this option then the resulting
+     library will be able to control the use of tagged memory when
+     hardware support is present by use of the tunable
+     'glibc.mem.tagging'.  This includes the generation of tagged memory
+     when using the 'malloc' APIs.
+
+     At present only AArch64 platforms with MTE provide this
+     functionality, although the library will still operate (without
+     memory tagging) on older versions of the architecture.
+
+     The default is to disable support for memory tagging.
+
 '--disable-profile'
      Don't build libraries with profiling information.  You may want to
      use this option if you don't plan to do profiling.
@@ -188,14 +202,9 @@ if 'CFLAGS' is specified it must enable optimization.  For example:
 '--enable-pt_chown'
      The file 'pt_chown' is a helper binary for 'grantpt' (*note
      Pseudo-Terminals: Allocation.) that is installed setuid root to fix
-     up pseudo-terminal ownership.  It is not built by default because
-     systems using the Linux kernel are commonly built with the 'devpts'
-     filesystem enabled and mounted at '/dev/pts', which manages
-     pseudo-terminal ownership automatically.  By using
-     '--enable-pt_chown', you may build 'pt_chown' and install it setuid
-     and owned by 'root'.  The use of 'pt_chown' introduces additional
-     security risks to the system and you should enable it only if you
-     understand and accept those risks.
+     up pseudo-terminal ownership on GNU/Hurd.  It is not required on
+     GNU/Linux, and the GNU C Library will not use the installed
+     'pt_chown' program when configured with '--enable-pt_chown'.
 
 '--disable-werror'
      By default, the GNU C Library is built with '-Werror'.  If you wish
@@ -451,15 +460,15 @@ build the GNU C Library:
 
    * GNU 'make' 4.0 or newer
 
-     As of relase time, GNU 'make' 4.2.1 is the newest verified to work
-     to build the GNU C Library.
+     As of relase time, GNU 'make' 4.3 is the newest verified to work to
+     build the GNU C Library.
 
    * GCC 6.2 or newer
 
      GCC 6.2 or higher is required.  In general it is recommended to use
      the newest version of the compiler that is known to work for
      building the GNU C Library, as newer compilers usually produce
-     better code.  As of release time, GCC 9.2.1 is the newest compiler
+     better code.  As of release time, GCC 10.2 is the newest compiler
      verified to work to build the GNU C Library.
 
      For PowerPC 64-bits little-endian (powerpc64le), a GCC version with
@@ -471,6 +480,9 @@ build the GNU C Library:
      building the GNU C Library with support for IEEE long double.
 
      For ARC architecture builds, GCC 8.3 or higher is needed.
+
+     For s390x architecture builds, GCC 7.1 or higher is needed (See gcc
+     Bug 98269).
 
      For multi-arch support it is recommended to use a GCC which has
      been built with support for GNU indirect functions.  This ensures
@@ -491,7 +503,7 @@ build the GNU C Library:
 
      You must use GNU 'binutils' (as and ld) to build the GNU C Library.
      No other assembler or linker has the necessary functionality at the
-     moment.  As of release time, GNU 'binutils' 2.32 is the newest
+     moment.  As of release time, GNU 'binutils' 2.35.1 is the newest
      verified to work to build the GNU C Library.
 
      For PowerPC 64-bits little-endian (powerpc64le), 'objcopy' is
@@ -507,7 +519,7 @@ build the GNU C Library:
      need this version of the 'texinfo' package.  Earlier versions do
      not understand all the tags used in the document, and the
      installation mechanism for the info files is not present or works
-     differently.  As of release time, 'texinfo' 6.6 is the newest
+     differently.  As of release time, 'texinfo' 6.7 is the newest
      verified to work to build the GNU C Library.
 
    * GNU 'awk' 3.1.2, or higher
@@ -515,32 +527,32 @@ build the GNU C Library:
      'awk' is used in several places to generate files.  Some 'gawk'
      extensions are used, including the 'asorti' function, which was
      introduced in version 3.1.2 of 'gawk'.  As of release time, 'gawk'
-     version 5.0.1 is the newest verified to work to build the GNU C
+     version 5.1 is the newest verified to work to build the GNU C
      Library.
 
    * GNU 'bison' 2.7 or later
 
      'bison' is used to generate the 'yacc' parser code in the 'intl'
-     subdirectory.  As of release time, 'bison' version 3.4.1 is the
+     subdirectory.  As of release time, 'bison' version 3.7.4 is the
      newest verified to work to build the GNU C Library.
 
    * Perl 5
 
      Perl is not required, but if present it is used in some tests and
      the 'mtrace' program, to build the GNU C Library manual.  As of
-     release time 'perl' version 5.30.1 is the newest verified to work
+     release time 'perl' version 5.32.0 is the newest verified to work
      to build the GNU C Library.
 
    * GNU 'sed' 3.02 or newer
 
      'Sed' is used in several places to generate files.  Most scripts
      work with any version of 'sed'.  As of release time, 'sed' version
-     4.5 is the newest verified to work to build the GNU C Library.
+     4.8 is the newest verified to work to build the GNU C Library.
 
    * Python 3.4 or later
 
      Python is required to build the GNU C Library.  As of release time,
-     Python 3.7.4 is the newest verified to work for building and
+     Python 3.8.6 is the newest verified to work for building and
      testing the GNU C Library.
 
    * PExpect 4.0
@@ -548,7 +560,7 @@ build the GNU C Library:
      The pretty printer tests drive GDB through test programs and
      compare its output to the printers'.  PExpect is used to capture
      the output of GDB, and should be compatible with the Python version
-     in your system.  As of release time PExpect 4.3 is the newest
+     in your system.  As of release time PExpect 4.8 is the newest
      verified to work to test the pretty printers.
 
    * GDB 7.8 or later with support for Python 2.7/3.4 or later
@@ -557,7 +569,7 @@ build the GNU C Library:
      use the pretty printers.  Notice that your system having Python
      available doesn't imply that GDB supports it, nor that your
      system's Python and GDB's have the same version.  As of release
-     time GNU 'debugger' 8.3 is the newest verified to work to test the
+     time GNU 'debugger' 10.1 is the newest verified to work to test the
      pretty printers.
 
      Unless Python, PExpect and GDB with Python support are present, the
@@ -573,7 +585,7 @@ and if you change any of the message translation files you will need
 
    * GNU 'gettext' 0.10.36 or later
 
-     As of release time, GNU 'gettext' version 0.19.8.1 is the newest
+     As of release time, GNU 'gettext' version 0.21 is the newest
      version verified to work to build the GNU C Library.
 
 You may also need these packages if you upgrade your source tree using

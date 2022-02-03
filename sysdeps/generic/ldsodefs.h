@@ -1,5 +1,5 @@
 /* Run-time dynamic linker data structures for loaded ELF shared objects.
-   Copyright (C) 1995-2020 Free Software Foundation, Inc.
+   Copyright (C) 1995-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -39,6 +39,7 @@
 #include <libc-lock.h>
 #include <hp-timing.h>
 #include <tls.h>
+#include <list_t.h>
 
 __BEGIN_DECLS
 
@@ -462,15 +463,22 @@ struct rtld_global
 
   EXTERN void (*_dl_init_static_tls) (struct link_map *);
 
-  EXTERN void (*_dl_wait_lookup_done) (void);
-
   /* Scopes to free after next THREAD_GSCOPE_WAIT ().  */
   EXTERN struct dl_scope_free_list
   {
     size_t count;
     void *list[50];
   } *_dl_scope_free_list;
-#if !THREAD_GSCOPE_IN_TCB
+#if THREAD_GSCOPE_IN_TCB
+  /* List of active thread stacks, with memory managed by glibc.  */
+  EXTERN list_t _dl_stack_used;
+
+  /* List of thread stacks that were allocated by the application.  */
+  EXTERN list_t _dl_stack_user;
+
+  /* Mutex protecting the stack lists.  */
+  EXTERN int _dl_stack_cache_lock;
+#else
   EXTERN int _dl_thread_gscope_count;
 #endif
 #ifdef SHARED
@@ -758,6 +766,12 @@ _dl_dprintf (int fd, const char *fmt, ...)
 }
 #endif
 
+/* Write LENGTH bytes at BUFFER to FD, like write.  Returns the number
+   of bytes written on success, or a negative error constant on
+   failure.  */
+ssize_t _dl_write (int fd, const void *buffer, size_t length)
+  attribute_hidden;
+
 /* Write a message on the specified descriptor standard output.  The
    parameters are interpreted as for a `printf' call.  */
 void _dl_printf (const char *fmt, ...)
@@ -879,6 +893,17 @@ extern int _dl_catch_error (const char **objname, const char **errstring,
 			    bool *mallocedp, void (*operate) (void *),
 			    void *args);
 libc_hidden_proto (_dl_catch_error)
+
+
+/* libdl in a secondary namespace (after dlopen) must use
+   _dl_catch_error from the main namespace, so it has to be exported
+   in some way.  Initialized to _rtld_catch_error in rtld.c.  Not in
+   _rtld_global_ro to preserve structure layout.  */
+extern __typeof (_dl_catch_error) *_dl_catch_error_ptr attribute_relro;
+rtld_hidden_proto (_dl_catch_error_ptr)
+
+/* Used for initializing _dl_catch_error_ptr.  */
+extern __typeof__ (_dl_catch_error) _rtld_catch_error attribute_hidden;
 
 /* Call OPERATE (ARGS).  If no error occurs, set *EXCEPTION to zero.
    Otherwise, store a copy of the raised exception in *EXCEPTION,
@@ -1042,8 +1067,15 @@ rtld_hidden_proto (_dl_debug_state)
 extern struct r_debug *_dl_debug_initialize (ElfW(Addr) ldbase, Lmid_t ns)
      attribute_hidden;
 
-/* Initialize the basic data structure for the search paths.  */
-extern void _dl_init_paths (const char *library_path) attribute_hidden;
+/* Initialize the basic data structure for the search paths.  SOURCE
+   is either "LD_LIBRARY_PATH" or "--library-path".
+   GLIBC_HWCAPS_PREPEND adds additional glibc-hwcaps subdirectories to
+   search.  GLIBC_HWCAPS_MASK is used to filter the built-in
+   subdirectories if not NULL.  */
+extern void _dl_init_paths (const char *library_path, const char *source,
+			    const char *glibc_hwcaps_prepend,
+			    const char *glibc_hwcaps_mask)
+  attribute_hidden;
 
 /* Gather the information needed to install the profiling tables and start
    the timers.  */
@@ -1065,12 +1097,17 @@ extern void _dl_show_auxv (void) attribute_hidden;
    other.  */
 extern char *_dl_next_ld_env_entry (char ***position) attribute_hidden;
 
-/* Return an array with the names of the important hardware capabilities.  */
-extern const struct r_strlenpair *_dl_important_hwcaps (const char *platform,
-							size_t paltform_len,
-							size_t *sz,
-							size_t *max_capstrlen)
-     attribute_hidden;
+/* Return an array with the names of the important hardware
+   capabilities.  PREPEND is a colon-separated list of glibc-hwcaps
+   directories to search first.  MASK is a colon-separated list used
+   to filter the built-in glibc-hwcaps subdirectories.  The length of
+   the array is written to *SZ, and the maximum of all strings length
+   is written to *MAX_CAPSTRLEN.  */
+const struct r_strlenpair *_dl_important_hwcaps (const char *prepend,
+						 const char *mask,
+						 size_t *sz,
+						 size_t *max_capstrlen)
+  attribute_hidden;
 
 /* Look up NAME in ld.so.cache and return the file name stored there,
    or null if none is found.  Caller must free returned string.  */
@@ -1245,6 +1282,11 @@ link_map_audit_state (struct link_map *l, size_t index)
     }
 }
 #endif /* SHARED */
+
+#if THREAD_GSCOPE_IN_TCB
+void __thread_gscope_wait (void) attribute_hidden;
+# define THREAD_GSCOPE_WAIT() __thread_gscope_wait ()
+#endif
 
 __END_DECLS
 

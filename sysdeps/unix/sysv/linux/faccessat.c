@@ -1,5 +1,5 @@
 /* Test for access to file, relative to open directory.  Linux version.
-   Copyright (C) 2006-2020 Free Software Foundation, Inc.
+   Copyright (C) 2006-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,20 +16,23 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <errno.h>
 #include <fcntl.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <alloca.h>
+#include <sys/stat.h>
 #include <sysdep.h>
 
 
 int
-faccessat (int fd, const char *file, int mode, int flag)
+__faccessat (int fd, const char *file, int mode, int flag)
 {
+  int ret = INLINE_SYSCALL_CALL (faccessat2, fd, file, mode, flag);
+#if __ASSUME_FACCESSAT2
+  return ret;
+#else
+  if (ret == 0 || errno != ENOSYS)
+    return ret;
+
   if (flag & ~(AT_SYMLINK_NOFOLLOW | AT_EACCESS))
     return INLINE_SYSCALL_ERROR_RETURN_VALUE (EINVAL);
 
@@ -37,13 +40,13 @@ faccessat (int fd, const char *file, int mode, int flag)
     return INLINE_SYSCALL (faccessat, 3, fd, file, mode);
 
   struct stat64 stats;
-  if (__fxstatat64 (_STAT_VER, fd, file, &stats, flag & AT_SYMLINK_NOFOLLOW))
+  if (__fstatat64 (fd, file, &stats, flag & AT_SYMLINK_NOFOLLOW))
     return -1;
 
   mode &= (X_OK | W_OK | R_OK);	/* Clear any bogus bits. */
-#if R_OK != S_IROTH || W_OK != S_IWOTH || X_OK != S_IXOTH
-# error Oops, portability assumptions incorrect.
-#endif
+# if R_OK != S_IROTH || W_OK != S_IWOTH || X_OK != S_IXOTH
+#  error Oops, portability assumptions incorrect.
+# endif
 
   if (mode == F_OK)
     return 0;			/* The file exists. */
@@ -68,4 +71,6 @@ faccessat (int fd, const char *file, int mode, int flag)
     return 0;
 
   return INLINE_SYSCALL_ERROR_RETURN_VALUE (EACCES);
+#endif /* !__ASSUME_FACCESSAT2 */
 }
+weak_alias (__faccessat, faccessat)

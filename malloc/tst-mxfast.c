@@ -1,5 +1,5 @@
 /* Test that glibc.malloc.mxfast tunable works.
-   Copyright (C) 2019-2020 Free Software Foundation, Inc.
+   Copyright (C) 2019-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -21,6 +21,7 @@
    the fast bins.  */
 
 #include <malloc.h>
+#include <libc-diag.h>
 #include <support/check.h>
 
 int
@@ -36,7 +37,13 @@ do_test (void)
   p2 = malloc (512);
   free (p1);
 
+  /* The test below covers the deprecated mallinfo function.  */
+  DIAG_PUSH_NEEDS_COMMENT;
+  DIAG_IGNORE_NEEDS_COMMENT (4.9, "-Wdeprecated-declarations");
+
   m = mallinfo ();
+
+  DIAG_POP_NEEDS_COMMENT;
 
   /* This will fail if there are any blocks in the fastbins.  */
   TEST_COMPARE (m.smblks, 0);

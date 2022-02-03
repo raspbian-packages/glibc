@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -32,7 +32,6 @@
 #include <fork.h>
 #include <version.h>
 #include <shlib-compat.h>
-#include <smp.h>
 #include <lowlevellock.h>
 #include <futex-internal.h>
 #include <kernel-features.h>
@@ -252,12 +251,9 @@ __pthread_initialize_minimal_internal (void)
      purposes this is good enough.  */
   THREAD_SETMEM (pd, stackblock_size, (size_t) __libc_stack_end);
 
-  /* Initialize the list of all running threads with the main thread.  */
-  INIT_LIST_HEAD (&__stack_user);
-  list_add (&pd->list, &__stack_user);
-
-  /* Before initializing __stack_user, the debugger could not find us and
-     had to set __nptl_initial_report_events.  Propagate its setting.  */
+  /* Before initializing GL (dl_stack_user), the debugger could not
+     find us and had to set __nptl_initial_report_events.  Propagate
+     its setting.  */
   THREAD_SETMEM (pd, report_events, __nptl_initial_report_events);
 
   struct sigaction sa;
@@ -337,17 +333,12 @@ __pthread_initialize_minimal_internal (void)
 
   GL(dl_init_static_tls) = &__pthread_init_static_tls;
 
-  GL(dl_wait_lookup_done) = &__wait_lookup_done;
-
   /* Register the fork generation counter with the libc.  */
 #ifndef TLS_MULTIPLE_THREADS_IN_TCB
   __libc_multiple_threads_ptr =
 #endif
     __libc_pthread_init (&__fork_generation, __reclaim_stacks,
 			 ptr_pthread_functions);
-
-  /* Determine whether the machine is SMP or not.  */
-  __is_smp = is_smp_system ();
 
 #if HAVE_TUNABLES
   __pthread_tunables_init ();

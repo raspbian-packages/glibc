@@ -1,5 +1,5 @@
 /* Support for relocating static PIE.
-   Copyright (C) 2017-2020 Free Software Foundation, Inc.
+   Copyright (C) 2017-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -17,6 +17,8 @@
    <https://www.gnu.org/licenses/>.  */
 
 #if ENABLE_STATIC_PIE
+/* Mark symbols hidden in static PIE for early self relocation to work.  */
+# pragma GCC visibility push(hidden)
 #include <unistd.h>
 #include <ldsodefs.h>
 #include "dynamic-link.h"

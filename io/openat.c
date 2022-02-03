@@ -1,4 +1,4 @@
-/* Copyright (C) 2005-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2005-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -23,11 +23,6 @@
 #include <sys/stat.h>
 #include <kernel-features.h>
 
-/* Some mostly-generic code (e.g. sysdeps/posix/getcwd.c) uses this variable
-   if __ASSUME_ATFCTS is not defined.  */
-#ifndef __ASSUME_ATFCTS
-int __have_atfcts;
-#endif
 
 /* Open FILE with access OFLAG.  Interpret relative paths relative to
    the directory associated with FD.  If O_CREAT or O_TMPFILE is in OFLAG, a
@@ -47,7 +42,7 @@ __openat (int fd, const char *file, int oflag, ...)
     {
       /* Check FD is associated with a directory.  */
       struct stat64 st;
-      if (__fxstat64 (_STAT_VER, fd, &st) != 0)
+      if (__fstat64 (fd, &st) != 0)
 	return -1;
 
       if (!S_ISDIR (st.st_mode))

@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -68,7 +68,7 @@ check_add_mapping (const char *name, size_t namelen, int fd, sem_t *existing)
 
   /* Get the information about the file.  */
   struct stat64 st;
-  if (__fxstat64 (_STAT_VER, fd, &st) == 0)
+  if (__fstat64 (fd, &st) == 0)
     {
       /* Get the lock.  */
       lll_lock (__sem_mappings_lock, LLL_PRIVATE);

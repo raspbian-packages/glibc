@@ -1,5 +1,5 @@
 /* Minimal replacements for basic facilities used in the dynamic linker.
-   Copyright (C) 1995-2020 Free Software Foundation, Inc.
+   Copyright (C) 1995-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -57,6 +57,14 @@ __rtld_malloc_init_stubs (void)
   __rtld_free = &rtld_free;
   __rtld_malloc = &rtld_malloc;
   __rtld_realloc = &rtld_realloc;
+}
+
+bool
+__rtld_malloc_is_complete (void)
+{
+  /* The caller assumes that there is an active malloc.  */
+  assert (__rtld_malloc != NULL);
+  return __rtld_malloc != &rtld_malloc;
 }
 
 /* Lookup NAME at VERSION in the scope of MATCH.  */
@@ -284,7 +292,9 @@ Inconsistency detected by ld.so: %s: %u: %s%sAssertion `%s' failed!\n",
 		    assertion);
 
 }
+# ifndef NO_RTLD_HIDDEN
 rtld_hidden_weak (__assert_fail)
+# endif
 
 void weak_function
 __assert_perror_fail (int errnum,
@@ -298,7 +308,9 @@ Inconsistency detected by ld.so: %s: %u: %s%sUnexpected error: %s.\n",
 		    __strerror_r (errnum, errbuf, sizeof errbuf));
 
 }
+# ifndef NO_RTLD_HIDDEN
 rtld_hidden_weak (__assert_perror_fail)
+# endif
 #endif
 
 #undef _itoa

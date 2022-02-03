@@ -1,5 +1,5 @@
 /* Assembler macros for ARC.
-   Copyright (C) 2020 Free Software Foundation, Inc.
+   Copyright (C) 2020-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -220,6 +220,9 @@ hidden_proto (__syscall_error)
 /* Pointer mangling not yet supported.  */
 # define PTR_MANGLE(var) (void) (var)
 # define PTR_DEMANGLE(var) (void) (var)
+
+# undef HAVE_INTERNAL_BRK_ADDR_SYMBOL
+# define HAVE_INTERNAL_BRK_ADDR_SYMBOL  1
 
 #endif /* !__ASSEMBLER__ */
 

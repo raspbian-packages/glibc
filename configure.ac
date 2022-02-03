@@ -311,6 +311,21 @@ AC_ARG_ENABLE([experimental-malloc],
 	      [experimental_malloc=yes])
 AC_SUBST(experimental_malloc)
 
+AC_ARG_ENABLE([memory-tagging],
+	      AC_HELP_STRING([--enable-memory-tagging],
+			     [enable memory tagging if supported by the architecture @<:@default=no@:>@]),
+	      [memory_tagging=$enableval],
+	      [memory_tagging=no])
+if test "$memory_tagging" = yes; then
+  # Only enable this on architectures that support it.
+  case $host_cpu in
+    aarch64)
+      AC_DEFINE(USE_MTAG)
+      ;;
+  esac
+fi
+AC_SUBST(memory_tagging)
+
 AC_ARG_ENABLE([crypt],
               AC_HELP_STRING([--disable-crypt],
                              [do not build nor install the passphrase hashing library, libcrypt]),
@@ -1416,17 +1431,6 @@ fi
 rm -f conftest*])
 AC_SUBST(libc_cv_has_glob_dat)
 
-AC_CACHE_CHECK(linker output format, libc_cv_output_format, [dnl
-if libc_cv_output_format=`
-${CC-cc} -nostartfiles -nostdlib $no_ssp -Wl,--print-output-format 2>&AS_MESSAGE_LOG_FD`
-then
-  :
-else
-  libc_cv_output_format=
-fi
-test -n "$libc_cv_output_format" || libc_cv_output_format=unknown])
-AC_SUBST(libc_cv_output_format)
-
 AC_CACHE_CHECK(for -fno-toplevel-reorder -fno-section-anchors, libc_cv_fno_toplevel_reorder, [dnl
 cat > conftest.c <<EOF
 int foo;
@@ -1829,6 +1833,10 @@ libc_cv_multidir=`${CC-cc} $CFLAGS $CPPFLAGS -print-multi-directory`
 AC_SUBST(libc_cv_multidir)
 
 if test "$static_pie" = yes; then
+  # Check target support for static PIE
+  AC_COMPILE_IFELSE([AC_LANG_SOURCE([[#ifndef SUPPORT_STATIC_PIE
+# error static PIE is not supported
+#endif]])], , AC_MSG_ERROR([the architecture does not support static PIE]))
   # The linker must support --no-dynamic-linker.
   if test "$libc_cv_no_dynamic_linker" != yes; then
     AC_MSG_ERROR([linker support for --no-dynamic-linker needed])

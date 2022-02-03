@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2020 Free Software Foundation, Inc.
+# Copyright (C) 1991-2021 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -88,7 +88,7 @@ tests := tst-dirname tst-tsearch tst-fdset tst-mntent tst-hsearch \
 	 tst-preadvwritev tst-preadvwritev64 tst-makedev tst-empty \
 	 tst-preadvwritev2 tst-preadvwritev64v2 tst-warn-wide \
 	 tst-ldbl-warn tst-ldbl-error tst-dbl-efgcvt tst-ldbl-efgcvt \
-	 tst-mntent-autofs tst-syscalls
+	 tst-mntent-autofs tst-syscalls tst-mntent-escape tst-select
 
 # Tests which need libdl.
 ifeq (yes,$(build-shared))

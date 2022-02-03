@@ -1,5 +1,5 @@
 /* Translate Mach exception codes into signal numbers.  i386 version.
-   Copyright (C) 1991-2020 Free Software Foundation, Inc.
+   Copyright (C) 1991-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -194,4 +194,3 @@ _hurd_exception2signal_legacy (struct hurd_signal_detail *detail, int *signo)
 {
   exception2signal (detail, signo, 0);
 }
-

@@ -1,5 +1,5 @@
 /* spawn a new process running an executable.  Hurd version.
-   Copyright (C) 2001-2020 Free Software Foundation, Inc.
+   Copyright (C) 2001-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -882,11 +882,15 @@ retry:
       err = exec (execfile);
     __mach_port_deallocate (__mach_task_self (), execfile);
 
-    if (err == ENOEXEC)
+    if ((err == ENOEXEC) && (xflags & SPAWN_XFLAGS_TRY_SHELL) != 0)
       {
 	/* The file is accessible but it is not an executable file.
 	   Invoke the shell to interpret it as a script.  */
-	err = __argz_insert (&args, &argslen, args, _PATH_BSHELL);
+	err = 0;
+	if (!argslen)
+	  err = __argz_insert (&args, &argslen, args, relpath);
+	if (!err)
+	  err = __argz_insert (&args, &argslen, args, _PATH_BSHELL);
 	if (!err)
 	  err = child_lookup (_PATH_BSHELL, O_EXEC, 0, &execfile);
 	if (!err)

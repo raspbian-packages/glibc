@@ -1,4 +1,4 @@
-/* Copyright (C) 1995-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1995-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@gnu.org>, 1995.
 
@@ -2039,7 +2039,7 @@ add_to_tablewc (uint32_t ch, struct element_t *runp)
 		obstack_int32_grow_fast (atwc.extrapool, curp->wcs[i]);
 
 	      /* Now find the end of the consecutive sequence and
-		 add all the indeces in the indirect pool.  */
+		 add all the indices in the indirect pool.  */
 	      do
 		{
 		  weightidx = output_weightwc (atwc.weightpool, atwc.collate,
@@ -2255,7 +2255,7 @@ collate_output (struct localedef_t *locale, const struct charmap_t *charmap,
 		  obstack_1grow_fast (&extrapool, curp->mbs[i]);
 
 		/* Now find the end of the consecutive sequence and
-		   add all the indeces in the indirect pool.  */
+		   add all the indices in the indirect pool.  */
 		do
 		  {
 		    weightidx = output_weight (&weightpool, collate, curp);

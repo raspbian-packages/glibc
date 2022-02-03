@@ -1,5 +1,5 @@
 /* Internal prototype declarations that don't fit anywhere else.
-   Copyright (C) 2000-2020 Free Software Foundation, Inc.
+   Copyright (C) 2000-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -43,10 +43,15 @@ extern void __libc_thread_freeres (void);
 /* Define and initialize `__progname' et. al.  */
 extern void __init_misc (int, char **, char **) attribute_hidden;
 
-# if IS_IN (rtld) && !defined NO_RTLD_HIDDEN
+# if IS_IN (rtld)
 extern __typeof (__profile_frequency) __profile_frequency attribute_hidden;
 # endif
 
-extern int __libc_multiple_libcs attribute_hidden;
+#ifdef SHARED
+/* True if this libc belongs to the initially loaded program (i.e., it
+   is not for an audit module, not loaded via dlmopen, and not loaded
+   via static dlopen either).  */
+extern _Bool __libc_initial attribute_hidden;
+#endif
 
 #endif /* _LIBC_INTERNAL  */

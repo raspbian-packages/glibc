@@ -1,4 +1,4 @@
-/* Copyright (C) 2008-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2008-2021 Free Software Foundation, Inc.
    Contributed by Andreas Krebbel <Andreas.Krebbel@de.ibm.com>.
    This file is part of the GNU C Library.
 
@@ -19,7 +19,7 @@
 #include <sys/types.h>
 #include <utmp.h>
 #include <errno.h>
-#include <libc-symbols.h>
+#include <stdlib.h>
 
 #include "utmp32.h"
 #include "utmp-convert.h"

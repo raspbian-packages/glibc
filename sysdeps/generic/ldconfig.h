@@ -1,4 +1,4 @@
-/* Copyright (C) 1999-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1999-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Andreas Jaeger <aj@suse.de>, 1999.
 
@@ -57,31 +57,51 @@ extern void init_cache (void);
 
 extern void save_cache (const char *cache_name);
 
-extern void add_to_cache (const char *path, const char *lib, int flags,
-			  unsigned int osversion, uint64_t hwcap);
+struct glibc_hwcaps_subdirectory;
+
+/* Return a struct describing the subdirectory for NAME.  Reuse an
+   existing struct if it exists.  */
+struct glibc_hwcaps_subdirectory *new_glibc_hwcaps_subdirectory
+  (const char *name);
+
+/* Returns the name that was specified when
+   add_glibc_hwcaps_subdirectory was called.  */
+const char *glibc_hwcaps_subdirectory_name
+  (const struct glibc_hwcaps_subdirectory *);
+
+extern void add_to_cache (const char *path, const char *filename,
+			  const char *soname, int flags,
+			  unsigned int osversion, unsigned int isa_level,
+			  uint64_t hwcap,
+			  struct glibc_hwcaps_subdirectory *);
 
 extern void init_aux_cache (void);
 
 extern void load_aux_cache (const char *aux_cache_name);
 
 extern int search_aux_cache (struct stat64 *stat_buf, int *flags,
-			     unsigned int *osversion, char **soname);
+			     unsigned int *osversion,
+			     unsigned int *isa_level, char **soname);
 
 extern void add_to_aux_cache (struct stat64 *stat_buf, int flags,
-			      unsigned int osversion, const char *soname);
+			      unsigned int osversion,
+			      unsigned int isa_level, const char *soname);
 
 extern void save_aux_cache (const char *aux_cache_name);
 
 /* Declared in readlib.c.  */
 extern int process_file (const char *real_file_name, const char *file_name,
-			 const char *lib, int *flag, unsigned int *osversion,
-			 char **soname, int is_link, struct stat64 *stat_buf);
+			 const char *lib, int *flag,
+			 unsigned int *osversion, unsigned int *isa_level,
+			 char **soname, int is_link,
+			 struct stat64 *stat_buf);
 
 extern char *implicit_soname (const char *lib, int flag);
 
 /* Declared in readelflib.c.  */
-extern int process_elf_file (const char *file_name, const char *lib, int *flag,
-			     unsigned int *osversion, char **soname,
+extern int process_elf_file (const char *file_name, const char *lib,
+			     int *flag, unsigned int *osversion,
+			     unsigned int *isa_level, char **soname,
 			     void *file_contents, size_t file_length);
 
 /* Declared in chroot_canon.c.  */
@@ -90,7 +110,14 @@ extern char *chroot_canon (const char *chroot, const char *name);
 /* Declared in ldconfig.c.  */
 extern int opt_verbose;
 
-extern int opt_format;
+enum opt_format
+  {
+    opt_format_old = 0,	/* Use struct cache_file.  */
+    opt_format_compat = 1, /* Use both, old format followed by new.  */
+    opt_format_new = 2,	/* Use struct cache_file_new.  */
+  };
+
+extern enum opt_format opt_format;
 
 /* Prototypes for a few program-wide used functions.  */
 #include <programs/xmalloc.h>

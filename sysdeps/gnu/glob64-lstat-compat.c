@@ -1,6 +1,6 @@
 /* Compat glob which does not use gl_lstat for GLOB_ALTDIRFUNC.
    GNU version
-   Copyright (C) 2017-2020 Free Software Foundation, Inc.
+   Copyright (C) 2017-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -32,7 +32,7 @@
 #undef stat
 #define stat stat64
 #undef __stat
-#define __stat(file, buf) __xstat64 (_STAT_VER, file, buf)
+#define __stat(file, buf) __stat64 (file, buf)
 
 #define COMPILE_GLOB64	1
 

@@ -1,5 +1,5 @@
 /* Verify that ftime is sane.
-   Copyright (C) 2014-2020 Free Software Foundation, Inc.
+   Copyright (C) 2014-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,9 +16,11 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
+#include <features.h>
 #include <sys/timeb.h>
-#include <stdio.h>
 #include <libc-diag.h>
+
+#include <support/check.h>
 
 static int
 do_test (void)
@@ -34,26 +36,14 @@ do_test (void)
       DIAG_PUSH_NEEDS_COMMENT;
       DIAG_IGNORE_NEEDS_COMMENT (4.9, "-Wdeprecated-declarations");
 
-      if (ftime (&curr))
-        {
-          printf ("ftime returned an error\n");
-          return 1;
-        }
+      TEST_COMPARE (ftime (&curr), 0);
 
       DIAG_POP_NEEDS_COMMENT;
 
-      if (curr.time < prev.time)
-        {
-          printf ("ftime's time flowed backwards\n");
-          return 1;
-        }
+      TEST_VERIFY (curr.time >= prev.time);
 
-      if (curr.time == prev.time
-          && curr.millitm < prev.millitm)
-        {
-          printf ("ftime's millitm flowed backwards\n");
-          return 1;
-        }
+      if (curr.time == prev.time)
+	TEST_VERIFY (curr.millitm >= prev.millitm);
 
       if (curr.time > prev.time)
         sec ++;
@@ -61,5 +51,4 @@ do_test (void)
   return 0;
 }
 
-#define TEST_FUNCTION do_test ()
-#include "../test-skeleton.c"
+#include <support/test-driver.c>

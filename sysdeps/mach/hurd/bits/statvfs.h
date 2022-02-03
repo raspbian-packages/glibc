@@ -1,5 +1,5 @@
 /* Definition of `struct statvfs', information about a filesystem.
-   Copyright (C) 1998-2020 Free Software Foundation, Inc.
+   Copyright (C) 1998-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -89,7 +89,9 @@ enum
 # define ST_NOEXEC	ST_NOEXEC
   ST_SYNCHRONOUS = 16,
 # define ST_SYNCHRONOUS	ST_SYNCHRONOUS
-  ST_NOATIME = 32		/* Do not update access times.  */
+  ST_NOATIME = 32,		/* Do not update access times.  */
 # define ST_NOATIME	ST_NOATIME
+  ST_RELATIME = 64		/* Update atime relative to mtime/ctime.  */
+# define ST_RELATIME	ST_RELATIME
 #endif
 };

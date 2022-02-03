@@ -1,5 +1,5 @@
 /* C11 threads recursive mutex tests.
-   Copyright (C) 2018-2020 Free Software Foundation, Inc.
+   Copyright (C) 2018-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -27,7 +27,7 @@ do_test (void)
 {
   static mtx_t mutex;
 
-  if (mtx_init (&mutex, mtx_recursive) != thrd_success)
+  if (mtx_init (&mutex, mtx_plain | mtx_recursive) != thrd_success)
     FAIL_EXIT1 ("mtx_init failed");
 
   if (mtx_lock (&mutex) != thrd_success)

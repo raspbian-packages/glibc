@@ -1,4 +1,4 @@
-/* Copyright (C) 1992-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1992-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <hurd.h>
 #include <hurd/port.h>
+#include <ldsodefs.h>
 #include "set-hooks.h"
 #include "hurdmalloc.h"		/* XXX */
 
@@ -34,6 +35,10 @@ sigset_t _hurdsig_traced;
 char **__libc_argv;
 int __libc_argc;
 
+static int *_hurd_intarray;
+static size_t _hurd_intarraysize;
+static mach_port_t *_hurd_portarray;
+static size_t _hurd_portarraysize;
 
 error_t
 _hurd_ports_use (int which, error_t (*operate) (mach_port_t))
@@ -87,17 +92,10 @@ _hurd_init (int flags, char **argv,
   if (intarraysize > INIT_TRACEMASK)
     _hurdsig_traced = intarray[INIT_TRACEMASK];
 
-  /* Tell the proc server we exist, if it does.  */
-  if (portarray[INIT_PORT_PROC] != MACH_PORT_NULL)
-    _hurd_new_proc_init (argv, intarray, intarraysize);
-
-  /* All done with init ints and ports.  */
-  __vm_deallocate (__mach_task_self (),
-		   (vm_address_t) intarray,
-		   intarraysize * sizeof (int));
-  __vm_deallocate (__mach_task_self (),
-		   (vm_address_t) portarray,
-		   portarraysize * sizeof (mach_port_t));
+  _hurd_intarray = intarray;
+  _hurd_intarraysize = intarraysize;
+  _hurd_portarray = portarray;
+  _hurd_portarraysize = portarraysize;
 
   if (flags & EXEC_SECURE)
     {
@@ -113,6 +111,36 @@ _hurd_init (int flags, char **argv,
   RUN_HOOK (_hurd_subinit, ());
 }
 libc_hidden_def (_hurd_init)
+
+void
+_hurd_libc_proc_init (char **argv)
+{
+  if (_hurd_portarray)
+    {
+      /* We will start the signal thread, so we need to initialize libpthread
+       * if linked in.  */
+      if (__pthread_initialize_minimal != NULL)
+	__pthread_initialize_minimal ();
+
+      /* Tell the proc server we exist, if it does.  */
+      if (_hurd_portarray[INIT_PORT_PROC] != MACH_PORT_NULL)
+	_hurd_new_proc_init (argv, _hurd_intarray, _hurd_intarraysize);
+
+      /* All done with init ints and ports.  */
+      __vm_deallocate (__mach_task_self (),
+		       (vm_address_t) _hurd_intarray,
+		       _hurd_intarraysize * sizeof (int));
+      _hurd_intarray = NULL;
+      _hurd_intarraysize = 0;
+
+      __vm_deallocate (__mach_task_self (),
+		       (vm_address_t) _hurd_portarray,
+		       _hurd_portarraysize * sizeof (mach_port_t));
+      _hurd_portarray = NULL;
+      _hurd_portarraysize = 0;
+    }
+}
+libc_hidden_def (_hurd_libc_proc_init)
 
 #include <hurd/signal.h>
 

@@ -1,5 +1,5 @@
 /* Locate TLS data for a thread.
-   Copyright (C) 2003-2020 Free Software Foundation, Inc.
+   Copyright (C) 2003-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -28,12 +28,7 @@ dtv_slotinfo_list (td_thragent_t *ta,
   td_err_e err;
   psaddr_t head;
 
-  if (ta->ta_addr__rtld_global == 0
-      && td_mod_lookup (ta->ph, LD_SO, SYM__rtld_global,
-			&ta->ta_addr__rtld_global) != PS_OK)
-    ta->ta_addr__rtld_global = (void*)-1;
-
-  if (ta->ta_addr__rtld_global != (void*)-1)
+  if (__td_ta_rtld_global (ta))
     {
       err = DB_GET_FIELD (head, ta, ta->ta_addr__rtld_global,
 			  rtld_global, _dl_tls_dtv_slotinfo_list, 0);

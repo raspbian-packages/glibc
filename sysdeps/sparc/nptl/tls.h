@@ -1,5 +1,5 @@
 /* Definitions for thread-local data handling.  NPTL/sparc version.
-   Copyright (C) 2003-2020 Free Software Foundation, Inc.
+   Copyright (C) 2003-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -158,8 +158,6 @@ register struct pthread *__thread_self __asm__("%g7");
       atomic_write_barrier ();						     \
     }									     \
   while (0)
-#define THREAD_GSCOPE_WAIT() \
-  GL(dl_wait_lookup_done) ()
 
 #endif /* !ASSEMBLER */
 

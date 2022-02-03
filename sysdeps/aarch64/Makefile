@@ -17,6 +17,13 @@ sysdep-dl-routines += tlsdesc dl-tlsdesc
 gen-as-const-headers += dl-link.sym
 
 tests-internal += tst-ifunc-arg-1 tst-ifunc-arg-2
+
+ifeq (yes,$(aarch64-variant-pcs))
+tests += tst-vpcs
+modules-names += tst-vpcs-mod
+LDFLAGS-tst-vpcs-mod.so = -Wl,-z,lazy
+$(objpfx)tst-vpcs: $(objpfx)tst-vpcs-mod.so
+endif
 endif
 
 ifeq ($(subdir),csu)
@@ -33,4 +40,9 @@ endif
 
 ifeq ($(subdir),misc)
 sysdep_headers += sys/ifunc.h
+sysdep_routines += __mtag_address_get_tag \
+		   __mtag_memset_tag \
+		   __mtag_new_tag \
+		   __mtag_tag_region
+
 endif

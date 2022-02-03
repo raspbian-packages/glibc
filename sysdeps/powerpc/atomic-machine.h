@@ -1,5 +1,5 @@
 /* Atomic operations.  PowerPC Common version.
-   Copyright (C) 2003-2020 Free Software Foundation, Inc.
+   Copyright (C) 2003-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Paul Mackerras <paulus@au.ibm.com>, 2003.
 
@@ -53,14 +53,9 @@ typedef uintmax_t uatomic_max_t;
 #define __arch_compare_and_exchange_bool_16_acq(mem, newval, oldval) \
   (abort (), 0)
 
-#ifdef UP
-# define __ARCH_ACQ_INSTR	""
-# define __ARCH_REL_INSTR	""
-#else
-# define __ARCH_ACQ_INSTR	"isync"
-# ifndef __ARCH_REL_INSTR
-#  define __ARCH_REL_INSTR	"sync"
-# endif
+#define __ARCH_ACQ_INSTR	"isync"
+#ifndef __ARCH_REL_INSTR
+# define __ARCH_REL_INSTR	"sync"
 #endif
 
 #ifndef MUTEX_HINT_ACQ

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2003-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -28,9 +28,11 @@
 ENTRY (__vfork)
 	CALL_MCOUNT 0
 
-	DO_CALL (SYS_ify (vfork))
+	li r0,SYS_ify (vfork)
+	DO_CALL_SC
 
-	PSEUDO_RET
+	RET_SC
+	TAIL_CALL_SYSCALL_ERROR
 
 PSEUDO_END (__vfork)
 libc_hidden_def (__vfork)

@@ -1,7 +1,7 @@
 /*
  * svc_tcp.c, Server side for TCP/IP based RPC.
  *
- * Copyright (C) 2012-2020 Free Software Foundation, Inc.
+ * Copyright (C) 2012-2021 Free Software Foundation, Inc.
  * This file is part of the GNU C Library.
  *
  * The GNU C Library is free software; you can redistribute it and/or
@@ -271,6 +271,14 @@ again:
    * make a new transporter (re-uses xprt)
    */
   xprt = makefd_xprt (sock, r->sendsize, r->recvsize);
+
+  /* If we are out of memory, makefd_xprt has already dumped an error.  */
+  if (xprt == NULL)
+    {
+      __svc_wait_on_error ();
+      return FALSE;
+    }
+
   memcpy (&xprt->xp_raddr, &addr, sizeof (addr));
   xprt->xp_addrlen = len;
   return FALSE;		/* there is never an rpc msg to be processed */

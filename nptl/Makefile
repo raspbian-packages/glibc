@@ -1,4 +1,4 @@
-# Copyright (C) 2002-2020 Free Software Foundation, Inc.
+# Copyright (C) 2002-2021 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -147,7 +147,6 @@ libpthread-routines = nptl-init nptlfreeres vars events version pt-interp \
 		      pt-longjmp pt-cleanup\
 		      cancellation \
 		      lowlevellock \
-		      lll_timedlock_wait \
 		      pt-fork pt-fcntl \
 		      $(pthread-compat-wrappers) \
 		      pt-raise pt-system \
@@ -170,10 +169,6 @@ libpthread-routines = nptl-init nptlfreeres vars events version pt-interp \
 		      pthread_setattr_default_np pthread_getattr_default_np \
 		      pthread_mutex_conf \
 		      libpthread-compat
-#		      pthread_setuid pthread_seteuid pthread_setreuid \
-#		      pthread_setresuid \
-#		      pthread_setgid pthread_setegid pthread_setregid \
-#		      pthread_setresgid
 
 libpthread-shared-only-routines = version pt-interp pt-allocrtsig \
 				  unwind-forcedunwind
@@ -266,7 +261,7 @@ tests = tst-attr2 tst-attr3 tst-default-attr \
 	tst-mutex5a tst-mutex7a \
 	tst-mutexpi1 tst-mutexpi2 tst-mutexpi3 tst-mutexpi4 \
 	tst-mutexpi5 tst-mutexpi5a tst-mutexpi6 tst-mutexpi7 tst-mutexpi7a \
-	tst-mutexpi9 \
+	tst-mutexpi9 tst-mutexpi10 \
 	tst-cond22 tst-cond26 \
 	tst-robustpi1 tst-robustpi2 tst-robustpi3 tst-robustpi4 tst-robustpi5 \
 	tst-robustpi6 tst-robustpi7 tst-robustpi9 \
@@ -277,7 +272,7 @@ tests = tst-attr2 tst-attr3 tst-default-attr \
 	tst-once5 \
 	tst-sem17 \
 	tst-tsd3 tst-tsd4 \
-	tst-cancel4 tst-cancel4_1 tst-cancel4_2 tst-cancel5 \
+	tst-cancel4_1 tst-cancel4_2 \
 	tst-cancel7 tst-cancel17 tst-cancel24 \
 	tst-cleanup4 \
 	tst-signal3 \
@@ -299,7 +294,8 @@ tests = tst-attr2 tst-attr3 tst-default-attr \
 	tst-thread-affinity-sched \
 	tst-pthread-defaultattr-free \
 	tst-pthread-attr-sigmask \
-
+	tst-pthread-timedlock-lockloop \
+	tst-pthread-gdb-attach tst-pthread-gdb-attach-static
 
 tests-container =  tst-pthread-getattr
 
@@ -310,17 +306,14 @@ tests-internal := tst-robustpi8 tst-rwlock19 tst-rwlock20 \
 		  tst-setgetname \
 
 xtests = tst-setuid1 tst-setuid1-static tst-setuid2 \
-	tst-mutexpp1 tst-mutexpp6 tst-mutexpp10 tst-setgroups
+	tst-mutexpp1 tst-mutexpp6 tst-mutexpp10 tst-setgroups \
+	tst-mutexpp5 tst-mutexpp9
 
 # This test can run into task limits because of a linux kernel bug
 # and then cause the make process to fail too, see bug 24537.
 xtests += tst-eintr1
 
 test-srcs = tst-oddstacklimit
-
-# Test expected to fail on most targets (except x86_64) due to bug
-# 18435 - pthread_once hangs when init routine throws an exception.
-test-xfail-tst-once5 = yes
 
 gen-as-const-headers = unwindbuf.sym \
 		       pthread-pi-defines.sym
@@ -348,6 +341,22 @@ CPPFLAGS-test-cond-printers.c := $(CFLAGS-printers-tests)
 CPPFLAGS-test-rwlockattr-printers.c := $(CFLAGS-printers-tests)
 CPPFLAGS-test-rwlock-printers.c := $(CFLAGS-printers-tests)
 
+# Reuse the CFLAGS setting for the GDB attaching test.  It needs
+# debugging information.
+CFLAGS-tst-pthread-gdb-attach.c := $(CFLAGS-printers-tests)
+CPPFLAGS-tst-pthread-gdb-attach.c := $(CFLAGS-printers-tests)
+ifeq ($(build-shared)$(build-hardcoded-path-in-tests),yesno)
+CPPFLAGS-tst-pthread-gdb-attach.c += -DDO_ADD_SYMBOL_FILE=1
+else
+CPPFLAGS-tst-pthread-gdb-attach.c += -DDO_ADD_SYMBOL_FILE=0
+endif
+CFLAGS-tst-pthread-gdb-attach-static.c := $(CFLAGS-printers-tests)
+CPPFLAGS-tst-pthread-gdb-attach-static.c := \
+  $(CFLAGS-printers-tests) -DDO_ADD_SYMBOL_FILE=0
+# As of version 9.2, GDB cannot attach properly to PIE programs that
+# were launched with an explicit ld.so invocation.
+tst-pthread-gdb-attach-no-pie = yes
+
 ifeq ($(build-shared),yes)
 tests-printers-libs := $(shared-thread-library)
 else
@@ -356,7 +365,7 @@ endif
 
 LDFLAGS-pthread.so = -Wl,--enable-new-dtags,-z,nodelete,-z,initfirst
 
-tests += tst-cancelx4 tst-cancelx5 tst-cancelx7 tst-cancelx17 tst-cleanupx4
+tests += tst-cancelx7 tst-cancelx17 tst-cleanupx4
 
 ifeq ($(build-shared),yes)
 tests += tst-compat-forwarder tst-audit-threads
@@ -419,15 +428,13 @@ link-libc-static := $(common-objpfx)libc.a $(static-gnulib) \
 tests-static += tst-stackguard1-static \
 		tst-cancel24-static \
 		tst-mutex8-static tst-mutexpi8-static tst-sem11-static \
-		tst-sem12-static tst-cond11-static
+		tst-sem12-static tst-cond11-static \
+		tst-pthread-gdb-attach-static
 
 tests += tst-cancel24-static
 
 tests-internal += tst-sem11-static tst-sem12-static tst-stackguard1-static
 xtests-static += tst-setuid1-static
-
-# These tests are linked with libc before libpthread
-tests-reverse += tst-cancel5
 
 ifeq ($(run-built-tests),yes)
 tests-special += $(objpfx)tst-stack3-mem.out $(objpfx)tst-oddstacklimit.out
@@ -461,17 +468,8 @@ endif
 # function frequently to get a thread-specific handle.
 CFLAGS-pthread_self.os += -fomit-frame-pointer
 
-# The sigmask macro is deprecated and triggers are compiler warning
-# which cannot be suppressed (as of GCC 9).
-CFLAGS-tst-cancel4.c += -Wno-error
-CFLAGS-tst-cancel5.c += -Wno-error
-CFLAGS-tst-cancelx4.c += -Wno-error
-CFLAGS-tst-cancelx5.c += -Wno-error
-
 # Run the cancellation and cleanup tests also for the modern, exception-based
 # implementation.  For this we have to pass the -fexceptions parameter.
-CFLAGS-tst-cancelx4.c += -fexceptions
-CFLAGS-tst-cancelx5.c += -fexceptions
 CFLAGS-tst-cancelx7.c += -fexceptions
 CFLAGS-tst-cancelx17.c += -fexceptions
 CFLAGS-tst-cleanupx4.c += -fexceptions
@@ -530,7 +528,7 @@ $(objpfx)tst-tls6.out: tst-tls6.sh $(objpfx)tst-tls5 \
 		       $(objpfx)tst-tls5modc.so $(objpfx)tst-tls5modd.so \
 		       $(objpfx)tst-tls5mode.so $(objpfx)tst-tls5modf.so
 	$(BASH) $< $(common-objpfx) '$(test-via-rtld-prefix)' \
-	  '$(test-wrapper-env)' '$(run-program-env)' > $@; \
+	  '$(test-wrapper-env)' '$(run-program-env)'; \
 	$(evaluate-test)
 endif
 
@@ -626,7 +624,7 @@ tst-audit-threads-ENV = LD_AUDIT=$(objpfx)tst-audit-threads-mod1.so
 # The test uses dlopen indirectly and would otherwise load system
 # objects.
 tst-setuid1-static-ENV = \
-  LD_LIBRARY_PATH=$(objpfx):$(common-objpfx):$(common-objpfx)elf
+  LD_LIBRARY_PATH=$(ld-library-path):$(common-objpfx)elf:$(common-objpfx)nss
 
 # The tests here better do not run in parallel.
 ifeq ($(run-built-tests),yes)

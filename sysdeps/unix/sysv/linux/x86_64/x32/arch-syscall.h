@@ -25,6 +25,7 @@
 #define __NR_clone 1073741880
 #define __NR_clone3 1073742259
 #define __NR_close 1073741827
+#define __NR_close_range 1073742260
 #define __NR_connect 1073741866
 #define __NR_copy_file_range 1073742150
 #define __NR_creat 1073741909
@@ -44,6 +45,7 @@
 #define __NR_exit 1073741884
 #define __NR_exit_group 1073742055
 #define __NR_faccessat 1073742093
+#define __NR_faccessat2 1073742263
 #define __NR_fadvise64 1073742045
 #define __NR_fallocate 1073742109
 #define __NR_fanotify_init 1073742124
@@ -199,6 +201,7 @@
 #define __NR_preadv 1073742358
 #define __NR_preadv2 1073742370
 #define __NR_prlimit64 1073742126
+#define __NR_process_madvise 1073742264
 #define __NR_process_vm_readv 1073742363
 #define __NR_process_vm_writev 1073742364
 #define __NR_pselect6 1073742094
@@ -259,6 +262,7 @@
 #define __NR_sendto 1073741868
 #define __NR_set_mempolicy 1073742062
 #define __NR_set_robust_list 1073742354
+#define __NR_set_thread_area 1073742029
 #define __NR_set_tid_address 1073742042
 #define __NR_setdomainname 1073741995
 #define __NR_setfsgid 1073741947

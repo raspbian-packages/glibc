@@ -1,5 +1,5 @@
 /* Machine-dependent ELF dynamic relocation inline functions.  i386 version.
-   Copyright (C) 1995-2020 Free Software Foundation, Inc.
+   Copyright (C) 1995-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -25,7 +25,6 @@
 #include <sysdep.h>
 #include <tls.h>
 #include <dl-tlsdesc.h>
-#include <cpu-features.c>
 
 /* Return nonzero iff ELF header is compatible with the running host.  */
 static inline int __attribute__ ((unused))
@@ -144,7 +143,7 @@ extern ElfW(Addr) _dl_profile_fixup (struct link_map *l,
 
 /* Mask identifying addresses reserved for the user program,
    where the dynamic linker should not map anything.  */
-#define ELF_MACHINE_USER_ADDRESS_MASK	0xf0000000UL
+#define ELF_MACHINE_USER_ADDRESS_MASK	0xf8000000UL
 
 /* Initial entry point code for the dynamic linker.
    The C function `_dl_start' is the real entry point;
@@ -248,9 +247,9 @@ static inline void __attribute__ ((unused))
 dl_platform_init (void)
 {
 #if IS_IN (rtld)
-  /* init_cpu_features has been called early from __libc_start_main in
-     static executable.  */
-  init_cpu_features (&GLRO(dl_x86_cpu_features));
+  /* _dl_x86_init_cpu_features is a wrapper for init_cpu_features which
+     has been called early from __libc_start_main in static executable.  */
+  _dl_x86_init_cpu_features ();
 #else
   if (GLRO(dl_platform) != NULL && *GLRO(dl_platform) == '\0')
     /* Avoid an empty string which would disturb us.  */

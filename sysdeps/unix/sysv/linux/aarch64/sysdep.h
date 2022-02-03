@@ -1,4 +1,4 @@
-/* Copyright (C) 2005-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2005-2021 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -233,6 +233,9 @@
 # undef INTERNAL_SYSCALL_NCS
 # define INTERNAL_SYSCALL_NCS(number, nr, args...)	\
 	INTERNAL_SYSCALL_RAW (number, nr, args)
+
+#undef HAVE_INTERNAL_BRK_ADDR_SYMBOL
+#define HAVE_INTERNAL_BRK_ADDR_SYMBOL 1
 
 #endif	/* __ASSEMBLER__ */
 

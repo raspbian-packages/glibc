@@ -1,4 +1,4 @@
-/* Copyright (C) 1998-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1998-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -15,12 +15,17 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
+/* Mark symbols hidden in static PIE for early self relocation to work.  */
+#if BUILD_PIE_DEFAULT
+# pragma GCC visibility push(hidden)
+#endif
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <ldsodefs.h>
 #include <exit-thread.h>
+#include <libc-diag.h>
 #include <libc-internal.h>
 #include <elf/libc-early-init.h>
 #include <stdbool.h>
@@ -140,11 +145,7 @@ LIBC_START_MAIN (int (*main) (int, char **, char ** MAIN_AUXVEC_DECL),
   /* Result of the 'main' function.  */
   int result;
 
-  __libc_multiple_libcs = &_dl_starting_up && !_dl_starting_up;
-
 #ifndef SHARED
-  _dl_relocate_static_pie ();
-
   char **ev = &argv[argc + 1];
 
   __environ = ev;
@@ -176,8 +177,12 @@ LIBC_START_MAIN (int (*main) (int, char **, char ** MAIN_AUXVEC_DECL),
          information from auxv.  */
 
       extern const ElfW(Ehdr) __ehdr_start
+# if BUILD_PIE_DEFAULT
+	__attribute__ ((visibility ("hidden")));
+# else
 	__attribute__ ((weak, visibility ("hidden")));
       if (&__ehdr_start != NULL)
+# endif
         {
           assert (__ehdr_start.e_phentsize == sizeof *GL(dl_phdr));
           GL(dl_phdr) = (const void *) &__ehdr_start + __ehdr_start.e_phoff;
@@ -191,6 +196,11 @@ LIBC_START_MAIN (int (*main) (int, char **, char ** MAIN_AUXVEC_DECL),
   __tunables_init (__environ);
 
   ARCH_INIT_CPU_FEATURES ();
+
+  /* Do static pie self relocation after tunables and cpu features
+     are setup for ifunc resolvers. Before this point relocations
+     must be avoided.  */
+  _dl_relocate_static_pie ();
 
   /* Perform IREL{,A} relocations.  */
   ARCH_SETUP_IREL ();
@@ -212,12 +222,11 @@ LIBC_START_MAIN (int (*main) (int, char **, char ** MAIN_AUXVEC_DECL),
 # endif
 
 # ifdef DL_SYSDEP_OSCHECK
-  if (!__libc_multiple_libcs)
-    {
-      /* This needs to run to initiliaze _dl_osversion before TLS
-	 setup might check it.  */
-      DL_SYSDEP_OSCHECK (__libc_fatal);
-    }
+  {
+    /* This needs to run to initiliaze _dl_osversion before TLS
+       setup might check it.  */
+    DL_SYSDEP_OSCHECK (__libc_fatal);
+  }
 # endif
 
   /* Initialize libpthread if linked in.  */
@@ -298,7 +307,16 @@ LIBC_START_MAIN (int (*main) (int, char **, char ** MAIN_AUXVEC_DECL),
   struct pthread_unwind_buf unwind_buf;
 
   int not_first_call;
+  DIAG_PUSH_NEEDS_COMMENT;
+#if __GNUC_PREREQ (7, 0)
+  /* This call results in a -Wstringop-overflow warning because struct
+     pthread_unwind_buf is smaller than jmp_buf.  setjmp and longjmp
+     do not use anything beyond the common prefix (they never access
+     the saved signal mask), so that is a false positive.  */
+  DIAG_IGNORE_NEEDS_COMMENT (11, "-Wstringop-overflow=");
+#endif
   not_first_call = setjmp ((struct __jmp_buf_tag *) unwind_buf.cancel_jmp_buf);
+  DIAG_POP_NEEDS_COMMENT;
   if (__glibc_likely (! not_first_call))
     {
       struct pthread *self = THREAD_SELF;

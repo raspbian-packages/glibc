@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2020 Free Software Foundation, Inc.
+# Copyright (C) 1991-2021 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -27,7 +27,7 @@ headers := time.h sys/time.h sys/timeb.h bits/time.h			\
 	   bits/types/struct_itimerspec.h				\
 	   bits/types/struct_timespec.h bits/types/struct_timeval.h	\
 	   bits/types/struct_tm.h bits/types/timer_t.h			\
-	   bits/types/time_t.h
+	   bits/types/time_t.h bits/types/struct_timeb.h
 
 routines := offtime asctime clock ctime ctime_r difftime \
 	    gmtime localtime mktime time		 \
@@ -47,7 +47,8 @@ tests	:= test_time clocktest tst-posixtz tst-strptime tst_wcsftime \
 	   tst-mktime3 tst-strptime2 bug-asctime bug-asctime_r bug-mktime1 \
 	   tst-strptime3 bug-getdate1 tst-strptime-whitespace tst-ftime \
 	   tst-tzname tst-y2039 bug-mktime4 tst-strftime2 tst-strftime3 \
-	   tst-clock tst-clock2 tst-clock_nanosleep tst-cpuclock1
+	   tst-clock tst-clock2 tst-clock_nanosleep tst-cpuclock1 \
+	   tst-adjtime
 
 include ../Rules
 

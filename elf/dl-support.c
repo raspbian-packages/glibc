@@ -1,5 +1,5 @@
 /* Support for dynamic linking code in static libc.
-   Copyright (C) 1996-2020 Free Software Foundation, Inc.
+   Copyright (C) 1996-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -19,6 +19,12 @@
 /* This file defines some things that for the dynamic linker are defined in
    rtld.c and dl-sysdep.c in ways appropriate to bootstrap dynamic linking.  */
 
+#include <string.h>
+/* Mark symbols hidden in static PIE for early self relocation to work.
+   Note: string.h may have ifuncs which cannot be hidden on i686.  */
+#if BUILD_PIE_DEFAULT
+# pragma GCC visibility push(hidden)
+#endif
 #include <errno.h>
 #include <libintl.h>
 #include <stdlib.h>
@@ -183,17 +189,19 @@ ElfW(Word) _dl_stack_flags = DEFAULT_STACK_PERMS;
 int (*_dl_make_stack_executable_hook) (void **) = _dl_make_stack_executable;
 
 
-/* Function in libpthread to wait for termination of lookups.  */
-void (*_dl_wait_lookup_done) (void);
-
-#if !THREAD_GSCOPE_IN_TCB
+#if THREAD_GSCOPE_IN_TCB
+list_t _dl_stack_used;
+list_t _dl_stack_user;
+int _dl_stack_cache_lock;
+#else
 int _dl_thread_gscope_count;
 #endif
 struct dl_scope_free_list *_dl_scope_free_list;
 
 #ifdef NEED_DL_SYSINFO
-/* Needed for improved syscall handling on at least x86/Linux.  */
-uintptr_t _dl_sysinfo = DL_SYSINFO_DEFAULT;
+/* Needed for improved syscall handling on at least x86/Linux.  NB: Don't
+   initialize it here to avoid RELATIVE relocation in static PIE.  */
+uintptr_t _dl_sysinfo;
 #endif
 #ifdef NEED_DL_SYSINFO_DSO
 /* Address of the ELF headers in the vsyscall page.  */
@@ -230,6 +238,11 @@ _dl_aux_init (ElfW(auxv_t) *av)
   int seen = 0;
   uid_t uid = 0;
   gid_t gid = 0;
+
+#ifdef NEED_DL_SYSINFO
+  /* NB: Avoid RELATIVE relocation in static PIE.  */
+  GL(dl_sysinfo) = DL_SYSINFO_DEFAULT;
+#endif
 
   _dl_auxv = av;
   for (; av->a_type != AT_NULL; ++av)
@@ -323,7 +336,10 @@ _dl_non_dynamic_init (void)
 
   /* Initialize the data structures for the search paths for shared
      objects.  */
-  _dl_init_paths (getenv ("LD_LIBRARY_PATH"));
+  _dl_init_paths (getenv ("LD_LIBRARY_PATH"), "LD_LIBRARY_PATH",
+		  /* No glibc-hwcaps selection support in statically
+		     linked binaries.  */
+		  NULL, NULL);
 
   /* Remember the last search directory added at startup.  */
   _dl_init_all_dirs = GL(dl_all_dirs);

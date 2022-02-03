@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -32,7 +32,6 @@
 char *
 getenv (const char *name)
 {
-  size_t len = strlen (name);
   char **ep;
   uint16_t name_start;
 
@@ -63,6 +62,7 @@ getenv (const char *name)
     }
   else
     {
+      size_t len = strlen (name);
 #if _STRING_ARCH_unaligned
       name_start = *(const uint16_t *) name;
 #else

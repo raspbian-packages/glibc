@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -65,6 +65,7 @@ struct sigaction
 # define SA_RESETHAND	0x0004	/* Reset to SIG_DFL on entry to handler.  */
 #endif
 #define	SA_NOCLDSTOP	0x0008	/* Don't send SIGCHLD when children stop.  */
+#define SA_SIGINFO	0x0040	/* Signal handler with SA_SIGINFO args */
 
 #ifdef __USE_MISC
 # define SA_INTERRUPT	0	/* Historical no-op ("not SA_RESTART").  */

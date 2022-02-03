@@ -29,6 +29,7 @@
 #define __NR_clone 120
 #define __NR_clone3 435
 #define __NR_close 6
+#define __NR_close_range 436
 #define __NR_connect 328
 #define __NR_copy_file_range 379
 #define __NR_creat 8
@@ -49,6 +50,7 @@
 #define __NR_exit 1
 #define __NR_exit_group 234
 #define __NR_faccessat 298
+#define __NR_faccessat2 439
 #define __NR_fadvise64 233
 #define __NR_fallocate 309
 #define __NR_fanotify_init 323
@@ -223,6 +225,7 @@
 #define __NR_preadv 320
 #define __NR_preadv2 380
 #define __NR_prlimit64 325
+#define __NR_process_madvise 440
 #define __NR_process_vm_readv 351
 #define __NR_process_vm_writev 352
 #define __NR_prof 44

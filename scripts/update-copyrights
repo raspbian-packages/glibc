@@ -1,6 +1,6 @@
 #!/bin/sh
 # Update copyright year lists.
-# Copyright (C) 2012-2020 Free Software Foundation, Inc.
+# Copyright (C) 2012-2021 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -69,6 +69,12 @@ for f in $files; do
       | sysdeps/wordsize-32/divdi3.c)
       # Pre-1991 gaps in copyright years, so cannot use a single range.
       UPDATE_COPYRIGHT_USE_INTERVALS=1 "$update_script" "$f"
+      ;;
+    csu/version.c | elf/dl-usage.c)
+      # Update the copyright string in the output message.
+      year="$(date +%Y)"
+      sed -i 's/^Copyright (C) [0-9]\{4\} /Copyright (C) '"$year"' /' $f
+      "$update_script" "$f"
       ;;
     *)
       "$update_script" "$f"

@@ -1,5 +1,5 @@
 /* Run time dynamic linker.
-   Copyright (C) 1995-2020 Free Software Foundation, Inc.
+   Copyright (C) 1995-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -47,6 +47,10 @@
 #include <not-cancel.h>
 #include <array_length.h>
 #include <libc-early-init.h>
+#include <dl-main.h>
+#include <list.h>
+#include <gnu/lib-names.h>
+#include <dl-tunables.h>
 
 #include <assert.h>
 
@@ -111,42 +115,6 @@ static void print_missing_version (int errcode, const char *objname,
 /* Print the various times we collected.  */
 static void print_statistics (const hp_timing_t *total_timep);
 
-/* Length limits for names and paths, to protect the dynamic linker,
-   particularly when __libc_enable_secure is active.  */
-#ifdef NAME_MAX
-# define SECURE_NAME_LIMIT NAME_MAX
-#else
-# define SECURE_NAME_LIMIT 255
-#endif
-#ifdef PATH_MAX
-# define SECURE_PATH_LIMIT PATH_MAX
-#else
-# define SECURE_PATH_LIMIT 1024
-#endif
-
-/* Strings containing colon-separated lists of audit modules.  */
-struct audit_list
-{
-  /* Array of strings containing colon-separated path lists.  Each
-     audit module needs its own namespace, so pre-allocate the largest
-     possible list.  */
-  const char *audit_strings[DL_NNS];
-
-  /* Number of entries added to audit_strings.  */
-  size_t length;
-
-  /* Index into the audit_strings array (for the iteration phase).  */
-  size_t current_index;
-
-  /* Tail of audit_strings[current_index] which still needs
-     processing.  */
-  const char *current_tail;
-
-  /* Scratch buffer for returning a name which is part of the strings
-     in audit_strings.  */
-  char fname[SECURE_NAME_LIMIT];
-};
-
 /* Creates an empty audit list.  */
 static void audit_list_init (struct audit_list *);
 
@@ -167,13 +135,14 @@ static void audit_list_add_dynamic_tag (struct audit_list *,
    audit_list_add_dynamic_tags calls.  */
 static const char *audit_list_next (struct audit_list *);
 
-/* This is a list of all the modes the dynamic loader can be in.  */
-enum mode { normal, list, verify, trace };
+/* Initialize *STATE with the defaults.  */
+static void dl_main_state_init (struct dl_main_state *state);
 
 /* Process all environments variables the dynamic linker must recognize.
    Since all of them start with `LD_' we are a bit smarter while finding
    all the entries.  */
-static void process_envvars (enum mode *modep, struct audit_list *);
+extern char **_environ attribute_hidden;
+static void process_envvars (struct dl_main_state *state);
 
 #ifdef DL_ARGV_NOT_RELRO
 int _dl_argc attribute_hidden;
@@ -316,6 +285,21 @@ audit_list_count (struct audit_list *list)
   return naudit;
 }
 
+static void
+dl_main_state_init (struct dl_main_state *state)
+{
+  audit_list_init (&state->audit_list);
+  state->library_path = NULL;
+  state->library_path_source = NULL;
+  state->preloadlist = NULL;
+  state->preloadarg = NULL;
+  state->glibc_hwcaps_prepend = NULL;
+  state->glibc_hwcaps_mask = NULL;
+  state->mode = rtld_mode_normal;
+  state->any_debug = false;
+  state->version_info = false;
+}
+
 #ifndef HAVE_INLINED_SYSCALLS
 /* Set nonzero during loading and initialization of executable and
    libraries, cleared before the executable's entry point runs.  This
@@ -352,7 +336,7 @@ struct rtld_global _rtld_global =
   };
 /* If we would use strong_alias here the compiler would see a
    non-hidden definition.  This would undo the effect of the previous
-   declaration.  So spell out was strong_alias does plus add the
+   declaration.  So spell out what strong_alias does plus add the
    visibility attribute.  */
 extern struct rtld_global _rtld_local
     __attribute__ ((alias ("_rtld_global"), visibility ("hidden")));
@@ -395,7 +379,6 @@ struct rtld_global_ro _rtld_global_ro attribute_relro =
    visibility attribute.  */
 extern struct rtld_global_ro _rtld_local_ro
     __attribute__ ((alias ("_rtld_global_ro"), visibility ("hidden")));
-
 
 static void dl_main (const ElfW(Phdr) *phdr, ElfW(Word) phnum,
 		     ElfW(Addr) *user_entry, ElfW(auxv_t) *auxv);
@@ -821,6 +804,9 @@ cannot allocate TLS data structures for initial thread\n");
   const char *lossage = TLS_INIT_TP (tcbp);
   if (__glibc_unlikely (lossage != NULL))
     _dl_fatal_printf ("cannot set up thread-local storage: %s\n", lossage);
+#if THREAD_GSCOPE_IN_TCB
+  list_add (&THREAD_SELF->list, &GL (dl_stack_user));
+#endif
   tls_init_tp_called = true;
 
   return tcbp;
@@ -899,15 +885,6 @@ security_init (void)
 }
 
 #include <setup-vdso.h>
-
-/* The library search path.  */
-static const char *library_path attribute_relro;
-/* The list preloaded objects.  */
-static const char *preloadlist attribute_relro;
-/* Nonzero if information about versions has to be printed.  */
-static int version_info attribute_relro;
-/* The preload list passed as a command argument.  */
-static const char *preloadarg attribute_relro;
 
 /* The LD_PRELOAD environment variable gives list of libraries
    separated by white space or colons that are loaded before the
@@ -1150,7 +1127,6 @@ dl_main (const ElfW(Phdr) *phdr,
 	 ElfW(auxv_t) *auxv)
 {
   const ElfW(Phdr) *ph;
-  enum mode mode;
   struct link_map *main_map;
   size_t file_size;
   char *file;
@@ -1160,8 +1136,8 @@ dl_main (const ElfW(Phdr) *phdr,
   bool rtld_is_main = false;
   void *tcbp = NULL;
 
-  struct audit_list audit_list;
-  audit_list_init (&audit_list);
+  struct dl_main_state state;
+  dl_main_state_init (&state);
 
   GL(dl_init_static_tls) = &_dl_nothread_init_static_tls;
 
@@ -1171,18 +1147,24 @@ dl_main (const ElfW(Phdr) *phdr,
   GL(dl_rtld_unlock_recursive) = rtld_lock_default_unlock_recursive;
 #endif
 
+#if THREAD_GSCOPE_IN_TCB
+  INIT_LIST_HEAD (&GL (dl_stack_used));
+  INIT_LIST_HEAD (&GL (dl_stack_user));
+#endif
+
   /* The explicit initialization here is cheaper than processing the reloc
      in the _rtld_local definition's initializer.  */
   GL(dl_make_stack_executable_hook) = &_dl_make_stack_executable;
 
   /* Process the environment variable which control the behaviour.  */
-  process_envvars (&mode, &audit_list);
+  process_envvars (&state);
 
 #ifndef HAVE_INLINED_SYSCALLS
   /* Set up a flag which tells we are just starting.  */
   _dl_starting_up = 1;
 #endif
 
+  const char *ld_so_name = _dl_argv[0];
   if (*user_entry == (ElfW(Addr)) ENTRY_POINT)
     {
       /* Ho ho.  We are not the program interpreter!  We are the program
@@ -1202,14 +1184,20 @@ dl_main (const ElfW(Phdr) *phdr,
 	 installing it.  */
       rtld_is_main = true;
 
+      char *argv0 = NULL;
+
       /* Note the place where the dynamic linker actually came from.  */
       GL(dl_rtld_map).l_name = rtld_progname;
 
       while (_dl_argc > 1)
 	if (! strcmp (_dl_argv[1], "--list"))
 	  {
-	    mode = list;
-	    GLRO(dl_lazy) = -1;	/* This means do no dependency analysis.  */
+	    if (state.mode != rtld_mode_help)
+	      {
+	       state.mode = rtld_mode_list;
+		/* This means do no dependency analysis.  */
+		GLRO(dl_lazy) = -1;
+	      }
 
 	    ++_dl_skip_args;
 	    --_dl_argc;
@@ -1217,7 +1205,8 @@ dl_main (const ElfW(Phdr) *phdr,
 	  }
 	else if (! strcmp (_dl_argv[1], "--verify"))
 	  {
-	    mode = verify;
+	    if (state.mode != rtld_mode_help)
+	      state.mode = rtld_mode_verify;
 
 	    ++_dl_skip_args;
 	    --_dl_argc;
@@ -1233,7 +1222,8 @@ dl_main (const ElfW(Phdr) *phdr,
 	else if (! strcmp (_dl_argv[1], "--library-path")
 		 && _dl_argc > 2)
 	  {
-	    library_path = _dl_argv[2];
+	    state.library_path = _dl_argv[2];
+	    state.library_path_source = "--library-path";
 
 	    _dl_skip_args += 2;
 	    _dl_argc -= 2;
@@ -1250,7 +1240,7 @@ dl_main (const ElfW(Phdr) *phdr,
 	  }
 	else if (! strcmp (_dl_argv[1], "--audit") && _dl_argc > 2)
 	  {
-	    audit_list_add_string (&audit_list, _dl_argv[2]);
+	    audit_list_add_string (&state.audit_list, _dl_argv[2]);
 
 	    _dl_skip_args += 2;
 	    _dl_argc -= 2;
@@ -1258,41 +1248,94 @@ dl_main (const ElfW(Phdr) *phdr,
 	  }
 	else if (! strcmp (_dl_argv[1], "--preload") && _dl_argc > 2)
 	  {
-	    preloadarg = _dl_argv[2];
+	    state.preloadarg = _dl_argv[2];
 	    _dl_skip_args += 2;
 	    _dl_argc -= 2;
 	    _dl_argv += 2;
 	  }
+	else if (! strcmp (_dl_argv[1], "--argv0") && _dl_argc > 2)
+	  {
+	    argv0 = _dl_argv[2];
+
+	    _dl_skip_args += 2;
+	    _dl_argc -= 2;
+	    _dl_argv += 2;
+	  }
+	else if (strcmp (_dl_argv[1], "--glibc-hwcaps-prepend") == 0
+		 && _dl_argc > 2)
+	  {
+	    state.glibc_hwcaps_prepend = _dl_argv[2];
+	    _dl_skip_args += 2;
+	    _dl_argc -= 2;
+	    _dl_argv += 2;
+	  }
+	else if (strcmp (_dl_argv[1], "--glibc-hwcaps-mask") == 0
+		 && _dl_argc > 2)
+	  {
+	    state.glibc_hwcaps_mask = _dl_argv[2];
+	    _dl_skip_args += 2;
+	    _dl_argc -= 2;
+	    _dl_argv += 2;
+	  }
+#if HAVE_TUNABLES
+	else if (! strcmp (_dl_argv[1], "--list-tunables"))
+	  {
+	    state.mode = rtld_mode_list_tunables;
+
+	    ++_dl_skip_args;
+	    --_dl_argc;
+	    ++_dl_argv;
+	  }
+#endif
+	else if (! strcmp (_dl_argv[1], "--list-diagnostics"))
+	  {
+	    state.mode = rtld_mode_list_diagnostics;
+
+	    ++_dl_skip_args;
+	    --_dl_argc;
+	    ++_dl_argv;
+	  }
+	else if (strcmp (_dl_argv[1], "--help") == 0)
+	  {
+	    state.mode = rtld_mode_help;
+	    --_dl_argc;
+	    ++_dl_argv;
+	  }
+	else if (strcmp (_dl_argv[1], "--version") == 0)
+	  _dl_version ();
+	else if (_dl_argv[1][0] == '-' && _dl_argv[1][1] == '-')
+	  {
+	   if (_dl_argv[1][1] == '\0')
+	     /* End of option list.  */
+	     break;
+	   else
+	     /* Unrecognized option.  */
+	     _dl_usage (ld_so_name, _dl_argv[1]);
+	  }
 	else
 	  break;
+
+#if HAVE_TUNABLES
+      if (__glibc_unlikely (state.mode == rtld_mode_list_tunables))
+	{
+	  __tunables_print ();
+	  _exit (0);
+	}
+#endif
+
+      if (state.mode == rtld_mode_list_diagnostics)
+	_dl_print_diagnostics (_environ);
 
       /* If we have no further argument the program was called incorrectly.
 	 Grant the user some education.  */
       if (_dl_argc < 2)
-	_dl_fatal_printf ("\
-Usage: ld.so [OPTION]... EXECUTABLE-FILE [ARGS-FOR-PROGRAM...]\n\
-You have invoked `ld.so', the helper program for shared library executables.\n\
-This program usually lives in the file `/lib/ld.so', and special directives\n\
-in executable files using ELF shared libraries tell the system's program\n\
-loader to load the helper program from this file.  This helper program loads\n\
-the shared libraries needed by the program executable, prepares the program\n\
-to run, and runs it.  You may invoke this helper program directly from the\n\
-command line to load and run an ELF executable file; this is like executing\n\
-that file itself, but always uses this helper program from the file you\n\
-specified, instead of the helper program file specified in the executable\n\
-file you run.  This is mostly of use for maintainers to test new versions\n\
-of this helper program; chances are you did not intend to run this program.\n\
-\n\
-  --list                list all dependencies and how they are resolved\n\
-  --verify              verify that given object really is a dynamically linked\n\
-			object we can handle\n\
-  --inhibit-cache       Do not use " LD_SO_CACHE "\n\
-  --library-path PATH   use given PATH instead of content of the environment\n\
-			variable LD_LIBRARY_PATH\n\
-  --inhibit-rpath LIST  ignore RUNPATH and RPATH information in object names\n\
-			in LIST\n\
-  --audit LIST          use objects named in LIST as auditors\n\
-  --preload LIST        preload objects named in LIST\n");
+	{
+	  if (state.mode == rtld_mode_help)
+	    /* --help without an executable is not an error.  */
+	    _dl_help (ld_so_name, &state);
+	  else
+	    _dl_usage (ld_so_name, NULL);
+	}
 
       ++_dl_skip_args;
       --_dl_argc;
@@ -1317,7 +1360,8 @@ of this helper program; chances are you did not intend to run this program.\n\
 	    break;
 	  }
 
-      if (__builtin_expect (mode, normal) == verify)
+      if (__glibc_unlikely (state.mode == rtld_mode_verify
+			    || state.mode == rtld_mode_help))
 	{
 	  const char *objname;
 	  const char *err_str = NULL;
@@ -1330,9 +1374,16 @@ of this helper program; chances are you did not intend to run this program.\n\
 	  (void) _dl_catch_error (&objname, &err_str, &malloced, map_doit,
 				  &args);
 	  if (__glibc_unlikely (err_str != NULL))
-	    /* We don't free the returned string, the programs stops
-	       anyway.  */
-	    _exit (EXIT_FAILURE);
+	    {
+	      /* We don't free the returned string, the programs stops
+		 anyway.  */
+	      if (state.mode == rtld_mode_help)
+		/* Mask the failure to load the main object.  The help
+		   message contains less information in this case.  */
+		_dl_help (ld_so_name, &state);
+	      else
+		_exit (EXIT_FAILURE);
+	    }
 	}
       else
 	{
@@ -1346,7 +1397,7 @@ of this helper program; chances are you did not intend to run this program.\n\
       /* Now the map for the main executable is available.  */
       main_map = GL(dl_ns)[LM_ID_BASE]._ns_loaded;
 
-      if (__builtin_expect (mode, normal) == normal
+      if (__glibc_likely (state.mode == rtld_mode_normal)
 	  && GL(dl_rtld_map).l_info[DT_SONAME] != NULL
 	  && main_map->l_info[DT_SONAME] != NULL
 	  && strcmp ((const char *) D_PTR (&GL(dl_rtld_map), l_info[DT_STRTAB])
@@ -1379,13 +1430,17 @@ of this helper program; chances are you did not intend to run this program.\n\
 	  case AT_ENTRY:
 	    av->a_un.a_val = *user_entry;
 	    break;
-# ifdef AT_EXECFN	    
+# ifdef AT_EXECFN
 	  case AT_EXECFN:
 	    av->a_un.a_val = (uintptr_t) _dl_argv[0];
 	    break;
-# endif	    
+# endif
 	  }
 #endif
+
+      /* Set the argv[0] string now that we've processed the executable.  */
+      if (argv0 != NULL)
+        _dl_argv[0] = argv0;
     }
   else
     {
@@ -1587,11 +1642,21 @@ of this helper program; chances are you did not intend to run this program.\n\
     {
       /* Extract the contents of the dynamic section for easy access.  */
       elf_get_dynamic_info (main_map, NULL);
+
+      /* If the main map is libc.so, update the base namespace to
+	 refer to this map.  If libc.so is loaded later, this happens
+	 in _dl_map_object_from_fd.  */
+      if (main_map->l_info[DT_SONAME] != NULL
+	  && (strcmp (((const char *) D_PTR (main_map, l_info[DT_STRTAB])
+		      + main_map->l_info[DT_SONAME]->d_un.d_val), LIBC_SO)
+	      == 0))
+	GL(dl_ns)[LM_ID_BASE].libc_map = main_map;
+
       /* Set up our cache of pointers into the hash table.  */
       _dl_setup_hash (main_map);
     }
 
-  if (__builtin_expect (mode, normal) == verify)
+  if (__glibc_unlikely (state.mode == rtld_mode_verify))
     {
       /* We were called just to verify that this is a dynamic
 	 executable using us as the program interpreter.  Exit with an
@@ -1621,7 +1686,7 @@ of this helper program; chances are you did not intend to run this program.\n\
 
   /* Initialize the data structures for the search paths for shared
      objects.  */
-  _dl_init_paths (library_path);
+  call_init_paths (&state);
 
   /* Initialize _r_debug.  */
   struct r_debug *r = _dl_debug_initialize (GL(dl_rtld_map).l_addr,
@@ -1686,14 +1751,19 @@ of this helper program; chances are you did not intend to run this program.\n\
     /* Assign a module ID.  Do this before loading any audit modules.  */
     GL(dl_rtld_map).l_tls_modid = _dl_next_tls_modid ();
 
-  audit_list_add_dynamic_tag (&audit_list, main_map, DT_AUDIT);
-  audit_list_add_dynamic_tag (&audit_list, main_map, DT_DEPAUDIT);
+  audit_list_add_dynamic_tag (&state.audit_list, main_map, DT_AUDIT);
+  audit_list_add_dynamic_tag (&state.audit_list, main_map, DT_DEPAUDIT);
+
+  /* At this point, all data has been obtained that is included in the
+     --help output.  */
+  if (__glibc_unlikely (state.mode == rtld_mode_help))
+    _dl_help (ld_so_name, &state);
 
   /* If we have auditing DSOs to load, do it now.  */
   bool need_security_init = true;
-  if (audit_list.length > 0)
+  if (state.audit_list.length > 0)
     {
-      size_t naudit = audit_list_count (&audit_list);
+      size_t naudit = audit_list_count (&state.audit_list);
 
       /* Since we start using the auditing DSOs right away we need to
 	 initialize the data structures now.  */
@@ -1706,7 +1776,7 @@ of this helper program; chances are you did not intend to run this program.\n\
       security_init ();
       need_security_init = false;
 
-      load_audit_modules (main_map, &audit_list);
+      load_audit_modules (main_map, &state.audit_list);
 
       /* The count based on audit strings may overestimate the number
 	 of audit modules that got loaded, but not underestimate.  */
@@ -1761,19 +1831,21 @@ of this helper program; chances are you did not intend to run this program.\n\
   struct link_map **preloads = NULL;
   unsigned int npreloads = 0;
 
-  if (__glibc_unlikely (preloadlist != NULL))
+  if (__glibc_unlikely (state.preloadlist != NULL))
     {
       RTLD_TIMING_VAR (start);
       rtld_timer_start (&start);
-      npreloads += handle_preload_list (preloadlist, main_map, "LD_PRELOAD");
+      npreloads += handle_preload_list (state.preloadlist, main_map,
+					"LD_PRELOAD");
       rtld_timer_accum (&load_time, start);
     }
 
-  if (__glibc_unlikely (preloadarg != NULL))
+  if (__glibc_unlikely (state.preloadarg != NULL))
     {
       RTLD_TIMING_VAR (start);
       rtld_timer_start (&start);
-      npreloads += handle_preload_list (preloadarg, main_map, "--preload");
+      npreloads += handle_preload_list (state.preloadarg, main_map,
+					"--preload");
       rtld_timer_accum (&load_time, start);
     }
 
@@ -1880,7 +1952,8 @@ of this helper program; chances are you did not intend to run this program.\n\
   {
     RTLD_TIMING_VAR (start);
     rtld_timer_start (&start);
-    _dl_map_object_deps (main_map, preloads, npreloads, mode == trace, 0);
+    _dl_map_object_deps (main_map, preloads, npreloads,
+			 state.mode == rtld_mode_trace, 0);
     rtld_timer_accum (&load_time, start);
   }
 
@@ -1907,7 +1980,7 @@ of this helper program; chances are you did not intend to run this program.\n\
       rtld_multiple_ref = true;
 
       GL(dl_rtld_map).l_prev = main_map->l_searchlist.r_list[i - 1];
-      if (__builtin_expect (mode, normal) == normal)
+      if (__glibc_likely (state.mode == rtld_mode_normal))
 	{
 	  GL(dl_rtld_map).l_next = (i + 1 < main_map->l_searchlist.r_nlist
 				    ? main_map->l_searchlist.r_list[i + 1]
@@ -1940,8 +2013,8 @@ of this helper program; chances are you did not intend to run this program.\n\
      versions we need.  */
   {
     struct version_check_args args;
-    args.doexit = mode == normal;
-    args.dotrace = mode == trace;
+    args.doexit = state.mode == rtld_mode_normal;
+    args.dotrace = state.mode == rtld_mode_trace;
     _dl_receive_error (print_missing_version, version_check_doit, &args);
   }
 
@@ -1961,7 +2034,7 @@ of this helper program; chances are you did not intend to run this program.\n\
        earlier.  */
     security_init ();
 
-  if (__builtin_expect (mode, normal) != normal)
+  if (__glibc_unlikely (state.mode != rtld_mode_normal))
     {
       /* We were run just to list the shared libraries.  It is
 	 important that we do this before real relocation, because the
@@ -2063,7 +2136,7 @@ of this helper program; chances are you did not intend to run this program.\n\
 			  (size_t) l->l_map_start);
 	}
 
-      if (__builtin_expect (mode, trace) != trace)
+      if (__glibc_unlikely (state.mode != rtld_mode_trace))
 	for (i = 1; i < (unsigned int) _dl_argc; ++i)
 	  {
 	    const ElfW(Sym) *ref = NULL;
@@ -2117,7 +2190,7 @@ of this helper program; chances are you did not intend to run this program.\n\
 		}
 	    }
 #define VERNEEDTAG (DT_NUM + DT_THISPROCNUM + DT_VERSIONTAGIDX (DT_VERNEED))
-	  if (version_info)
+	  if (state.version_info)
 	    {
 	      /* Print more information.  This means here, print information
 		 about the versions needed.  */
@@ -2380,6 +2453,9 @@ of this helper program; chances are you did not intend to run this program.\n\
       if (__glibc_unlikely (lossage != NULL))
 	_dl_fatal_printf ("cannot set up thread-local storage: %s\n",
 			  lossage);
+#if THREAD_GSCOPE_IN_TCB
+      list_add (&THREAD_SELF->list, &GL (dl_stack_user));
+#endif
     }
 
   /* Make sure no new search directories have been added.  */
@@ -2479,13 +2555,10 @@ print_missing_version (int errcode __attribute__ ((unused)),
 		    objname, errstring);
 }
 
-/* Nonzero if any of the debugging options is enabled.  */
-static int any_debug attribute_relro;
-
 /* Process the string given as the parameter which explains which debugging
    options are enabled.  */
 static void
-process_dl_debug (const char *dl_debug)
+process_dl_debug (struct dl_main_state *state, const char *dl_debug)
 {
   /* When adding new entries make sure that the maximal length of a name
      is correctly handled in the LD_DEBUG_HELP code below.  */
@@ -2542,7 +2615,7 @@ process_dl_debug (const char *dl_debug)
 		&& memcmp (dl_debug, debopts[cnt].name, len) == 0)
 	      {
 		GLRO(dl_debug_mask) |= debopts[cnt].mask;
-		any_debug = 1;
+		state->any_debug = true;
 		break;
 	      }
 
@@ -2589,18 +2662,11 @@ a filename can be specified using the LD_DEBUG_OUTPUT environment variable.\n");
     }
 }
 
-/* Process all environments variables the dynamic linker must recognize.
-   Since all of them start with `LD_' we are a bit smarter while finding
-   all the entries.  */
-extern char **_environ attribute_hidden;
-
-
 static void
-process_envvars (enum mode *modep, struct audit_list *audit_list)
+process_envvars (struct dl_main_state *state)
 {
   char **runp = _environ;
   char *envline;
-  enum mode mode = normal;
   char *debug_output = NULL;
 
   /* This is the default place for profiling data file.  */
@@ -2632,25 +2698,25 @@ process_envvars (enum mode *modep, struct audit_list *audit_list)
 	  /* Debugging of the dynamic linker?  */
 	  if (memcmp (envline, "DEBUG", 5) == 0)
 	    {
-	      process_dl_debug (&envline[6]);
+	      process_dl_debug (state, &envline[6]);
 	      break;
 	    }
 	  if (memcmp (envline, "AUDIT", 5) == 0)
-	    audit_list_add_string (audit_list, &envline[6]);
+	    audit_list_add_string (&state->audit_list, &envline[6]);
 	  break;
 
 	case 7:
 	  /* Print information about versions.  */
 	  if (memcmp (envline, "VERBOSE", 7) == 0)
 	    {
-	      version_info = envline[8] != '\0';
+	      state->version_info = envline[8] != '\0';
 	      break;
 	    }
 
 	  /* List of objects to be preloaded.  */
 	  if (memcmp (envline, "PRELOAD", 7) == 0)
 	    {
-	      preloadlist = &envline[8];
+	      state->preloadlist = &envline[8];
 	      break;
 	    }
 
@@ -2699,7 +2765,8 @@ process_envvars (enum mode *modep, struct audit_list *audit_list)
 	  if (!__libc_enable_secure
 	      && memcmp (envline, "LIBRARY_PATH", 12) == 0)
 	    {
-	      library_path = &envline[13];
+	      state->library_path = &envline[13];
+	      state->library_path_source = "LD_LIBRARY_PATH";
 	      break;
 	    }
 
@@ -2741,7 +2808,7 @@ process_envvars (enum mode *modep, struct audit_list *audit_list)
 	  /* The mode of the dynamic linker can be set.  */
 	  if (memcmp (envline, "TRACE_PRELINKING", 16) == 0)
 	    {
-	      mode = trace;
+	      state->mode = rtld_mode_trace;
 	      GLRO(dl_verbose) = 1;
 	      GLRO(dl_debug_mask) |= DL_DEBUG_PRELINK;
 	      GLRO(dl_trace_prelink) = &envline[17];
@@ -2751,7 +2818,7 @@ process_envvars (enum mode *modep, struct audit_list *audit_list)
 	case 20:
 	  /* The mode of the dynamic linker can be set.  */
 	  if (memcmp (envline, "TRACE_LOADED_OBJECTS", 20) == 0)
-	    mode = trace;
+	    state->mode = rtld_mode_trace;
 	  break;
 
 	  /* We might have some extra environment variable to handle.  This
@@ -2763,9 +2830,6 @@ process_envvars (enum mode *modep, struct audit_list *audit_list)
 #endif
 	}
     }
-
-  /* The caller wants this information.  */
-  *modep = mode;
 
   /* Extra security for SUID binaries.  Remove all dangerous environment
      variables.  */
@@ -2795,13 +2859,13 @@ process_envvars (enum mode *modep, struct audit_list *audit_list)
 	  GLRO(dl_debug_mask) = 0;
 	}
 
-      if (mode != normal)
+      if (state->mode != rtld_mode_normal)
 	_exit (5);
     }
   /* If we have to run the dynamic linker in debugging mode and the
      LD_DEBUG_OUTPUT environment variable is given, we write the debug
      messages to this file.  */
-  else if (any_debug && debug_output != NULL)
+  else if (state->any_debug && debug_output != NULL)
     {
       const int flags = O_WRONLY | O_APPEND | O_CREAT | O_NOFOLLOW;
       size_t name_len = strlen (debug_output);

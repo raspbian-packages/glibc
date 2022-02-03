@@ -1,4 +1,4 @@
-/* Copyright (C) 2000-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2000-2021 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -25,6 +25,8 @@
 
 /* Defines RTLD_PRIVATE_ERRNO.  */
 #include <dl-sysdep.h>
+
+#include <tls.h>
 
 /* In order to get __set_errno() definition in INLINE_SYSCALL.  */
 #ifndef __ASSEMBLER__
@@ -307,6 +309,9 @@ SYSCALL_ERROR_LABEL_DCL:                            \
 # define PTR_DEMANGLE(var) (void) (var)
 
 # define SINGLE_THREAD_BY_GLOBAL	1
+
+#undef HAVE_INTERNAL_BRK_ADDR_SYMBOL
+#define HAVE_INTERNAL_BRK_ADDR_SYMBOL 1
 
 #endif /* not __ASSEMBLER__ */
 

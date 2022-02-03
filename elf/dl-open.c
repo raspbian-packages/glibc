@@ -1,5 +1,5 @@
 /* Load a shared object at runtime, relocate it, and run its initializer.
-   Copyright (C) 1996-2020 Free Software Foundation, Inc.
+   Copyright (C) 1996-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -787,12 +787,6 @@ dl_open_worker (void *a)
   if (mode & RTLD_GLOBAL)
     add_to_global_update (new);
 
-#ifndef SHARED
-  /* We must be the static _dl_open in libc.a.  A static program that
-     has loaded a dynamic object now has competition.  */
-  __libc_multiple_libcs = 1;
-#endif
-
   /* Let the user know about the opencount.  */
   if (__glibc_unlikely (GLRO(dl_debug_mask) & DL_DEBUG_FILES))
     _dl_debug_printf ("opening file=%s [%lu]; direct_opencount=%u\n\n",
@@ -887,7 +881,7 @@ no more namespaces available for dlmopen()"));
       /* Avoid keeping around a dangling reference to the libc.so link
 	 map in case it has been cached in libc_map.  */
       if (!args.libc_already_loaded)
-	GL(dl_ns)[nsid].libc_map = NULL;
+	GL(dl_ns)[args.nsid].libc_map = NULL;
 
       /* Remove the object from memory.  It may be in an inconsistent
 	 state if relocation failed, for example.  */

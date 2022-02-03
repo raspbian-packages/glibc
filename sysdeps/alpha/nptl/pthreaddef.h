@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2003-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -17,6 +17,9 @@
 
 /* Default stack size.  */
 #define ARCH_STACK_DEFAULT_SIZE	(4 * 1024 * 1024)
+
+/* Minimum guard size.  */
+#define ARCH_MIN_GUARD_SIZE 0
 
 /* Required stack pointer alignment at beginning.  The ABI requires 16.  */
 #define STACK_ALIGN		16

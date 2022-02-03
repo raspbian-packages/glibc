@@ -1,5 +1,5 @@
 /* Definition for thread-local data handling.  NPTL/m68k version.
-   Copyright (C) 2010-2020 Free Software Foundation, Inc.
+   Copyright (C) 2010-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Maxim Kuvyrkov <maxim@codesourcery.com>, 2010.
 
@@ -153,8 +153,6 @@ extern void * __m68k_read_tp (void);
       atomic_write_barrier ();						\
     }									\
   while (0)
-#define THREAD_GSCOPE_WAIT() \
-  GL(dl_wait_lookup_done) ()
 
 #endif /* __ASSEMBLER__ */
 

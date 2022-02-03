@@ -1,4 +1,4 @@
-/* Copyright (C) 1998-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1998-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Thorsten Kukuk <kukuk@suse.de>, 1998.
 
@@ -33,7 +33,7 @@
 
 NSS_DECLARE_MODULE_FUNCTIONS (compat)
 
-static service_user *ni;
+static nss_action_list ni;
 static enum nss_status (*initgroups_dyn_impl) (const char *, gid_t,
 					       long int *, long int *,
 					       gid_t **, long int, int *);

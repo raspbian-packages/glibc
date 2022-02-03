@@ -1,5 +1,5 @@
 /* Get information about file named relative to open directory.  Hurd version.
-   Copyright (C) 2006-2020 Free Software Foundation, Inc.
+   Copyright (C) 2006-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -21,26 +21,18 @@
 #include <stddef.h>
 #include <sys/stat.h>
 #include <hurd.h>
-#include <hurd/fd.h>
+#include <shlib-compat.h>
+
+#if LIB_COMPAT(libc, GLIBC_2_4, GLIBC_2_33)
 
 /* Get information about the file descriptor FD in BUF.  */
 int
 __fxstatat64 (int vers, int fd, const char *filename, struct stat64 *buf,
 	      int flag)
 {
-  error_t err;
-  io_t port;
-
   if (vers != _STAT_VER)
     return __hurd_fail (EINVAL);
 
-  port = __file_name_lookup_at (fd, flag, filename, 0, 0);
-  if (port == MACH_PORT_NULL)
-    return -1;
-
-  err = __io_stat (port, buf);
-  __mach_port_deallocate (__mach_task_self (), port);
-
-  return __hurd_fail (err);
+  return __fstatat64 (fd, filename, buf, flag);
 }
-libc_hidden_def (__fxstatat64)
+#endif

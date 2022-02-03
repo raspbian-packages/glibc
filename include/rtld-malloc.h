@@ -1,5 +1,5 @@
 /* Redirection of malloc inside the dynamic linker.
-   Copyright (C) 2020 Free Software Foundation, Inc.
+   Copyright (C) 2020-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -65,6 +65,10 @@ realloc (void *ptr, size_t size)
 /* Called after the first self-relocation to activate the minimal malloc
    implementation.  */
 void __rtld_malloc_init_stubs (void) attribute_hidden;
+
+/* Return false if the active malloc is the ld.so minimal malloc, true
+   if it is the full implementation from libc.so.  */
+_Bool __rtld_malloc_is_complete (void) attribute_hidden;
 
 /* Called shortly before the final self-relocation (when RELRO
    variables are still writable) to activate the real malloc

@@ -1,4 +1,4 @@
-/* Copyright (C) 1992-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1992-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper, <drepper@gnu.org>, August 1995.
 
@@ -290,6 +290,9 @@ struct libc_do_syscall_args
 # define HAVE_GETTIMEOFDAY_VSYSCALL     "__vdso_gettimeofday"
 # define HAVE_TIME_VSYSCALL             "__vdso_time"
 # define HAVE_CLOCK_GETRES_VSYSCALL     "__vdso_clock_getres"
+
+# undef HAVE_INTERNAL_BRK_ADDR_SYMBOL
+# define HAVE_INTERNAL_BRK_ADDR_SYMBOL 1
 
 /* Define a macro which expands inline into the wrapper code for a system
    call.  This use is for internal calls that do not need to handle errors

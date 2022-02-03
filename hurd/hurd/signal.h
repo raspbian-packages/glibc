@@ -1,5 +1,5 @@
 /* Implementing POSIX.1 signals under the Hurd.
-   Copyright (C) 1993-2020 Free Software Foundation, Inc.
+   Copyright (C) 1993-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -331,7 +331,8 @@ extern void _hurd_internal_post_signal (struct hurd_sigstate *ss,
 
 struct machine_thread_all_state;
 extern struct sigcontext *
-_hurd_setup_sighandler (struct hurd_sigstate *ss, __sighandler_t handler,
+_hurd_setup_sighandler (struct hurd_sigstate *ss, const struct sigaction *action,
+			__sighandler_t handler,
 			int signo, struct hurd_signal_detail *detail,
 			int rpc_wait, struct machine_thread_all_state *state);
 

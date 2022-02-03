@@ -1,5 +1,5 @@
 /* Malloc implementation for multiple threads without lock contention.
-   Copyright (C) 2001-2020 Free Software Foundation, Inc.
+   Copyright (C) 2001-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Wolfram Gloger <wg@malloc.de>, 2001.
 
@@ -274,15 +274,50 @@ next_env_entry (char ***position)
 #endif
 
 
-#ifdef SHARED
+#if defined(SHARED) || defined(USE_MTAG)
 static void *
 __failing_morecore (ptrdiff_t d)
 {
   return (void *) MORECORE_FAILURE;
 }
+#endif
 
+#ifdef SHARED
 extern struct dl_open_hook *_dl_open_hook;
 libc_hidden_proto (_dl_open_hook);
+#endif
+
+#ifdef USE_MTAG
+
+/* Generate a new (random) tag value for PTR and tag the memory it
+   points to upto the end of the usable size for the chunk containing
+   it.  Return the newly tagged pointer.  */
+static void *
+__mtag_tag_new_usable (void *ptr)
+{
+  if (ptr)
+    {
+      mchunkptr cp = mem2chunk(ptr);
+      /* This likely will never happen, but we can't handle retagging
+	 chunks from the dumped main arena.  So just return the
+	 existing pointer.  */
+      if (DUMPED_MAIN_ARENA_CHUNK (cp))
+	return ptr;
+      ptr = __libc_mtag_tag_region (__libc_mtag_new_tag (ptr),
+				    CHUNK_AVAILABLE_SIZE (cp) - CHUNK_HDR_SZ);
+    }
+  return ptr;
+}
+
+/* Generate a new (random) tag value for PTR, set the tags for the
+   memory to the new tag and initialize the memory contents to VAL.
+   In practice this function will only be called with VAL=0, but we
+   keep this parameter to maintain the same prototype as memset.  */
+static void *
+__mtag_tag_new_memset (void *ptr, int val, size_t size)
+{
+  return __libc_mtag_memset_with_tag (__libc_mtag_new_tag (ptr), val, size);
+}
 #endif
 
 static void
@@ -293,15 +328,30 @@ ptmalloc_init (void)
 
   __malloc_initialized = 0;
 
-#ifdef SHARED
-  /* In case this libc copy is in a non-default namespace, never use brk.
-     Likewise if dlopened from statically linked program.  */
-  Dl_info di;
-  struct link_map *l;
+#ifdef USE_MTAG
+  if ((TUNABLE_GET_FULL (glibc, mem, tagging, int32_t, NULL) & 1) != 0)
+    {
+      /* If the tunable says that we should be using tagged memory
+	 and that morecore does not support tagged regions, then
+	 disable it.  */
+      if (__MTAG_SBRK_UNTAGGED)
+	__morecore = __failing_morecore;
 
-  if (_dl_open_hook != NULL
-      || (_dl_addr (ptmalloc_init, &di, &l, NULL) != 0
-          && l->l_ns != LM_ID_BASE))
+      __mtag_mmap_flags = __MTAG_MMAP_FLAGS;
+      __tag_new_memset = __mtag_tag_new_memset;
+      __tag_region = __libc_mtag_tag_region;
+      __tag_new_usable = __mtag_tag_new_usable;
+      __tag_at = __libc_mtag_address_get_tag;
+      __mtag_granule_mask = ~(size_t)(__MTAG_GRANULE_SIZE - 1);
+    }
+#endif
+
+#ifdef SHARED
+  /* In case this libc copy is in a non-default namespace, never use
+     brk.  Likewise if dlopened from statically linked program.  The
+     generic sbrk implementation also enforces this, but it is not
+     used on Hurd.  */
+  if (!__libc_initial)
     __morecore = __failing_morecore;
 #endif
 
@@ -419,13 +469,13 @@ dump_heap (heap_info *heap)
                    ~MALLOC_ALIGN_MASK);
   for (;; )
     {
-      fprintf (stderr, "chunk %p size %10lx", p, (long) p->size);
+      fprintf (stderr, "chunk %p size %10lx", p, (long) chunksize_nomask(p));
       if (p == top (heap->ar_ptr))
         {
           fprintf (stderr, " (top)\n");
           break;
         }
-      else if (p->size == (0 | PREV_INUSE))
+      else if (chunksize_nomask(p) == (0 | PREV_INUSE))
         {
           fprintf (stderr, " (fence)\n");
           break;
@@ -512,7 +562,7 @@ new_heap (size_t size, size_t top_pad)
             }
         }
     }
-  if (__mprotect (p2, size, PROT_READ | PROT_WRITE) != 0)
+  if (__mprotect (p2, size, MTAG_MMAP_FLAGS | PROT_READ | PROT_WRITE) != 0)
     {
       __munmap (p2, HEAP_MAX_SIZE);
       return 0;
@@ -542,7 +592,7 @@ grow_heap (heap_info *h, long diff)
     {
       if (__mprotect ((char *) h + h->mprotect_size,
                       (unsigned long) new_size - h->mprotect_size,
-                      PROT_READ | PROT_WRITE) != 0)
+                      MTAG_MMAP_FLAGS | PROT_READ | PROT_WRITE) != 0)
         return -2;
 
       h->mprotect_size = new_size;

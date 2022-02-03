@@ -11,19 +11,25 @@ https://sourceware.org/bugzilla/show_bug.cgi?id=15794
 
 --- a/misc/getauxval.c
 +++ b/misc/getauxval.c
-@@ -27,10 +27,15 @@
+@@ -27,16 +27,21 @@
    ElfW(auxv_t) *p;
  #endif
  
 +#ifdef AT_HWCAP
    if (type == AT_HWCAP)
-     return GLRO(dl_hwcap);
+     {
+       *result = GLRO(dl_hwcap);
+       return true;
+     }
 -  else if (type == AT_HWCAP2)
 +#endif
 +
 +#ifdef AT_HWCAP2
 +  if (type == AT_HWCAP2)
-     return GLRO(dl_hwcap2);
+     {
+       *result = GLRO(dl_hwcap2);
+       return true;
+     }
 +#endif
  
  #ifdef HAVE_AUX_VECTOR
@@ -124,7 +130,7 @@ https://sourceware.org/bugzilla/show_bug.cgi?id=15794
 +				      (AArch64).  */
 --- a/elf/elf.h
 +++ b/elf/elf.h
-@@ -1157,81 +1157,7 @@
+@@ -1154,81 +1154,7 @@
      } a_un;
  } Elf64_auxv_t;
  

@@ -1,5 +1,5 @@
 /* Machine-dependent ELF dynamic relocation inline functions.  RISC-V version.
-   Copyright (C) 2011-2020 Free Software Foundation, Inc.
+   Copyright (C) 2011-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -106,6 +106,7 @@ elf_machine_load_address (void)
 	" _RTLD_PROLOGUE (ENTRY_POINT) "\
 	mv a0, sp\n\
 	jal _dl_start\n\
+	" _RTLD_PROLOGUE (_dl_start_user) "\
 	# Stash user entry point in s0.\n\
 	mv s0, a0\n\
 	# See if we were run as a command with the executable file\n\
@@ -132,7 +133,8 @@ elf_machine_load_address (void)
 	lla a0, _dl_fini\n\
 	# Jump to the user entry point.\n\
 	jr s0\n\
-	" _RTLD_EPILOGUE (ENTRY_POINT) "\
+	" _RTLD_EPILOGUE (ENTRY_POINT) \
+	  _RTLD_EPILOGUE (_dl_start_user) "\
 	.previous" \
 );
 

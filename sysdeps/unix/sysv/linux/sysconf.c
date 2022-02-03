@@ -1,5 +1,5 @@
 /* Get file-specific information about a file.  Linux version.
-   Copyright (C) 2003-2020 Free Software Foundation, Inc.
+   Copyright (C) 2003-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -81,7 +81,7 @@ __sysconf (int name)
 
   if (procfname != NULL)
     {
-      int fd = __open_nocancel (procfname, O_RDONLY);
+      int fd = __open_nocancel (procfname, O_RDONLY | O_CLOEXEC);
       if (fd != -1)
 	{
 	  /* This is more than enough, the file contains a single integer.  */

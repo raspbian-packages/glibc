@@ -1,5 +1,5 @@
 /* Wait for process state.
-   Copyright (C) 2020 Free Software Foundation, Inc.
+   Copyright (C) 2020-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -88,5 +88,5 @@ support_process_state_wait (pid_t pid, enum support_process_state state)
   xfclose (fstatus);
   /* Fallback to nanosleep if an invalid state is found.  */
 #endif
-  nanosleep (&(struct timespec) { 2, 0 }, NULL);
+  nanosleep (&(struct timespec) { 1, 0 }, NULL);
 }

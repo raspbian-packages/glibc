@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -162,7 +162,7 @@ __pthread_mutex_unlock_full (pthread_mutex_t *mutex, int decr)
       private = PTHREAD_ROBUST_MUTEX_PSHARED (mutex);
       if (__glibc_unlikely ((atomic_exchange_rel (&mutex->__data.__lock, 0)
 			     & FUTEX_WAITERS) != 0))
-	lll_futex_wake (&mutex->__data.__lock, 1, private);
+	futex_wake ((unsigned int *) &mutex->__data.__lock, 1, private);
 
       /* We must clear op_pending after we release the mutex.
 	 FIXME However, this violates the mutex destruction requirements
@@ -332,8 +332,8 @@ __pthread_mutex_unlock_full (pthread_mutex_t *mutex, int decr)
 						    &oldval, newval));
 
       if ((oldval & ~PTHREAD_MUTEX_PRIO_CEILING_MASK) > 1)
-	lll_futex_wake (&mutex->__data.__lock, 1,
-			PTHREAD_MUTEX_PSHARED (mutex));
+	futex_wake ((unsigned int *)&mutex->__data.__lock, 1,
+		    PTHREAD_MUTEX_PSHARED (mutex));
 
       int oldprio = newval >> PTHREAD_MUTEX_PRIO_CEILING_SHIFT;
 

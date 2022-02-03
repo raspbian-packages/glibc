@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2003-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Martin Schwidefsky <schwidefsky@de.ibm.com>, 2003.
 
@@ -81,7 +81,7 @@ __condvar_cancel_waiting (pthread_cond_t *cond, uint64_t seq, unsigned int g,
 {
   bool consumed_signal = false;
 
-  /* No deadlock with group switching is possible here because we have do
+  /* No deadlock with group switching is possible here because we do
      not hold a reference on the group.  */
   __condvar_acquire_lock (cond, private);
 
@@ -378,8 +378,7 @@ __condvar_cleanup_waiting (void *arg)
 */
 static __always_inline int
 __pthread_cond_wait_common (pthread_cond_t *cond, pthread_mutex_t *mutex,
-    clockid_t clockid,
-    const struct timespec *abstime)
+    clockid_t clockid, const struct __timespec64 *abstime)
 {
   const int maxspin = 0;
   int err;
@@ -502,30 +501,12 @@ __pthread_cond_wait_common (pthread_cond_t *cond, pthread_mutex_t *mutex,
 	  cbuffer.private = private;
 	  __pthread_cleanup_push (&buffer, __condvar_cleanup_waiting, &cbuffer);
 
-	  if (abstime == NULL)
-	    {
-	      /* Block without a timeout.  */
-	      err = futex_wait_cancelable (
-		  cond->__data.__g_signals + g, 0, private);
-	    }
-	  else
-	    {
-	      /* Block, but with a timeout.
-		 Work around the fact that the kernel rejects negative timeout
-		 values despite them being valid.  */
-	      if (__glibc_unlikely (abstime->tv_sec < 0))
-	        err = ETIMEDOUT;
-	      else
-		{
-		  err = futex_abstimed_wait_cancelable
-                    (cond->__data.__g_signals + g, 0, clockid, abstime,
-                     private);
-		}
-	    }
+	  err = __futex_abstimed_wait_cancelable64 (
+	    cond->__data.__g_signals + g, 0, clockid, abstime, private);
 
 	  __pthread_cleanup_pop (&buffer, 0);
 
-	  if (__glibc_unlikely (err == ETIMEDOUT))
+	  if (__glibc_unlikely (err == ETIMEDOUT || err == EOVERFLOW))
 	    {
 	      __condvar_dec_grefs (cond, g, private);
 	      /* If we timed out, we effectively cancel waiting.  Note that
@@ -534,7 +515,7 @@ __pthread_cond_wait_common (pthread_cond_t *cond, pthread_mutex_t *mutex,
 		 __condvar_quiesce_and_switch_g1 and us trying to acquire
 		 the lock during cancellation is not possible.  */
 	      __condvar_cancel_waiting (cond, seq, g, private);
-	      result = ETIMEDOUT;
+	      result = err;
 	      goto done;
 	    }
 	  else
@@ -640,8 +621,8 @@ __pthread_cond_wait (pthread_cond_t *cond, pthread_mutex_t *mutex)
 
 /* See __pthread_cond_wait_common.  */
 int
-__pthread_cond_timedwait (pthread_cond_t *cond, pthread_mutex_t *mutex,
-    const struct timespec *abstime)
+__pthread_cond_timedwait64 (pthread_cond_t *cond, pthread_mutex_t *mutex,
+                            const struct __timespec64 *abstime)
 {
   /* Check parameter validity.  This should also tell the compiler that
      it can assume that abstime is not NULL.  */
@@ -655,6 +636,20 @@ __pthread_cond_timedwait (pthread_cond_t *cond, pthread_mutex_t *mutex,
                     ? CLOCK_MONOTONIC : CLOCK_REALTIME;
   return __pthread_cond_wait_common (cond, mutex, clockid, abstime);
 }
+
+#if __TIMESIZE != 64
+libpthread_hidden_def (__pthread_cond_timedwait64)
+
+int
+__pthread_cond_timedwait (pthread_cond_t *cond, pthread_mutex_t *mutex,
+                          const struct timespec *abstime)
+{
+  struct __timespec64 ts64 = valid_timespec_to_timespec64 (*abstime);
+
+  return __pthread_cond_timedwait64 (cond, mutex, &ts64);
+}
+#endif
+
 versioned_symbol (libpthread, __pthread_cond_wait, pthread_cond_wait,
 		  GLIBC_2_3_2);
 versioned_symbol (libpthread, __pthread_cond_timedwait, pthread_cond_timedwait,
@@ -662,9 +657,9 @@ versioned_symbol (libpthread, __pthread_cond_timedwait, pthread_cond_timedwait,
 
 /* See __pthread_cond_wait_common.  */
 int
-__pthread_cond_clockwait (pthread_cond_t *cond, pthread_mutex_t *mutex,
-			  clockid_t clockid,
-			  const struct timespec *abstime)
+__pthread_cond_clockwait64 (pthread_cond_t *cond, pthread_mutex_t *mutex,
+                            clockid_t clockid,
+                            const struct __timespec64 *abstime)
 {
   /* Check parameter validity.  This should also tell the compiler that
      it can assume that abstime is not NULL.  */
@@ -676,4 +671,18 @@ __pthread_cond_clockwait (pthread_cond_t *cond, pthread_mutex_t *mutex,
 
   return __pthread_cond_wait_common (cond, mutex, clockid, abstime);
 }
+
+#if __TIMESIZE != 64
+libpthread_hidden_def (__pthread_cond_clockwait64)
+
+int
+__pthread_cond_clockwait (pthread_cond_t *cond, pthread_mutex_t *mutex,
+                          clockid_t clockid,
+                          const struct timespec *abstime)
+{
+  struct __timespec64 ts64 = valid_timespec_to_timespec64 (*abstime);
+
+  return __pthread_cond_clockwait64 (cond, mutex, clockid, &ts64);
+}
+#endif
 weak_alias (__pthread_cond_clockwait, pthread_cond_clockwait);

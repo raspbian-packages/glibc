@@ -1,5 +1,5 @@
 /* Basic tests for SYSV shared memory functions.
-   Copyright (C) 2016-2020 Free Software Foundation, Inc.
+   Copyright (C) 2016-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,6 +24,8 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+
+#include <test-sysvipc.h>
 
 #include <support/support.h>
 #include <support/check.h>
@@ -80,6 +82,9 @@ do_test (void)
 	FAIL_UNSUPPORTED ("shmget not supported");
       FAIL_EXIT1 ("shmget failed (errno=%d)", errno);
     }
+
+  TEST_COMPARE (shmctl (shmid, first_shm_invalid_cmd (), NULL), -1);
+  TEST_COMPARE (errno, EINVAL);
 
   /* Get shared memory kernel information and do some sanity checks.  */
   struct shmid_ds shminfo;

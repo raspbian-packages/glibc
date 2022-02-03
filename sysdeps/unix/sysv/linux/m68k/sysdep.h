@@ -1,4 +1,4 @@
-/* Copyright (C) 1996-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1996-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Written by Andreas Schwab, <schwab@issan.informatik.uni-dortmund.de>,
    December 1995.
@@ -291,6 +291,9 @@ SYSCALL_ERROR_LABEL:							      \
   register int _a0 asm ("a0") = __arg6;		\
   LOAD_REGS_5
 #define ASM_ARGS_6	ASM_ARGS_5, "a" (_a0)
+
+#undef HAVE_INTERNAL_BRK_ADDR_SYMBOL
+#define HAVE_INTERNAL_BRK_ADDR_SYMBOL 1
 
 #endif /* not __ASSEMBLER__ */
 

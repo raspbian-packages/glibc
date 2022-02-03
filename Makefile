@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2020 Free Software Foundation, Inc.
+# Copyright (C) 1991-2021 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -303,6 +303,15 @@ if [ ! -v TESTCASE ] || [ ! -f $${TESTCASE} ]
 then
   usage
   exit 1
+fi
+
+# Container tests needing locale data should install them in-container.
+# Other tests/binaries need to use locale data from the build tree.
+if [ "$$CONTAINER" = false ]
+then
+  ENVVARS="GCONV_PATH=$${BUILD_DIR}/iconvdata $$ENVVARS"
+  ENVVARS="LOCPATH=$${BUILD_DIR}/localedata $$ENVVARS"
+  ENVVARS="LC_ALL=C $$ENVVARS"
 fi
 
 # Expand environment setup command

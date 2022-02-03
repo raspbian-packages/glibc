@@ -1,5 +1,5 @@
 /* Cache handling for host lookup.
-   Copyright (C) 2004-2020 Free Software Foundation, Inc.
+   Copyright (C) 2004-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2004.
 
@@ -71,20 +71,15 @@ addhstaiX (struct database_dyn *db, int fd, request_header *req,
 	dbg_log (_("Reloading \"%s\" in hosts cache!"), (char *) key);
     }
 
-  static service_user *hosts_database;
-  service_user *nip;
+  nss_action_list nip;
   int no_more;
   int rc6 = 0;
   int rc4 = 0;
   int herrno = 0;
 
-  if (hosts_database == NULL)
-    no_more = __nss_database_lookup2 ("hosts", NULL,
-				      "dns [!UNAVAIL=return] files",
-				      &hosts_database);
-  else
-    no_more = 0;
-  nip = hosts_database;
+  no_more = __nss_database_lookup2 ("hosts", NULL,
+				    "dns [!UNAVAIL=return] files",
+				    &nip);
 
   /* Initialize configurations.  */
   struct resolv_context *ctx = __resolv_context_get ();
@@ -442,10 +437,10 @@ next_nip:
       if (nss_next_action (nip, status[1]) == NSS_ACTION_RETURN)
 	break;
 
-      if (nip->next == NULL)
+      if (nip[1].module == NULL)
 	no_more = -1;
       else
-	nip = nip->next;
+	++nip;
     }
 
   /* No result found.  Create a negative result record.  */

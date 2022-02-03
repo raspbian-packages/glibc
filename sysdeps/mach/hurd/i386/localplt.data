@@ -30,31 +30,18 @@ ld.so: __write_nocancel
 ld.so: __writev
 ld.so: __libc_lseek64
 ld.so: __mmap
-ld.so: __fxstat64
-ld.so: __xstat64
+ld.so: __fstat64
+ld.so: __stat64
 ld.so: __access
 ld.so: __access_noerrno
 ld.so: __getpid
 ld.so: __getcwd
 ld.so: __sbrk
-ld.so: __strtoul_internal
-#ld.so: _exit
+ld.so: _exit ?
 ld.so: abort
 ld.so: _hurd_intr_rpc_mach_msg
 ld.so: __errno_location
-# rtld_hidden is currently disabled to avoid having to special-case the
-# functions above which do need a PLT.  These are thus currently expected.
-ld.so: _dl_allocate_tls
-ld.so: _dl_allocate_tls_init
-ld.so: _dl_exception_create
-ld.so: _dl_exception_create_format
-ld.so: _dl_exception_free
-ld.so: _dl_fatal_printf
-ld.so: _dl_find_dso_for_object
 ld.so: _dl_init_first
-ld.so: _dl_mcount
-ld.so: ___tls_get_addr
-ld.so: __tunable_get_val
 #
 # These should ideally be avoided, but is currently difficult
 libc.so: siglongjmp ?

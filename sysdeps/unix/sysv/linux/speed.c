@@ -1,5 +1,5 @@
 /* `struct termios' speed frobnication functions.  Linux version.
-   Copyright (C) 1991-2020 Free Software Foundation, Inc.
+   Copyright (C) 1991-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
 #include <stddef.h>
 #include <errno.h>
 #include <termios.h>
-
+#include <sysdep.h>
 
 /* This is a gross hack around a kernel bug.  If the cfsetispeed functions
    is called with the SPEED argument set to zero this means use the same

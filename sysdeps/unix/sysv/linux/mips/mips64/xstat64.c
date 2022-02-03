@@ -1,5 +1,5 @@
-/* xstat64 using 64-bit MIPS stat system call.
-   Copyright (C) 1991-2020 Free Software Foundation, Inc.
+/* xstat64 using Linux stat64 system call.
+   Copyright (C) 1991-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,29 +16,16 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <errno.h>
-#include <stddef.h>
 #include <sys/stat.h>
 #include <kernel_stat.h>
-
 #include <sysdep.h>
-#include <sys/syscall.h>
-
 #include <xstatconv.h>
 
 /* Get information about the file NAME in BUF.  */
-
 int
 __xstat64 (int vers, const char *name, struct stat64 *buf)
 {
-  int result;
   struct kernel_stat kbuf;
-
-  result = INLINE_SYSCALL (stat, 2, name, &kbuf);
-  if (result == 0)
-    result = __xstat64_conv (vers, &kbuf, buf);
-
-  return result;
+  int r = INLINE_SYSCALL_CALL (stat, name, &kbuf);
+  return r ?: __xstat64_conv (vers, &kbuf, buf);
 }
-
-hidden_def (__xstat64)

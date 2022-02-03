@@ -1,5 +1,5 @@
 /* Tester for string functions.
-   Copyright (C) 1995-2020 Free Software Foundation, Inc.
+   Copyright (C) 1995-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -46,6 +46,9 @@ DIAG_IGNORE_NEEDS_COMMENT (7, "-Wstringop-overflow=");
 #endif
 #if __GNUC_PREREQ (8, 0)
 DIAG_IGNORE_NEEDS_COMMENT (8, "-Wstringop-truncation");
+#endif
+#if __GNUC_PREREQ (11, 0)
+DIAG_IGNORE_NEEDS_COMMENT (11, "-Wstringop-overread");
 #endif
 
 

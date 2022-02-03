@@ -1,5 +1,5 @@
 /* Map in a shared object's segments from the file.
-   Copyright (C) 1995-2020 Free Software Foundation, Inc.
+   Copyright (C) 1995-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -98,12 +98,16 @@ int __stack_prot attribute_hidden attribute_relro
 
 
 /* This is the decomposed LD_LIBRARY_PATH search path.  */
-static struct r_search_path_struct env_path_list attribute_relro;
+struct r_search_path_struct __rtld_env_path_list attribute_relro;
 
 /* List of the hardware capabilities we might end up using.  */
+#ifdef SHARED
 static const struct r_strlenpair *capstr attribute_relro;
 static size_t ncapstr attribute_relro;
 static size_t max_capstrlen attribute_relro;
+#else
+enum { ncapstr = 1, max_capstrlen = 0 };
+#endif
 
 
 /* Get the generated information about the trusted directories.  Use
@@ -438,7 +442,7 @@ add_name_to_object (struct link_map *l, const char *name)
 }
 
 /* Standard search directories.  */
-static struct r_search_path_struct rtld_search_dirs attribute_relro;
+struct r_search_path_struct __rtld_search_dirs attribute_relro;
 
 static size_t max_dirnamelen;
 
@@ -678,7 +682,9 @@ cache_rpath (struct link_map *l,
 
 
 void
-_dl_init_paths (const char *llp)
+_dl_init_paths (const char *llp, const char *source,
+		const char *glibc_hwcaps_prepend,
+		const char *glibc_hwcaps_mask)
 {
   size_t idx;
   const char *strp;
@@ -691,14 +697,16 @@ _dl_init_paths (const char *llp)
   /* Fill in the information about the application's RPATH and the
      directories addressed by the LD_LIBRARY_PATH environment variable.  */
 
+#ifdef SHARED
   /* Get the capabilities.  */
-  capstr = _dl_important_hwcaps (GLRO(dl_platform), GLRO(dl_platformlen),
+  capstr = _dl_important_hwcaps (glibc_hwcaps_prepend, glibc_hwcaps_mask,
 				 &ncapstr, &max_capstrlen);
+#endif
 
   /* First set up the rest of the default search directory entries.  */
-  aelem = rtld_search_dirs.dirs = (struct r_search_path_elem **)
+  aelem = __rtld_search_dirs.dirs = (struct r_search_path_elem **)
     malloc ((nsystem_dirs_len + 1) * sizeof (struct r_search_path_elem *));
-  if (rtld_search_dirs.dirs == NULL)
+  if (__rtld_search_dirs.dirs == NULL)
     {
       errstring = N_("cannot create search path array");
     signal_error:
@@ -709,16 +717,17 @@ _dl_init_paths (const char *llp)
 		 + ncapstr * sizeof (enum r_dir_status))
 		/ sizeof (struct r_search_path_elem));
 
-  rtld_search_dirs.dirs[0] = malloc (nsystem_dirs_len * round_size
-				     * sizeof (*rtld_search_dirs.dirs[0]));
-  if (rtld_search_dirs.dirs[0] == NULL)
+  __rtld_search_dirs.dirs[0]
+    = malloc (nsystem_dirs_len * round_size
+	      * sizeof (*__rtld_search_dirs.dirs[0]));
+  if (__rtld_search_dirs.dirs[0] == NULL)
     {
       errstring = N_("cannot create cache for search path");
       goto signal_error;
     }
 
-  rtld_search_dirs.malloced = 0;
-  pelem = GL(dl_all_dirs) = rtld_search_dirs.dirs[0];
+  __rtld_search_dirs.malloced = 0;
+  pelem = GL(dl_all_dirs) = __rtld_search_dirs.dirs[0];
   strp = system_dirs;
   idx = 0;
 
@@ -749,50 +758,51 @@ _dl_init_paths (const char *llp)
   max_dirnamelen = SYSTEM_DIRS_MAX_LEN;
   *aelem = NULL;
 
-#ifdef SHARED
-  /* This points to the map of the main object.  */
+  /* This points to the map of the main object.  If there is no main
+     object (e.g., under --help, use the dynamic loader itself as a
+     stand-in.  */
   l = GL(dl_ns)[LM_ID_BASE]._ns_loaded;
-  if (l != NULL)
-    {
-      assert (l->l_type != lt_loaded);
+#ifdef SHARED
+  if (l == NULL)
+    l = &GL (dl_rtld_map);
+#endif
+  assert (l->l_type != lt_loaded);
 
-      if (l->l_info[DT_RUNPATH])
+  if (l->l_info[DT_RUNPATH])
+    {
+      /* Allocate room for the search path and fill in information
+	 from RUNPATH.  */
+      decompose_rpath (&l->l_runpath_dirs,
+		       (const void *) (D_PTR (l, l_info[DT_STRTAB])
+				       + l->l_info[DT_RUNPATH]->d_un.d_val),
+		       l, "RUNPATH");
+      /* During rtld init the memory is allocated by the stub malloc,
+	 prevent any attempt to free it by the normal malloc.  */
+      l->l_runpath_dirs.malloced = 0;
+
+      /* The RPATH is ignored.  */
+      l->l_rpath_dirs.dirs = (void *) -1;
+    }
+  else
+    {
+      l->l_runpath_dirs.dirs = (void *) -1;
+
+      if (l->l_info[DT_RPATH])
 	{
 	  /* Allocate room for the search path and fill in information
-	     from RUNPATH.  */
-	  decompose_rpath (&l->l_runpath_dirs,
+	     from RPATH.  */
+	  decompose_rpath (&l->l_rpath_dirs,
 			   (const void *) (D_PTR (l, l_info[DT_STRTAB])
-					   + l->l_info[DT_RUNPATH]->d_un.d_val),
-			   l, "RUNPATH");
-	  /* During rtld init the memory is allocated by the stub malloc,
-	     prevent any attempt to free it by the normal malloc.  */
-	  l->l_runpath_dirs.malloced = 0;
-
-	  /* The RPATH is ignored.  */
-	  l->l_rpath_dirs.dirs = (void *) -1;
+					   + l->l_info[DT_RPATH]->d_un.d_val),
+			   l, "RPATH");
+	  /* During rtld init the memory is allocated by the stub
+	     malloc, prevent any attempt to free it by the normal
+	     malloc.  */
+	  l->l_rpath_dirs.malloced = 0;
 	}
       else
-	{
-	  l->l_runpath_dirs.dirs = (void *) -1;
-
-	  if (l->l_info[DT_RPATH])
-	    {
-	      /* Allocate room for the search path and fill in information
-		 from RPATH.  */
-	      decompose_rpath (&l->l_rpath_dirs,
-			       (const void *) (D_PTR (l, l_info[DT_STRTAB])
-					       + l->l_info[DT_RPATH]->d_un.d_val),
-			       l, "RPATH");
-	      /* During rtld init the memory is allocated by the stub
-		 malloc, prevent any attempt to free it by the normal
-		 malloc.  */
-	      l->l_rpath_dirs.malloced = 0;
-	    }
-	  else
-	    l->l_rpath_dirs.dirs = (void *) -1;
-	}
+	l->l_rpath_dirs.dirs = (void *) -1;
     }
-#endif	/* SHARED */
 
   if (llp != NULL && *llp != '\0')
     {
@@ -805,51 +815,27 @@ _dl_init_paths (const char *llp)
 	if (*cp == ':' || *cp == ';')
 	  ++nllp;
 
-      env_path_list.dirs = (struct r_search_path_elem **)
+      __rtld_env_path_list.dirs = (struct r_search_path_elem **)
 	malloc ((nllp + 1) * sizeof (struct r_search_path_elem *));
-      if (env_path_list.dirs == NULL)
+      if (__rtld_env_path_list.dirs == NULL)
 	{
 	  errstring = N_("cannot create cache for search path");
 	  goto signal_error;
 	}
 
-      (void) fillin_rpath (llp_tmp, env_path_list.dirs, ":;",
-			   "LD_LIBRARY_PATH", NULL, l);
+      (void) fillin_rpath (llp_tmp, __rtld_env_path_list.dirs, ":;",
+			   source, NULL, l);
 
-      if (env_path_list.dirs[0] == NULL)
+      if (__rtld_env_path_list.dirs[0] == NULL)
 	{
-	  free (env_path_list.dirs);
-	  env_path_list.dirs = (void *) -1;
+	  free (__rtld_env_path_list.dirs);
+	  __rtld_env_path_list.dirs = (void *) -1;
 	}
 
-      env_path_list.malloced = 0;
+      __rtld_env_path_list.malloced = 0;
     }
   else
-    env_path_list.dirs = (void *) -1;
-}
-
-
-static void
-__attribute__ ((noreturn, noinline))
-lose (int code, int fd, const char *name, char *realname, struct link_map *l,
-      const char *msg, struct r_debug *r, Lmid_t nsid)
-{
-  /* The file might already be closed.  */
-  if (fd != -1)
-    (void) __close_nocancel (fd);
-  if (l != NULL && l->l_origin != (char *) -1l)
-    free ((char *) l->l_origin);
-  free (l);
-  free (realname);
-
-  if (r != NULL)
-    {
-      r->r_state = RT_CONSISTENT;
-      _dl_debug_state ();
-      LIBC_PROBE (map_failed, 2, nsid, r);
-    }
-
-  _dl_signal_error (code, name, NULL, msg);
+    __rtld_env_path_list.dirs = (void *) -1;
 }
 
 
@@ -964,11 +950,31 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
       if (__glibc_unlikely (!_dl_get_file_id (fd, &id)))
 	{
 	  errstring = N_("cannot stat shared object");
-	call_lose_errno:
+	lose_errno:
 	  errval = errno;
-	call_lose:
-	  lose (errval, fd, name, realname, l, errstring,
-		make_consistent ? r : NULL, nsid);
+	lose:
+	  /* The file might already be closed.  */
+	  if (fd != -1)
+	    __close_nocancel (fd);
+	  if (l != NULL && l->l_map_start != 0)
+	    _dl_unmap_segments (l);
+	  if (l != NULL && l->l_origin != (char *) -1l)
+	    free ((char *) l->l_origin);
+	  if (l != NULL && !l->l_libname->dont_free)
+	    free (l->l_libname);
+	  if (l != NULL && l->l_phdr_allocated)
+	    free ((void *) l->l_phdr);
+	  free (l);
+	  free (realname);
+
+	  if (make_consistent && r != NULL)
+	    {
+	      r->r_state = RT_CONSISTENT;
+	      _dl_debug_state ();
+	      LIBC_PROBE (map_failed, 2, nsid, r);
+	    }
+
+	  _dl_signal_error (errval, name, NULL, errstring);
 	}
 
       /* Look again to see if the real name matched another already loaded.  */
@@ -1075,7 +1081,7 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
     fail_new:
 #endif
       errstring = N_("cannot create shared object descriptor");
-      goto call_lose_errno;
+      goto lose_errno;
     }
 
   /* Extract the remaining details we need from the ELF header
@@ -1094,7 +1100,7 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 				       header->e_phoff) != maplength)
 	{
 	  errstring = N_("cannot read file data");
-	  goto call_lose_errno;
+	  goto lose_errno;
 	}
     }
 
@@ -1140,14 +1146,14 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 	  if (__glibc_unlikely ((ph->p_align & (GLRO(dl_pagesize) - 1)) != 0))
 	    {
 	      errstring = N_("ELF load command alignment not page-aligned");
-	      goto call_lose;
+	      goto lose;
 	    }
 	  if (__glibc_unlikely (((ph->p_vaddr - ph->p_offset)
 				 & (ph->p_align - 1)) != 0))
 	    {
 	      errstring
 		= N_("ELF load command address/offset not properly aligned");
-	      goto call_lose;
+	      goto lose;
 	    }
 
 	  struct loadcmd *c = &loadcmds[nloadcmds++];
@@ -1226,7 +1232,7 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 	   another error below.  But we don't want to go through the
 	   calculations below using NLOADCMDS - 1.  */
 	errstring = N_("object file has no loadable segments");
-	goto call_lose;
+	goto lose;
       }
 
     /* dlopen of an executable is not valid because it is not possible
@@ -1239,7 +1245,7 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 	/* This object is loaded at a fixed address.  This must never
 	   happen for objects loaded with dlopen.  */
 	errstring = N_("cannot dynamically load executable");
-	goto call_lose;
+	goto lose;
       }
 
     /* Length of the sections to be loaded.  */
@@ -1252,7 +1258,11 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
     errstring = _dl_map_segments (l, fd, header, type, loadcmds, nloadcmds,
 				  maplength, has_holes, loader);
     if (__glibc_unlikely (errstring != NULL))
-      goto call_lose;
+      {
+	/* Mappings can be in an inconsistent state: avoid unmap.  */
+	l->l_map_start = l->l_map_end = 0;
+	goto lose;
+      }
   }
 
   if (l->l_ld == 0)
@@ -1260,7 +1270,7 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
       if (__glibc_unlikely (type == ET_DYN))
 	{
 	  errstring = N_("object file has no dynamic section");
-	  goto call_lose;
+	  goto lose;
 	}
     }
   else
@@ -1275,21 +1285,12 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
       || (__glibc_unlikely (l->l_flags_1 & DF_1_PIE)
 	  && __glibc_unlikely ((mode & __RTLD_OPENEXEC) == 0)))
     {
-      /* We are not supposed to load this object.  Free all resources.  */
-      _dl_unmap_segments (l);
-
-      if (!l->l_libname->dont_free)
-	free (l->l_libname);
-
-      if (l->l_phdr_allocated)
-	free ((void *) l->l_phdr);
-
       if (l->l_flags_1 & DF_1_PIE)
 	errstring
 	  = N_("cannot dynamically load position-independent executable");
       else
 	errstring = N_("shared object cannot be dlopen()ed");
-      goto call_lose;
+      goto lose;
     }
 
   if (l->l_phdr == NULL)
@@ -1302,7 +1303,7 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
       if (newp == NULL)
 	{
 	  errstring = N_("cannot allocate memory for program header");
-	  goto call_lose_errno;
+	  goto lose_errno;
 	}
 
       l->l_phdr = memcpy (newp, phdr,
@@ -1335,7 +1336,7 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 	      if (__mprotect ((void *) p, s, PROT_READ|PROT_WRITE) < 0)
 		{
 		  errstring = N_("cannot change memory protections");
-		  goto call_lose_errno;
+		  goto lose_errno;
 		}
 	      __stack_prot |= PROT_READ|PROT_WRITE|PROT_EXEC;
 	      __mprotect ((void *) p, s, PROT_READ);
@@ -1356,7 +1357,7 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 	{
 	  errstring = N_("\
 cannot enable executable stack as shared object requires");
-	  goto call_lose;
+	  goto lose;
 	}
     }
 
@@ -1383,10 +1384,14 @@ cannot enable executable stack as shared object requires");
   if (__glibc_unlikely (__close_nocancel (fd) != 0))
     {
       errstring = N_("cannot close file descriptor");
-      goto call_lose_errno;
+      goto lose_errno;
     }
   /* Signal that we closed the file.  */
   fd = -1;
+
+  /* Failures before this point are handled locally via lose.
+     There are no more failures in this function until return,
+     to change that the cleanup handling needs to be updated.  */
 
   /* If this is ET_EXEC, we should have loaded it as lt_executable.  */
   assert (type != ET_EXEC || l->l_type == lt_executable);
@@ -1523,11 +1528,15 @@ print_search_path (struct r_search_path_elem **list,
       for (cnt = 0; cnt < ncapstr; ++cnt)
 	if ((*list)->status[cnt] != nonexisting)
 	  {
+#ifdef SHARED
 	    char *cp = __mempcpy (endp, capstr[cnt].str, capstr[cnt].len);
 	    if (cp == buf || (cp == buf + 1 && buf[0] == '/'))
 	      cp[0] = '\0';
 	    else
 	      cp[-1] = '\0';
+#else
+	    *endp = '\0';
+#endif
 
 	    _dl_debug_printf_c (first ? "%s" : ":%s", buf);
 	    first = 0;
@@ -1658,14 +1667,15 @@ open_verify (const char *name, int fd,
 	  errval = errno;
 	  errstring = (errval == 0
 		       ? N_("file too short") : N_("cannot read file data"));
-	call_lose:
+	lose:
 	  if (free_name)
 	    {
 	      char *realname = (char *) name;
 	      name = strdupa (realname);
 	      free (realname);
 	    }
-	  lose (errval, fd, name, NULL, NULL, errstring, NULL, 0);
+	  __close_nocancel (fd);
+	  _dl_signal_error (errval, name, NULL, errstring);
 	}
 
       /* See whether the ELF header is what we expect.  */
@@ -1740,13 +1750,13 @@ open_verify (const char *name, int fd,
 	    /* Otherwise we don't know what went wrong.  */
 	    errstring = N_("internal error");
 
-	  goto call_lose;
+	  goto lose;
 	}
 
       if (__glibc_unlikely (ehdr->e_version != EV_CURRENT))
 	{
 	  errstring = N_("ELF file version does not match current one");
-	  goto call_lose;
+	  goto lose;
 	}
       if (! __glibc_likely (elf_machine_matches_host (ehdr)))
 	goto close_and_out;
@@ -1754,12 +1764,12 @@ open_verify (const char *name, int fd,
 				 && ehdr->e_type != ET_EXEC))
 	{
 	  errstring = N_("only ET_DYN and ET_EXEC can be loaded");
-	  goto call_lose;
+	  goto lose;
 	}
       else if (__glibc_unlikely (ehdr->e_phentsize != sizeof (ElfW(Phdr))))
 	{
 	  errstring = N_("ELF file's phentsize not the expected size");
-	  goto call_lose;
+	  goto lose;
 	}
 
       maplength = ehdr->e_phnum * sizeof (ElfW(Phdr));
@@ -1774,7 +1784,7 @@ open_verify (const char *name, int fd,
 	    read_error:
 	      errval = errno;
 	      errstring = N_("cannot read file data");
-	      goto call_lose;
+	      goto lose;
 	    }
 	}
 
@@ -1903,11 +1913,15 @@ open_path (const char *name, size_t namelen, int mode,
 	  if (this_dir->status[cnt] == nonexisting)
 	    continue;
 
+#ifdef SHARED
 	  buflen =
 	    ((char *) __mempcpy (__mempcpy (edp, capstr[cnt].str,
 					    capstr[cnt].len),
 				 name, namelen)
 	     - buf);
+#else
+	  buflen = (char *) __mempcpy (edp, name, namelen) - buf;
+#endif
 
 	  /* Print name we try if this is wanted.  */
 	  if (__glibc_unlikely (GLRO(dl_debug_mask) & DL_DEBUG_LIBS))
@@ -1931,7 +1945,7 @@ open_path (const char *name, size_t namelen, int mode,
 
 		  buf[buflen - namelen - 1] = '\0';
 
-		  if (__xstat64 (_STAT_VER, buf, &st) != 0
+		  if (__stat64 (buf, &st) != 0
 		      || ! S_ISDIR (st.st_mode))
 		    /* The directory does not exist or it is no directory.  */
 		    this_dir->status[cnt] = nonexisting;
@@ -1951,7 +1965,7 @@ open_path (const char *name, size_t namelen, int mode,
 		 directories and so exploit the bugs.  */
 	      struct stat64 st;
 
-	      if (__fxstat64 (_STAT_VER, fd, &st) != 0
+	      if (__fstat64 (fd, &st) != 0
 		  || (st.st_mode & S_ISUID) == 0)
 		{
 		  /* The shared object cannot be tested for being SUID
@@ -1999,9 +2013,9 @@ open_path (const char *name, size_t namelen, int mode,
       if (sps->malloced)
 	free (sps->dirs);
 
-      /* rtld_search_dirs and env_path_list are attribute_relro, therefore
-	 avoid writing into it.  */
-      if (sps != &rtld_search_dirs && sps != &env_path_list)
+      /* __rtld_search_dirs and __rtld_env_path_list are
+	 attribute_relro, therefore avoid writing to them.  */
+      if (sps != &__rtld_search_dirs && sps != &__rtld_env_path_list)
 	sps->dirs = (void *) -1;
     }
 
@@ -2149,8 +2163,8 @@ _dl_map_object (struct link_map *loader, const char *name,
 	}
 
       /* Try the LD_LIBRARY_PATH environment variable.  */
-      if (fd == -1 && env_path_list.dirs != (void *) -1)
-	fd = open_path (name, namelen, mode, &env_path_list,
+      if (fd == -1 && __rtld_env_path_list.dirs != (void *) -1)
+	fd = open_path (name, namelen, mode, &__rtld_env_path_list,
 			&realname, &fb,
 			loader ?: GL(dl_ns)[LM_ID_BASE]._ns_loaded,
 			LA_SER_LIBPATH, &found_other_class);
@@ -2239,8 +2253,8 @@ _dl_map_object (struct link_map *loader, const char *name,
       if (fd == -1
 	  && ((l = loader ?: GL(dl_ns)[nsid]._ns_loaded) == NULL
 	      || __glibc_likely (!(l->l_flags_1 & DF_1_NODEFLIB)))
-	  && rtld_search_dirs.dirs != (void *) -1)
-	fd = open_path (name, namelen, mode, &rtld_search_dirs,
+	  && __rtld_search_dirs.dirs != (void *) -1)
+	fd = open_path (name, namelen, mode, &__rtld_search_dirs,
 			&realname, &fb, l, LA_SER_DEFAULT, &found_other_class);
 
       /* Add another newline when we are tracing the library loading.  */
@@ -2408,7 +2422,7 @@ _dl_rtld_di_serinfo (struct link_map *loader, Dl_serinfo *si, bool counting)
     }
 
   /* Try the LD_LIBRARY_PATH environment variable.  */
-  add_path (&p, &env_path_list, XXX_ENV);
+  add_path (&p, &__rtld_env_path_list, XXX_ENV);
 
   /* Look at the RUNPATH information for this binary.  */
   if (cache_rpath (loader, &loader->l_runpath_dirs, DT_RUNPATH, "RUNPATH"))
@@ -2420,7 +2434,7 @@ _dl_rtld_di_serinfo (struct link_map *loader, Dl_serinfo *si, bool counting)
 
   /* Finally, try the default path.  */
   if (!(loader->l_flags_1 & DF_1_NODEFLIB))
-    add_path (&p, &rtld_search_dirs, XXX_default);
+    add_path (&p, &__rtld_search_dirs, XXX_default);
 
   if (counting)
     /* Count the struct size before the string area, which we didn't

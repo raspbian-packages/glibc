@@ -1,5 +1,5 @@
 /* Compare dlvsym and __libc_dlvsym results.  Common code.
-   Copyright (C) 2017-2020 Free Software Foundation, Inc.
+   Copyright (C) 2017-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -117,8 +117,13 @@ compare_vsyms (void)
      obtain an explicit handle for libc.so.  */
   void *libc_handle = xdlopen (LIBC_SO, RTLD_LAZY | RTLD_NOLOAD);
 
+
+  /* sys_errlist and sys_siglist were deprecated in glibc 2.32 and they are
+     not available on architectures with base ABI newer than 2.32.  */
+#if TEST_COMPAT (libc, GLIBC_2_0, GLIBC_2_32)
   compare_vsyms_1 (libc_handle, "_sys_errlist");
   compare_vsyms_1 (libc_handle, "_sys_siglist");
+#endif
   compare_vsyms_1 (libc_handle, "quick_exit");
 
   xdlclose (libc_handle);

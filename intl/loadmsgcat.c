@@ -1,5 +1,5 @@
 /* Load needed message catalogs.
-   Copyright (C) 1995-2020 Free Software Foundation, Inc.
+   Copyright (C) 1995-2021 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published by
@@ -804,7 +804,7 @@ _nl_load_domain (struct loaded_l10nfile *domain_file,
   /* We must know about the size of the file.  */
   if (
 #ifdef _LIBC
-      __builtin_expect (fstat64 (fd, &st) != 0, 0)
+      __builtin_expect (__fstat64 (fd, &st) != 0, 0)
 #else
       __builtin_expect (fstat (fd, &st) != 0, 0)
 #endif

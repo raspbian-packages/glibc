@@ -1,4 +1,4 @@
-/* Copyright (C) 2015-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2015-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,11 +16,15 @@
    <https://www.gnu.org/licenses/>.  */
 
 #ifndef SHARED
+
+/* Mark symbols hidden in static PIE for early self relocation to work.  */
+# if BUILD_PIE_DEFAULT
+#  pragma GCC visibility push(hidden)
+# endif
 /* Define I386_USE_SYSENTER to support syscall during startup in static
    PIE.  */
 # include <startup.h>
 # include <ldsodefs.h>
-# include <cpu-features.h>
 # include <cpu-features.c>
 
 extern struct cpu_features _dl_x86_cpu_features;

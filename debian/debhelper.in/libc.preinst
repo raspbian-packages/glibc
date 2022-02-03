@@ -125,6 +125,36 @@ then
             fi
             exit 1
         fi
+
+    elif [ $system = "GNU" ]
+    then
+        kernel_ver=`uname -v | cut -d / -f 1 | cut -d ' ' -f 2`
+        kernel_ver_git=${kernel_ver#*+git}
+        kernel_ver_git=${kernel_ver_git%%-*}
+        kernel_ver=${kernel_ver%+git*}
+        kernel_ver_min=1.8
+        kernel_ver_git_min=20210923
+        if kernel_compare_versions "$kernel_ver" lt $kernel_ver_min || \
+         ( kernel_compare_versions "$kernel_ver" eq $kernel_ver_min && \
+            [ "$kernel_ver_git" -lt $kernel_ver_git_min ] )
+        then
+            if [ "$USE_DEBCONF" ]
+            then
+                db_version 2.0
+                db_fset glibc/kernel-too-old seen false
+                db_reset glibc/kernel-too-old
+                db_subst glibc/kernel-too-old kernel_ver $kernel_ver_min+git$kernel_ver_git_min
+                db_input critical glibc/kernel-too-old || true
+                db_go
+                db_stop
+            else
+                echo "ERROR: This version of the GNU libc requires kernel version"
+                echo "$kernel_ver_min+git$kernel_ver_git_min or later."
+                echo "Please upgrade your kernel and reboot before installing glibc."
+                echo
+            fi
+            exit 1
+        fi
     fi
 fi
 

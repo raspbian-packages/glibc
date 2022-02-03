@@ -1,4 +1,4 @@
-/* Copyright (C) 1993-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1993-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Written by Per Bothner <bothner@cygnus.com>.
 
@@ -1145,7 +1145,7 @@ libc_hidden_def (_IO_file_seek)
 int
 _IO_file_stat (FILE *fp, void *st)
 {
-  return __fxstat64 (_STAT_VER, fp->_fileno, (struct stat64 *) st);
+  return __fstat64 (fp->_fileno, (struct stat64 *) st);
 }
 libc_hidden_def (_IO_file_stat)
 

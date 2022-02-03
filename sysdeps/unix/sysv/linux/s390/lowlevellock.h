@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2003-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Martin Schwidefsky <schwidefsky@de.ibm.com>, 2003.
 
@@ -24,7 +24,7 @@
 /* Transactional lock elision definitions.  */
 extern int __lll_clocklock_elision
   (int *futex, short *adapt_count,
-   clockid_t clockid, const struct timespec *timeout, int private)
+   clockid_t clockid, const struct __timespec64 *timeout, int private)
   attribute_hidden;
 
 #  define lll_clocklock_elision(futex, adapt_count, clockid, timeout, private) \

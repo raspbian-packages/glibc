@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -15,19 +15,22 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
+#include <sys/stat.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <stddef.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <hurd.h>
+#include <shlib-compat.h>
 
-
+#if SHLIB_COMPAT(libc, GLIBC_2_0, GLIBC_2_33)
 /* Create a device file named FILE_NAME, with permission and special bits MODE
    and device number DEV (which can be constructed from major and minor
    device numbers with the `makedev' macro above).  */
 int
 __xmknod (int vers, const char *file_name, mode_t mode, dev_t *dev)
 {
-  return __xmknodat (vers, AT_FDCWD, file_name, mode, dev);
+  if (vers != _MKNOD_VER)
+    return __hurd_fail (EINVAL);
+
+  return __mknodat (AT_FDCWD, file_name, mode, *dev);
 }
-libc_hidden_def (__xmknod)
+#endif

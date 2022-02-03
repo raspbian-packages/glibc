@@ -1,5 +1,5 @@
 /* Generic optimized memcpy using SIMD.
-   Copyright (C) 2020 Free Software Foundation, Inc.
+   Copyright (C) 2020-2021 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -64,9 +64,9 @@
    from the end.  */
 
 ENTRY (__memcpy_simd)
-	DELOUSE (0)
-	DELOUSE (1)
-	DELOUSE (2)
+	PTR_ARG (0)
+	PTR_ARG (1)
+	SIZE_ARG (2)
 
 	add	srcend, src, count
 	add	dstend, dstin, count
@@ -181,9 +181,9 @@ libc_hidden_builtin_def (__memcpy_simd)
 
 
 ENTRY (__memmove_simd)
-	DELOUSE (0)
-	DELOUSE (1)
-	DELOUSE (2)
+	PTR_ARG (0)
+	PTR_ARG (1)
+	SIZE_ARG (2)
 
 	add	srcend, src, count
 	add	dstend, dstin, count

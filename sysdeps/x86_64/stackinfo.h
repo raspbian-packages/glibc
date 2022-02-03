@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2001-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -23,6 +23,12 @@
 
 #include <elf.h>
 
+#ifdef __ILP32__
+# define RSP_REG "esp"
+#else
+# define RSP_REG "rsp"
+#endif
+
 /* On x86_64 the stack grows down.  */
 #define _STACK_GROWS_DOWN	1
 
@@ -34,10 +40,10 @@
    for which they need to act as barriers as well, hence the additional
    (unnecessary) parameters.  */
 #define stackinfo_get_sp() \
-  ({ void *p__; asm volatile ("mov %%" RSP_LP ", %0" : "=r" (p__)); p__; })
+  ({ void *p__; asm volatile ("mov %%" RSP_REG ", %0" : "=r" (p__)); p__; })
 #define stackinfo_sub_sp(ptr) \
   ({ ptrdiff_t d__;						\
-     asm volatile ("sub %%" RSP_LP " , %0" : "=r" (d__) : "0" (ptr));	\
+     asm volatile ("sub %%" RSP_REG " , %0" : "=r" (d__) : "0" (ptr));	\
      d__; })
 
 #endif	/* stackinfo.h */

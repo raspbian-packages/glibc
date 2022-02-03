@@ -1,5 +1,5 @@
 /* Return information about the filesystem on which FILE resides.
-   Copyright (C) 1996-2020 Free Software Foundation, Inc.
+   Copyright (C) 1996-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -78,6 +78,7 @@ __statfs64 (const char *file, struct statfs64 *buf)
   buf->f_fsid = buf32.f_fsid;
   buf->f_namelen = buf32.f_namelen;
   buf->f_frsize = buf32.f_frsize;
+  buf->f_flags = buf32.f_flags;
   memcpy (buf->f_spare, buf32.f_spare, sizeof (buf32.f_spare));
 
   return 0;

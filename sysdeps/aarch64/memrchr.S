@@ -1,6 +1,6 @@
 /* memrchr - find the last occurrence of a byte in a memory block
 
-   Copyright (C) 2015-2020 Free Software Foundation, Inc.
+   Copyright (C) 2015-2021 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -59,8 +59,8 @@
    string, counting trailing zeros identifies exactly which byte matched.  */
 
 ENTRY (__memrchr)
-	DELOUSE (0)
-	DELOUSE (2)
+	PTR_ARG (0)
+	SIZE_ARG (2)
 	add	end, srcin, cntin
 	sub	endm1, end, 1
 	bic	src, endm1, 15

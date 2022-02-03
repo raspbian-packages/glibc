@@ -1,4 +1,4 @@
-/* Copyright (C) 2000-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2000-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -40,6 +40,9 @@
 # define SYSCALL_ERROR_LABEL 99b
 
 #else   /* ! __ASSEMBLER__ */
+
+#undef HAVE_INTERNAL_BRK_ADDR_SYMBOL
+#define HAVE_INTERNAL_BRK_ADDR_SYMBOL 1
 
 #if _MIPS_SIM == _ABIN32
 /* Convert X to a long long, without losing any bits if it is one

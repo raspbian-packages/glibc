@@ -1,5 +1,5 @@
 /* Basic tests for SYSV message queue functions.
-   Copyright (C) 2016-2020 Free Software Foundation, Inc.
+   Copyright (C) 2016-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -23,6 +23,8 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
+
+#include <test-sysvipc.h>
 
 #include <support/support.h>
 #include <support/check.h>
@@ -85,6 +87,9 @@ do_test (void)
 	FAIL_UNSUPPORTED ("msgget not supported");
       FAIL_EXIT1 ("msgget failed (errno=%d)", errno);
     }
+
+  TEST_COMPARE (msgctl (msqid, first_msg_invalid_cmd (), NULL), -1);
+  TEST_COMPARE (errno, EINVAL);
 
   /* Get message queue kernel information and do some sanity checks.  */
   struct msqid_ds msginfo;

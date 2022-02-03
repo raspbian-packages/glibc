@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -17,6 +17,7 @@
 
 #include <errno.h>
 #include <signal.h>
+#include <stddef.h>
 #include <sigsetops.h>
 
 /* Return 1 if SIGNO is in SET, 0 if not.  */

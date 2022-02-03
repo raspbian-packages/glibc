@@ -1,4 +1,4 @@
-/* Copyright (C) 1998-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1998-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Zack Weinberg <zack@rabi.phys.columbia.edu>, 1998.
 
@@ -74,20 +74,16 @@ __bsd_openpt (int oflag)
   return -1;
 }
 
-#ifndef HAVE_GETPT
 int
 __getpt (void)
 {
   return __bsd_openpt (O_RDWR);
 }
 weak_alias (__getpt, getpt)
-#endif
 
-#ifndef HAVE_POSIX_OPENPT
 int
 __posix_openpt (int oflag)
 {
   return __bsd_openpt (oflag);
 }
 weak_alias (__posix_openpt, posix_openpt)
-#endif

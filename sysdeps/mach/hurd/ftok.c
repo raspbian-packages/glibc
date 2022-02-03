@@ -31,7 +31,7 @@ ftok (const char *pathname, int proj_id)
   struct stat64 st;
   key_t key;
 
-  if (__xstat64 (_STAT_VER, pathname, &st) < 0)
+  if (__stat64 (pathname, &st) < 0)
     return (key_t) -1;
 
   key = ((st.st_dev & 0xff) | ((proj_id & 0xff) << 8)

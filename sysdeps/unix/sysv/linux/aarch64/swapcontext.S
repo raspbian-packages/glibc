@@ -1,6 +1,6 @@
 /* Modify saved context.
 
-   Copyright (C) 2009-2020 Free Software Foundation, Inc.
+   Copyright (C) 2009-2021 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -27,7 +27,7 @@
 
 	.text
 ENTRY(__swapcontext)
-	DELOUSE (0)
+	PTR_ARG (0)
 	/* Set the value returned when swapcontext() returns in this context.
 	   And set up x1 to become the return address of the caller, so we
 	   can return there with a normal RET instead of an indirect jump.  */

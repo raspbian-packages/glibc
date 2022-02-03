@@ -1,5 +1,5 @@
 # Makefile for support library, used only at build and test time
-# Copyright (C) 2016-2020 Free Software Foundation, Inc.
+# Copyright (C) 2016-2021 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -46,6 +46,7 @@ libsupport-routines = \
   support_capture_subprocess \
   support_capture_subprocess_check \
   support_chroot \
+  support_copy_file \
   support_copy_file_range \
   support_descriptor_supports_holes \
   support_descriptors \
@@ -66,6 +67,8 @@ libsupport-routines = \
   support_quote_string \
   support_record_failure \
   support_run_diff \
+  support_select_modifies_timeout \
+  support_select_normalizes_timeout \
   support_set_small_thread_stack_size \
   support_shared_allocate \
   support_small_stack_thread_attribute \
@@ -86,14 +89,18 @@ libsupport-routines = \
   xasprintf \
   xbind \
   xcalloc \
+  xchdir \
   xchroot \
   xclock_gettime \
+  xclone \
   xclose \
+  xchmod \
   xconnect \
   xcopy_file_range \
   xdlfcn \
   xdlmopen \
   xdup2 \
+  xfchmod \
   xfclose \
   xfopen \
   xfork \
@@ -135,6 +142,7 @@ libsupport-routines = \
   xpthread_join \
   xpthread_key_create \
   xpthread_key_delete \
+  xpthread_kill \
   xpthread_mutex_consistent \
   xpthread_mutex_destroy \
   xpthread_mutex_init \
@@ -195,6 +203,7 @@ CFLAGS-support_paths.c = \
 		-DLIBDIR_PATH=\"$(libdir)\" \
 		-DBINDIR_PATH=\"$(bindir)\" \
 		-DSBINDIR_PATH=\"$(sbindir)\" \
+		-DSLIBDIR_PATH=\"$(slibdir)\" \
 		-DROOTSBINDIR_PATH=\"$(rootsbindir)\" \
 		-DCOMPLOCALEDIR_PATH=\"$(complocaledir)\"
 

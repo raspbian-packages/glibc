@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -653,6 +653,13 @@ open_archive (struct locarhandle *ah, bool readonly)
     {
       (void) lockf64 (fd, F_ULOCK, sizeof (struct locarhead));
       error (EXIT_FAILURE, errno, _("cannot read archive header"));
+    }
+
+  /* Check the magic value */
+  if (GET (head.magic) != AR_MAGIC)
+    {
+      (void) lockf64 (fd, F_ULOCK, sizeof (struct locarhead));
+      error (EXIT_FAILURE, 0, _("bad magic value in archive header"));
     }
 
   ah->fd = fd;

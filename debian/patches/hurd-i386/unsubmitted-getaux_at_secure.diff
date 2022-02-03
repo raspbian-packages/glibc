@@ -1,27 +1,30 @@
 FIXME: sysdeps/mach/hurd/i386/init-first.c should instead pass an auxv
 to __libc_start_main
 
-Index: glibc-2.28/misc/getauxval.c
+Index: glibc-2.33/misc/getauxval.c
 ===================================================================
---- glibc-2.28.orig/misc/getauxval.c
-+++ glibc-2.28/misc/getauxval.c
-@@ -18,6 +18,7 @@
- #include <sys/auxv.h>
+--- glibc-2.33.orig/misc/getauxval.c
++++ glibc-2.33/misc/getauxval.c
+@@ -19,6 +19,7 @@
  #include <errno.h>
  #include <ldsodefs.h>
+ #include <stdbool.h>
 +#include <unistd.h>
  
- 
- unsigned long int
-@@ -27,6 +28,11 @@ __getauxval (unsigned long int type)
+ bool
+ __getauxval2 (unsigned long int type, unsigned long int *result)
+@@ -27,6 +28,14 @@ __getauxval2 (unsigned long int type, un
    ElfW(auxv_t) *p;
  #endif
  
 +#ifdef AT_SECURE
 +  if (type == AT_SECURE)
-+    return __libc_enable_secure;
++    {
++      *result = __libc_enable_secure;
++      return true;
++    }
 +#endif
 +
  #ifdef AT_HWCAP
    if (type == AT_HWCAP)
-     return GLRO(dl_hwcap);
+     {

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2003-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2003.
 
@@ -25,10 +25,9 @@ int
 __timer_settime_new (timer_t timerid, int flags, const struct itimerspec *value,
                      struct itimerspec *ovalue)
 {
-  struct timer *kt = (struct timer *) timerid;
+  kernel_timer_t ktimerid = timerid_to_kernel_timer (timerid);
 
-  return INLINE_SYSCALL_CALL (timer_settime, kt->ktimerid, flags, value,
-                              ovalue);
+  return INLINE_SYSCALL_CALL (timer_settime, ktimerid, flags, value, ovalue);
 }
 versioned_symbol (librt, __timer_settime_new, timer_settime, GLIBC_2_3_3);
 

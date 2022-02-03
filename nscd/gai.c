@@ -1,4 +1,4 @@
-/* Copyright (C) 2004-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2004-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 2004.
 
@@ -16,6 +16,7 @@
    along with this program; if not, see <https://www.gnu.org/licenses/>.  */
 
 #include <alloca.h>
+#include <sys/stat.h>
 
 /* This file uses the getaddrinfo code but it compiles it without NSCD
    support.  We just need a few symbol renames.  */
@@ -32,6 +33,10 @@
 #define __libc_use_alloca(size) (size <= __MAX_ALLOCA_CUTOFF)
 #define __getifaddrs getifaddrs
 #define __freeifaddrs freeifaddrs
+#undef __fstat64
+#define __fstat64 fstat64
+#undef __stat64
+#define __stat64 stat64
 
 /* We are nscd, so we don't want to be talking to ourselves.  */
 #undef  USE_NSCD
@@ -43,4 +48,4 @@
 #include <check_native.c>
 
 /* Some variables normally defined in libc.  */
-service_user *__nss_hosts_database attribute_hidden;
+nss_action_list __nss_hosts_database attribute_hidden;

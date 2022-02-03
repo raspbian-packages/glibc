@@ -1,5 +1,5 @@
 /* File tree walker functions.  LFS version.
-   Copyright (C) 1996-2020 Free Software Foundation, Inc.
+   Copyright (C) 1996-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1996.
 
@@ -22,10 +22,10 @@
 #define NFTW_OLD_NAME __old_nftw64
 #define NFTW_NEW_NAME __new_nftw64
 #define INO_T ino64_t
-#define STAT stat64
-#define LXSTAT __lxstat64
-#define XSTAT __xstat64
-#define FXSTATAT __fxstatat64
+#define STRUCT_STAT stat64
+#define LSTAT __lstat64
+#define STAT __stat64
+#define FSTATAT __fstatat64
 #define FTW_FUNC_T __ftw64_func_t
 #define NFTW_FUNC_T __nftw64_func_t
 

@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2020 Free Software Foundation, Inc.
+# Copyright (C) 1991-2021 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -29,9 +29,13 @@ headers	:= sys/socket.h sys/un.h bits/sockaddr.h bits/socket.h \
 routines := accept bind connect getpeername getsockname getsockopt	\
 	    listen recv recvfrom recvmsg send sendmsg sendto		\
 	    setsockopt shutdown socket socketpair isfdtype opensock	\
-	    sockatmark accept4 recvmmsg sendmmsg
+	    sockatmark accept4 recvmmsg sendmmsg sockaddr_un_set
 
 tests := tst-accept4
+
+tests-internal := \
+  tst-sockaddr_un_set \
+  # tests-internal
 
 aux	 := sa_len
 

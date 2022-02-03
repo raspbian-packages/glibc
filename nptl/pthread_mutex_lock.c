@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -120,9 +120,6 @@ __pthread_mutex_lock (pthread_mutex_t *mutex)
   else if (__builtin_expect (PTHREAD_MUTEX_TYPE (mutex)
 			  == PTHREAD_MUTEX_ADAPTIVE_NP, 1))
     {
-      if (! __is_smp)
-	goto simple;
-
       if (LLL_MUTEX_TRYLOCK (mutex) != 0)
 	{
 	  int cnt = 0;
@@ -310,8 +307,8 @@ __pthread_mutex_lock_full (pthread_mutex_t *mutex)
 	  assume_other_futex_waiters |= FUTEX_WAITERS;
 
 	  /* Block using the futex and reload current lock value.  */
-	  lll_futex_wait (&mutex->__data.__lock, oldval,
-			  PTHREAD_ROBUST_MUTEX_PSHARED (mutex));
+	  futex_wait ((unsigned int *) &mutex->__data.__lock, oldval,
+		      PTHREAD_ROBUST_MUTEX_PSHARED (mutex));
 	  oldval = mutex->__data.__lock;
 	}
 
@@ -416,8 +413,7 @@ __pthread_mutex_lock_full (pthread_mutex_t *mutex)
 	    int private = (robust
 			   ? PTHREAD_ROBUST_MUTEX_PSHARED (mutex)
 			   : PTHREAD_MUTEX_PSHARED (mutex));
-	    int e = futex_lock_pi ((unsigned int *) &mutex->__data.__lock,
-				   NULL, private);
+	    int e = futex_lock_pi64 (&mutex->__data.__lock, NULL, private);
 	    if (e == ESRCH || e == EDEADLK)
 	      {
 		assert (e != EDEADLK
@@ -429,8 +425,8 @@ __pthread_mutex_lock_full (pthread_mutex_t *mutex)
 
 		/* Delay the thread indefinitely.  */
 		while (1)
-		  lll_timedwait (&(int){0}, 0, 0 /* ignored */, NULL,
-				 private);
+		  __futex_abstimed_wait64 (&(unsigned int){0}, 0,
+					   0 /* ignored */, NULL, private);
 	      }
 
 	    oldval = mutex->__data.__lock;
@@ -572,8 +568,9 @@ __pthread_mutex_lock_full (pthread_mutex_t *mutex)
 		  break;
 
 		if (oldval != ceilval)
-		  lll_futex_wait (&mutex->__data.__lock, ceilval | 2,
-				  PTHREAD_MUTEX_PSHARED (mutex));
+		  futex_wait ((unsigned int * ) &mutex->__data.__lock,
+			      ceilval | 2,
+			      PTHREAD_MUTEX_PSHARED (mutex));
 	      }
 	    while (atomic_compare_and_exchange_val_acq (&mutex->__data.__lock,
 							ceilval | 2, ceilval)

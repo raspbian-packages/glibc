@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2020 Free Software Foundation, Inc.
+# Copyright (C) 1991-2021 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -96,7 +96,7 @@ tests		:= test-errno tstgetopt testfnm runtests runptests \
 		   bug-getopt5 tst-getopt_long1 bug-regex34 bug-regex35 \
 		   tst-pathconf tst-rxspencer-no-utf8 \
 		   tst-fnmatch3 bug-regex36 \
-		   tst-fnmatch4 tst-fnmatch5 \
+		   tst-fnmatch4 tst-fnmatch5 tst-fnmatch6 \
 		   tst-posix_spawn-fd tst-posix_spawn-setsid \
 		   tst-posix_fadvise tst-posix_fadvise64 \
 		   tst-sysconf-empty-chroot tst-glob_symlinks tst-fexecve \
@@ -106,7 +106,8 @@ tests		:= test-errno tstgetopt testfnm runtests runptests \
 tests-internal	:= bug-regex5 bug-regex20 bug-regex33 \
 		   tst-rfc3484 tst-rfc3484-2 tst-rfc3484-3 \
 		   tst-glob_lstat_compat tst-spawn4-compat
-xtests		:= bug-ga2 tst-getaddrinfo4 tst-getaddrinfo5
+tests-container := bug-ga2
+xtests		:= tst-getaddrinfo4 tst-getaddrinfo5
 ifeq (yes,$(build-shared))
 test-srcs	:= globtest
 tests           += wordexp-test tst-exec tst-spawn tst-spawn2 tst-spawn3
@@ -153,8 +154,7 @@ tests-special += $(objpfx)bug-regex2-mem.out $(objpfx)bug-regex14-mem.out \
 		 $(objpfx)tst-boost-mem.out $(objpfx)tst-getconf.out \
 		 $(objpfx)bug-glob2-mem.out $(objpfx)tst-vfork3-mem.out \
 		 $(objpfx)tst-fnmatch-mem.out $(objpfx)bug-regex36-mem.out \
-		 $(objpfx)tst-glob-tilde-mem.out
-xtests-special += $(objpfx)bug-ga2-mem.out
+		 $(objpfx)tst-glob-tilde-mem.out $(objpfx)bug-ga2-mem.out
 endif
 
 include ../Rules
@@ -164,11 +164,11 @@ ifeq ($(run-built-tests),yes)
 ifeq (yes,$(build-shared))
 $(objpfx)globtest.out: globtest.sh $(objpfx)globtest
 	$(SHELL) $< $(common-objpfx) '$(test-via-rtld-prefix)' \
-		'$(test-program-prefix)' '$(test-wrapper-env)' > $@; \
+		'$(test-program-prefix)' '$(test-wrapper-env)'; \
 	$(evaluate-test)
 $(objpfx)wordexp-tst.out: wordexp-tst.sh $(objpfx)wordexp-test
 	$(SHELL) $< $(common-objpfx) '$(test-program-prefix-before-env)' \
-		 '$(run-program-env)' '$(test-program-prefix-after-env)' > $@; \
+		 '$(run-program-env)' '$(test-program-prefix-after-env)'; \
 	$(evaluate-test)
 endif
 
@@ -197,6 +197,7 @@ $(objpfx)bug-regex35.out: $(gen-locales)
 $(objpfx)tst-fnmatch.out: $(gen-locales)
 $(objpfx)tst-fnmatch4.out: $(gen-locales)
 $(objpfx)tst-fnmatch5.out: $(gen-locales)
+$(objpfx)tst-fnmatch6.out: $(gen-locales)
 $(objpfx)tst-regex.out: $(gen-locales)
 $(objpfx)tst-regex2.out: $(gen-locales)
 $(objpfx)tst-regexloc.out: $(gen-locales)
@@ -353,11 +354,13 @@ $(objpfx)tst-boost-mem.out: $(objpfx)tst-boost.out
 	$(evaluate-test)
 
 $(objpfx)tst-getconf.out: tst-getconf.sh $(objpfx)getconf
-	$(SHELL) $< $(common-objpfx) '$(built-program-cmd)' > $@; \
+	$(SHELL) $< $(common-objpfx) '$(built-program-cmd)'; \
 	$(evaluate-test)
 
 $(objpfx)bug-ga2-mem.out: $(objpfx)bug-ga2.out
-	$(common-objpfx)malloc/mtrace $(objpfx)bug-ga2.mtrace > $@; \
+	{ test -r $(objpfx)bug-ga2.mtrace \
+	|| ( echo "bug-ga2.mtrace does not exist"; exit 77; ) \
+	&& $(common-objpfx)malloc/mtrace $(objpfx)bug-ga2.mtrace; } > $@; \
 	$(evaluate-test)
 
 bug-ga2-ENV = MALLOC_TRACE=$(objpfx)bug-ga2.mtrace

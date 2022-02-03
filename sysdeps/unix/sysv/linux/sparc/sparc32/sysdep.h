@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1997-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Miguel de Icaza <miguel@gnu.ai.mit.edu>, January 1997.
 
@@ -120,6 +120,9 @@ ENTRY(name);					\
 	"f16", "f17", "f18", "f19", "f20", "f21", "f22", "f23",		\
 	"f24", "f25", "f26", "f27", "f28", "f29", "f30", "f31",		\
 	"cc", "memory"
+
+#undef HAVE_INTERNAL_BRK_ADDR_SYMBOL
+#define HAVE_INTERNAL_BRK_ADDR_SYMBOL 1
 
 #endif	/* __ASSEMBLER__ */
 

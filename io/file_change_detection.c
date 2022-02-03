@@ -1,5 +1,5 @@
 /* Detecting file changes using modification times.
-   Copyright (C) 2017-2020 Free Software Foundation, Inc.
+   Copyright (C) 2017-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -67,7 +67,7 @@ __file_change_detection_for_path (struct file_change_detection *file,
                                   const char *path)
 {
   struct stat64 st;
-  if (stat64 (path, &st) != 0)
+  if (__stat64 (path, &st) != 0)
     switch (errno)
       {
       case EACCES:
@@ -105,7 +105,7 @@ __file_change_detection_for_fp (struct file_change_detection *file,
   else
     {
       struct stat64 st;
-      if (fstat64 (__fileno (fp), &st) != 0)
+      if (__fstat64 (__fileno (fp), &st) != 0)
         /* If we already have a file descriptor, all errors are fatal.  */
         return false;
       else

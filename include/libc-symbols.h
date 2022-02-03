@@ -1,6 +1,6 @@
 /* Support macros for making weak and strong aliases for symbols,
    and for using symbol sets and linker warnings with GNU ld.
-   Copyright (C) 1995-2020 Free Software Foundation, Inc.
+   Copyright (C) 1995-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -57,6 +57,19 @@
 # define IS_IN(lib) 0
 # define IS_IN_LIB 0
 # define IN_MODULE (-1)
+#endif
+
+/* Use symbol_version_reference to specify the version a symbol
+   reference should link to.  Use symbol_version or
+   default_symbol_version for the definition of a versioned symbol.
+   The difference is that the latter is a no-op in non-shared
+   builds.  */
+#ifdef __ASSEMBLER__
+# define symbol_version_reference(real, name, version) \
+     .symver real, name##@##version
+#else  /* !__ASSEMBLER__ */
+# define symbol_version_reference(real, name, version) \
+  __asm__ (".symver " #real "," #name "@" #version)
 #endif
 
 #ifndef _ISOMAC
@@ -307,7 +320,7 @@ for linking")
 
 /* Resource freeing functions from libc.so go in this section.  */
 #define __libc_freeres_fn_section \
-  __attribute__ ((section ("__libc_freeres_fn")))
+  __attribute__ ((__used__, section ("__libc_freeres_fn")))
 
 /* Resource freeing functions for libc.so.  */
 #define libc_freeres_fn(name) \
@@ -395,19 +408,6 @@ for linking")
 /* Return true iff PTR (a void *const *) has been incremented
    past the last element in SET.  */
 #define symbol_set_end_p(set, ptr) ((ptr) >= (void *const *) &__stop_##set)
-
-/* Use symbol_version_reference to specify the version a symbol
-   reference should link to.  Use symbol_version or
-   default_symbol_version for the definition of a versioned symbol.
-   The difference is that the latter is a no-op in non-shared
-   builds.  */
-#ifdef __ASSEMBLER__
-# define symbol_version_reference(real, name, version) \
-     .symver real, name##@##version
-#else  /* !__ASSEMBLER__ */
-# define symbol_version_reference(real, name, version) \
-  __asm__ (".symver " #real "," #name "@" #version)
-#endif
 
 #ifdef SHARED
 # define symbol_version(real, name, version) \
@@ -643,7 +643,7 @@ for linking")
 # define libc_hidden_data_ver(local, name)
 #endif
 
-#if IS_IN (rtld) && !defined NO_RTLD_HIDDEN
+#if IS_IN (rtld)
 # define rtld_hidden_proto(name, attrs...) hidden_proto (name, ##attrs)
 # define rtld_hidden_tls_proto(name, attrs...) hidden_tls_proto (name, ##attrs)
 # define rtld_hidden_def(name) hidden_def (name)
@@ -877,6 +877,14 @@ for linking")
 # define libutil_hidden_tls_def(name)
 # define libutil_hidden_data_weak(name)
 # define libutil_hidden_data_ver(local, name)
+#endif
+
+#if IS_IN (libanl)
+# define libanl_hidden_proto(name, attrs...) hidden_proto (name, ##attrs)
+# define libanl_hidden_def(name) hidden_def (name)
+#else
+# define libanl_hidden_proto(name, attrs...)
+# define libanl_hidden_def(name)
 #endif
 
 /* Get some dirty hacks.  */

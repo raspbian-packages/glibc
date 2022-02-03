@@ -1,5 +1,5 @@
 /* brk system call for Linux/i386.
-   Copyright (C) 1995-2020 Free Software Foundation, Inc.
+   Copyright (C) 1995-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -21,25 +21,4 @@
 # define I386_USE_SYSENTER 0
 #endif
 
-#include <errno.h>
-#include <unistd.h>
-#include <sysdep.h>
-
-/* This must be initialized data because commons can't have aliases.  */
-void *__curbrk = 0;
-
-/* Old braindamage in GCC's crtstuff.c requires this symbol in an attempt
-   to work around different old braindamage in the old Linux ELF dynamic
-   linker.  */
-weak_alias (__curbrk, ___brk_addr)
-
-int
-__brk (void *addr)
-{
-  void *newbrk = (void *) INTERNAL_SYSCALL_CALL (brk, addr);
-  __curbrk = newbrk;
-  if (newbrk < addr)
-    return INLINE_SYSCALL_ERROR_RETURN_VALUE (ENOMEM);
-  return 0;
-}
-weak_alias (__brk, brk)
+#include <sysdeps/unix/sysv/linux/brk.c>

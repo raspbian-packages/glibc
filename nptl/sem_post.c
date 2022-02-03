@@ -1,5 +1,5 @@
 /* sem_post -- post to a POSIX semaphore.  Generic futex-using version.
-   Copyright (C) 2003-2020 Free Software Foundation, Inc.
+   Copyright (C) 2003-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Jakub Jelinek <jakub@redhat.com>, 2003.
 
@@ -84,19 +84,14 @@ int
 attribute_compat_text_section
 __old_sem_post (sem_t *sem)
 {
-  int *futex = (int *) sem;
+  unsigned int *futex = (unsigned int *) sem;
 
   /* We must need to synchronize with consumers of this token, so the atomic
      increment must have release MO semantics.  */
   atomic_write_barrier ();
   (void) atomic_increment_val (futex);
   /* We always have to assume it is a shared semaphore.  */
-  int err = lll_futex_wake (futex, 1, LLL_SHARED);
-  if (__builtin_expect (err, 0) < 0)
-    {
-      __set_errno (-err);
-      return -1;
-    }
+  futex_wake (futex, 1, LLL_SHARED);
   return 0;
 }
 compat_symbol (libpthread, __old_sem_post, sem_post, GLIBC_2_0);

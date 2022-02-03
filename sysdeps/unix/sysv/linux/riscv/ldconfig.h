@@ -1,5 +1,5 @@
 /* ldconfig default paths and libraries.  Linux/RISC-V version.
-   Copyright (C) 2001-2020 Free Software Foundation, Inc.
+   Copyright (C) 2001-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,7 +24,7 @@
 #if __riscv_xlen == 64
 # define LD_SO_ABI "riscv64-lp64"
 #else
-# error "rv32i-based targets are not supported"
+# define LD_SO_ABI "riscv32-ilp32"
 #endif
 
 #define SYSDEP_KNOWN_INTERPRETER_NAMES				\

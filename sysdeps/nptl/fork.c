@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
@@ -32,6 +32,7 @@
 #include <arch-fork.h>
 #include <futex-internal.h>
 #include <malloc/malloc-internal.h>
+#include <nss/nss_database.h>
 
 static void
 fresetlockfiles (void)
@@ -57,6 +58,8 @@ __libc_fork (void)
 
   __run_fork_handlers (atfork_run_prepare, multiple_threads);
 
+  struct nss_database_data nss_database_data;
+
   /* If we are not running multiple threads, we do not have to
      preserve lock state.  If fork runs from a signal handler, only
      async-signal-safe functions can be used in the child.  These data
@@ -64,6 +67,9 @@ __libc_fork (void)
      not matter if fork was called from a signal handler.  */
   if (multiple_threads)
     {
+      call_function_static_weak (__nss_database_fork_prepare_parent,
+				 &nss_database_data);
+
       _IO_list_lock ();
 
       /* Acquire malloc locks.  This needs to come last because fork
@@ -118,6 +124,9 @@ __libc_fork (void)
 
 	  /* Reset locks in the I/O code.  */
 	  _IO_list_resetlock ();
+
+	  call_function_static_weak (__nss_database_fork_subprocess,
+				     &nss_database_data);
 	}
 
       /* Reset the lock the dynamic loader uses to protect its data.  */

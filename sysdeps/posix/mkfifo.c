@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,6 +24,5 @@
 int
 mkfifo (const char *path, mode_t mode)
 {
-  dev_t dev = 0;
-  return __xmknod (_MKNOD_VER, path, mode | S_IFIFO, &dev);
+  return __mknod (path, mode | S_IFIFO, 0);
 }

@@ -1,4 +1,4 @@
-# Copyright (C) 1992-2020 Free Software Foundation, Inc.
+# Copyright (C) 1992-2021 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -33,9 +33,8 @@ routines :=								\
 	utime								\
 	mkfifo mkfifoat							\
 	stat fstat lstat stat64 fstat64 lstat64 fstatat fstatat64	\
-	xstat fxstat lxstat xstat64 fxstat64 lxstat64 statx		\
-	mknod mknodat xmknod xmknodat					\
-	fxstatat fxstatat64						\
+	statx								\
+	mknod mknodat 							\
 	statfs fstatfs statfs64 fstatfs64				\
 	statvfs fstatvfs statvfs64 fstatvfs64				\
 	umask chmod fchmod lchmod fchmodat				\
@@ -57,12 +56,6 @@ routines :=								\
 	sendfile sendfile64 copy_file_range 				\
 	utimensat futimens file_change_detection
 
-# These routines will be omitted from the libc shared object.
-# Instead the static object files will be included in a special archive
-# linked against when the shared library will be used.
-static-only-routines = stat fstat lstat stat64 fstat64 lstat64	\
-		       fstatat fstatat64 mknod mknodat
-
 others		:= pwd
 test-srcs	:= ftwtest
 tests		:= test-utime test-stat test-stat2 test-lfs tst-getcwd \
@@ -74,10 +67,12 @@ tests		:= test-utime test-stat test-stat2 test-lfs tst-getcwd \
 		   tst-posix_fallocate tst-posix_fallocate64 \
 		   tst-fts tst-fts-lfs tst-open-tmpfile \
 		   tst-copy_file_range tst-getcwd-abspath tst-lockf \
-		   tst-ftw-lnk tst-file_change_detection tst-lchmod
+		   tst-ftw-lnk tst-file_change_detection tst-lchmod \
+		   tst-ftw-bz26353 tst-stat tst-stat-lfs
 
 # Likewise for statx, but we do not need static linking here.
 tests-internal += tst-statx
+tests-static += tst-statx
 
 ifeq ($(run-built-tests),yes)
 tests-special += $(objpfx)ftwtest.out
@@ -93,7 +88,8 @@ CFLAGS-fcntl.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-fcntl64.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-poll.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-ppoll.c += -fexceptions -fasynchronous-unwind-tables
-CFLAGS-lockf.c += -fexceptions
+CFLAGS-lockf.c += -fexceptions -fasynchronous-unwind-tables
+CFLAGS-lockf64.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-statfs.c += -fexceptions
 CFLAGS-fstatfs.c += -fexceptions
 CFLAGS-statvfs.c += -fexceptions
@@ -102,7 +98,6 @@ CFLAGS-fts.c += -Wno-uninitialized $(uses-callbacks) -fexceptions
 CFLAGS-fts64.c += -Wno-uninitialized $(uses-callbacks) -fexceptions
 CFLAGS-ftw.c += $(uses-callbacks) -fexceptions
 CFLAGS-ftw64.c += $(uses-callbacks) -fexceptions
-CFLAGS-lockf.c += -fexceptions
 CFLAGS-posix_fallocate.c += -fexceptions
 CFLAGS-posix_fallocate64.c += -fexceptions
 CFLAGS-fallocate.c += -fexceptions

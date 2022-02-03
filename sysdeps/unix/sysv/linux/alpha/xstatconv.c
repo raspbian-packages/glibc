@@ -1,5 +1,5 @@
 /* Convert between the kernel's `struct stat' format, and libc's.
-   Copyright (C) 1997-2020 Free Software Foundation, Inc.
+   Copyright (C) 1997-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -44,9 +44,9 @@ __xstat_conv (int vers, struct kernel_stat *kbuf, void *ubuf)
 	buf->st_gid = kbuf->st_gid;
 	buf->st_rdev = kbuf->st_rdev;
 	buf->st_size = kbuf->st_size;
-	buf->st_atime = kbuf->st_atime;
-	buf->st_mtime = kbuf->st_mtime;
-	buf->st_ctime = kbuf->st_ctime;
+	buf->st_atime_sec = kbuf->st_atime_sec;
+	buf->st_mtime_sec = kbuf->st_mtime_sec;
+	buf->st_ctime_sec = kbuf->st_ctime_sec;
 	buf->st_blksize = kbuf->st_blksize;
 	buf->st_blocks = kbuf->st_blocks;
 	buf->st_flags = kbuf->st_flags;
@@ -66,9 +66,9 @@ __xstat_conv (int vers, struct kernel_stat *kbuf, void *ubuf)
 	buf->st_gid = kbuf->st_gid;
 	buf->st_rdev = kbuf->st_rdev;
 	buf->st_size = kbuf->st_size;
-	buf->st_atime = kbuf->st_atime;
-	buf->st_mtime = kbuf->st_mtime;
-	buf->st_ctime = kbuf->st_ctime;
+	buf->st_atime_sec = kbuf->st_atime_sec;
+	buf->st_mtime_sec = kbuf->st_mtime_sec;
+	buf->st_ctime_sec = kbuf->st_ctime_sec;
 	buf->st_blocks = kbuf->st_blocks;
 	buf->st_blksize = kbuf->st_blksize;
 	buf->st_flags = kbuf->st_flags;
@@ -98,12 +98,12 @@ __xstat_conv (int vers, struct kernel_stat *kbuf, void *ubuf)
 	buf->st_nlink = kbuf->st_nlink;
 	buf->__pad0 = 0;
 
-	buf->st_atime = kbuf->st_atime;
-	buf->st_atimensec = 0;
-	buf->st_mtime = kbuf->st_mtime;
-	buf->st_mtimensec = 0;
-	buf->st_ctime = kbuf->st_ctime;
-	buf->st_ctimensec = 0;
+	buf->st_atim.tv_sec = kbuf->st_atime_sec;
+	buf->st_atim.tv_nsec = 0;
+	buf->st_mtim.tv_sec = kbuf->st_mtime_sec;
+	buf->st_mtim.tv_nsec = 0;
+	buf->st_ctim.tv_sec = kbuf->st_ctime_sec;
+	buf->st_ctim.tv_nsec = 0;
 
 	buf->__glibc_reserved[0] = 0;
 	buf->__glibc_reserved[1] = 0;

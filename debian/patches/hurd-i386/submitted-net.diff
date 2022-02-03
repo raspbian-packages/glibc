@@ -95,8 +95,8 @@ Index: glibc-2.27/sysdeps/gnu/net/ethernet.h
 ===================================================================
 --- /dev/null
 +++ glibc-2.27/sysdeps/gnu/net/ethernet.h
-@@ -0,0 +1,84 @@
-+/* Copyright (C) 1997-2020 Free Software Foundation, Inc.
+@@ -0,0 +1,83 @@
++/* Copyright (C) 1997-2021 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
 +
 +   The GNU C Library is free software; you can redistribute it and/or
@@ -154,7 +154,6 @@ Index: glibc-2.27/sysdeps/gnu/net/ethernet.h
 +#define	ETHERTYPE_IPV6		0x86dd		/* IP protocol version 6 */
 +#define ETHERTYPE_LOOPBACK	0x9000		/* used to test interfaces */
 +
-+
 +#define	ETHER_ADDR_LEN	ETH_ALEN                 /* size of ethernet addr */
 +#define	ETHER_TYPE_LEN	2                        /* bytes in type field */
 +#define	ETHER_CRC_LEN	4                        /* bytes in CRC field */
@@ -162,7 +161,7 @@ Index: glibc-2.27/sysdeps/gnu/net/ethernet.h
 +#define	ETHER_MIN_LEN	(ETH_ZLEN + ETHER_CRC_LEN) /* min packet length */
 +#define	ETHER_MAX_LEN	(ETH_FRAME_LEN + ETHER_CRC_LEN) /* max packet length */
 +
-+/* make sure ethenet length is valid */
++/* make sure ethernet length is valid */
 +#define	ETHER_IS_VALID_LEN(foo)	\
 +	((foo) >= ETHER_MIN_LEN && (foo) <= ETHER_MAX_LEN)
 +
@@ -186,7 +185,7 @@ Index: glibc-2.27/sysdeps/gnu/net/if_arp.h
 +++ glibc-2.27/sysdeps/gnu/net/if_arp.h
 @@ -0,0 +1,183 @@
 +/* Definitions for Address Resolution Protocol.
-+   Copyright (C) 1997-2020 Free Software Foundation, Inc.
++   Copyright (C) 1997-2021 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
 +   Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 +
@@ -373,7 +372,7 @@ Index: glibc-2.27/sysdeps/gnu/net/if_ether.h
 --- /dev/null
 +++ glibc-2.27/sysdeps/gnu/net/if_ether.h
 @@ -0,0 +1,115 @@
-+/* Copyright (C) 1997-2020 Free Software Foundation, Inc.
++/* Copyright (C) 1997-2021 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
 +
 +   The GNU C Library is free software; you can redistribute it and/or
@@ -669,7 +668,7 @@ Index: glibc-2.27/sysdeps/gnu/net/route.h
 --- /dev/null
 +++ glibc-2.27/sysdeps/gnu/net/route.h
 @@ -0,0 +1,144 @@
-+/* Copyright (C) 1997-2020 Free Software Foundation, Inc.
++/* Copyright (C) 1997-2021 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
 +
 +   The GNU C Library is free software; you can redistribute it and/or
@@ -818,7 +817,7 @@ Index: glibc-2.27/sysdeps/gnu/netinet/if_ether.h
 --- /dev/null
 +++ glibc-2.27/sysdeps/gnu/netinet/if_ether.h
 @@ -0,0 +1,103 @@
-+/* Copyright (C) 1996-2020 Free Software Foundation, Inc.
++/* Copyright (C) 1996-2021 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
 +
 +   The GNU C Library is free software; you can redistribute it and/or
@@ -941,7 +940,7 @@ Index: glibc-2.27/sysdeps/mach/hurd/net/ethernet.h
 --- glibc-2.27.orig/sysdeps/mach/hurd/net/ethernet.h
 +++ /dev/null
 @@ -1,76 +0,0 @@
--/* Copyright (C) 1997-2020 Free Software Foundation, Inc.
+-/* Copyright (C) 1997-2021 Free Software Foundation, Inc.
 -   This file is part of the GNU C Library.
 -
 -   The GNU C Library is free software; you can redistribute it and/or
@@ -999,7 +998,7 @@ Index: glibc-2.27/sysdeps/mach/hurd/net/ethernet.h
 -#define	ETHER_MIN_LEN	(ETH_ZLEN + ETH_CRC_LEN) /* min packet length */
 -#define	ETHER_MAX_LEN	(ETH_FRAME_LEN + ETH_CRC_LEN) /* max packet length */
 -
--/* make sure ethenet length is valid */
+-/* make sure ethernet length is valid */
 -#define	ETHER_IS_VALID_LEN(foo)	\
 -	((foo) >= ETHER_MIN_LEN && (foo) <= ETHER_MAX_LEN)
 -
@@ -1023,7 +1022,7 @@ Index: glibc-2.27/sysdeps/mach/hurd/net/if_arp.h
 +++ /dev/null
 @@ -1,145 +0,0 @@
 -/* Definitions for Address Resolution Protocol.
--   Copyright (C) 1997-2020 Free Software Foundation, Inc.
+-   Copyright (C) 1997-2021 Free Software Foundation, Inc.
 -   This file is part of the GNU C Library.
 -   Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 -
@@ -1172,7 +1171,7 @@ Index: glibc-2.27/sysdeps/mach/hurd/net/if_ether.h
 --- glibc-2.27.orig/sysdeps/mach/hurd/net/if_ether.h
 +++ /dev/null
 @@ -1,84 +0,0 @@
--/* Copyright (C) 1997-2020 Free Software Foundation, Inc.
+-/* Copyright (C) 1997-2021 Free Software Foundation, Inc.
 -   This file is part of the GNU C Library.
 -
 -   The GNU C Library is free software; you can redistribute it and/or
@@ -1261,7 +1260,7 @@ Index: glibc-2.27/sysdeps/mach/hurd/net/route.h
 --- glibc-2.27.orig/sysdeps/mach/hurd/net/route.h
 +++ /dev/null
 @@ -1,140 +0,0 @@
--/* Copyright (C) 1997-2020 Free Software Foundation, Inc..
+-/* Copyright (C) 1997-2021 Free Software Foundation, Inc..
 -   This file is part of the GNU C Library.
 -
 -   The GNU C Library is free software; you can redistribute it and/or
@@ -1419,8 +1418,8 @@ Index: glibc-2.27/sysdeps/unix/sysv/linux/net/ethernet.h
 ===================================================================
 --- glibc-2.27.orig/sysdeps/unix/sysv/linux/net/ethernet.h
 +++ /dev/null
-@@ -1,84 +0,0 @@
--/* Copyright (C) 1997-2020 Free Software Foundation, Inc.
+@@ -1,83 +0,0 @@
+-/* Copyright (C) 1997-2021 Free Software Foundation, Inc.
 -   This file is part of the GNU C Library.
 -
 -   The GNU C Library is free software; you can redistribute it and/or
@@ -1478,7 +1477,6 @@ Index: glibc-2.27/sysdeps/unix/sysv/linux/net/ethernet.h
 -#define	ETHERTYPE_IPV6		0x86dd		/* IP protocol version 6 */
 -#define ETHERTYPE_LOOPBACK	0x9000		/* used to test interfaces */
 -
--
 -#define	ETHER_ADDR_LEN	ETH_ALEN                 /* size of ethernet addr */
 -#define	ETHER_TYPE_LEN	2                        /* bytes in type field */
 -#define	ETHER_CRC_LEN	4                        /* bytes in CRC field */
@@ -1486,7 +1484,7 @@ Index: glibc-2.27/sysdeps/unix/sysv/linux/net/ethernet.h
 -#define	ETHER_MIN_LEN	(ETH_ZLEN + ETHER_CRC_LEN) /* min packet length */
 -#define	ETHER_MAX_LEN	(ETH_FRAME_LEN + ETHER_CRC_LEN) /* max packet length */
 -
--/* make sure ethenet length is valid */
+-/* make sure ethernet length is valid */
 -#define	ETHER_IS_VALID_LEN(foo)	\
 -	((foo) >= ETHER_MIN_LEN && (foo) <= ETHER_MAX_LEN)
 -
@@ -1510,7 +1508,7 @@ Index: glibc-2.27/sysdeps/unix/sysv/linux/net/if_arp.h
 +++ /dev/null
 @@ -1,183 +0,0 @@
 -/* Definitions for Address Resolution Protocol.
--   Copyright (C) 1997-2020 Free Software Foundation, Inc.
+-   Copyright (C) 1997-2021 Free Software Foundation, Inc.
 -   This file is part of the GNU C Library.
 -   Contributed by Ulrich Drepper <drepper@cygnus.com>, 1997.
 -
@@ -1885,7 +1883,7 @@ Index: glibc-2.27/sysdeps/unix/sysv/linux/net/route.h
 --- glibc-2.27.orig/sysdeps/unix/sysv/linux/net/route.h
 +++ /dev/null
 @@ -1,144 +0,0 @@
--/* Copyright (C) 1997-2020 Free Software Foundation, Inc.
+-/* Copyright (C) 1997-2021 Free Software Foundation, Inc.
 -   This file is part of the GNU C Library.
 -
 -   The GNU C Library is free software; you can redistribute it and/or
@@ -2034,7 +2032,7 @@ Index: glibc-2.27/sysdeps/unix/sysv/linux/netinet/if_ether.h
 --- glibc-2.27.orig/sysdeps/unix/sysv/linux/netinet/if_ether.h
 +++ /dev/null
 @@ -1,104 +0,0 @@
--/* Copyright (C) 1996-2020 Free Software Foundation, Inc.
+-/* Copyright (C) 1996-2021 Free Software Foundation, Inc.
 -   This file is part of the GNU C Library.
 -
 -   The GNU C Library is free software; you can redistribute it and/or
