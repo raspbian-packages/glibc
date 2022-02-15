@@ -6247,7 +6247,7 @@ msgstr "Mauvaise version RPC"
 #. TRANS You did @strong{what}?
 #: sysdeps/gnu/errlist.h:714
 msgid "You really blew it this time"
-msgstr "Vous avez vraiment tout gâcher cette fois-ci"
+msgstr "Vous avez vraiment tout gâché cette fois-ci"
 
 #. TRANS This means that the per-user limit on new process would be exceeded by
 #. TRANS an attempted @code{fork}.  @xref{Limits on Resources}, for details on
