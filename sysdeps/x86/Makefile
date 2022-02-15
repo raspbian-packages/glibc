@@ -73,6 +73,29 @@ endif
 
 ifeq ($(subdir),string)
 sysdep_routines += cacheinfo
+
+tests += \
+  tst-memchr-rtm \
+  tst-memcmp-rtm \
+  tst-memmove-rtm \
+  tst-memrchr-rtm \
+  tst-memset-rtm \
+  tst-strchr-rtm \
+  tst-strcpy-rtm \
+  tst-strlen-rtm \
+  tst-strncmp-rtm \
+  tst-strrchr-rtm
+
+CFLAGS-tst-memchr-rtm.c += -mrtm
+CFLAGS-tst-memcmp-rtm.c += -mrtm
+CFLAGS-tst-memmove-rtm.c += -mrtm
+CFLAGS-tst-memrchr-rtm.c += -mrtm
+CFLAGS-tst-memset-rtm.c += -mrtm
+CFLAGS-tst-strchr-rtm.c += -mrtm
+CFLAGS-tst-strcpy-rtm.c += -mrtm
+CFLAGS-tst-strlen-rtm.c += -mrtm
+CFLAGS-tst-strncmp-rtm.c += -mrtm
+CFLAGS-tst-strrchr-rtm.c += -mrtm
 endif
 
 ifneq ($(enable-cet),no)
@@ -207,4 +230,12 @@ $(objpfx)check-cet.out: $(..)sysdeps/x86/check-cet.awk \
 	$(evaluate-test)
 generated += check-cet.out
 endif
+endif
+
+ifeq ($(subdir),posix)
+tests += \
+  tst-sysconf-cache-linesize \
+  tst-sysconf-cache-linesize-static
+tests-static += \
+  tst-sysconf-cache-linesize-static
 endif

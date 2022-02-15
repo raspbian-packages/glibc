@@ -294,7 +294,8 @@ tests = tst-attr2 tst-attr3 tst-default-attr \
 	tst-thread-affinity-sched \
 	tst-pthread-defaultattr-free \
 	tst-pthread-attr-sigmask \
-	tst-pthread-timedlock-lockloop
+	tst-pthread-timedlock-lockloop \
+	tst-pthread-gdb-attach tst-pthread-gdb-attach-static
 
 tests-container =  tst-pthread-getattr
 
@@ -313,10 +314,6 @@ xtests = tst-setuid1 tst-setuid1-static tst-setuid2 \
 xtests += tst-eintr1
 
 test-srcs = tst-oddstacklimit
-
-# Test expected to fail on most targets (except x86_64) due to bug
-# 18435 - pthread_once hangs when init routine throws an exception.
-test-xfail-tst-once5 = yes
 
 gen-as-const-headers = unwindbuf.sym \
 		       pthread-pi-defines.sym
@@ -343,6 +340,22 @@ CPPFLAGS-test-condattr-printers.c := $(CFLAGS-printers-tests)
 CPPFLAGS-test-cond-printers.c := $(CFLAGS-printers-tests)
 CPPFLAGS-test-rwlockattr-printers.c := $(CFLAGS-printers-tests)
 CPPFLAGS-test-rwlock-printers.c := $(CFLAGS-printers-tests)
+
+# Reuse the CFLAGS setting for the GDB attaching test.  It needs
+# debugging information.
+CFLAGS-tst-pthread-gdb-attach.c := $(CFLAGS-printers-tests)
+CPPFLAGS-tst-pthread-gdb-attach.c := $(CFLAGS-printers-tests)
+ifeq ($(build-shared)$(build-hardcoded-path-in-tests),yesno)
+CPPFLAGS-tst-pthread-gdb-attach.c += -DDO_ADD_SYMBOL_FILE=1
+else
+CPPFLAGS-tst-pthread-gdb-attach.c += -DDO_ADD_SYMBOL_FILE=0
+endif
+CFLAGS-tst-pthread-gdb-attach-static.c := $(CFLAGS-printers-tests)
+CPPFLAGS-tst-pthread-gdb-attach-static.c := \
+  $(CFLAGS-printers-tests) -DDO_ADD_SYMBOL_FILE=0
+# As of version 9.2, GDB cannot attach properly to PIE programs that
+# were launched with an explicit ld.so invocation.
+tst-pthread-gdb-attach-no-pie = yes
 
 ifeq ($(build-shared),yes)
 tests-printers-libs := $(shared-thread-library)
@@ -415,7 +428,8 @@ link-libc-static := $(common-objpfx)libc.a $(static-gnulib) \
 tests-static += tst-stackguard1-static \
 		tst-cancel24-static \
 		tst-mutex8-static tst-mutexpi8-static tst-sem11-static \
-		tst-sem12-static tst-cond11-static
+		tst-sem12-static tst-cond11-static \
+		tst-pthread-gdb-attach-static
 
 tests += tst-cancel24-static
 
