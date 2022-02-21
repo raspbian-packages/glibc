@@ -229,7 +229,7 @@ enum
 #define bit_cpu_AVX512_VP2INTERSECT (1u << 8)
 #define bit_cpu_INDEX_7_EDX_9	(1u << 9)
 #define bit_cpu_MD_CLEAR	(1u << 10)
-#define bit_cpu_INDEX_7_EDX_11	(1u << 11)
+#define bit_cpu_RTM_ALWAYS_ABORT (1u << 11)
 #define bit_cpu_INDEX_7_EDX_12	(1u << 12)
 #define bit_cpu_INDEX_7_EDX_13	(1u << 13)
 #define bit_cpu_SERIALIZE	(1u << 14)
@@ -454,7 +454,7 @@ enum
 #define index_cpu_AVX512_VP2INTERSECT CPUID_INDEX_7
 #define index_cpu_INDEX_7_EDX_9	CPUID_INDEX_7
 #define index_cpu_MD_CLEAR	CPUID_INDEX_7
-#define index_cpu_INDEX_7_EDX_11 CPUID_INDEX_7
+#define index_cpu_RTM_ALWAYS_ABORT CPUID_INDEX_7
 #define index_cpu_INDEX_7_EDX_12 CPUID_INDEX_7
 #define index_cpu_INDEX_7_EDX_13 CPUID_INDEX_7
 #define index_cpu_SERIALIZE	CPUID_INDEX_7
@@ -679,7 +679,7 @@ enum
 #define reg_AVX512_VP2INTERSECT	edx
 #define reg_INDEX_7_EDX_9	edx
 #define reg_MD_CLEAR		edx
-#define reg_INDEX_7_EDX_11	edx
+#define reg_RTM_ALWAYS_ABORT	edx
 #define reg_INDEX_7_EDX_12	edx
 #define reg_INDEX_7_EDX_13	edx
 #define reg_SERIALIZE		edx
@@ -757,40 +757,23 @@ enum
 #define reg_AESKLE		ebx
 #define reg_WIDE_KL		ebx
 
-/* PREFERRED_FEATURE_INDEX_1.  */
-#define bit_arch_I586				(1u << 0)
-#define bit_arch_I686				(1u << 1)
-#define bit_arch_Fast_Rep_String		(1u << 2)
-#define bit_arch_Fast_Copy_Backward		(1u << 3)
-#define bit_arch_Fast_Unaligned_Load		(1u << 4)
-#define bit_arch_Fast_Unaligned_Copy		(1u << 5)
-#define bit_arch_Slow_BSF			(1u << 6)
-#define bit_arch_Slow_SSE4_2			(1u << 7)
-#define bit_arch_AVX_Fast_Unaligned_Load	(1u << 8)
-#define bit_arch_Prefer_MAP_32BIT_EXEC		(1u << 9)
-#define bit_arch_Prefer_PMINUB_for_stringop	(1u << 10)
-#define bit_arch_Prefer_No_VZEROUPPER		(1u << 11)
-#define bit_arch_Prefer_ERMS			(1u << 12)
-#define bit_arch_Prefer_FSRM			(1u << 13)
-#define bit_arch_Prefer_No_AVX512		(1u << 14)
-#define bit_arch_MathVec_Prefer_No_AVX512	(1u << 15)
-
-#define index_arch_Fast_Rep_String		PREFERRED_FEATURE_INDEX_1
-#define index_arch_Fast_Copy_Backward		PREFERRED_FEATURE_INDEX_1
-#define index_arch_Slow_BSF			PREFERRED_FEATURE_INDEX_1
-#define index_arch_Fast_Unaligned_Load		PREFERRED_FEATURE_INDEX_1
-#define index_arch_Prefer_PMINUB_for_stringop 	PREFERRED_FEATURE_INDEX_1
-#define index_arch_Fast_Unaligned_Copy		PREFERRED_FEATURE_INDEX_1
-#define index_arch_I586				PREFERRED_FEATURE_INDEX_1
-#define index_arch_I686				PREFERRED_FEATURE_INDEX_1
-#define index_arch_Slow_SSE4_2			PREFERRED_FEATURE_INDEX_1
-#define index_arch_AVX_Fast_Unaligned_Load	PREFERRED_FEATURE_INDEX_1
-#define index_arch_Prefer_MAP_32BIT_EXEC	PREFERRED_FEATURE_INDEX_1
-#define index_arch_Prefer_No_VZEROUPPER		PREFERRED_FEATURE_INDEX_1
-#define index_arch_Prefer_ERMS			PREFERRED_FEATURE_INDEX_1
-#define index_arch_Prefer_No_AVX512		PREFERRED_FEATURE_INDEX_1
-#define index_arch_MathVec_Prefer_No_AVX512	PREFERRED_FEATURE_INDEX_1
-#define index_arch_Prefer_FSRM			PREFERRED_FEATURE_INDEX_1
+/* PREFERRED_FEATURE_INDEX_1.  First define the bitindex values
+   sequentially, then define the bit_arch* and index_arch_* lookup
+   constants.  */
+enum
+  {
+#define BIT(x) _bitindex_arch_##x ,
+#include "cpu-features-preferred_feature_index_1.def"
+#undef BIT
+  };
+enum
+  {
+#define BIT(x)					\
+    bit_arch_##x = 1u << _bitindex_arch_##x ,	\
+    index_arch_##x = PREFERRED_FEATURE_INDEX_1,
+#include "cpu-features-preferred_feature_index_1.def"
+#undef BIT
+  };
 
 /* XCR0 Feature flags.  */
 #define bit_XMM_state		(1u << 1)
@@ -841,6 +824,8 @@ struct cpuid_feature_internal
     };
 };
 
+/* NB: When adding new fields, update sysdeps/x86/dl-diagnostics-cpu.c
+   to print them.  */
 struct cpu_features
 {
   struct cpu_features_basic basic;
@@ -874,6 +859,8 @@ struct cpu_features
   unsigned long int rep_stosb_threshold;
   /* _SC_LEVEL1_ICACHE_SIZE.  */
   unsigned long int level1_icache_size;
+  /* _SC_LEVEL1_ICACHE_LINESIZE.  */
+  unsigned long int level1_icache_linesize;
   /* _SC_LEVEL1_DCACHE_SIZE.  */
   unsigned long int level1_dcache_size;
   /* _SC_LEVEL1_DCACHE_ASSOC.  */

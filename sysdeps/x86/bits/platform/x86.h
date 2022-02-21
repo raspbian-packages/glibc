@@ -210,7 +210,7 @@ enum
   x86_cpu_AVX512_VP2INTERSECT	= x86_cpu_index_7_edx + 8,
   x86_cpu_INDEX_7_EDX_9		= x86_cpu_index_7_edx + 9,
   x86_cpu_MD_CLEAR		= x86_cpu_index_7_edx + 10,
-  x86_cpu_INDEX_7_EDX_11	= x86_cpu_index_7_edx + 11,
+  x86_cpu_RTM_ALWAYS_ABORT	= x86_cpu_index_7_edx + 11,
   x86_cpu_INDEX_7_EDX_12	= x86_cpu_index_7_edx + 12,
   x86_cpu_INDEX_7_EDX_13	= x86_cpu_index_7_edx + 13,
   x86_cpu_SERIALIZE		= x86_cpu_index_7_edx + 14,
@@ -244,7 +244,7 @@ enum
   x86_cpu_XOP			= x86_cpu_index_80000001_ecx + 11,
   x86_cpu_LWP			= x86_cpu_index_80000001_ecx + 15,
   x86_cpu_FMA4			= x86_cpu_index_80000001_ecx + 16,
-  x86_cpu_TBM			= x86_cpu_index_80000001_ecx + 20,
+  x86_cpu_TBM			= x86_cpu_index_80000001_ecx + 21,
 
   x86_cpu_index_80000001_edx
     = (CPUID_INDEX_80000001 * 8 * 4 * sizeof (unsigned int)
