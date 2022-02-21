@@ -1,0 +1,677 @@
+Committed for glibc 2.34
+
+commit 1ecc5307a84d34c25dc026aec02d9276cd569561
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Mon Mar 22 22:44:36 2021 +0100
+
+    hurd: handle EINTR during critical sections
+    
+    During critical sections, signal handling is deferred and thus RPCs return
+    EINTR, even if SA_RESTART is set. We thus have to restart the whole critical
+    section in that case.
+    
+    This also adds HURD_CRITICAL_UNLOCK in the cases where one wants to
+    break the section in the middle.
+
+diff --git a/hurd/dtable.c b/hurd/dtable.c
+index 9437f8c06e..31e1448999 100644
+--- a/hurd/dtable.c
++++ b/hurd/dtable.c
+@@ -189,6 +189,7 @@ ctty_new_pgrp (void)
+ {
+   int i;
+ 
++retry:
+   HURD_CRITICAL_BEGIN;
+   __mutex_lock (&_hurd_dtable_lock);
+ 
+@@ -224,8 +225,19 @@ ctty_new_pgrp (void)
+ 	    /* This fd has a ctty-special port.  We need a new one, to tell
+ 	       the io server of our different process group.  */
+ 	    io_t new;
+-	    if (__term_open_ctty (port, _hurd_pid, _hurd_pgrp, &new))
+-	      new = MACH_PORT_NULL;
++	    error_t err;
++	    if ((err = __term_open_ctty (port, _hurd_pid, _hurd_pgrp, &new)))
++	      {
++		if (err == EINTR)
++		  {
++		    /* Got a signal while inside an RPC of the critical section,
++		       retry.  */
++		    __mutex_unlock (&_hurd_dtable_lock);
++		    HURD_CRITICAL_UNLOCK;
++		    goto retry;
++		  }
++		new = MACH_PORT_NULL;
++	      }
+ 	    _hurd_port_set (&d->ctty, new);
+ 	  }
+ 
+diff --git a/hurd/geteuids.c b/hurd/geteuids.c
+index 840d80a0d6..ac3e162e51 100644
+--- a/hurd/geteuids.c
++++ b/hurd/geteuids.c
+@@ -26,6 +26,7 @@ geteuids (int n, uid_t *uidset)
+   int nuids;
+   void *crit;
+ 
++retry:
+   crit = _hurd_critical_section_lock ();
+   __mutex_lock (&_hurd_id.lock);
+ 
+@@ -33,6 +34,9 @@ geteuids (int n, uid_t *uidset)
+     {
+       __mutex_unlock (&_hurd_id.lock);
+       _hurd_critical_section_unlock (crit);
++      if (err == EINTR)
++	/* Got a signal while inside an RPC of the critical section, retry.  */
++	goto retry;
+       return __hurd_fail (err);
+     }
+ 
+diff --git a/hurd/hurd/signal.h b/hurd/hurd/signal.h
+index 37b7dec5a0..db9a02f000 100644
+--- a/hurd/hurd/signal.h
++++ b/hurd/hurd/signal.h
+@@ -277,6 +277,10 @@ _hurd_critical_section_unlock (void *our_lock)
+   { void *__hurd_critical__ = _hurd_critical_section_lock ()
+ #define HURD_CRITICAL_END \
+       _hurd_critical_section_unlock (__hurd_critical__); } while (0)
++
++/* This one can be used inside the C scoping level, for early exits.  */
++#define HURD_CRITICAL_UNLOCK \
++      _hurd_critical_section_unlock (__hurd_critical__);
+ 
+ /* Initialize the signal code, and start the signal thread.
+    Arguments give the "init ints" from exec_startup.  */
+diff --git a/hurd/hurdexec.c b/hurd/hurdexec.c
+index db8989eef6..c39da7cf28 100644
+--- a/hurd/hurdexec.c
++++ b/hurd/hurdexec.c
+@@ -123,6 +123,7 @@ _hurd_exec_paths (task_t task, file_t file,
+ 
+   ss = _hurd_self_sigstate ();
+ 
++retry:
+   assert (! __spin_lock_locked (&ss->critical_section_lock));
+   __spin_lock (&ss->critical_section_lock);
+ 
+@@ -429,6 +430,9 @@ _hurd_exec_paths (task_t task, file_t file,
+ 
+   /* Safe to let signals happen now.  */
+   _hurd_critical_section_unlock (ss);
++  if (err == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+  outargs:
+   free (args);
+diff --git a/hurd/hurdfchdir.c b/hurd/hurdfchdir.c
+index 62a6ed1638..f345cdad1e 100644
+--- a/hurd/hurdfchdir.c
++++ b/hurd/hurdfchdir.c
+@@ -32,6 +32,7 @@ _hurd_change_directory_port_from_fd (struct hurd_port *portcell, int fd)
+   if (!d)
+     return __hurd_fail (EBADF);
+ 
++retry:
+   HURD_CRITICAL_BEGIN;
+ 
+   ret = HURD_PORT_USE (&d->port,
+@@ -53,6 +54,9 @@ _hurd_change_directory_port_from_fd (struct hurd_port *portcell, int fd)
+ 		       }));
+ 
+   HURD_CRITICAL_END;
++  if (ret == -1 && errno == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+   return ret;
+ }
+diff --git a/hurd/hurdsock.c b/hurd/hurdsock.c
+index 79395d9487..18f3806c73 100644
+--- a/hurd/hurdsock.c
++++ b/hurd/hurdsock.c
+@@ -52,6 +52,7 @@ _hurd_socket_server (int domain, int dead)
+       return MACH_PORT_NULL;
+     }
+ 
++retry:
+   HURD_CRITICAL_BEGIN;
+   __mutex_lock (&lock);
+ 
+@@ -101,6 +102,9 @@ _hurd_socket_server (int domain, int dead)
+ 
+   __mutex_unlock (&lock);
+   HURD_CRITICAL_END;
++  if (server == MACH_PORT_NULL && errno == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+   return server;
+ }
+diff --git a/hurd/seteuids.c b/hurd/seteuids.c
+index 19db47fd23..e5263d1bd7 100644
+--- a/hurd/seteuids.c
++++ b/hurd/seteuids.c
+@@ -31,6 +31,7 @@ seteuids (int n, const uid_t *uids)
+   for (i = 0; i < n; ++i)
+     new[i] = uids[i];
+ 
++retry:
+   HURD_CRITICAL_BEGIN;
+   __mutex_lock (&_hurd_id.lock);
+   err = _hurd_check_ids ();
+@@ -47,6 +48,9 @@ seteuids (int n, const uid_t *uids)
+     }
+   __mutex_unlock (&_hurd_id.lock);
+   HURD_CRITICAL_END;
++  if (err == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+   if (err)
+     return __hurd_fail (err);
+diff --git a/sysdeps/mach/hurd/faccessat.c b/sysdeps/mach/hurd/faccessat.c
+index f421a531fe..33797704d8 100644
+--- a/sysdeps/mach/hurd/faccessat.c
++++ b/sysdeps/mach/hurd/faccessat.c
+@@ -127,6 +127,7 @@ __faccessat_common (int fd, const char *file, int type, int at_flags,
+ 
+       rcrdir = rcwdir = MACH_PORT_NULL;
+ 
++     retry:
+       HURD_CRITICAL_BEGIN;
+ 
+       __mutex_lock (&_hurd_id.lock);
+@@ -172,6 +173,9 @@ __faccessat_common (int fd, const char *file, int type, int at_flags,
+       __mutex_unlock (&_hurd_id.lock);
+ 
+       HURD_CRITICAL_END;
++      if (err == EINTR)
++	/* Got a signal while inside an RPC of the critical section, retry.  */
++	goto retry;
+ 
+       if (rcrdir != MACH_PORT_NULL)
+ 	__mach_port_deallocate (__mach_task_self (), rcrdir);
+diff --git a/sysdeps/mach/hurd/fork.c b/sysdeps/mach/hurd/fork.c
+index 1c5299e686..661d60159a 100644
+--- a/sysdeps/mach/hurd/fork.c
++++ b/sysdeps/mach/hurd/fork.c
+@@ -70,6 +70,7 @@ __fork (void)
+   RUN_HOOK (_hurd_atfork_prepare_hook, ());
+ 
+   ss = _hurd_self_sigstate ();
++retry:
+   __spin_lock (&ss->critical_section_lock);
+ 
+ #undef	LOSE
+@@ -718,6 +719,9 @@ __fork (void)
+   }
+ 
+   _hurd_critical_section_unlock (ss);
++  if (err == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+   if (!err)
+     {
+diff --git a/sysdeps/mach/hurd/getegid.c b/sysdeps/mach/hurd/getegid.c
+index 5a3db22746..52424a6bdd 100644
+--- a/sysdeps/mach/hurd/getegid.c
++++ b/sysdeps/mach/hurd/getegid.c
+@@ -27,6 +27,7 @@ __getegid (void)
+   error_t err;
+   gid_t egid;
+ 
++retry:
+   HURD_CRITICAL_BEGIN;
+   __mutex_lock (&_hurd_id.lock);
+ 
+@@ -49,6 +50,9 @@ __getegid (void)
+ 
+   __mutex_unlock (&_hurd_id.lock);
+   HURD_CRITICAL_END;
++  if (egid == -1 && errno == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+   return egid;
+ }
+diff --git a/sysdeps/mach/hurd/geteuid.c b/sysdeps/mach/hurd/geteuid.c
+index a7af5a9d0d..cb917f0d40 100644
+--- a/sysdeps/mach/hurd/geteuid.c
++++ b/sysdeps/mach/hurd/geteuid.c
+@@ -27,6 +27,7 @@ __geteuid (void)
+   error_t err;
+   uid_t euid;
+ 
++retry:
+   HURD_CRITICAL_BEGIN;
+   __mutex_lock (&_hurd_id.lock);
+ 
+@@ -49,6 +50,9 @@ __geteuid (void)
+ 
+   __mutex_unlock (&_hurd_id.lock);
+   HURD_CRITICAL_END;
++  if (euid == -1 && errno == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+   return euid;
+ }
+diff --git a/sysdeps/mach/hurd/getgid.c b/sysdeps/mach/hurd/getgid.c
+index aa13884a8f..177c5c0d5a 100644
+--- a/sysdeps/mach/hurd/getgid.c
++++ b/sysdeps/mach/hurd/getgid.c
+@@ -27,6 +27,7 @@ __getgid (void)
+   error_t err;
+   gid_t gid;
+ 
++retry:
+   HURD_CRITICAL_BEGIN;
+   __mutex_lock (&_hurd_id.lock);
+ 
+@@ -46,6 +47,9 @@ __getgid (void)
+ 
+   __mutex_unlock (&_hurd_id.lock);
+   HURD_CRITICAL_END;
++  if (gid == -1 && errno == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+   return gid;
+ }
+diff --git a/sysdeps/mach/hurd/getgroups.c b/sysdeps/mach/hurd/getgroups.c
+index 5f036f8191..d61b0789dc 100644
+--- a/sysdeps/mach/hurd/getgroups.c
++++ b/sysdeps/mach/hurd/getgroups.c
+@@ -31,6 +31,7 @@ __getgroups (int n, gid_t *gidset)
+   if (n < 0)
+     return __hurd_fail (EINVAL);
+ 
++retry:
+   crit = _hurd_critical_section_lock ();
+   __mutex_lock (&_hurd_id.lock);
+ 
+@@ -38,6 +39,9 @@ __getgroups (int n, gid_t *gidset)
+     {
+       __mutex_unlock (&_hurd_id.lock);
+       _hurd_critical_section_unlock (crit);
++      if (err == EINTR)
++	/* Got a signal while inside an RPC of the critical section, retry.  */
++	goto retry;
+       return __hurd_fail (err);
+     }
+ 
+diff --git a/sysdeps/mach/hurd/getresgid.c b/sysdeps/mach/hurd/getresgid.c
+index 9cae591f58..0717399e6d 100644
+--- a/sysdeps/mach/hurd/getresgid.c
++++ b/sysdeps/mach/hurd/getresgid.c
+@@ -28,6 +28,7 @@ __getresgid (gid_t *rgid, gid_t *egid, gid_t *sgid)
+ {
+   error_t err;
+ 
++retry:
+   HURD_CRITICAL_BEGIN;
+   __mutex_lock (&_hurd_id.lock);
+ 
+@@ -49,6 +50,9 @@ __getresgid (gid_t *rgid, gid_t *egid, gid_t *sgid)
+ 
+   __mutex_unlock (&_hurd_id.lock);
+   HURD_CRITICAL_END;
++  if (err == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+   return __hurd_fail (err);
+ }
+diff --git a/sysdeps/mach/hurd/getresuid.c b/sysdeps/mach/hurd/getresuid.c
+index 02995db6ed..a5ddba5044 100644
+--- a/sysdeps/mach/hurd/getresuid.c
++++ b/sysdeps/mach/hurd/getresuid.c
+@@ -28,6 +28,7 @@ __getresuid (uid_t *ruid, uid_t *euid, uid_t *suid)
+ {
+   error_t err;
+ 
++retry:
+   HURD_CRITICAL_BEGIN;
+   __mutex_lock (&_hurd_id.lock);
+ 
+@@ -49,6 +50,9 @@ __getresuid (uid_t *ruid, uid_t *euid, uid_t *suid)
+ 
+   __mutex_unlock (&_hurd_id.lock);
+   HURD_CRITICAL_END;
++  if (err == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+   return __hurd_fail (err);
+ }
+diff --git a/sysdeps/mach/hurd/getuid.c b/sysdeps/mach/hurd/getuid.c
+index fc4a441569..7b4f4f9132 100644
+--- a/sysdeps/mach/hurd/getuid.c
++++ b/sysdeps/mach/hurd/getuid.c
+@@ -27,6 +27,7 @@ __getuid (void)
+   error_t err;
+   uid_t uid;
+ 
++retry:
+   HURD_CRITICAL_BEGIN;
+   __mutex_lock (&_hurd_id.lock);
+ 
+@@ -46,6 +47,9 @@ __getuid (void)
+ 
+   __mutex_unlock (&_hurd_id.lock);
+   HURD_CRITICAL_END;
++  if (uid == -1 && errno == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+   return uid;
+ }
+diff --git a/sysdeps/mach/hurd/group_member.c b/sysdeps/mach/hurd/group_member.c
+index c5256f12a6..54c5ba8fa2 100644
+--- a/sysdeps/mach/hurd/group_member.c
++++ b/sysdeps/mach/hurd/group_member.c
+@@ -28,6 +28,7 @@ __group_member (gid_t gid)
+   error_t err;
+   void *crit;
+ 
++retry:
+   crit = _hurd_critical_section_lock ();
+   __mutex_lock (&_hurd_id.lock);
+ 
+@@ -45,6 +46,9 @@ __group_member (gid_t gid)
+ 
+   __mutex_unlock (&_hurd_id.lock);
+   _hurd_critical_section_unlock (crit);
++  if (err == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+   if (err)
+     __hurd_fail (err);
+diff --git a/sysdeps/mach/hurd/setegid.c b/sysdeps/mach/hurd/setegid.c
+index f0258d3af0..c019a31087 100644
+--- a/sysdeps/mach/hurd/setegid.c
++++ b/sysdeps/mach/hurd/setegid.c
+@@ -29,6 +29,7 @@ setegid (gid_t gid)
+   auth_t newauth;
+   error_t err;
+ 
++retry:
+   HURD_CRITICAL_BEGIN;
+   __mutex_lock (&_hurd_id.lock);
+   err = _hurd_check_ids ();
+@@ -55,6 +56,9 @@ setegid (gid_t gid)
+     }
+   __mutex_unlock (&_hurd_id.lock);
+   HURD_CRITICAL_END;
++  if (err == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+   if (err)
+     return __hurd_fail (err);
+diff --git a/sysdeps/mach/hurd/seteuid.c b/sysdeps/mach/hurd/seteuid.c
+index 637015cc22..a80603f0f7 100644
+--- a/sysdeps/mach/hurd/seteuid.c
++++ b/sysdeps/mach/hurd/seteuid.c
+@@ -29,6 +29,7 @@ seteuid (uid_t uid)
+   auth_t newauth;
+   error_t err;
+ 
++retry:
+   HURD_CRITICAL_BEGIN;
+   __mutex_lock (&_hurd_id.lock);
+   err = _hurd_check_ids ();
+@@ -55,6 +56,9 @@ seteuid (uid_t uid)
+     }
+   __mutex_unlock (&_hurd_id.lock);
+   HURD_CRITICAL_END;
++  if (err == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+   if (err)
+     return __hurd_fail (err);
+diff --git a/sysdeps/mach/hurd/setgid.c b/sysdeps/mach/hurd/setgid.c
+index 6e0672d5e8..cbc559a2d0 100644
+--- a/sysdeps/mach/hurd/setgid.c
++++ b/sysdeps/mach/hurd/setgid.c
+@@ -32,6 +32,7 @@ __setgid (gid_t gid)
+   auth_t newauth;
+   error_t err;
+ 
++retry:
+   HURD_CRITICAL_BEGIN;
+   __mutex_lock (&_hurd_id.lock);
+   err = _hurd_check_ids ();
+@@ -81,6 +82,9 @@ __setgid (gid_t gid)
+     }
+   __mutex_unlock (&_hurd_id.lock);
+   HURD_CRITICAL_END;
++  if (err == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+   if (err)
+     return __hurd_fail (err);
+diff --git a/sysdeps/mach/hurd/setgroups.c b/sysdeps/mach/hurd/setgroups.c
+index fc78de3fa1..fab3645c5f 100644
+--- a/sysdeps/mach/hurd/setgroups.c
++++ b/sysdeps/mach/hurd/setgroups.c
+@@ -34,6 +34,7 @@ setgroups (size_t n, const gid_t *groups)
+   for (i = 0; i < n; ++i)
+     new[i] = groups[i];
+ 
++retry:
+   HURD_CRITICAL_BEGIN;
+   __mutex_lock (&_hurd_id.lock);
+   err = _hurd_check_ids ();
+@@ -50,6 +51,9 @@ setgroups (size_t n, const gid_t *groups)
+     }
+   __mutex_unlock (&_hurd_id.lock);
+   HURD_CRITICAL_END;
++  if (err == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+   if (err)
+     return __hurd_fail (err);
+diff --git a/sysdeps/mach/hurd/setitimer.c b/sysdeps/mach/hurd/setitimer.c
+index e23e79a63e..80b00e64d4 100644
+--- a/sysdeps/mach/hurd/setitimer.c
++++ b/sysdeps/mach/hurd/setitimer.c
+@@ -339,6 +339,7 @@ __setitimer (enum __itimer_which which, const struct itimerval *new,
+ 	     struct itimerval *old)
+ {
+   void *crit;
++  int ret;
+ 
+   switch (which)
+     {
+@@ -353,9 +354,15 @@ __setitimer (enum __itimer_which which, const struct itimerval *new,
+       break;
+     }
+ 
++retry:
+   crit = _hurd_critical_section_lock ();
+   __spin_lock (&_hurd_itimer_lock);
+-  return setitimer_locked (new, old, crit, 0);
++  ret = setitimer_locked (new, old, crit, 0);
++  if (ret == -1 && errno == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
++
++  return ret;
+ }
+ 
+ static void
+diff --git a/sysdeps/mach/hurd/setregid.c b/sysdeps/mach/hurd/setregid.c
+index 2fce6cf6cf..c20a424b04 100644
+--- a/sysdeps/mach/hurd/setregid.c
++++ b/sysdeps/mach/hurd/setregid.c
+@@ -28,6 +28,7 @@ __setregid (gid_t rgid, gid_t egid)
+   auth_t newauth;
+   error_t err;
+ 
++retry:
+   HURD_CRITICAL_BEGIN;
+   __mutex_lock (&_hurd_id.lock);
+   err = _hurd_check_ids ();
+@@ -82,6 +83,9 @@ __setregid (gid_t rgid, gid_t egid)
+     }
+   __mutex_unlock (&_hurd_id.lock);
+   HURD_CRITICAL_END;
++  if (err == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+   if (err)
+     return __hurd_fail (err);
+diff --git a/sysdeps/mach/hurd/setresgid.c b/sysdeps/mach/hurd/setresgid.c
+index 8ccfd93c80..692d073c73 100644
+--- a/sysdeps/mach/hurd/setresgid.c
++++ b/sysdeps/mach/hurd/setresgid.c
+@@ -29,6 +29,7 @@ __setresgid (gid_t rgid, gid_t egid, gid_t sgid)
+   auth_t newauth;
+   error_t err;
+ 
++retry:
+   HURD_CRITICAL_BEGIN;
+   __mutex_lock (&_hurd_id.lock);
+   err = _hurd_check_ids ();
+@@ -110,6 +111,9 @@ __setresgid (gid_t rgid, gid_t egid, gid_t sgid)
+     }
+   __mutex_unlock (&_hurd_id.lock);
+   HURD_CRITICAL_END;
++  if (err == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+   if (err)
+     return __hurd_fail (err);
+diff --git a/sysdeps/mach/hurd/setresuid.c b/sysdeps/mach/hurd/setresuid.c
+index d16db170c2..f95c6d33bf 100644
+--- a/sysdeps/mach/hurd/setresuid.c
++++ b/sysdeps/mach/hurd/setresuid.c
+@@ -29,6 +29,7 @@ __setresuid (uid_t ruid, uid_t euid, uid_t suid)
+   auth_t newauth;
+   error_t err;
+ 
++retry:
+   HURD_CRITICAL_BEGIN;
+   __mutex_lock (&_hurd_id.lock);
+   err = _hurd_check_ids ();
+@@ -111,6 +112,9 @@ __setresuid (uid_t ruid, uid_t euid, uid_t suid)
+ 
+   __mutex_unlock (&_hurd_id.lock);
+   HURD_CRITICAL_END;
++  if (err == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+   if (err)
+     return __hurd_fail (err);
+diff --git a/sysdeps/mach/hurd/setreuid.c b/sysdeps/mach/hurd/setreuid.c
+index 97328e1e1a..fed2b0bab0 100644
+--- a/sysdeps/mach/hurd/setreuid.c
++++ b/sysdeps/mach/hurd/setreuid.c
+@@ -28,6 +28,7 @@ __setreuid (uid_t ruid, uid_t euid)
+   auth_t newauth;
+   error_t err;
+ 
++retry:
+   HURD_CRITICAL_BEGIN;
+   __mutex_lock (&_hurd_id.lock);
+   err = _hurd_check_ids ();
+@@ -82,6 +83,9 @@ __setreuid (uid_t ruid, uid_t euid)
+     }
+   __mutex_unlock (&_hurd_id.lock);
+   HURD_CRITICAL_END;
++  if (err == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+   if (err)
+     return __hurd_fail (err);
+diff --git a/sysdeps/mach/hurd/setsid.c b/sysdeps/mach/hurd/setsid.c
+index 3861f8f850..b09c818258 100644
+--- a/sysdeps/mach/hurd/setsid.c
++++ b/sysdeps/mach/hurd/setsid.c
+@@ -32,6 +32,7 @@ __setsid (void)
+   error_t err;
+   unsigned int stamp;
+ 
++retry:
+   HURD_CRITICAL_BEGIN;
+   __mutex_lock (&_hurd_dtable_lock);
+ 
+@@ -60,6 +61,9 @@ __setsid (void)
+     }
+ 
+   HURD_CRITICAL_END;
++  if (err == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+   return err ? __hurd_fail (err) : _hurd_pgrp;
+ }
+diff --git a/sysdeps/mach/hurd/setuid.c b/sysdeps/mach/hurd/setuid.c
+index ede3f014c4..482c084bbc 100644
+--- a/sysdeps/mach/hurd/setuid.c
++++ b/sysdeps/mach/hurd/setuid.c
+@@ -32,6 +32,7 @@ __setuid (uid_t uid)
+   auth_t newauth;
+   error_t err;
+ 
++retry:
+   HURD_CRITICAL_BEGIN;
+   __mutex_lock (&_hurd_id.lock);
+   err = _hurd_check_ids ();
+@@ -86,6 +87,9 @@ __setuid (uid_t uid)
+     }
+   __mutex_unlock (&_hurd_id.lock);
+   HURD_CRITICAL_END;
++  if (err == EINTR)
++    /* Got a signal while inside an RPC of the critical section, retry.  */
++    goto retry;
+ 
+   if (err)
+     return __hurd_fail (err);
+diff --git a/sysdeps/mach/hurd/spawni.c b/sysdeps/mach/hurd/spawni.c
+index 9bc1571c29..d3eb5abcf0 100644
+--- a/sysdeps/mach/hurd/spawni.c
++++ b/sysdeps/mach/hurd/spawni.c
+@@ -333,6 +333,7 @@ __spawni (pid_t *pid, const char *file,
+ 
+   ss = _hurd_self_sigstate ();
+ 
++retry:
+   assert (! __spin_lock_locked (&ss->critical_section_lock));
+   __spin_lock (&ss->critical_section_lock);
+ 
+@@ -437,7 +438,20 @@ __spawni (pid_t *pid, const char *file,
+ 						 MACH_PORT_RIGHT_SEND, +1));
+ 
+   if (err)
+-    goto out;
++    {
++      _hurd_critical_section_unlock (ss);
++
++      if (err == EINTR)
++	{
++	  /* Got a signal while inside an RPC of the critical section,
++	     retry.  */
++	  __mach_port_deallocate (__mach_task_self (), auth);
++	  auth = MACH_PORT_NULL;
++	  goto retry;
++	}
++
++      goto out;
++    }
+ 
+   /* Pack up the descriptor table to give the new program.
+      These descriptors will need to be reauthenticated below
