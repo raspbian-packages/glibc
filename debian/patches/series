@@ -49,6 +49,9 @@ hurd-i386/git-const.diff
 hurd-i386/git-pthread_kill_exited.diff
 hurd-i386/git-reply_bogus.diff
 
+# 2.36
+hurd-i386/pthread_key.diff
+
 hurd-i386/local-enable-ldconfig.diff
 hurd-i386/tg-sysvshm.diff
 hurd-i386/tg-thread-cancel.diff

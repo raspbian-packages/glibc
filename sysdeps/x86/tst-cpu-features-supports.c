@@ -130,7 +130,7 @@ do_test (int argc, char **argv)
   fails += CHECK_SUPPORTS (gfni, GFNI);
 #endif
 #if __GNUC_PREREQ (11, 0)
-  fails += CHECK_SUPPORTS (hle, HLE);
+  fails += CHECK_CPU_SUPPORTS (hle, HLE);
   fails += CHECK_CPU_SUPPORTS (ibt, IBT);
   fails += CHECK_SUPPORTS (lahf_lm, LAHF64_SAHF64);
   fails += CHECK_CPU_SUPPORTS (lm, LM);
@@ -152,7 +152,7 @@ do_test (int argc, char **argv)
   fails += CHECK_SUPPORTS (rdpid, RDPID);
   fails += CHECK_SUPPORTS (rdrnd, RDRAND);
   fails += CHECK_SUPPORTS (rdseed, RDSEED);
-  fails += CHECK_SUPPORTS (rtm, RTM);
+  fails += CHECK_CPU_SUPPORTS (rtm, RTM);
   fails += CHECK_SUPPORTS (serialize, SERIALIZE);
   fails += CHECK_SUPPORTS (sha, SHA);
   fails += CHECK_CPU_SUPPORTS (shstk, SHSTK);
