@@ -110,6 +110,7 @@ endif
 		--disable-crypt \
 		--enable-stackguard-randomization \
 		--enable-stack-protector=strong \
+		--with-default-link=no \
 		--with-pkgversion="Debian GLIBC $(DEB_VERSION)" \
 		--with-bugurl="http://www.debian.org/Bugs/" \
 		$(if $(filter $(pt_chown),yes),--enable-pt_chown) \

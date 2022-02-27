@@ -1,4 +1,4 @@
-glibc (2.33-6+rpi1) bookworm-staging; urgency=medium
+glibc (2.33-7+rpi1) bookworm-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -9,7 +9,18 @@ glibc (2.33-6+rpi1) bookworm-staging; urgency=medium
     for other architectures are all 644 and we don't really care
     about x86-64 in raspbian anyway.
 
- -- Peter Michael Green <plugwash@raspbian.org>  Thu, 24 Feb 2022 19:25:03 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Sun, 27 Feb 2022 10:26:59 +0000
+
+glibc (2.33-7) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/rules.d/build.mk: pass --with-default-link=no to configure to
+    ensure that libio vtable protection is enabled.
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix wrong fallback of strncmp-avx2-rtm and wcsncmp-avx2-rtm fallback to
+      non-rtm variants when avoiding overflow.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Mon, 21 Feb 2022 09:47:11 +0100
 
 glibc (2.33-6) unstable; urgency=medium
 
