@@ -1,6 +1,5 @@
-/* Set flags signalling availability of kernel features based on given
-   kernel version number.  NIOS2 version.
-   Copyright (C) 2019-2020 Free Software Foundation, Inc.
+/* Set the sun_path member of struct sockaddr_un.
+   Copyright (C) 2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -17,6 +16,26 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include_next <kernel-features.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 
-#undef __ASSUME_SYSVIPC_DEFAULT_IPC_64
+int
+__sockaddr_un_set (struct sockaddr_un *addr, const char *pathname)
+{
+  size_t name_length = strlen (pathname);
+
+  /* The kernel supports names of exactly sizeof (addr->sun_path)
+     bytes, without a null terminator, but userspace does not; see the
+     SUN_LEN macro.  */
+  if (name_length >= sizeof (addr->sun_path))
+    {
+      __set_errno (EINVAL);     /* Error code used by the kernel.  */
+      return -1;
+    }
+
+  addr->sun_family = AF_UNIX;
+  memcpy (addr->sun_path, pathname, name_length + 1);
+  return 0;
+}
