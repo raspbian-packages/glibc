@@ -1,5 +1,5 @@
-/* Stub implementation of copy_file_range.
-   Copyright (C) 2017-2019 Free Software Foundation, Inc.
+/* BZ #24228 check for memory corruption in legacy libio
+   Copyright (C) 2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,17 +14,16 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
-#include <errno.h>
-#include <unistd.h>
+#include <mcheck.h>
+#include <support/test-driver.h>
 
-ssize_t
-copy_file_range (int infd, __off64_t *pinoff,
-                 int outfd, __off64_t *poutoff,
-                 size_t length, unsigned int flags)
+static int
+do_test (void)
 {
-  __set_errno (ENOSYS);
-  return -1;
+  mtrace ();
+  return 0;
 }
-stub_warning (copy_file_range)
+
+#include <support/test-driver.c>

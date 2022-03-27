@@ -1,5 +1,5 @@
-/* Test the fallback implementation of copy_file_range.
-   Copyright (C) 2017-2018 Free Software Foundation, Inc.
+/* Test that _IO_wfile_sync does not crash (bug 20568).
+   Copyright (C) 2019 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,15 +16,24 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-/* Get the declaration of the official copy_of_range function.  */
-#include <unistd.h>
+#include <locale.h>
+#include <stdio.h>
+#include <wchar.h>
+#include <support/check.h>
+#include <support/xunistd.h>
 
-/* Compile a local version of copy_file_range.  */
-#define COPY_FILE_RANGE_DECL static
-#define COPY_FILE_RANGE copy_file_range_compat
-#include <io/copy_file_range-compat.c>
+static int
+do_test (void)
+{
+  TEST_VERIFY_EXIT (setlocale (LC_ALL, "de_DE.UTF-8") != NULL);
+  /* Fill the stdio buffer and advance the read pointer.  */
+  TEST_VERIFY_EXIT (fgetwc (stdin) != WEOF);
+  /* This calls _IO_wfile_sync, it should not crash.  */
+  TEST_VERIFY_EXIT (setvbuf (stdin, NULL, _IONBF, 0) == 0);
+  /* Verify that the external file offset has been synchronized.  */
+  TEST_COMPARE (xlseek (0, 0, SEEK_CUR), 1);
 
-/* Re-use the test, but run it against copy_file_range_compat defined
-   above.  */
-#define copy_file_range copy_file_range_compat
-#include "tst-copy_file_range.c"
+  return 0;
+}
+
+#include <support/test-driver.c>

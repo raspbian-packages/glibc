@@ -1,3 +1,146 @@
+2019-09-13  Wilco Dijkstra  <wdijkstr@arm.com>
+
+	* string/memmem.c (__memmem): Rewrite to improve performance.
+
+2019-06-12  Wilco Dijkstra  <wdijkstr@arm.com>
+
+	* string/str-two-way.h (two_way_short_needle): Add inline to avoid
+	warning.
+	(two_way_long_needle): Block inlining.
+	* string/strstr.c (strstr2): Add new function.
+	(strstr3): Likewise.
+	(STRSTR): Completely rewrite strstr to improve performance.
+
+2019-09-13  Rajalakshmi Srinivasaraghavan  <raji@linux.vnet.ibm.com>
+
+	* string/memmem.c: Use memcmp for first match.
+
+2019-09-13  Wilco Dijkstra  <wdijkstr@arm.com>
+
+	* string/strcasestr.c (STRCASESTR): Simplify and speedup first match.
+	* string/strstr.c (AVAILABLE): Likewise.
+
+2019-09-06  Wilco Dijkstra  <wdijkstr@arm.com>
+
+	* manual/tunables.texi (glibc.cpu.name): Add ares tunable.
+	* sysdeps/aarch64/multiarch/memcpy.c (__libc_memcpy): Use
+	__memcpy_falkor for ares.
+	* sysdeps/unix/sysv/linux/aarch64/cpu-features.h (IS_ARES):
+	Add new define.
+	* sysdeps/unix/sysv/linux/aarch64/cpu-features.c (cpu_list):
+	Add ares cpu.
+
+2019-07-12  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	[BZ #24699]
+	* posix/tst-mmap-offset.c: Mention BZ #24699.
+	(do_test_bz21270): Rename to do_test_large_offset and use
+	mmap64_maximum_offset to check for maximum expected offset value.
+	* sysdeps/generic/mmap_info.h: New file.
+	* sysdeps/unix/sysv/linux/mips/mmap_info.h: Likewise.
+	* sysdeps/unix/sysv/linux/mmap64.c (MMAP_OFF_HIGH_MASK): Define iff
+	__NR_mmap2 is used.
+
+2019-07-12  Szabolcs Nagy  <szabolcs.nagy@arm.com>
+
+	* sysdeps/aarch64/dl-machine.h (elf_machine_lazy_rel): Check
+	STO_AARCH64_VARIANT_PCS and bind such symbols at load time.
+
+2019-06-13  Szabolcs Nagy  <szabolcs.nagy@arm.com>
+
+	* elf/elf.h (STO_AARCH64_VARIANT_PCS): Define.
+	(DT_AARCH64_VARIANT_PCS): Define.
+
+2019-06-28  Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #24744]
+	io: Remove the copy_file_range emulation.
+	* sysdeps/unix/sysv/linux/copy_file_range.c (copy_file_range): Do
+	not define and call copy_file_range_compat.
+	* io/Makefile (tests-static, tests-internal): Do not add
+	tst-copy_file_range-compat.
+	* io/copy_file_range-compat.c: Remove file.
+	* io/copy_file_range.c (copy_file_range): Define as stub.
+	* io/tst-copy_file_range-compat.c: Remove file.
+	* io/tst-copy_file_range.c (xdevfile): Remove variable.
+	(typical_sizes): Update comment.  Remove 16K sizes.
+	(maximum_offset, maximum_offset_errno, maximum_offset_hard_limit):
+	Remove variables.
+	(find_maximum_offset, pipe_as_source, pipe_as_destination)
+	(delayed_write_failure_beginning, delayed_write_failure_end)
+	(cross_device_failure, enospc_failure_1, enospc_failure)
+	(oappend_failure): Remove functions.
+	(tests): Adjust test case list.
+	(do_test): Remove file system search code.  Check for ENOSYS from
+	copy_file_range.  Do not free xdevfile.
+	* manual/llio.texi (Copying File Data): Document ENOSYS error from
+	copy_file_range.  Do not document the EXDEV error, which future
+	kernels may not report.  Update the wording to reflect that
+	further errors are possible.
+	* sysdeps/unix/sysv/linux/alpha/kernel-features.h
+	[__LINUX_KERNEL_VERSION < 0x040D00] (__ASSUME_COPY_FILE_RANGE): Do
+	not undefine.
+	* sysdeps/unix/sysv/linux/kernel-features.h
+	[__LINUX_KERNEL_VERSION >= 0x040500] (__ASSUME_COPY_FILE_RANGE):
+	Remove definition.
+	* sysdeps/unix/sysv/linux/microblaze/kernel-features.h
+	[__LINUX_KERNEL_VERSION < 0x040A00] (__ASSUME_COPY_FILE_RANGE): Do
+	not undefine.
+
+2019-06-20  Dmitry V. Levin  <ldv@altlinux.org>
+	    Florian Weimer  <fweimer@redhat.com>
+
+	[BZ #24228]
+	* libio/genops.c (_IO_unbuffer_all)
+	[SHLIB_COMPAT (libc, GLIBC_2_0, GLIBC_2_1)]: Do not attempt to free wide
+	buffers and access _IO_FILE_complete members of legacy libio streams.
+	* libio/tst-bz24228.c: New file.
+	* libio/tst-bz24228.map: Likewise.
+	* libio/Makefile [build-shared] (tests): Add tst-bz24228.
+	[build-shared] (generated): Add tst-bz24228.mtrace and
+	tst-bz24228.check.
+	[run-built-tests && build-shared] (tests-special): Add
+	$(objpfx)tst-bz24228-mem.out.
+	(LDFLAGS-tst-bz24228, tst-bz24228-ENV): New variables.
+	($(objpfx)tst-bz24228-mem.out): New rule.
+
+2019-05-22  Wilco Dijkstra  <wdijkstr@arm.com>
+
+	[BZ #24531]
+	* malloc/malloc.c (MAX_TCACHE_COUNT): New define.
+	(do_set_tcache_count): Only update if count is small enough.
+	* manual/tunables.texi (glibc.malloc.tcache_count): Document max value.
+
+2019-05-15  Mark Wielaard  <mark@klomp.org>
+
+	[BZ#24476]
+	* dlfcn/dlerror.c (__dlerror_main_freeres): Guard using
+	__libc_once_get (once) and static_buf == NULL.
+	(__dlerror): Check we have a valid key, set result to static_buf
+	otherwise.
+
+2019-05-15  Andreas Schwab  <schwab@suse.de>
+
+	[BZ #20568]
+	* libio/wfileops.c (_IO_wfile_sync): Correct last argument to
+	__codecvt_do_length.
+	* libio/Makefile (tests): Add tst-wfile-sync.
+	($(objpfx)tst-wfile-sync.out): Depend on $(gen-locales).
+	* libio/tst-wfile-sync.c: New file.
+	* libio/tst-wfile-sync.input: New file.
+
+2018-12-21  Istvan Kurucsai <pistukem@gmail.com>
+
+	* malloc/malloc.c (munmap_chunk): Verify chunk alignment.
+
+2018-12-20  Istvan Kurucsai <pistukem@gmail.com>
+
+	* malloc/malloc.c (mremap_chunk): Additional checks.
+
+2018-08-17  Istvan Kurucsai  <pistukem@gmail.com>
+
+	* malloc/malloc.c (_int_malloc): Additional binning code checks.
+
 2019-04-23  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
 
 	[BZ #18035]

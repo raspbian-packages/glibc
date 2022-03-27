@@ -1,9 +1,35 @@
-glibc (2.28-10+rpi1) buster-staging; urgency=medium
+glibc (2.28-10+rpi1+deb10u1) buster-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Tue, 14 May 2019 01:48:54 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Sun, 27 Mar 2022 02:48:06 +0000
+
+glibc (2.28-10+deb10u1) buster; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch
+    (Closes: #930697):
+    - Add more integrity check to malloc() function.
+    - Fix crash in _IO_wfile_sync.
+    - Fix bad free() in libdl if dlerror() is not used.  Closes: #953257.
+    - Fix overflow in glibc.malloc.tcache_count tunable.
+    - Fix old x86 applications crash on exit() under valgrind.
+    - Remove copy_file_range emulation. The kernel interface has at evolved
+      and the glibc emulation doesn't match it anymore, so it's better for
+      it to return -ENOSYS. This only impacts Linux kernels << 4.8.
+    - Avoid lazy binding of symbols that may follow a variant PCS on arm64, to
+      support binaries using AdvSIMD and SVE vector calls.
+    - Fix large mmap64 offset for the N32 ABI on mips/mipsel/mips64el.
+    - Improve string functions performances on arm64.
+  * debian/patches/any/git-libio-stdout-putc.diff: refresh.
+  * debian/debhelper.in/libc.preinst: simplify the version comparison by only
+    comparing the two first parts, now that kernel 2.X are not supported
+    anymore.  Closes: #1004861.
+  * debian/debhelper.in/libc.preinst: drop the check for kernel release > 255
+    now that glibc and preinstall script are fixed.  Closes: #987266.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Tue, 15 Mar 2022 23:48:49 +0100
 
 glibc (2.28-10) unstable; urgency=medium
 
