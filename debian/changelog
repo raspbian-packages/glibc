@@ -9,7 +9,11 @@ glibc (2.31-13+rpi1+deb11u3) bullseye-staging; urgency=medium
     script does not seem to be used for anything in the Debian
     package.
 
- -- Raspbian forward porter <root@raspbian.org>  Sun, 27 Mar 2022 03:41:03 +0000
+  [changes introduced in 2.31-13+rpi1+deb11u3 by Peter Michael Green]
+  * Change mode on sysdeps/x86_64/configure to 644, same dgit issue
+    as above.
+ 
+ -- Peter Michael Green <plugwash@raspbian.org>  Tue, 29 Mar 2022 22:11:31 +0000
 
 glibc (2.31-13+deb11u3) bullseye; urgency=medium
 
