@@ -18,31 +18,46 @@
    <https://www.gnu.org/licenses/>.  */
 
 #include <sysdep.h>
+#define USE_WITH_SSE2	1
 
 #define VEC_SIZE	16
-#define VEC(i)		xmm##i
-/* Don't use movups and movaps since it will get larger nop paddings for
-   alignment.  */
-#define VMOVU		movdqu
-#define VMOVA		movdqa
+#define MOV_SIZE	3
+#define RET_SIZE	1
 
-#define MEMSET_VDUP_TO_VEC0_AND_SET_RETURN(d, r) \
+#define VEC(i)		xmm##i
+#define VMOVU     movups
+#define VMOVA     movaps
+
+# define MEMSET_SET_VEC0_AND_SET_RETURN(d, r) \
   movd d, %xmm0; \
   movq r, %rax; \
   punpcklbw %xmm0, %xmm0; \
   punpcklwd %xmm0, %xmm0; \
   pshufd $0, %xmm0, %xmm0
 
-#define WMEMSET_VDUP_TO_VEC0_AND_SET_RETURN(d, r) \
+# define BZERO_ZERO_VEC0() \
+  pxor %xmm0, %xmm0
+
+# define WMEMSET_SET_VEC0_AND_SET_RETURN(d, r) \
   movd d, %xmm0; \
-  movq r, %rax; \
-  pshufd $0, %xmm0, %xmm0
+  pshufd $0, %xmm0, %xmm0; \
+  movq r, %rax
+
+# define MEMSET_VDUP_TO_VEC0_HIGH()
+# define MEMSET_VDUP_TO_VEC0_LOW()
+
+# define WMEMSET_VDUP_TO_VEC0_HIGH()
+# define WMEMSET_VDUP_TO_VEC0_LOW()
 
 #define SECTION(p)		p
 
 #ifndef MEMSET_SYMBOL
 # define MEMSET_CHK_SYMBOL(p,s)	p
 # define MEMSET_SYMBOL(p,s)	memset
+#endif
+
+#ifndef BZERO_SYMBOL
+# define BZERO_SYMBOL(p,s)	__bzero
 #endif
 
 #ifndef WMEMSET_SYMBOL
@@ -55,6 +70,7 @@
 libc_hidden_builtin_def (memset)
 
 #if IS_IN (libc)
+weak_alias (__bzero, bzero)
 libc_hidden_def (__wmemset)
 weak_alias (__wmemset, wmemset)
 libc_hidden_weak (wmemset)

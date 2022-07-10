@@ -704,9 +704,10 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
   int max_cpuid_ex;
   long int data = -1;
   long int shared = -1;
-  long int core;
+  long int core = -1;
   unsigned int threads = 0;
   unsigned long int level1_icache_size = -1;
+  unsigned long int level1_icache_linesize = -1;
   unsigned long int level1_dcache_size = -1;
   unsigned long int level1_dcache_assoc = -1;
   unsigned long int level1_dcache_linesize = -1;
@@ -726,6 +727,8 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
 
       level1_icache_size
 	= handle_intel (_SC_LEVEL1_ICACHE_SIZE, cpu_features);
+      level1_icache_linesize
+	= handle_intel (_SC_LEVEL1_ICACHE_LINESIZE, cpu_features);
       level1_dcache_size = data;
       level1_dcache_assoc
 	= handle_intel (_SC_LEVEL1_DCACHE_ASSOC, cpu_features);
@@ -753,6 +756,7 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
       shared = handle_zhaoxin (_SC_LEVEL3_CACHE_SIZE);
 
       level1_icache_size = handle_zhaoxin (_SC_LEVEL1_ICACHE_SIZE);
+      level1_icache_linesize = handle_zhaoxin (_SC_LEVEL1_ICACHE_LINESIZE);
       level1_dcache_size = data;
       level1_dcache_assoc = handle_zhaoxin (_SC_LEVEL1_DCACHE_ASSOC);
       level1_dcache_linesize = handle_zhaoxin (_SC_LEVEL1_DCACHE_LINESIZE);
@@ -772,6 +776,7 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
       shared = handle_amd (_SC_LEVEL3_CACHE_SIZE);
 
       level1_icache_size = handle_amd (_SC_LEVEL1_ICACHE_SIZE);
+      level1_icache_linesize = handle_amd (_SC_LEVEL1_ICACHE_LINESIZE);
       level1_dcache_size = data;
       level1_dcache_assoc = handle_amd (_SC_LEVEL1_DCACHE_ASSOC);
       level1_dcache_linesize = handle_amd (_SC_LEVEL1_DCACHE_LINESIZE);
@@ -833,6 +838,7 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
     }
 
   cpu_features->level1_icache_size = level1_icache_size;
+  cpu_features->level1_icache_linesize = level1_icache_linesize;
   cpu_features->level1_dcache_size = level1_dcache_size;
   cpu_features->level1_dcache_assoc = level1_dcache_assoc;
   cpu_features->level1_dcache_linesize = level1_dcache_linesize;
@@ -860,12 +866,14 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
   /* NB: The REP MOVSB threshold must be greater than VEC_SIZE * 8.  */
   unsigned int minimum_rep_movsb_threshold;
 #endif
-  /* NB: The default REP MOVSB threshold is 2048 * (VEC_SIZE / 16).  */
+  /* NB: The default REP MOVSB threshold is 4096 * (VEC_SIZE / 16) for
+     VEC_SIZE == 64 or 32.  For VEC_SIZE == 16, the default REP MOVSB
+     threshold is 2048 * (VEC_SIZE / 16).  */
   unsigned int rep_movsb_threshold;
   if (CPU_FEATURE_USABLE_P (cpu_features, AVX512F)
       && !CPU_FEATURE_PREFERRED_P (cpu_features, Prefer_No_AVX512))
     {
-      rep_movsb_threshold = 2048 * (64 / 16);
+      rep_movsb_threshold = 4096 * (64 / 16);
 #if HAVE_TUNABLES
       minimum_rep_movsb_threshold = 64 * 8;
 #endif
@@ -873,7 +881,7 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
   else if (CPU_FEATURE_PREFERRED_P (cpu_features,
 				    AVX_Fast_Unaligned_Load))
     {
-      rep_movsb_threshold = 2048 * (32 / 16);
+      rep_movsb_threshold = 4096 * (32 / 16);
 #if HAVE_TUNABLES
       minimum_rep_movsb_threshold = 32 * 8;
 #endif
@@ -885,6 +893,22 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
       minimum_rep_movsb_threshold = 16 * 8;
 #endif
     }
+  /* NB: The default REP MOVSB threshold is 2112 on processors with fast
+     short REP MOVSB (FSRM).  */
+  if (CPU_FEATURE_USABLE_P (cpu_features, FSRM))
+    rep_movsb_threshold = 2112;
+
+  unsigned long int rep_movsb_stop_threshold;
+  /* ERMS feature is implemented from AMD Zen3 architecture and it is
+     performing poorly for data above L2 cache size. Henceforth, adding
+     an upper bound threshold parameter to limit the usage of Enhanced
+     REP MOVSB operations and setting its value to L2 cache size.  */
+  if (cpu_features->basic.kind == arch_kind_amd)
+    rep_movsb_stop_threshold = core;
+  /* Setting the upper bound of ERMS to the computed value of
+     non-temporal threshold for architectures other than AMD.  */
+  else
+    rep_movsb_stop_threshold = non_temporal_threshold;
 
   /* The default threshold to use Enhanced REP STOSB.  */
   unsigned long int rep_stosb_threshold = 2048;
@@ -917,17 +941,14 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
   rep_stosb_threshold = TUNABLE_GET (x86_rep_stosb_threshold,
 				     long int, NULL);
 
-  TUNABLE_SET_WITH_BOUNDS (x86_data_cache_size, long int, data,
-			   0, (long int) -1);
-  TUNABLE_SET_WITH_BOUNDS (x86_shared_cache_size, long int, shared,
-			   0, (long int) -1);
-  TUNABLE_SET_WITH_BOUNDS (x86_non_temporal_threshold, long int,
-			   non_temporal_threshold, 0, (long int) -1);
-  TUNABLE_SET_WITH_BOUNDS (x86_rep_movsb_threshold, long int,
-			   rep_movsb_threshold,
-			   minimum_rep_movsb_threshold, (long int) -1);
-  TUNABLE_SET_WITH_BOUNDS (x86_rep_stosb_threshold, long int,
-			   rep_stosb_threshold, 1, (long int) -1);
+  TUNABLE_SET_WITH_BOUNDS (x86_data_cache_size, data, 0, SIZE_MAX);
+  TUNABLE_SET_WITH_BOUNDS (x86_shared_cache_size, shared, 0, SIZE_MAX);
+  TUNABLE_SET_WITH_BOUNDS (x86_non_temporal_threshold, non_temporal_threshold,
+			   0, SIZE_MAX);
+  TUNABLE_SET_WITH_BOUNDS (x86_rep_movsb_threshold, rep_movsb_threshold,
+			   minimum_rep_movsb_threshold, SIZE_MAX);
+  TUNABLE_SET_WITH_BOUNDS (x86_rep_stosb_threshold, rep_stosb_threshold, 1,
+			   SIZE_MAX);
 #endif
 
   cpu_features->data_cache_size = data;
@@ -935,4 +956,5 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
   cpu_features->non_temporal_threshold = non_temporal_threshold;
   cpu_features->rep_movsb_threshold = rep_movsb_threshold;
   cpu_features->rep_stosb_threshold = rep_stosb_threshold;
+  cpu_features->rep_movsb_stop_threshold = rep_movsb_stop_threshold;
 }

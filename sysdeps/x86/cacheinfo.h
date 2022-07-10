@@ -54,6 +54,14 @@ long int __x86_rep_movsb_threshold attribute_hidden = 2048;
 /* Threshold to use Enhanced REP STOSB.  */
 long int __x86_rep_stosb_threshold attribute_hidden = 2048;
 
+/* Threshold to stop using Enhanced REP MOVSB.  */
+long int __x86_rep_movsb_stop_threshold attribute_hidden;
+
+/* A bit-wise OR of string/memory requirements for optimal performance
+   e.g. X86_STRING_CONTROL_AVOID_SHORT_DISTANCE_REP_MOVSB.  These bits
+   are used at runtime to tune implementation behavior.  */
+int __x86_string_control attribute_hidden;
+
 static void
 init_cacheinfo (void)
 {
@@ -63,21 +71,32 @@ init_cacheinfo (void)
   __x86_raw_data_cache_size = data;
   /* Round data cache size to multiple of 256 bytes.  */
   data = data & ~255L;
-  __x86_data_cache_size_half = data / 2;
-  __x86_data_cache_size = data;
+  if (data > 0)
+    {
+      __x86_data_cache_size_half = data / 2;
+      __x86_data_cache_size = data;
+    }
 
   long int shared = cpu_features->shared_cache_size;
   __x86_raw_shared_cache_size_half = shared / 2;
   __x86_raw_shared_cache_size = shared;
   /* Round shared cache size to multiple of 256 bytes.  */
   shared = shared & ~255L;
-  __x86_shared_cache_size_half = shared / 2;
-  __x86_shared_cache_size = shared;
+  if (shared > 0)
+    {
+      __x86_shared_cache_size_half = shared / 2;
+      __x86_shared_cache_size = shared;
+    }
 
   __x86_shared_non_temporal_threshold
     = cpu_features->non_temporal_threshold;
 
   __x86_rep_movsb_threshold = cpu_features->rep_movsb_threshold;
   __x86_rep_stosb_threshold = cpu_features->rep_stosb_threshold;
+  __x86_rep_movsb_stop_threshold =  cpu_features->rep_movsb_stop_threshold;
+
+  if (CPU_FEATURES_ARCH_P (cpu_features, Avoid_Short_Distance_REP_MOVSB))
+    __x86_string_control
+      |= X86_STRING_CONTROL_AVOID_SHORT_DISTANCE_REP_MOVSB;
 }
 #endif

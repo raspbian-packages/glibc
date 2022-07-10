@@ -67,6 +67,8 @@ libsupport-routines = \
   support_quote_string \
   support_record_failure \
   support_run_diff \
+  support_select_modifies_timeout \
+  support_select_normalizes_timeout \
   support_set_small_thread_stack_size \
   support_shared_allocate \
   support_small_stack_thread_attribute \
@@ -90,6 +92,7 @@ libsupport-routines = \
   xchdir \
   xchroot \
   xclock_gettime \
+  xclone \
   xclose \
   xchmod \
   xconnect \
@@ -139,6 +142,7 @@ libsupport-routines = \
   xpthread_join \
   xpthread_key_create \
   xpthread_key_delete \
+  xpthread_kill \
   xpthread_mutex_consistent \
   xpthread_mutex_destroy \
   xpthread_mutex_init \

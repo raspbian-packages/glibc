@@ -758,50 +758,51 @@ _dl_init_paths (const char *llp, const char *source,
   max_dirnamelen = SYSTEM_DIRS_MAX_LEN;
   *aelem = NULL;
 
-#ifdef SHARED
-  /* This points to the map of the main object.  */
+  /* This points to the map of the main object.  If there is no main
+     object (e.g., under --help, use the dynamic loader itself as a
+     stand-in.  */
   l = GL(dl_ns)[LM_ID_BASE]._ns_loaded;
-  if (l != NULL)
-    {
-      assert (l->l_type != lt_loaded);
+#ifdef SHARED
+  if (l == NULL)
+    l = &GL (dl_rtld_map);
+#endif
+  assert (l->l_type != lt_loaded);
 
-      if (l->l_info[DT_RUNPATH])
+  if (l->l_info[DT_RUNPATH])
+    {
+      /* Allocate room for the search path and fill in information
+	 from RUNPATH.  */
+      decompose_rpath (&l->l_runpath_dirs,
+		       (const void *) (D_PTR (l, l_info[DT_STRTAB])
+				       + l->l_info[DT_RUNPATH]->d_un.d_val),
+		       l, "RUNPATH");
+      /* During rtld init the memory is allocated by the stub malloc,
+	 prevent any attempt to free it by the normal malloc.  */
+      l->l_runpath_dirs.malloced = 0;
+
+      /* The RPATH is ignored.  */
+      l->l_rpath_dirs.dirs = (void *) -1;
+    }
+  else
+    {
+      l->l_runpath_dirs.dirs = (void *) -1;
+
+      if (l->l_info[DT_RPATH])
 	{
 	  /* Allocate room for the search path and fill in information
-	     from RUNPATH.  */
-	  decompose_rpath (&l->l_runpath_dirs,
+	     from RPATH.  */
+	  decompose_rpath (&l->l_rpath_dirs,
 			   (const void *) (D_PTR (l, l_info[DT_STRTAB])
-					   + l->l_info[DT_RUNPATH]->d_un.d_val),
-			   l, "RUNPATH");
-	  /* During rtld init the memory is allocated by the stub malloc,
-	     prevent any attempt to free it by the normal malloc.  */
-	  l->l_runpath_dirs.malloced = 0;
-
-	  /* The RPATH is ignored.  */
-	  l->l_rpath_dirs.dirs = (void *) -1;
+					   + l->l_info[DT_RPATH]->d_un.d_val),
+			   l, "RPATH");
+	  /* During rtld init the memory is allocated by the stub
+	     malloc, prevent any attempt to free it by the normal
+	     malloc.  */
+	  l->l_rpath_dirs.malloced = 0;
 	}
       else
-	{
-	  l->l_runpath_dirs.dirs = (void *) -1;
-
-	  if (l->l_info[DT_RPATH])
-	    {
-	      /* Allocate room for the search path and fill in information
-		 from RPATH.  */
-	      decompose_rpath (&l->l_rpath_dirs,
-			       (const void *) (D_PTR (l, l_info[DT_STRTAB])
-					       + l->l_info[DT_RPATH]->d_un.d_val),
-			       l, "RPATH");
-	      /* During rtld init the memory is allocated by the stub
-		 malloc, prevent any attempt to free it by the normal
-		 malloc.  */
-	      l->l_rpath_dirs.malloced = 0;
-	    }
-	  else
-	    l->l_rpath_dirs.dirs = (void *) -1;
-	}
+	l->l_rpath_dirs.dirs = (void *) -1;
     }
-#endif	/* SHARED */
 
   if (llp != NULL && *llp != '\0')
     {
@@ -1113,6 +1114,7 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
     struct loadcmd loadcmds[l->l_phnum];
     size_t nloadcmds = 0;
     bool has_holes = false;
+    bool empty_dynamic = false;
 
     /* The struct is initialized to zero so this is not necessary:
     l->l_ld = 0;
@@ -1125,7 +1127,9 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 	     segments are mapped in.  We record the addresses it says
 	     verbatim, and later correct for the run-time load address.  */
 	case PT_DYNAMIC:
-	  if (ph->p_filesz)
+	  if (ph->p_filesz == 0)
+	    empty_dynamic = true; /* Usually separate debuginfo.  */
+	  else
 	    {
 	      /* Debuginfo only files from "objcopy --only-keep-debug"
 		 contain a PT_DYNAMIC segment with p_filesz == 0.  Skip
@@ -1247,6 +1251,13 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 	goto lose;
       }
 
+    /* This check recognizes most separate debuginfo files.  */
+    if (__glibc_unlikely ((l->l_ld == 0 && type == ET_DYN) || empty_dynamic))
+      {
+	errstring = N_("object file has no dynamic section");
+	goto lose;
+      }
+
     /* Length of the sections to be loaded.  */
     maplength = loadcmds[nloadcmds - 1].allocend - loadcmds[0].mapstart;
 
@@ -1264,15 +1275,7 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
       }
   }
 
-  if (l->l_ld == 0)
-    {
-      if (__glibc_unlikely (type == ET_DYN))
-	{
-	  errstring = N_("object file has no dynamic section");
-	  goto lose;
-	}
-    }
-  else
+  if (l->l_ld != 0)
     l->l_ld = (ElfW(Dyn) *) ((ElfW(Addr)) l->l_ld + l->l_addr);
 
   elf_get_dynamic_info (l, NULL);
