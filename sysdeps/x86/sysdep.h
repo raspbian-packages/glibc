@@ -57,6 +57,11 @@ enum cf_protection_level
 #define STATE_SAVE_MASK \
   ((1 << 1) | (1 << 2) | (1 << 3) | (1 << 5) | (1 << 6) | (1 << 7))
 
+/* Constants for bits in __x86_string_control:  */
+
+/* Avoid short distance REP MOVSB.  */
+#define X86_STRING_CONTROL_AVOID_SHORT_DISTANCE_REP_MOVSB	(1 << 0)
+
 #ifdef	__ASSEMBLER__
 
 /* Syntactic details of assembler.  */
@@ -73,14 +78,17 @@ enum cf_protection_level
 #define ASM_SIZE_DIRECTIVE(name) .size name,.-name;
 
 /* Define an entry point visible from C.  */
-#define	ENTRY(name)							      \
+#define	ENTRY_P2ALIGN(name, alignment)					      \
   .globl C_SYMBOL_NAME(name);						      \
   .type C_SYMBOL_NAME(name),@function;					      \
-  .align ALIGNARG(4);							      \
+  .align ALIGNARG(alignment);						      \
   C_LABEL(name)								      \
   cfi_startproc;							      \
   _CET_ENDBR;								      \
   CALL_MCOUNT
+
+/* Common entry 16 byte aligns.  */
+#define ENTRY(name) ENTRY_P2ALIGN (name, 4)
 
 #undef	END
 #define END(name)							      \
@@ -103,7 +111,8 @@ enum cf_protection_level
 /* Local label name for asm code. */
 #ifndef L
 /* ELF-like local names start with `.L'.  */
-# define L(name)	.L##name
+# define LOCAL_LABEL(name) .L##name
+# define L(name)	LOCAL_LABEL(name)
 #endif
 
 #define atom_text_section .section ".text.atom", "ax"

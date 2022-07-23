@@ -34,6 +34,7 @@ DUMMY := $(shell mkdir -p $(stamp))
 
 # Beyond here you shouldn't need to customise anything:
 DEB_HOST_ARCH         ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+DEB_HOST_ARCH_CPU     ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU)
 DEB_HOST_ARCH_ENDIAN  ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_ENDIAN)
 DEB_HOST_ARCH_OS      ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
 DEB_HOST_GNU_TYPE     ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)

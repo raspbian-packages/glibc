@@ -704,7 +704,7 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
   int max_cpuid_ex;
   long int data = -1;
   long int shared = -1;
-  long int core;
+  long int core = -1;
   unsigned int threads = 0;
   unsigned long int level1_icache_size = -1;
   unsigned long int level1_icache_linesize = -1;
@@ -866,12 +866,14 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
   /* NB: The REP MOVSB threshold must be greater than VEC_SIZE * 8.  */
   unsigned int minimum_rep_movsb_threshold;
 #endif
-  /* NB: The default REP MOVSB threshold is 2048 * (VEC_SIZE / 16).  */
+  /* NB: The default REP MOVSB threshold is 4096 * (VEC_SIZE / 16) for
+     VEC_SIZE == 64 or 32.  For VEC_SIZE == 16, the default REP MOVSB
+     threshold is 2048 * (VEC_SIZE / 16).  */
   unsigned int rep_movsb_threshold;
   if (CPU_FEATURE_USABLE_P (cpu_features, AVX512F)
       && !CPU_FEATURE_PREFERRED_P (cpu_features, Prefer_No_AVX512))
     {
-      rep_movsb_threshold = 2048 * (64 / 16);
+      rep_movsb_threshold = 4096 * (64 / 16);
 #if HAVE_TUNABLES
       minimum_rep_movsb_threshold = 64 * 8;
 #endif
@@ -879,7 +881,7 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
   else if (CPU_FEATURE_PREFERRED_P (cpu_features,
 				    AVX_Fast_Unaligned_Load))
     {
-      rep_movsb_threshold = 2048 * (32 / 16);
+      rep_movsb_threshold = 4096 * (32 / 16);
 #if HAVE_TUNABLES
       minimum_rep_movsb_threshold = 32 * 8;
 #endif
@@ -891,6 +893,22 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
       minimum_rep_movsb_threshold = 16 * 8;
 #endif
     }
+  /* NB: The default REP MOVSB threshold is 2112 on processors with fast
+     short REP MOVSB (FSRM).  */
+  if (CPU_FEATURE_USABLE_P (cpu_features, FSRM))
+    rep_movsb_threshold = 2112;
+
+  unsigned long int rep_movsb_stop_threshold;
+  /* ERMS feature is implemented from AMD Zen3 architecture and it is
+     performing poorly for data above L2 cache size. Henceforth, adding
+     an upper bound threshold parameter to limit the usage of Enhanced
+     REP MOVSB operations and setting its value to L2 cache size.  */
+  if (cpu_features->basic.kind == arch_kind_amd)
+    rep_movsb_stop_threshold = core;
+  /* Setting the upper bound of ERMS to the computed value of
+     non-temporal threshold for architectures other than AMD.  */
+  else
+    rep_movsb_stop_threshold = non_temporal_threshold;
 
   /* The default threshold to use Enhanced REP STOSB.  */
   unsigned long int rep_stosb_threshold = 2048;
@@ -938,4 +956,5 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
   cpu_features->non_temporal_threshold = non_temporal_threshold;
   cpu_features->rep_movsb_threshold = rep_movsb_threshold;
   cpu_features->rep_stosb_threshold = rep_stosb_threshold;
+  cpu_features->rep_movsb_stop_threshold = rep_movsb_stop_threshold;
 }

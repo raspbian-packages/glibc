@@ -1,5 +1,5 @@
-/* strcasecmp_l optimized with AVX.
-   Copyright (C) 2017-2021 Free Software Foundation, Inc.
+/* strcasecmp_l optimized with EVEX.
+   Copyright (C) 2017-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,7 +16,8 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#define STRCMP_SSE42 __strcasecmp_l_avx
-#define USE_AVX 1
+#ifndef STRCMP
+# define STRCMP	__strcasecmp_l_evex
+#endif
 #define USE_AS_STRCASECMP_L
-#include "strcmp-sse42.S"
+#include "strcmp-evex.S"

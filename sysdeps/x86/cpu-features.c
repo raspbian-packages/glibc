@@ -555,23 +555,23 @@ disable_tsx:
 	  |= bit_arch_Prefer_No_VZEROUPPER;
       else
 	{
-	  cpu_features->preferred[index_arch_Prefer_No_AVX512]
-	    |= bit_arch_Prefer_No_AVX512;
+	  /* Processors with AVX512 and AVX-VNNI won't lower CPU frequency
+	     when ZMM load and store instructions are used.  */
+	  if (!CPU_FEATURES_CPU_P (cpu_features, AVX_VNNI))
+	    cpu_features->preferred[index_arch_Prefer_No_AVX512]
+	      |= bit_arch_Prefer_No_AVX512;
 
 	  /* Avoid RTM abort triggered by VZEROUPPER inside a
 	     transactionally executing RTM region.  */
 	  if (CPU_FEATURE_USABLE_P (cpu_features, RTM))
 	    cpu_features->preferred[index_arch_Prefer_No_VZEROUPPER]
 	      |= bit_arch_Prefer_No_VZEROUPPER;
-
-	  /* Since to compare 2 32-byte strings, 256-bit EVEX strcmp
-	     requires 2 loads, 3 VPCMPs and 2 KORDs while AVX2 strcmp
-	     requires 1 load, 2 VPCMPEQs, 1 VPMINU and 1 VPMOVMSKB,
-	     AVX2 strcmp is faster than EVEX strcmp.  */
-	  if (CPU_FEATURE_USABLE_P (cpu_features, AVX2))
-	    cpu_features->preferred[index_arch_Prefer_AVX2_STRCMP]
-	      |= bit_arch_Prefer_AVX2_STRCMP;
 	}
+
+      /* Avoid avoid short distance REP MOVSB on processor with FSRM.  */
+      if (CPU_FEATURES_CPU_P (cpu_features, FSRM))
+	cpu_features->preferred[index_arch_Avoid_Short_Distance_REP_MOVSB]
+	  |= bit_arch_Avoid_Short_Distance_REP_MOVSB;
     }
   /* This spells out "AuthenticAMD" or "HygonGenuine".  */
   else if ((ebx == 0x68747541 && ecx == 0x444d4163 && edx == 0x69746e65)

@@ -1,5 +1,5 @@
-/* strspn optimized with SSE2.
-   Copyright (C) 2017-2021 Free Software Foundation, Inc.
+/* strncasecmp_l optimized with EVEX.
+   Copyright (C) 2017-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,13 +16,10 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#if IS_IN (libc)
-
-# include <sysdep.h>
-# define strspn __strspn_sse2
-
-# undef libc_hidden_builtin_def
-# define libc_hidden_builtin_def(strspn)
+#ifndef STRCMP
+# define STRCMP	__strncasecmp_l_evex
 #endif
-
-#include <sysdeps/x86_64/strspn.S>
+#define OVERFLOW_STRCMP	__strcasecmp_l_evex
+#define USE_AS_STRCASECMP_L
+#define USE_AS_STRNCMP
+#include "strcmp-evex.S"

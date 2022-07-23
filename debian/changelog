@@ -1,4 +1,4 @@
-glibc (2.33-7+rpi1) bookworm-staging; urgency=medium
+glibc (2.33-8+rpi1) bookworm-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -9,7 +9,21 @@ glibc (2.33-7+rpi1) bookworm-staging; urgency=medium
     for other architectures are all 644 and we don't really care
     about x86-64 in raspbian anyway.
 
- -- Raspbian forward porter <root@raspbian.org>  Sun, 27 Feb 2022 10:26:59 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Sat, 23 Jul 2022 07:19:44 +0000
+
+glibc (2.33-8) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/git-spawni-reauth.diff: Fix make calls to spawni.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix testsuite on arm64 with recent binutils versions.  Closes: #1014109.
+  * debian/rules.d/build.mk, debian/testsuite-mips-nan2008.c: disable the
+    testsuite if the CPU NaN doesn't encoding matches the ABI. This fixes FTBFS
+    on broken mips build daemons.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 10 Jul 2022 22:29:34 +0200
 
 glibc (2.33-7) unstable; urgency=medium
 

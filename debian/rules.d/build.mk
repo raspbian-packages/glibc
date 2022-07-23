@@ -140,6 +140,10 @@ $(stamp)check_%: $(stamp)build_%
 	elif [ $(call xx,configure_build) != $(call xx,configure_target) ] && \
 	     ! $(DEB_BUILDDIR)/elf/ld.so $(DEB_BUILDDIR)/libc.so >/dev/null 2>&1 ; then \
 	  echo "Flavour cross-compiled, tests have been skipped." ; \
+	elif echo $(DEB_HOST_ARCH_CPU) | grep -q mips && \
+	     $(call xx,CC) -o $(DEB_BUILDDIR)/testsuite-mips-nan2008 debian/testsuite-mips-nan2008.c && \
+	     ! $(DEB_BUILDDIR)/testsuite-mips-nan2008 ; then \
+	  echo "CPU NaN encoding does not match the ABI, tests have been skipped" ; \
 	elif ! $(call kernel_check,$(call xx,MIN_KERNEL_SUPPORTED)); then \
 	  echo "Kernel too old, tests have been skipped." ; \
 	elif [ $(call xx,RUN_TESTSUITE) != "yes" ]; then \

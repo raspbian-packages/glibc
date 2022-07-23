@@ -1,4 +1,4 @@
-/* strncasecmp_l optimized with AVX.
+/* strcspn optimized with SSE2.
    Copyright (C) 2017-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -16,7 +16,13 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#define STRCMP_SSE42 __strncasecmp_l_avx
-#define USE_AVX 1
-#define USE_AS_STRNCASECMP_L
-#include "strcmp-sse42.S"
+#if IS_IN (libc)
+
+# include <sysdep.h>
+# define STRCSPN __strcspn_sse2
+
+# undef libc_hidden_builtin_def
+# define libc_hidden_builtin_def(STRCSPN)
+#endif
+
+#include <string/strcspn.c>

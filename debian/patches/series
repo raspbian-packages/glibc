@@ -51,6 +51,7 @@ hurd-i386/git-reply_bogus.diff
 
 # 2.36
 hurd-i386/pthread_key.diff
+hurd-i386/git-spawni-reauth.diff
 
 hurd-i386/local-enable-ldconfig.diff
 hurd-i386/tg-sysvshm.diff

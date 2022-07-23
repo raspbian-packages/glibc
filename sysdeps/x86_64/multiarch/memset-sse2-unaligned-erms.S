@@ -22,6 +22,7 @@
 
 #if IS_IN (libc)
 # define MEMSET_SYMBOL(p,s)	p##_sse2_##s
+# define BZERO_SYMBOL(p,s)	MEMSET_SYMBOL (p, s)
 # define WMEMSET_SYMBOL(p,s)	p##_sse2_##s
 
 # ifdef SHARED
@@ -30,9 +31,7 @@
 # endif
 
 # undef weak_alias
-# define weak_alias(original, alias) \
-	.weak bzero; bzero = __bzero
-
+# define weak_alias(original, alias)
 # undef strong_alias
 # define strong_alias(ignored1, ignored2)
 #endif
