@@ -164,6 +164,10 @@ extern bool support_select_modifies_timeout (void);
    tv_usec larger than 1000000.  */
 extern bool support_select_normalizes_timeout (void);
 
+/* Return true if socket FD supports 64-bit timestamps with the SOL_SOCKET
+   and SO_TIMESTAMP/SO_TIMESTAMPNS.  */
+extern bool support_socket_so_timestamp_time64 (int fd);
+
 /* Create a timer that trigger after SEC seconds and NSEC nanoseconds.  If
    REPEAT is true the timer will repeat indefinitely.  If CALLBACK is not
    NULL, the function will be called when the timer expires; otherwise a
@@ -173,6 +177,10 @@ timer_t support_create_timer (uint64_t sec, long int nsec, bool repeat,
 			      void (*callback)(int));
 /* Disable the timer TIMER.  */
 void support_delete_timer (timer_t timer);
+
+/* Wait until all threads except the current thread have exited (as
+   far as the kernel is concerned).  */
+void support_wait_for_thread_exit (void);
 
 struct support_stack
 {
@@ -192,6 +200,14 @@ struct support_stack support_stack_alloc (size_t size);
 
 /* Deallocate the STACK.  */
 void support_stack_free (struct support_stack *stack);
+
+
+/* Create a range of NUM opened '/dev/null' file descriptors using FLAGS and
+   MODE.  The function takes care of restarting the open range if a file
+   descriptor is found within the specified range and also increases
+   RLIMIT_NOFILE if required.
+   The returned value is the lowest file descriptor number.  */
+int support_open_dev_null_range (int num, int flags, mode_t mode);
 
 __END_DECLS
 

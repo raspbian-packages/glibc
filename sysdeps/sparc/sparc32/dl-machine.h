@@ -28,6 +28,8 @@
 #include <tls.h>
 #include <dl-plt.h>
 #include <elf/dl-hwcaps.h>
+#include <dl-static-tls.h>
+#include <dl-machine-rel.h>
 
 /* Return nonzero iff ELF header is compatible with the running host.  */
 static inline int
@@ -97,7 +99,8 @@ elf_machine_load_address (void)
    entries will jump to the on-demand fixup code in dl-runtime.c.  */
 
 static inline int
-elf_machine_runtime_setup (struct link_map *l, int lazy, int profile)
+elf_machine_runtime_setup (struct link_map *l, struct r_scope_elem *scope[],
+			   int lazy, int profile)
 {
   Elf32_Addr *plt;
   extern void _dl_runtime_resolve (Elf32_Word);
@@ -194,10 +197,6 @@ elf_machine_runtime_setup (struct link_map *l, int lazy, int profile)
 
 /* A reloc type used for ld.so cmdline arg lookups to reject PLT entries.  */
 #define ELF_MACHINE_JMP_SLOT	R_SPARC_JMP_SLOT
-
-/* The SPARC never uses Elf32_Rel relocations.  */
-#define ELF_MACHINE_NO_REL 1
-#define ELF_MACHINE_NO_RELA 0
 
 /* Undo the sub %sp, 6*4, %sp; add %sp, 22*4, %o0 below to get at the
    value we want in __libc_stack_end.  */
@@ -327,10 +326,11 @@ elf_machine_plt_value (struct link_map *map, const Elf32_Rela *reloc,
 /* Perform the relocation specified by RELOC and SYM (which is fully resolved).
    MAP is the object containing the reloc.  */
 
-auto inline void
+static inline void
 __attribute__ ((always_inline))
-elf_machine_rela (struct link_map *map, const Elf32_Rela *reloc,
-		  const Elf32_Sym *sym, const struct r_found_version *version,
+elf_machine_rela (struct link_map *map, struct r_scope_elem *scope[],
+		  const Elf32_Rela *reloc, const Elf32_Sym *sym,
+		  const struct r_found_version *version,
 		  void *const reloc_addr_arg, int skip_ifunc)
 {
   Elf32_Addr *const reloc_addr = reloc_addr_arg;
@@ -381,7 +381,7 @@ elf_machine_rela (struct link_map *map, const Elf32_Rela *reloc,
     }
   else
     {
-      sym_map = RESOLVE_MAP (&sym, version, r_type);
+      sym_map = RESOLVE_MAP (map, scope, &sym, version, r_type);
       value = SYMBOL_ADDRESS (sym_map, sym, true);
     }
 #else
@@ -536,7 +536,7 @@ elf_machine_rela (struct link_map *map, const Elf32_Rela *reloc,
     }
 }
 
-auto inline void
+static inline void
 __attribute__ ((always_inline))
 elf_machine_rela_relative (Elf32_Addr l_addr, const Elf32_Rela *reloc,
 			   void *const reloc_addr_arg)
@@ -545,9 +545,9 @@ elf_machine_rela_relative (Elf32_Addr l_addr, const Elf32_Rela *reloc,
   *reloc_addr += l_addr + reloc->r_addend;
 }
 
-auto inline void
+static inline void
 __attribute__ ((always_inline))
-elf_machine_lazy_rel (struct link_map *map,
+elf_machine_lazy_rel (struct link_map *map, struct r_scope_elem *scope[],
 		      Elf32_Addr l_addr, const Elf32_Rela *reloc,
 		      int skip_ifunc)
 {

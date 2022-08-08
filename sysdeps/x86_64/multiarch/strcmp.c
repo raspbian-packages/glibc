@@ -29,6 +29,7 @@
 extern __typeof (REDIRECT_NAME) OPTIMIZE (sse2) attribute_hidden;
 extern __typeof (REDIRECT_NAME) OPTIMIZE (sse2_unaligned) attribute_hidden;
 extern __typeof (REDIRECT_NAME) OPTIMIZE (ssse3) attribute_hidden;
+extern __typeof (REDIRECT_NAME) OPTIMIZE (sse42) attribute_hidden;
 extern __typeof (REDIRECT_NAME) OPTIMIZE (avx2) attribute_hidden;
 extern __typeof (REDIRECT_NAME) OPTIMIZE (avx2_rtm) attribute_hidden;
 extern __typeof (REDIRECT_NAME) OPTIMIZE (evex) attribute_hidden;
@@ -43,8 +44,7 @@ IFUNC_SELECTOR (void)
     {
       if (CPU_FEATURE_USABLE_P (cpu_features, AVX512VL)
 	  && CPU_FEATURE_USABLE_P (cpu_features, AVX512BW)
-	  && CPU_FEATURE_USABLE_P (cpu_features, BMI2)
-	  && !CPU_FEATURES_ARCH_P (cpu_features, Prefer_AVX2_STRCMP))
+	  && CPU_FEATURE_USABLE_P (cpu_features, BMI2))
 	return OPTIMIZE (evex);
 
       if (CPU_FEATURE_USABLE_P (cpu_features, RTM))
@@ -53,6 +53,10 @@ IFUNC_SELECTOR (void)
       if (!CPU_FEATURES_ARCH_P (cpu_features, Prefer_No_VZEROUPPER))
 	return OPTIMIZE (avx2);
     }
+
+  if (CPU_FEATURE_USABLE_P (cpu_features, SSE4_2)
+      && !CPU_FEATURES_ARCH_P (cpu_features, Slow_SSE4_2))
+    return OPTIMIZE (sse42);
 
   if (CPU_FEATURES_ARCH_P (cpu_features, Fast_Unaligned_Load))
     return OPTIMIZE (sse2_unaligned);

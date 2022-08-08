@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sysdep.h>
+#include <brk_call.h>
 
 /* This must be initialized data because commons can't have aliases.  */
 void *__curbrk = 0;
@@ -33,7 +34,7 @@ weak_alias (__curbrk, ___brk_addr)
 int
 __brk (void *addr)
 {
-  __curbrk = (void *) INTERNAL_SYSCALL_CALL (brk, addr);
+  __curbrk = __brk_call (addr);
   if (__curbrk < addr)
     {
       __set_errno (ENOMEM);
