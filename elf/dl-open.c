@@ -66,6 +66,9 @@ struct dl_open_args
      libc_map value in the namespace in case of a dlopen failure.  */
   bool libc_already_loaded;
 
+  /* Set to true if the end of dl_open_worker_begin was reached.  */
+  bool worker_continue;
+
   /* Original parameters to the program and the current environment.  */
   int argc;
   char **argv;
@@ -482,7 +485,7 @@ call_dl_init (void *closure)
 }
 
 static void
-dl_open_worker (void *a)
+dl_open_worker_begin (void *a)
 {
   struct dl_open_args *args = a;
   const char *file = args->file;
@@ -608,25 +611,7 @@ dl_open_worker (void *a)
 
 #ifdef SHARED
   /* Auditing checkpoint: we have added all objects.  */
-  if (__glibc_unlikely (GLRO(dl_naudit) > 0))
-    {
-      struct link_map *head = GL(dl_ns)[new->l_ns]._ns_loaded;
-      /* Do not call the functions for any auditing object.  */
-      if (head->l_auditing == 0)
-	{
-	  struct audit_ifaces *afct = GLRO(dl_audit);
-	  for (unsigned int cnt = 0; cnt < GLRO(dl_naudit); ++cnt)
-	    {
-	      if (afct->activity != NULL)
-		{
-		  struct auditstate *state = link_map_audit_state (head, cnt);
-		  afct->activity (&state->cookie, LA_ACT_CONSISTENT);
-		}
-
-	      afct = afct->next;
-	    }
-	}
-    }
+  _dl_audit_activity_nsid (new->l_ns, LA_ACT_CONSISTENT);
 #endif
 
   /* Notify the debugger all new objects are now ready to go.  */
@@ -774,6 +759,36 @@ dl_open_worker (void *a)
       _dl_call_libc_early_init (libc_map, false);
     }
 
+  args->worker_continue = true;
+}
+
+static void
+dl_open_worker (void *a)
+{
+  struct dl_open_args *args = a;
+
+  args->worker_continue = false;
+
+  {
+    /* Protects global and module specific TLS state.  */
+    __rtld_lock_lock_recursive (GL(dl_load_tls_lock));
+
+    struct dl_exception ex;
+    int err = _dl_catch_exception (&ex, dl_open_worker_begin, args);
+
+    __rtld_lock_unlock_recursive (GL(dl_load_tls_lock));
+
+    if (__glibc_unlikely (ex.errstring != NULL))
+      /* Reraise the error.  */
+      _dl_signal_exception (err, &ex, NULL);
+  }
+
+  if (!args->worker_continue)
+    return;
+
+  int mode = args->mode;
+  struct link_map *new = args->map;
+
   /* Run the initializer functions of new objects.  Temporarily
      disable the exception handler, so that lazy binding failures are
      fatal.  */
@@ -886,7 +901,7 @@ no more namespaces available for dlmopen()"));
       /* Avoid keeping around a dangling reference to the libc.so link
 	 map in case it has been cached in libc_map.  */
       if (!args.libc_already_loaded)
-	GL(dl_ns)[nsid].libc_map = NULL;
+	GL(dl_ns)[args.nsid].libc_map = NULL;
 
       /* Remove the object from memory.  It may be in an inconsistent
 	 state if relocation failed, for example.  */
@@ -898,8 +913,6 @@ no more namespaces available for dlmopen()"));
 	     at this point, which is why it is not necessary to reset
 	     the flag here.  */
 	}
-
-      assert (_dl_debug_initialize (0, args.nsid)->r_state == RT_CONSISTENT);
 
       /* Release the lock.  */
       __rtld_lock_unlock_recursive (GL(dl_load_lock));

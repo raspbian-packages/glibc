@@ -92,6 +92,7 @@
 #define __NR_ftruncate64 84
 #define __NR_futex 142
 #define __NR_futex_time64 422
+#define __NR_futex_waitv 449
 #define __NR_futimesat 288
 #define __NR_get_kernel_syms 223
 #define __NR_get_mempolicy 304
@@ -242,6 +243,7 @@
 #define __NR_preadv2 358
 #define __NR_prlimit64 331
 #define __NR_process_madvise 440
+#define __NR_process_mrelease 448
 #define __NR_process_vm_readv 338
 #define __NR_process_vm_writev 339
 #define __NR_pselect6 297
@@ -252,6 +254,7 @@
 #define __NR_pwritev2 359
 #define __NR_query_module 184
 #define __NR_quotactl 165
+#define __NR_quotactl_fd 443
 #define __NR_read 3
 #define __NR_readahead 205
 #define __NR_readdir 204
@@ -307,6 +310,7 @@
 #define __NR_sendmsg 114
 #define __NR_sendto 133
 #define __NR_set_mempolicy 305
+#define __NR_set_mempolicy_home_node 450
 #define __NR_set_robust_list 300
 #define __NR_set_tid_address 166
 #define __NR_setdomainname 163
