@@ -21,6 +21,8 @@
 #include <unistd.h>
 #include <not-cancel.h>
 
+extern char *__trivfs_server_name __attribute__((weak));
+
 /* Write up to LENGTH bytes of randomness starting at BUFFER.
    Return the number of bytes written, or -1 on error.  */
 ssize_t
@@ -30,6 +32,17 @@ __getrandom (void *buffer, size_t length, unsigned int flags)
   int open_flags = O_RDONLY | O_CLOEXEC;
   size_t amount_read;
   int fd;
+
+  if (&__trivfs_server_name && __trivfs_server_name
+      && __trivfs_server_name[0] == 'r'
+      && __trivfs_server_name[1] == 'a'
+      && __trivfs_server_name[2] == 'n'
+      && __trivfs_server_name[3] == 'd'
+      && __trivfs_server_name[4] == 'o'
+      && __trivfs_server_name[5] == 'm'
+      && __trivfs_server_name[6] == '\0')
+    /* We are random, don't try to read ourselves!  */
+    return length;
 
   if (flags & GRND_RANDOM)
     random_source = "/dev/random";
