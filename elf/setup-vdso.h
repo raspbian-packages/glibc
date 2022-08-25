@@ -30,11 +30,9 @@ setup_vdso (struct link_map *main_map __attribute__ ((unused)),
      We just want our data structures to describe it as if we had just
      mapped and relocated it normally.  */
   struct link_map *l = _dl_new_object ((char *) "", "", lt_library, NULL,
-				       0, LM_ID_BASE);
+				       __RTLD_VDSO, LM_ID_BASE);
   if (__glibc_likely (l != NULL))
     {
-      static ElfW(Dyn) dyn_temp[DL_RO_DYN_TEMP_CNT] attribute_relro;
-
       l->l_phdr = ((const void *) GLRO(dl_sysinfo_dso)
 		   + GLRO(dl_sysinfo_dso)->e_phoff);
       l->l_phnum = GLRO(dl_sysinfo_dso)->e_phnum;
@@ -45,6 +43,7 @@ setup_vdso (struct link_map *main_map __attribute__ ((unused)),
 	    {
 	      l->l_ld = (void *) ph->p_vaddr;
 	      l->l_ldnum = ph->p_memsz / sizeof (ElfW(Dyn));
+	      l->l_ld_readonly = (ph->p_flags & PF_W) == 0;
 	    }
 	  else if (ph->p_type == PT_LOAD)
 	    {
@@ -65,7 +64,7 @@ setup_vdso (struct link_map *main_map __attribute__ ((unused)),
       l->l_map_end += l->l_addr;
       l->l_text_end += l->l_addr;
       l->l_ld = (void *) ((ElfW(Addr)) l->l_ld + l->l_addr);
-      elf_get_dynamic_info (l, dyn_temp);
+      elf_get_dynamic_info (l, false, false);
       _dl_setup_hash (l);
       l->l_relocated = 1;
 

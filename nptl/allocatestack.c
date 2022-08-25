@@ -32,6 +32,7 @@
 #include <futex-internal.h>
 #include <kernel-features.h>
 #include <nptl-stack.h>
+#include <libc-lock.h>
 
 /* Default alignment of stack.  */
 #ifndef STACK_ALIGN
@@ -119,14 +120,14 @@ get_cached_stack (size_t *sizep, void **memp)
 
   /* Cancellation handling is back to the default.  */
   result->cancelhandling = 0;
-  result->cancelstate = PTHREAD_CANCEL_ENABLE;
-  result->canceltype = PTHREAD_CANCEL_DEFERRED;
   result->cleanup = NULL;
   result->setup_failed = 0;
 
   /* No pending event.  */
   result->nextevent = NULL;
 
+  result->exiting = false;
+  __libc_lock_init (result->exit_lock);
   result->tls_state = (struct tls_internal_t) { 0 };
 
   /* Clear the DTV.  */
@@ -136,7 +137,7 @@ get_cached_stack (size_t *sizep, void **memp)
   memset (dtv, '\0', (dtv[-1].counter + 1) * sizeof (dtv_t));
 
   /* Re-initialize the TLS.  */
-  _dl_allocate_tls_init (TLS_TPADJ (result));
+  _dl_allocate_tls_init (TLS_TPADJ (result), true);
 
   return result;
 }

@@ -27,9 +27,12 @@
 #include <string.h>
 #include <link.h>
 #include <errno.h>
+#include <ldsodefs.h>
 #include <dl-fptr.h>
 #include <abort-instr.h>
 #include <tls.h>
+#include <dl-static-tls.h>
+#include <dl-machine-rel.h>
 
 /* These two definitions must match the definition of the stub in
    bfd/elf32-hppa.c (see plt_stub[]).
@@ -69,8 +72,8 @@ __hppa_init_bootstrap_fdesc_table (struct link_map *map)
   map->l_mach.fptr_table = boot_table;
 }
 
-#define ELF_MACHINE_BEFORE_RTLD_RELOC(dynamic_info)		\
-	__hppa_init_bootstrap_fdesc_table (BOOTSTRAP_MAP);	\
+#define ELF_MACHINE_BEFORE_RTLD_RELOC(map, dynamic_info)	\
+	__hppa_init_bootstrap_fdesc_table (map);		\
 	_dl_fptr_init();
 
 /* Return nonzero iff ELF header is compatible with the running host.  */
@@ -159,11 +162,30 @@ elf_machine_plt_value (struct link_map *map, const Elf32_Rela *reloc,
   return (struct fdesc) { value.ip + reloc->r_addend, value.gp };
 }
 
+static inline struct link_map *
+elf_machine_main_map (void)
+{
+  struct link_map *main_map;
+
+#if defined SHARED && IS_IN (rtld)
+  asm (
+"	bl	1f,%0\n"
+"	addil	L'_rtld_local - ($PIC_pcrel$0 - 1),%0\n"
+"1:	ldw	R'_rtld_local - ($PIC_pcrel$0 - 5)(%%r1),%0\n"
+   : "=r" (main_map) : : "r1");
+#else
+  main_map = NULL;
+#endif
+
+  return main_map;
+}
+
 /* Set up the loaded object described by L so its unrelocated PLT
    entries will jump to the on-demand fixup code in dl-runtime.c.  */
 
 static inline int
-elf_machine_runtime_setup (struct link_map *l, int lazy, int profile)
+elf_machine_runtime_setup (struct link_map *l, struct r_scope_elem *scope[],
+			   int lazy, int profile)
 {
   Elf32_Addr *got = NULL;
   Elf32_Addr l_addr, iplt, jmprel, end_jmprel, r_type, r_sym;
@@ -173,6 +195,15 @@ elf_machine_runtime_setup (struct link_map *l, int lazy, int profile)
     unsigned char c[8];
     Elf32_Addr i[2];
   } sig = {{0x00,0xc0,0xff,0xee, 0xde,0xad,0xbe,0xef}};
+
+  /* Initialize dp register for main executable.  */
+  if (l == elf_machine_main_map ())
+    {
+      register Elf32_Addr dp asm ("%r27");
+
+      dp = D_PTR (l, l_info[DT_PLTGOT]);
+      asm volatile ("" : : "r" (dp));
+    }
 
   /* If we don't have a PLT we can just skip all this... */
   if (__builtin_expect (l->l_info[DT_JMPREL] == NULL,0))
@@ -336,16 +367,6 @@ elf_machine_runtime_setup (struct link_map *l, int lazy, int profile)
    its return value is the user program's entry point.  */
 
 #define RTLD_START \
-/* Set up dp for any non-PIC lib constructors that may be called.  */	\
-static struct link_map * __attribute__((used))				\
-set_dp (struct link_map *map)						\
-{									\
-  register Elf32_Addr dp asm ("%r27");					\
-  dp = D_PTR (map, l_info[DT_PLTGOT]);					\
-  asm volatile ("" : : "r" (dp));					\
-  return map;								\
-}									\
-									\
 asm (									\
 "	.text\n"							\
 "	.globl _start\n"						\
@@ -353,10 +374,6 @@ asm (									\
 "_start:\n"								\
 	/* The kernel does not give us an initial stack frame. */	\
 "	ldo	64(%sp),%sp\n"						\
-	/* Save the relevant arguments (yes, those are the correct	\
-	   registers, the kernel is weird) in their stack slots. */	\
-"	stw	%r25,-40(%sp)\n" /* argc */				\
-"	stw	%r24,-44(%sp)\n" /* argv */				\
 									\
 	/* We need the LTP, and we need it now.				\
 	   $PIC_pcrel$0 points 8 bytes past the current instruction,	\
@@ -414,12 +431,7 @@ asm (									\
 	  So, obviously, we can't just pass %sp to _dl_start.  That's	\
 	  okay, argv-4 will do just fine.				\
 									\
-	  The pleasant part of this is that if we need to skip		\
-	  arguments we can just decrement argc and move argv, because	\
-	  the stack pointer is utterly unrelated to the location of	\
-	  the environment and argument vectors. */			\
-									\
-	/* This is always within range so we'll be okay. */		\
+	  This is always within range so we'll be okay. */		\
 "	bl	_dl_start,%rp\n"					\
 "	ldo	-4(%r24),%r26\n"					\
 									\
@@ -429,29 +441,27 @@ asm (									\
 	/* Save the entry point in %r3. */				\
 "	copy	%ret0,%r3\n"						\
 									\
-	/* See if we were called as a command with the executable file	\
-	   name as an extra leading argument. */			\
-"	addil	LT'_dl_skip_args,%r19\n"				\
-"	ldw	RT'_dl_skip_args(%r1),%r20\n"				\
-"	ldw	0(%r20),%r20\n"						\
+	/* The loader adjusts argc, argv, env, and the aux vectors	\
+	   directly on the stack to remove any arguments used for	\
+	   direct loader invocation.  Thus, argc and argv must be	\
+	   reloaded from from _dl_argc and _dl_argv.  */		\
 									\
-"	ldw	-40(%sp),%r25\n"	/* argc */			\
-"	comib,=	0,%r20,.Lnofix\n"	/* FIXME: Mispredicted branch */\
-"	ldw	-44(%sp),%r24\n"	/* argv (delay slot) */		\
-									\
-"	sub	%r25,%r20,%r25\n"					\
+	/* Load argc from _dl_argc.  */					\
+"	addil	LT'_dl_argc,%r19\n"					\
+"	ldw	RT'_dl_argc(%r1),%r20\n"				\
+"	ldw	0(%r20),%r25\n"						\
 "	stw	%r25,-40(%sp)\n"					\
-"	sh2add	%r20,%r24,%r24\n"					\
+									\
+	/* Same for argv with _dl_argv.  */				\
+"	addil	LT'_dl_argv,%r19\n"					\
+"	ldw	RT'_dl_argv(%r1),%r20\n"				\
+"	ldw	0(%r20),%r24\n"						\
 "	stw	%r24,-44(%sp)\n"					\
 									\
-".Lnofix:\n"								\
+	/* Call _dl_init(main_map, argc, argv, envp). */		\
 "	addil	LT'_rtld_local,%r19\n"					\
 "	ldw	RT'_rtld_local(%r1),%r26\n"				\
-"	bl	set_dp, %r2\n"						\
 "	ldw	0(%r26),%r26\n"						\
-									\
-	/* Call _dl_init(_dl_loaded, argc, argv, envp). */		\
-"	copy	%r28,%r26\n"						\
 									\
 	/* envp = argv + argc + 1 */					\
 "	sh2add	%r25,%r24,%r23\n"					\
@@ -509,10 +519,6 @@ asm (									\
 #define ELF_MACHINE_JMP_SLOT R_PARISC_IPLT
 #define ELF_MACHINE_SIZEOF_JMP_SLOT PLT_ENTRY_SIZE
 
-/* We only use RELA. */
-#define ELF_MACHINE_NO_REL 1
-#define ELF_MACHINE_NO_RELA 0
-
 /* Return the address of the entry point. */
 #define ELF_MACHINE_START_ADDRESS(map, start)			\
 ({								\
@@ -549,8 +555,8 @@ dl_platform_init (void)
   (  (((as14) & 0x1fff) << 1) \
    | (((as14) & 0x2000) >> 13))
 
-auto void __attribute__((always_inline))
-elf_machine_rela (struct link_map *map,
+static void __attribute__((always_inline))
+elf_machine_rela (struct link_map *map, struct r_scope_elem *scope[],
 		  const Elf32_Rela *reloc,
 		  const Elf32_Sym *sym,
 		  const struct r_found_version *version,
@@ -579,11 +585,9 @@ elf_machine_rela (struct link_map *map,
      zeros, and an all zero Elf32_Sym has a binding of STB_LOCAL.)
      See RESOLVE_MAP definition in elf/dl-reloc.c  */
 # ifdef RTLD_BOOTSTRAP
-  /* RESOLVE_MAP in rtld.c doesn't have the local sym test.  */
-  sym_map = (ELF32_ST_BIND (sym->st_info) != STB_LOCAL
-	     ? RESOLVE_MAP (&sym, version, r_type) : map);
+  sym_map = map;
 # else
-  sym_map = RESOLVE_MAP (&sym, version, r_type);
+  sym_map = RESOLVE_MAP (map, scope, &sym, version, r_type);
 # endif
 
   if (sym_map)
@@ -741,7 +745,7 @@ elf_machine_rela (struct link_map *map,
 
 /* hppa doesn't have an R_PARISC_RELATIVE reloc, but uses relocs with
    ELF32_R_SYM (info) == 0 for a similar purpose.  */
-auto void __attribute__((always_inline))
+static void __attribute__((always_inline))
 elf_machine_rela_relative (Elf32_Addr l_addr,
 			   const Elf32_Rela *reloc,
 			   void *const reloc_addr_arg)
@@ -794,8 +798,8 @@ elf_machine_rela_relative (Elf32_Addr l_addr,
   *reloc_addr = value;
 }
 
-auto void __attribute__((always_inline))
-elf_machine_lazy_rel (struct link_map *map,
+static void __attribute__((always_inline))
+elf_machine_lazy_rel (struct link_map *map, struct r_scope_elem *scope[],
 		      Elf32_Addr l_addr, const Elf32_Rela *reloc,
 		      int skip_ifunc)
 {

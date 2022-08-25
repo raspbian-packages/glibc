@@ -507,11 +507,39 @@ init_cpu_features (struct cpu_features *cpu_features)
 	      break;
 	    }
 
-	 /* Disable TSX on some Haswell processors to avoid TSX on kernels that
-	    weren't updated with the latest microcode package (which disables
-	    broken feature by default).  */
+	 /* Disable TSX on some processors to avoid TSX on kernels that
+	    weren't updated with the latest microcode package (which
+	    disables broken feature by default).  */
 	 switch (model)
 	    {
+	    case 0x55:
+	      if (stepping <= 5)
+		goto disable_tsx;
+	      break;
+	    case 0x8e:
+	      /* NB: Although the errata documents that for model == 0x8e,
+		 only 0xb stepping or lower are impacted, the intention of
+		 the errata was to disable TSX on all client processors on
+		 all steppings.  Include 0xc stepping which is an Intel
+		 Core i7-8665U, a client mobile processor.  */
+	    case 0x9e:
+	      if (stepping > 0xc)
+		break;
+	      /* Fall through.  */
+	    case 0x4e:
+	    case 0x5e:
+	      {
+		/* Disable Intel TSX and enable RTM_ALWAYS_ABORT for
+		   processors listed in:
+
+https://www.intel.com/content/www/us/en/support/articles/000059422/processors.html
+		 */
+disable_tsx:
+		CPU_FEATURE_UNSET (cpu_features, HLE);
+		CPU_FEATURE_UNSET (cpu_features, RTM);
+		CPU_FEATURE_SET (cpu_features, RTM_ALWAYS_ABORT);
+	      }
+	      break;
 	    case 0x3f:
 	      /* Xeon E7 v3 with stepping >= 4 has working TSX.  */
 	      if (stepping >= 4)
@@ -538,22 +566,17 @@ init_cpu_features (struct cpu_features *cpu_features)
 	  |= bit_arch_Prefer_No_VZEROUPPER;
       else
 	{
-	  cpu_features->preferred[index_arch_Prefer_No_AVX512]
-	    |= bit_arch_Prefer_No_AVX512;
+	  /* Processors with AVX512 and AVX-VNNI won't lower CPU frequency
+	     when ZMM load and store instructions are used.  */
+	  if (!CPU_FEATURES_CPU_P (cpu_features, AVX_VNNI))
+	    cpu_features->preferred[index_arch_Prefer_No_AVX512]
+	      |= bit_arch_Prefer_No_AVX512;
 
 	  /* Avoid RTM abort triggered by VZEROUPPER inside a
 	     transactionally executing RTM region.  */
 	  if (CPU_FEATURE_USABLE_P (cpu_features, RTM))
 	    cpu_features->preferred[index_arch_Prefer_No_VZEROUPPER]
 	      |= bit_arch_Prefer_No_VZEROUPPER;
-
-	  /* Since to compare 2 32-byte strings, 256-bit EVEX strcmp
-	     requires 2 loads, 3 VPCMPs and 2 KORDs while AVX2 strcmp
-	     requires 1 load, 2 VPCMPEQs, 1 VPMINU and 1 VPMOVMSKB,
-	     AVX2 strcmp is faster than EVEX strcmp.  */
-	  if (CPU_FEATURE_USABLE_P (cpu_features, AVX2))
-	    cpu_features->preferred[index_arch_Prefer_AVX2_STRCMP]
-	      |= bit_arch_Prefer_AVX2_STRCMP;
 	}
 
       /* Avoid avoid short distance REP MOVSB on processor with FSRM.  */

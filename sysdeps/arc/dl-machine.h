@@ -30,6 +30,8 @@
 #include <string.h>
 #include <link.h>
 #include <dl-tls.h>
+#include <dl-static-tls.h>
+#include <dl-machine-rel.h>
 
 /* Dynamic Linking ABI for ARCv2 ISA.
 
@@ -122,7 +124,8 @@ elf_machine_load_address (void)
 
 static inline int
 __attribute__ ((always_inline))
-elf_machine_runtime_setup (struct link_map *l, int lazy, int profile)
+elf_machine_runtime_setup (struct link_map *l, struct r_scope_elem *scope[],
+			   int lazy, int profile)
 {
   extern void _dl_runtime_resolve (void);
 
@@ -202,10 +205,6 @@ __start:								\n\
 /* A reloc type used for ld.so cmdline arg lookups to reject PLT entries.  */
 #define ELF_MACHINE_JMP_SLOT  R_ARC_JUMP_SLOT
 
-/* ARC uses Rela relocations.  */
-#define ELF_MACHINE_NO_REL 1
-#define ELF_MACHINE_NO_RELA 0
-
 /* Fixup a PLT entry to bounce directly to the function at VALUE.  */
 
 static inline ElfW(Addr)
@@ -228,10 +227,11 @@ elf_machine_fixup_plt (struct link_map *map, lookup_t t,
 
 #ifdef RESOLVE_MAP
 
-inline void
+static inline void
 __attribute__ ((always_inline))
-elf_machine_rela (struct link_map *map, const ElfW(Rela) *reloc,
-                  const ElfW(Sym) *sym, const struct r_found_version *version,
+elf_machine_rela (struct link_map *map, struct r_scope_elem *scope[],
+		  const ElfW(Rela) *reloc, const ElfW(Sym) *sym,
+		  const struct r_found_version *version,
                   void *const reloc_addr_arg, int skip_ifunc)
 {
   ElfW(Addr) r_info = reloc->r_info;
@@ -245,7 +245,8 @@ elf_machine_rela (struct link_map *map, const ElfW(Rela) *reloc,
   else
     {
       const ElfW(Sym) *const refsym = sym;
-      struct link_map *sym_map = RESOLVE_MAP (&sym, version, r_type);
+      struct link_map *sym_map = RESOLVE_MAP (map, scope, &sym, version,
+					      r_type);
       ElfW(Addr) value = SYMBOL_ADDRESS (sym_map, sym, true);
 
       switch (r_type)
@@ -315,7 +316,7 @@ elf_machine_rela (struct link_map *map, const ElfW(Rela) *reloc,
     }
 }
 
-inline void
+static inline void
 __attribute__ ((always_inline))
 elf_machine_rela_relative (ElfW(Addr) l_addr, const ElfW(Rela) *reloc,
                            void *const reloc_addr_arg)
@@ -324,10 +325,11 @@ elf_machine_rela_relative (ElfW(Addr) l_addr, const ElfW(Rela) *reloc,
   *reloc_addr += l_addr;
 }
 
-inline void
+static inline void
 __attribute__ ((always_inline))
-elf_machine_lazy_rel (struct link_map *map, ElfW(Addr) l_addr,
-                      const ElfW(Rela) *reloc, int skip_ifunc)
+elf_machine_lazy_rel (struct link_map *map, struct r_scope_elem *scope[],
+		      ElfW(Addr) l_addr, const ElfW(Rela) *reloc,
+		      int skip_ifunc)
 {
   ElfW(Addr) *const reloc_addr = (void *) (l_addr + reloc->r_offset);
   const unsigned int r_type = ELFW (R_TYPE) (reloc->r_info);
