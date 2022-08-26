@@ -333,6 +333,9 @@ init_cpu_features (struct cpu_features *cpu_features)
 
       get_extended_indices (cpu_features);
 
+      if (CPU_FEATURES_CPU_P (cpu_features, RTM_ALWAYS_ABORT))
+	cpu_features->cpuid[index_cpu_RTM].reg_RTM &= ~bit_cpu_RTM;
+
       if (family == 0x06)
 	{
 	  model += extended_model;
@@ -394,11 +397,42 @@ init_cpu_features (struct cpu_features *cpu_features)
 	      break;
 	    }
 
-	 /* Disable TSX on some Haswell processors to avoid TSX on kernels that
-	    weren't updated with the latest microcode package (which disables
-	    broken feature by default).  */
+	 /* Disable TSX on some processors to avoid TSX on kernels that
+	    weren't updated with the latest microcode package (which
+	    disables broken feature by default).  */
 	 switch (model)
 	    {
+	    case 0x55:
+	      if (stepping <= 5)
+		goto disable_tsx;
+	      break;
+	    case 0x8e:
+	      /* NB: Although the errata documents that for model == 0x8e,
+		 only 0xb stepping or lower are impacted, the intention of
+		 the errata was to disable TSX on all client processors on
+		 all steppings.  Include 0xc stepping which is an Intel
+		 Core i7-8665U, a client mobile processor.  */
+	    case 0x9e:
+	      if (stepping > 0xc)
+		break;
+	      /* Fall through.  */
+	    case 0x4e:
+	    case 0x5e:
+	      {
+		/* Disable Intel TSX and enable RTM_ALWAYS_ABORT for
+		   processors listed in:
+
+https://www.intel.com/content/www/us/en/support/articles/000059422/processors.html
+		 */
+disable_tsx:
+		cpu_features->cpuid[index_cpu_HLE].reg_HLE
+		  &= ~bit_cpu_HLE;
+		cpu_features->cpuid[index_cpu_RTM].reg_RTM
+		  &= ~bit_cpu_RTM;
+		cpu_features->cpuid[index_cpu_RTM_ALWAYS_ABORT].reg_RTM_ALWAYS_ABORT
+		  |= bit_cpu_RTM_ALWAYS_ABORT;
+	      }
+	      break;
 	    case 0x3f:
 	      /* Xeon E7 v3 with stepping >= 4 has working TSX.  */
 	      if (stepping >= 4)
@@ -424,8 +458,24 @@ init_cpu_features (struct cpu_features *cpu_features)
 	cpu_features->feature[index_arch_Prefer_No_VZEROUPPER]
 	  |= bit_arch_Prefer_No_VZEROUPPER;
       else
-	cpu_features->feature[index_arch_Prefer_No_AVX512]
-	  |= bit_arch_Prefer_No_AVX512;
+	{
+	  cpu_features->feature[index_arch_Prefer_No_AVX512]
+	    |= bit_arch_Prefer_No_AVX512;
+
+	  /* Avoid RTM abort triggered by VZEROUPPER inside a
+	     transactionally executing RTM region.  */
+	  if (CPU_FEATURES_CPU_P (cpu_features, RTM))
+	    cpu_features->feature[index_arch_Prefer_No_VZEROUPPER]
+	      |= bit_arch_Prefer_No_VZEROUPPER;
+
+	  /* Since to compare 2 32-byte strings, 256-bit EVEX strcmp
+	     requires 2 loads, 3 VPCMPs and 2 KORDs while AVX2 strcmp
+	     requires 1 load, 2 VPCMPEQs, 1 VPMINU and 1 VPMOVMSKB,
+	     AVX2 strcmp is faster than EVEX strcmp.  */
+	  if (CPU_FEATURES_ARCH_P (cpu_features, AVX2_Usable))
+	    cpu_features->feature[index_arch_Prefer_AVX2_STRCMP]
+	      |= bit_arch_Prefer_AVX2_STRCMP;
+	}
     }
   /* This spells out "AuthenticAMD" or "HygonGenuine".  */
   else if ((ebx == 0x68747541 && ecx == 0x444d4163 && edx == 0x69746e65)
