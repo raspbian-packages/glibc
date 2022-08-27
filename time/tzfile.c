@@ -431,8 +431,8 @@ __tzfile_read (const char *file, size_t extra, char **extrap)
   if (__tzname[0] == NULL)
     {
       /* This should only happen if there are no transition rules.
-	 In this case there should be only one single type.  */
-      assert (num_types == 1);
+	 In this case there's usually only one single type, unless
+	 e.g. the data file has a truncated time-range.  */
       __tzname[0] = __tzstring (zone_names);
     }
   if (__tzname[1] == NULL)
@@ -765,8 +765,7 @@ __tzfile_compute (__time64_t timer, int use_localtime,
   *leap_correct = leaps[i].change;
 
   if (timer == leaps[i].transition /* Exactly at the transition time.  */
-      && ((i == 0 && leaps[i].change > 0)
-	  || leaps[i].change > leaps[i - 1].change))
+      && (leaps[i].change > (i == 0 ? 0 : leaps[i - 1].change)))
     {
       *leap_hit = 1;
       while (i > 0

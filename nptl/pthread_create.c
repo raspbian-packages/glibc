@@ -37,6 +37,7 @@
 #include <sys/single_threaded.h>
 #include <version.h>
 #include <clone_internal.h>
+#include <futex-internal.h>
 
 #include <shlib-compat.h>
 
@@ -406,8 +407,6 @@ start_thread (void *arg)
   unwind_buf.priv.data.prev = NULL;
   unwind_buf.priv.data.cleanup = NULL;
 
-  __libc_signal_restore_set (&pd->sigmask);
-
   /* Allow setxid from now onwards.  */
   if (__glibc_unlikely (atomic_exchange_acq (&pd->setxid_futex, 0) == -2))
     futex_wake (&pd->setxid_futex, 1, FUTEX_PRIVATE);
@@ -416,6 +415,8 @@ start_thread (void *arg)
     {
       /* Store the new cleanup handler info.  */
       THREAD_SETMEM (pd, cleanup_jmp_buf, &unwind_buf);
+
+      __libc_signal_restore_set (&pd->sigmask);
 
       LIBC_PROBE (pthread_start, 3, (pthread_t) pd, pd->start_routine, pd->arg);
 
@@ -484,6 +485,27 @@ start_thread (void *arg)
   if (__glibc_unlikely (atomic_decrement_and_test (&__nptl_nthreads)))
     /* This was the last thread.  */
     exit (0);
+
+  /* This prevents sending a signal from this thread to itself during
+     its final stages.  This must come after the exit call above
+     because atexit handlers must not run with signals blocked.
+
+     Do not block SIGSETXID.  The setxid handshake below expects the
+     signal to be delivered.  (SIGSETXID cannot run application code,
+     nor does it use pthread_kill.)  Reuse the pd->sigmask space for
+     computing the signal mask, to save stack space.  */
+  __sigfillset (&pd->sigmask);
+  __sigdelset (&pd->sigmask, SIGSETXID);
+  INTERNAL_SYSCALL_CALL (rt_sigprocmask, SIG_BLOCK, &pd->sigmask, NULL,
+			 __NSIG_BYTES);
+
+  /* Tell __pthread_kill_internal that this thread is about to exit.
+     If there is a __pthread_kill_internal in progress, this delays
+     the thread exit until the signal has been queued by the kernel
+     (so that the TID used to send it remains valid).  */
+  __libc_lock_lock (pd->exit_lock);
+  pd->exiting = true;
+  __libc_lock_unlock (pd->exit_lock);
 
 #ifndef __ASSUME_SET_ROBUST_LIST
   /* If this thread has any robust mutexes locked, handle them now.  */

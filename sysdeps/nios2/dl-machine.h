@@ -24,6 +24,8 @@
 #include <string.h>
 #include <link.h>
 #include <dl-tls.h>
+#include <dl-static-tls.h>
+#include <dl-machine-rel.h>
 
 /* Return nonzero iff ELF header is compatible with the running host.  */
 static inline int
@@ -67,7 +69,8 @@ elf_machine_load_address (void)
    entries will jump to the on-demand fixup code in dl-runtime.c.  */
 
 static inline int __attribute__ ((always_inline))
-elf_machine_runtime_setup (struct link_map *l, int lazy, int profile)
+elf_machine_runtime_setup (struct link_map *l, struct r_scope_elem *scope[],
+			   int lazy, int profile)
 {
   extern void _dl_runtime_resolve (Elf32_Word);
 
@@ -126,52 +129,22 @@ _start:\n\
         callr r8\n\
         mov gp, r2\n\
 \n\
-        /* Find the number of arguments to skip.  */\n\
-        ldw r8, %got(_dl_skip_args)(r22)\n\
-        ldw r8, 0(r8)\n\
-\n\
         /* Find the main_map from the GOT.  */\n\
         ldw r4, %got(_rtld_local)(r22)\n\
         ldw r4, 0(r4)\n\
 \n\
-        /* Find argc.  */\n\
-        ldw r5, 0(sp)\n\
-        sub r5, r5, r8\n\
-        stw r5, 0(sp)\n\
+        /* Load adjusted argc.  */\n\
+        ldw r2, %got(_dl_argc)(r22)\n\
+	ldw r5, 0(r2)\n\
 \n\
-        /* Find the first unskipped argument.  */\n\
-        slli r8, r8, 2\n\
-        addi r6, sp, 4\n\
-        add r9, r6, r8\n\
-        mov r10, r6\n\
-\n\
-        /* Shuffle argv down.  */\n\
-3:      ldw r11, 0(r9)\n\
-        stw r11, 0(r10)\n\
-        addi r9, r9, 4\n\
-        addi r10, r10, 4\n\
-        bne r11, zero, 3b\n\
-\n\
-        /* Shuffle envp down.  */\n\
-        mov r7, r10\n\
-4:      ldw r11, 0(r9)\n\
-        stw r11, 0(r10)\n\
-        addi r9, r9, 4\n\
-        addi r10, r10, 4\n\
-        bne r11, zero, 4b\n\
-\n\
-        /* Shuffle auxv down.  */\n\
-5:      ldw r11, 4(r9)\n\
-        stw r11, 4(r10)\n\
-        ldw r11, 0(r9)\n\
-        stw r11, 0(r10)\n\
-        addi r9, r9, 8\n\
-        addi r10, r10, 8\n\
-        bne r11, zero, 5b\n\
-\n\
-        /* Update _dl_argv.  */\n\
+        /* Load adjsuted argv.  */\n\
         ldw r2, %got(_dl_argv)(r22)\n\
-        stw r6, 0(r2)\n\
+	ldw r6, 0(r2)\n\
+\n\
+	/* envp = argv + argc + 1  */\n\
+        addi r7, r5, 1\n\
+        slli r7, r7, 2\n\
+        add  r7, r7, r6\n\
 \n\
         /* Call _dl_init through the PLT.  */\n\
         ldw r8, %call(_dl_init)(r22)\n\
@@ -198,10 +171,6 @@ _start:\n\
 
 /* A reloc type used for ld.so cmdline arg lookups to reject PLT entries.  */
 #define ELF_MACHINE_JMP_SLOT  R_NIOS2_JUMP_SLOT
-
-/* The Nios II never uses Elf32_Rel relocations.  */
-#define ELF_MACHINE_NO_REL 1
-#define ELF_MACHINE_NO_RELA 0
 
 /* Fixup a PLT entry to bounce directly to the function at VALUE.  */
 
@@ -234,10 +203,11 @@ elf_machine_plt_value (struct link_map *map, const Elf32_Rela *reloc,
    LOADADDR is the load address of the object; INFO is an array indexed
    by DT_* of the .dynamic section info.  */
 
-auto inline void __attribute__ ((always_inline))
-elf_machine_rela (struct link_map *map, const ElfW(Rela) *reloc,
-                  const ElfW(Sym) *sym, const struct r_found_version *version,
-                  void *const reloc_addr_arg, int skip_ifunc)
+static inline void __attribute__ ((always_inline))
+elf_machine_rela (struct link_map *map, struct r_scope_elem *scope[],
+		  const ElfW(Rela) *reloc, const ElfW(Sym) *sym,
+		  const struct r_found_version *version,
+		  void *const reloc_addr_arg, int skip_ifunc)
 {
   Elf32_Addr *const reloc_addr = reloc_addr_arg;
   const unsigned int r_type = ELF32_R_TYPE (reloc->r_info);
@@ -249,7 +219,8 @@ elf_machine_rela (struct link_map *map, const ElfW(Rela) *reloc,
   else
     {
       const Elf32_Sym *const refsym = sym;
-      struct link_map *sym_map = RESOLVE_MAP (&sym, version, r_type);
+      struct link_map *sym_map = RESOLVE_MAP (map, scope, &sym, version,
+					      r_type);
       Elf32_Addr value = SYMBOL_ADDRESS (sym_map, sym, true);
 
       switch (r_type)
@@ -314,7 +285,7 @@ elf_machine_rela (struct link_map *map, const ElfW(Rela) *reloc,
     }
 }
 
-auto inline void __attribute__((always_inline))
+static inline void __attribute__((always_inline))
 elf_machine_rela_relative (ElfW(Addr) l_addr, const ElfW(Rela) *reloc,
 			   void *const reloc_addr_arg)
 {
@@ -322,8 +293,8 @@ elf_machine_rela_relative (ElfW(Addr) l_addr, const ElfW(Rela) *reloc,
   *reloc_addr = l_addr + reloc->r_addend;
 }
 
-auto inline void __attribute__((always_inline))
-elf_machine_lazy_rel (struct link_map *map,
+static inline void __attribute__((always_inline))
+elf_machine_lazy_rel (struct link_map *map, struct r_scope_elem *scope[],
 		      ElfW(Addr) l_addr, const ElfW(Rela) *reloc,
 		      int skip_ifunc)
 {
