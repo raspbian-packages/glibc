@@ -62,6 +62,9 @@ __pthread_thread_terminate (struct __pthread *thread)
       ? __mig_get_reply_port () : MACH_PORT_NULL;
   __mach_port_deallocate (__mach_task_self (), self_ktid);
 
+  /* The kernel thread won't be there any more.  */
+  thread->kernel_thread = MACH_PORT_DEAD;
+
   /* Finally done with the thread structure.  */
   __pthread_dealloc (thread);
 
