@@ -27,6 +27,8 @@
 #include <errno.h>
 #include <dl-fptr.h>
 #include <tls.h>
+#include <dl-static-tls.h>
+#include <dl-machine-rel.h>
 
 /* Translate a processor specific dynamic tag to the index
    in l_info array.  */
@@ -44,8 +46,8 @@ __ia64_init_bootstrap_fdesc_table (struct link_map *map)
   map->l_mach.fptr_table = boot_table;
 }
 
-#define ELF_MACHINE_BEFORE_RTLD_RELOC(dynamic_info)		\
-	__ia64_init_bootstrap_fdesc_table (BOOTSTRAP_MAP);
+#define ELF_MACHINE_BEFORE_RTLD_RELOC(map, dynamic_info)		\
+	__ia64_init_bootstrap_fdesc_table (map);
 
 /* Return nonzero iff ELF header is compatible with the running host.  */
 static inline int __attribute__ ((unused))
@@ -98,7 +100,8 @@ elf_machine_load_address (void)
    entries will jump to the on-demand fixup code in dl-runtime.c.  */
 
 static inline int __attribute__ ((unused, always_inline))
-elf_machine_runtime_setup (struct link_map *l, int lazy, int profile)
+elf_machine_runtime_setup (struct link_map *l, struct r_scope_elem *scope[],
+			   int lazy, int profile)
 {
   extern void _dl_runtime_resolve (void);
   extern void _dl_runtime_profile (void);
@@ -318,10 +321,6 @@ elf_machine_runtime_setup (struct link_map *l, int lazy, int profile)
 /* A reloc type used for ld.so cmdline arg lookups to reject PLT entries.  */
 #define ELF_MACHINE_JMP_SLOT	 R_IA64_IPLTLSB
 
-/* According to the IA-64 specific documentation, Rela is always used.  */
-#define ELF_MACHINE_NO_REL 1
-#define ELF_MACHINE_NO_RELA 0
-
 /* Return the address of the entry point. */
 #define ELF_MACHINE_START_ADDRESS(map, start)			\
 ({								\
@@ -371,9 +370,9 @@ elf_machine_plt_value (struct link_map *map, const Elf64_Rela *reloc,
 
 /* Perform the relocation specified by RELOC and SYM (which is fully
    resolved).  MAP is the object containing the reloc.  */
-auto inline void
+static inline void
 __attribute ((always_inline))
-elf_machine_rela (struct link_map *map,
+elf_machine_rela (struct link_map *map, struct r_scope_elem *scope[],
 		  const Elf64_Rela *reloc,
 		  const Elf64_Sym *sym,
 		  const struct r_found_version *version,
@@ -414,10 +413,11 @@ elf_machine_rela (struct link_map *map,
       return;
   else
     {
-      struct link_map *sym_map;
+      struct link_map *sym_map = RESOLVE_MAP (map, scope, &sym, version,
+					      r_type);
 
       /* RESOLVE_MAP() will return NULL if it fail to locate the symbol.  */
-      if ((sym_map = RESOLVE_MAP (&sym, version, r_type)))
+      if (sym_map != NULL)
 	{
 	  value = SYMBOL_ADDRESS (sym_map, sym, true) + reloc->r_addend;
 
@@ -476,7 +476,7 @@ elf_machine_rela (struct link_map *map,
    can be skipped.  */
 #define ELF_MACHINE_REL_RELATIVE 1
 
-auto inline void
+static inline void
 __attribute ((always_inline))
 elf_machine_rela_relative (Elf64_Addr l_addr, const Elf64_Rela *reloc,
 			   void *const reloc_addr_arg)
@@ -489,9 +489,9 @@ elf_machine_rela_relative (Elf64_Addr l_addr, const Elf64_Rela *reloc,
 }
 
 /* Perform a RELATIVE reloc on the .got entry that transfers to the .plt.  */
-auto inline void
+static inline void
 __attribute ((always_inline))
-elf_machine_lazy_rel (struct link_map *map,
+elf_machine_lazy_rel (struct link_map *map, struct r_scope_elem *scope[],
 		      Elf64_Addr l_addr, const Elf64_Rela *reloc,
 		      int skip_ifunc)
 {

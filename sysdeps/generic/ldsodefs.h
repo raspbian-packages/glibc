@@ -35,6 +35,7 @@
 #include <link.h>
 #include <dl-lookupcfg.h>
 #include <dl-sysdep.h>
+#include <dl-fixup-attribute.h>
 #include <libc-lock.h>
 #include <hp-timing.h>
 #include <tls.h>
@@ -69,17 +70,24 @@ __BEGIN_DECLS
    `ElfW(TYPE)' is used in place of `Elf32_TYPE' or `Elf64_TYPE'.  */
 #define ELFW(type)	_ElfW (ELF, __ELF_NATIVE_CLASS, type)
 
+/* Return true if dynamic section in the shared library L should be
+   relocated.  */
+
+static inline bool
+dl_relocate_ld (const struct link_map *l)
+{
+  /* Don't relocate dynamic section if it is readonly  */
+  return !(l->l_ld_readonly || DL_RO_DYN_SECTION);
+}
+
 /* All references to the value of l_info[DT_PLTGOT],
   l_info[DT_STRTAB], l_info[DT_SYMTAB], l_info[DT_RELA],
   l_info[DT_REL], l_info[DT_JMPREL], and l_info[VERSYMIDX (DT_VERSYM)]
   have to be accessed via the D_PTR macro.  The macro is needed since for
   most architectures the entry is already relocated - but for some not
   and we need to relocate at access time.  */
-#ifdef DL_RO_DYN_SECTION
-# define D_PTR(map, i) ((map)->i->d_un.d_ptr + (map)->l_addr)
-#else
-# define D_PTR(map, i) (map)->i->d_un.d_ptr
-#endif
+#define D_PTR(map, i) \
+  ((map)->i->d_un.d_ptr + (dl_relocate_ld (map) ? 0 : (map)->l_addr))
 
 /* Result of the lookup functions and how to retrieve the base address.  */
 typedef struct link_map *lookup_t;
@@ -372,6 +380,13 @@ struct rtld_global
      list of loaded objects while an object is added to or removed
      from that list.  */
   __rtld_lock_define_recursive (EXTERN, _dl_load_write_lock)
+  /* This lock protects global and module specific TLS related data.
+     E.g. it is held in dlopen and dlclose when GL(dl_tls_generation),
+     GL(dl_tls_max_dtv_idx) or GL(dl_tls_dtv_slotinfo_list) are
+     accessed and when TLS related relocations are processed for a
+     module.  It was introduced to keep pthread_create accessing TLS
+     state that is being set up.  */
+  __rtld_lock_define_recursive (EXTERN, _dl_load_tls_lock)
 
   /* Incremented whenever something may have been added to dl_loaded.  */
   EXTERN unsigned long long _dl_load_adds;
@@ -1211,6 +1226,11 @@ extern struct link_map * _dl_get_dl_main_map (void)
 # endif
 #endif
 
+/* Perform early memory allocation, avoding a TCB dependency.
+   Terminate the process if allocation fails.  May attempt to use
+   brk.  */
+void *_dl_early_allocate (size_t size) attribute_hidden;
+
 /* Initialization of libpthread for statically linked applications.
    If libpthread is not linked in, this is an empty function.  */
 void __pthread_initialize_minimal (void) weak_function;
@@ -1227,7 +1247,7 @@ extern void _dl_allocate_static_tls (struct link_map *map) attribute_hidden;
 /* These are internal entry points to the two halves of _dl_allocate_tls,
    only used within rtld.c itself at startup time.  */
 extern void *_dl_allocate_tls_storage (void) attribute_hidden;
-extern void *_dl_allocate_tls_init (void *);
+extern void *_dl_allocate_tls_init (void *, bool);
 rtld_hidden_proto (_dl_allocate_tls_init)
 
 /* Deallocate memory allocated with _dl_allocate_tls.  */
@@ -1261,7 +1281,7 @@ extern int _dl_scope_free (void *) attribute_hidden;
 
 /* Add module to slot information data.  If DO_ADD is false, only the
    required memory is allocated.  Must be called with GL
-   (dl_load_lock) acquired.  If the function has already been called
+   (dl_load_tls_lock) acquired.  If the function has already been called
    for the link map L with !do_add, then this function will not raise
    an exception, otherwise it is possible that it encounters a memory
    allocation failure.  */
@@ -1346,6 +1366,57 @@ link_map_audit_state (struct link_map *l, size_t index)
       return &base[index];
     }
 }
+
+/* Call the la_objsearch from the audit modules from the link map L.  If
+   ORIGNAME is non NULL, it is updated with the revious name prior calling
+   la_objsearch.  */
+const char *_dl_audit_objsearch (const char *name, struct link_map *l,
+				 unsigned int code)
+   attribute_hidden;
+
+/* Call the la_activity from the audit modules from the link map L and issues
+   the ACTION argument.  */
+void _dl_audit_activity_map (struct link_map *l, int action)
+  attribute_hidden;
+
+/* Call the la_activity from the audit modules from the link map from the
+   namespace NSID and issues the ACTION argument.  */
+void _dl_audit_activity_nsid (Lmid_t nsid, int action)
+  attribute_hidden;
+
+/* Call the la_objopen from the audit modules for the link_map L on the
+   namespace identification NSID.  */
+void _dl_audit_objopen (struct link_map *l, Lmid_t nsid)
+  attribute_hidden;
+
+/* Call the la_objclose from the audit modules for the link_map L.  */
+void _dl_audit_objclose (struct link_map *l)
+  attribute_hidden;
+
+/* Call the la_preinit from the audit modules for the link_map L.  */
+void _dl_audit_preinit (struct link_map *l);
+
+/* Call the la_symbind{32,64} from the audit modules for the link_map L.  If
+   RELOC_RESULT is NULL it assumes the symbol to be bind-now and will set
+   the flags with LA_SYMB_NOPLTENTER | LA_SYMB_NOPLTEXIT prior calling
+   la_symbind{32,64}.  */
+void _dl_audit_symbind (struct link_map *l, struct reloc_result *reloc_result,
+			const ElfW(Sym) *defsym, DL_FIXUP_VALUE_TYPE *value,
+			lookup_t result)
+  attribute_hidden;
+/* Same as _dl_audit_symbind, but also sets LA_SYMB_DLSYM flag.  */
+void _dl_audit_symbind_alt (struct link_map *l, const ElfW(Sym) *ref,
+			    void **value, lookup_t result);
+rtld_hidden_proto (_dl_audit_symbind_alt)
+void _dl_audit_pltenter (struct link_map *l, struct reloc_result *reloc_result,
+			 DL_FIXUP_VALUE_TYPE *value, void *regs,
+			 long int *framesize)
+  attribute_hidden;
+void DL_ARCH_FIXUP_ATTRIBUTE _dl_audit_pltexit (struct link_map *l,
+						ElfW(Word) reloc_arg,
+						const void *inregs,
+						void *outregs)
+  attribute_hidden;
 #endif /* SHARED */
 
 #if PTHREAD_IN_LIBC && defined SHARED

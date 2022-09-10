@@ -58,6 +58,7 @@ struct filebuf
 };
 
 #include "dynamic-link.h"
+#include "get-dynamic-info.h"
 #include <abi-tag.h>
 #include <stackinfo.h>
 #include <sysdep.h>
@@ -1053,42 +1054,6 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
   /* This is the ELF header.  We read it in `open_verify'.  */
   header = (void *) fbp->buf;
 
-  /* Signal that we are going to add new objects.  */
-  if (r->r_state == RT_CONSISTENT)
-    {
-#ifdef SHARED
-      /* Auditing checkpoint: we are going to add new objects.  */
-      if ((mode & __RTLD_AUDIT) == 0
-	  && __glibc_unlikely (GLRO(dl_naudit) > 0))
-	{
-	  struct link_map *head = GL(dl_ns)[nsid]._ns_loaded;
-	  /* Do not call the functions for any auditing object.  */
-	  if (head->l_auditing == 0)
-	    {
-	      struct audit_ifaces *afct = GLRO(dl_audit);
-	      for (unsigned int cnt = 0; cnt < GLRO(dl_naudit); ++cnt)
-		{
-		  if (afct->activity != NULL)
-		    afct->activity (&link_map_audit_state (head, cnt)->cookie,
-				    LA_ACT_ADD);
-
-		  afct = afct->next;
-		}
-	    }
-	}
-#endif
-
-      /* Notify the debugger we have added some objects.  We need to
-	 call _dl_debug_initialize in a static program in case dynamic
-	 linking has not been used before.  */
-      r->r_state = RT_ADD;
-      _dl_debug_state ();
-      LIBC_PROBE (map_start, 2, nsid, r);
-      make_consistent = true;
-    }
-  else
-    assert (r->r_state == RT_ADD);
-
   /* Enter the new object in the list of loaded objects.  */
   l = _dl_new_object (realname, name, l_type, loader, mode, nsid);
   if (__glibc_unlikely (l == NULL))
@@ -1130,6 +1095,7 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
     struct loadcmd loadcmds[l->l_phnum];
     size_t nloadcmds = 0;
     bool has_holes = false;
+    bool empty_dynamic = false;
 
     /* The struct is initialized to zero so this is not necessary:
     l->l_ld = 0;
@@ -1142,13 +1108,16 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 	     segments are mapped in.  We record the addresses it says
 	     verbatim, and later correct for the run-time load address.  */
 	case PT_DYNAMIC:
-	  if (ph->p_filesz)
+	  if (ph->p_filesz == 0)
+	    empty_dynamic = true; /* Usually separate debuginfo.  */
+	  else
 	    {
 	      /* Debuginfo only files from "objcopy --only-keep-debug"
 		 contain a PT_DYNAMIC segment with p_filesz == 0.  Skip
 		 such a segment to avoid a crash later.  */
 	      l->l_ld = (void *) ph->p_vaddr;
 	      l->l_ldnum = ph->p_memsz / sizeof (ElfW(Dyn));
+	      l->l_ld_readonly = (ph->p_flags & PF_W) == 0;
 	    }
 	  break;
 
@@ -1264,6 +1233,13 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 	goto lose;
       }
 
+    /* This check recognizes most separate debuginfo files.  */
+    if (__glibc_unlikely ((l->l_ld == 0 && type == ET_DYN) || empty_dynamic))
+      {
+	errstring = N_("object file has no dynamic section");
+	goto lose;
+      }
+
     /* Length of the sections to be loaded.  */
     maplength = loadcmds[nloadcmds - 1].allocend - loadcmds[0].mapstart;
 
@@ -1281,18 +1257,10 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
       }
   }
 
-  if (l->l_ld == 0)
-    {
-      if (__glibc_unlikely (type == ET_DYN))
-	{
-	  errstring = N_("object file has no dynamic section");
-	  goto lose;
-	}
-    }
-  else
+  if (l->l_ld != 0)
     l->l_ld = (ElfW(Dyn) *) ((ElfW(Addr)) l->l_ld + l->l_addr);
 
-  elf_get_dynamic_info (l, NULL);
+  elf_get_dynamic_info (l, false, false);
 
   /* Make sure we are not dlopen'ing an object that has the
      DF_1_NOOPEN flag set, or a PIE object.  */
@@ -1507,24 +1475,32 @@ cannot enable executable stack as shared object requires");
   /* Now that the object is fully initialized add it to the object list.  */
   _dl_add_to_namespace_list (l, nsid);
 
+  /* Signal that we are going to add new objects.  */
+  if (r->r_state == RT_CONSISTENT)
+    {
+#ifdef SHARED
+      /* Auditing checkpoint: we are going to add new objects.  Since this
+         is called after _dl_add_to_namespace_list the namespace is guaranteed
+	 to not be empty.  */
+      if ((mode & __RTLD_AUDIT) == 0)
+	_dl_audit_activity_nsid (nsid, LA_ACT_ADD);
+#endif
+
+      /* Notify the debugger we have added some objects.  We need to
+	 call _dl_debug_initialize in a static program in case dynamic
+	 linking has not been used before.  */
+      r->r_state = RT_ADD;
+      _dl_debug_state ();
+      LIBC_PROBE (map_start, 2, nsid, r);
+      make_consistent = true;
+    }
+  else
+    assert (r->r_state == RT_ADD);
+
 #ifdef SHARED
   /* Auditing checkpoint: we have a new object.  */
-  if (__glibc_unlikely (GLRO(dl_naudit) > 0)
-      && !GL(dl_ns)[l->l_ns]._ns_loaded->l_auditing)
-    {
-      struct audit_ifaces *afct = GLRO(dl_audit);
-      for (unsigned int cnt = 0; cnt < GLRO(dl_naudit); ++cnt)
-	{
-	  if (afct->objopen != NULL)
-	    {
-	      struct auditstate *state = link_map_audit_state (l, cnt);
-	      state->bindflags = afct->objopen (l, nsid, &state->cookie);
-	      l->l_audit_any_plt |= state->bindflags != 0;
-	    }
-
-	  afct = afct->next;
-	}
-    }
+  if (!GL(dl_ns)[l->l_ns]._ns_loaded->l_auditing)
+    _dl_audit_objopen (l, nsid);
 #endif
 
   return l;
@@ -1620,32 +1596,20 @@ open_verify (const char *name, int fd,
 
 #ifdef SHARED
   /* Give the auditing libraries a chance.  */
-  if (__glibc_unlikely (GLRO(dl_naudit) > 0) && whatcode != 0
-      && loader->l_auditing == 0)
+  if (__glibc_unlikely (GLRO(dl_naudit) > 0))
     {
       const char *original_name = name;
-      struct audit_ifaces *afct = GLRO(dl_audit);
-      for (unsigned int cnt = 0; cnt < GLRO(dl_naudit); ++cnt)
-	{
-	  if (afct->objsearch != NULL)
-	    {
-	      struct auditstate *state = link_map_audit_state (loader, cnt);
-	      name = afct->objsearch (name, &state->cookie, whatcode);
-	      if (name == NULL)
-		/* Ignore the path.  */
-		return -1;
-	    }
-
-	  afct = afct->next;
-	}
+      name = _dl_audit_objsearch (name, loader, whatcode);
+      if (name == NULL)
+	return -1;
 
       if (fd != -1 && name != original_name && strcmp (name, original_name))
-        {
-          /* An audit library changed what we're supposed to open,
-             so FD no longer matches it.  */
-          __close_nocancel (fd);
-          fd = -1;
-        }
+	{
+	  /* An audit library changed what we're supposed to open,
+	     so FD no longer matches it.  */
+	  __close_nocancel (fd);
+	  fd = -1;
+	}
     }
 #endif
 
@@ -2084,36 +2048,17 @@ _dl_map_object (struct link_map *loader, const char *name,
 #ifdef SHARED
   /* Give the auditing libraries a chance to change the name before we
      try anything.  */
-  if (__glibc_unlikely (GLRO(dl_naudit) > 0)
-      && (loader == NULL || loader->l_auditing == 0))
+  if (__glibc_unlikely (GLRO(dl_naudit) > 0))
     {
-      struct audit_ifaces *afct = GLRO(dl_audit);
-      for (unsigned int cnt = 0; cnt < GLRO(dl_naudit); ++cnt)
+      const char *before = name;
+      name = _dl_audit_objsearch (name, loader, LA_SER_ORIG);
+      if (name == NULL)
 	{
-	  if (afct->objsearch != NULL)
-	    {
-	      const char *before = name;
-	      struct auditstate *state = link_map_audit_state (loader, cnt);
-	      name = afct->objsearch (name, &state->cookie, LA_SER_ORIG);
-	      if (name == NULL)
-		{
-		  /* Do not try anything further.  */
-		  fd = -1;
-		  goto no_file;
-		}
-	      if (before != name && strcmp (before, name) != 0)
-		{
-		  if (__glibc_unlikely (GLRO(dl_debug_mask) & DL_DEBUG_FILES))
-		    _dl_debug_printf ("audit changed filename %s -> %s\n",
-				      before, name);
-
-		  if (origname == NULL)
-		    origname = before;
-		}
-	    }
-
-	  afct = afct->next;
+	  fd = -1;
+	  goto no_file;
 	}
+      if (before != name && strcmp (before, name) != 0)
+	origname = before;
     }
 #endif
 

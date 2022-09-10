@@ -32,14 +32,16 @@
 # define readdir __readdir
 # define closedir __closedir
 # define mempcpy __mempcpy
-# define lstat64 __lstat64
+# define struct_stat struct __stat64_t64
+# define lstat __lstat64_time64
 # define feof_unlocked __feof_unlocked
+#else
+# define struct_stat struct stat
 #endif
 
 /* Name of the file containing the module information in the directories
    along the path.  */
 static const char gconv_conf_filename[] = "gconv-modules";
-static const char gconv_conf_dirname[] = "gconv-modules.d";
 
 static void add_alias (char *);
 static void add_module (char *, const char *, size_t, int);
@@ -110,19 +112,28 @@ read_conf_file (const char *filename, const char *directory, size_t dir_len)
   return true;
 }
 
+/* Prefix DIR (with length DIR_LEN) with PREFIX if the latter is non-NULL and
+   parse configuration in it.  */
+
 static __always_inline bool
-gconv_parseconfdir (const char *dir, size_t dir_len)
+gconv_parseconfdir (const char *prefix, const char *dir, size_t dir_len)
 {
-  /* No slash needs to be inserted between dir and gconv_conf_filename;
-     dir already ends in a slash.  */
-  char *buf = malloc (dir_len + sizeof (gconv_conf_dirname));
+  /* No slash needs to be inserted between dir and gconv_conf_filename; dir
+     already ends in a slash.  The additional 2 is to accommodate the ".d"
+     when looking for configuration files in gconv-modules.d.  */
+  size_t buflen = dir_len + sizeof (gconv_conf_filename) + 2;
+  char *buf = malloc (buflen + (prefix != NULL ? strlen (prefix) : 0));
+  char *cp = buf;
   bool found = false;
 
   if (buf == NULL)
     return false;
 
-  char *cp = mempcpy (mempcpy (buf, dir, dir_len), gconv_conf_filename,
-		      sizeof (gconv_conf_filename));
+  if (prefix != NULL)
+    cp = stpcpy (cp, prefix);
+
+  cp = mempcpy (mempcpy (cp, dir, dir_len), gconv_conf_filename,
+		sizeof (gconv_conf_filename));
 
   /* Read the gconv-modules configuration file first.  */
   found = read_conf_file (buf, dir, dir_len);
@@ -150,15 +161,14 @@ gconv_parseconfdir (const char *dir, size_t dir_len)
 	      && strcmp (ent->d_name + len - strlen (suffix), suffix) == 0)
 	    {
 	      char *conf;
-	      struct stat64 st;
+	      struct_stat st;
 	      if (asprintf (&conf, "%s/%s", buf, ent->d_name) < 0)
 		continue;
-	      if (ent->d_type == DT_UNKNOWN
-		  && (lstat64 (conf, &st) == -1
-		      || !S_ISREG (st.st_mode)))
-		continue;
 
-	      found |= read_conf_file (conf, dir, dir_len);
+	      if (ent->d_type != DT_UNKNOWN
+		  || (lstat (conf, &st) != -1 && S_ISREG (st.st_mode)))
+		found |= read_conf_file (conf, dir, dir_len);
+
 	      free (conf);
 	    }
 	}

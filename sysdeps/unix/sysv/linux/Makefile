@@ -123,6 +123,7 @@ tests += tst-clone tst-clone2 tst-clone3 tst-fanotify tst-personality \
   tst-close_range \
   tst-prctl \
   tst-scm_rights \
+  tst-getauxval \
   # tests
 
 # Test for the symbol version of fcntl that was replaced in glibc 2.28.
@@ -262,6 +263,15 @@ sysdep_routines += cmsg_nxthdr
 CFLAGS-recvmmsg.c = -fexceptions -fasynchronous-unwind-tables
 CFLAGS-sendmmsg.c = -fexceptions -fasynchronous-unwind-tables
 
+tests += \
+  tst-socket-timestamp \
+  tst-socket-timestamp-compat \
+  # tests
+tests-time64 += \
+  tst-socket-timestamp-time64 \
+  tst-socket-timestamp-compat-time64
+  # tests-time64
+
 tests-special += $(objpfx)tst-socket-consts.out
 $(objpfx)tst-socket-consts.out: ../sysdeps/unix/sysv/linux/tst-socket-consts.py
 	PYTHONPATH=../scripts \
@@ -331,7 +341,12 @@ sysdep_routines += xstatconv internal_statvfs \
 
 sysdep_headers += bits/fcntl-linux.h
 
-tests += tst-fallocate tst-fallocate64 tst-o_path-locks
+tests += \
+  tst-fallocate \
+  tst-fallocate64 \
+  tst-getcwd-smallbuff \
+  tst-o_path-locks \
+# tests
 endif
 
 ifeq ($(subdir),elf)

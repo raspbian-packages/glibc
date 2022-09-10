@@ -26,3 +26,6 @@
 #define DL_FIXUP_VALUE_CODE_ADDR(value) (value)
 #define DL_FIXUP_VALUE_ADDR(value) (value)
 #define DL_FIXUP_ADDR_VALUE(addr) (addr)
+#define DL_FIXUP_BINDNOW_ADDR_VALUE(addr) (addr)
+#define DL_FIXUP_BINDNOW_RELOC(value, new_value, st_value) \
+  (*value) = st_value;
