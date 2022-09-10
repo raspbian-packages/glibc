@@ -24,7 +24,7 @@
 thrd_t
 thrd_current (void)
 {
-  if (__pthread_threads)
+  if (&__pthread_threads && __pthread_threads)
     return (thrd_t) __pthread_self ();
 
   return (thrd_t) 0;
