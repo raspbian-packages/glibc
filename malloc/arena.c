@@ -79,7 +79,9 @@ static __thread mstate thread_arena attribute_tls_model_ie;
    acquired after free_list_lock has been acquired.  */
 
 __libc_lock_define_initialized (static, free_list_lock);
+#if IS_IN (libc)
 static size_t narenas = 1;
+#endif
 static mstate free_list;
 
 /* list_lock prevents concurrent writes to the next member of struct
@@ -97,7 +99,7 @@ static mstate free_list;
 __libc_lock_define_initialized (static, list_lock);
 
 /* Already initialized? */
-int __malloc_initialized = -1;
+static bool __malloc_initialized = false;
 
 /**************************************************************************/
 
@@ -143,7 +145,7 @@ int __malloc_initialized = -1;
 void
 __malloc_fork_lock_parent (void)
 {
-  if (__malloc_initialized < 1)
+  if (!__malloc_initialized)
     return;
 
   /* We do not acquire free_list_lock here because we completely
@@ -163,7 +165,7 @@ __malloc_fork_lock_parent (void)
 void
 __malloc_fork_unlock_parent (void)
 {
-  if (__malloc_initialized < 1)
+  if (!__malloc_initialized)
     return;
 
   for (mstate ar_ptr = &main_arena;; )
@@ -179,7 +181,7 @@ __malloc_fork_unlock_parent (void)
 void
 __malloc_fork_unlock_child (void)
 {
-  if (__malloc_initialized < 1)
+  if (!__malloc_initialized)
     return;
 
   /* Push all arenas to the free list, except thread_arena, which is
@@ -207,17 +209,9 @@ __malloc_fork_unlock_child (void)
 }
 
 #if HAVE_TUNABLES
-void
-TUNABLE_CALLBACK (set_mallopt_check) (tunable_val_t *valp)
-{
-  int32_t value = (int32_t) valp->numval;
-  if (value != 0)
-    __malloc_check_init ();
-}
-
 # define TUNABLE_CALLBACK_FNDECL(__name, __type) \
 static inline int do_ ## __name (__type value);				      \
-void									      \
+static void									      \
 TUNABLE_CALLBACK (__name) (tunable_val_t *valp)				      \
 {									      \
   __type value = (__type) (valp)->numval;				      \
@@ -274,59 +268,26 @@ next_env_entry (char ***position)
 #endif
 
 
-#if defined(SHARED) || defined(USE_MTAG)
-static void *
-__failing_morecore (ptrdiff_t d)
-{
-  return (void *) MORECORE_FAILURE;
-}
-#endif
-
 #ifdef SHARED
 extern struct dl_open_hook *_dl_open_hook;
 libc_hidden_proto (_dl_open_hook);
 #endif
 
-#ifdef USE_MTAG
-
-/* Generate a new (random) tag value for PTR and tag the memory it
-   points to upto the end of the usable size for the chunk containing
-   it.  Return the newly tagged pointer.  */
-static void *
-__mtag_tag_new_usable (void *ptr)
-{
-  if (ptr)
-    {
-      mchunkptr cp = mem2chunk(ptr);
-      /* This likely will never happen, but we can't handle retagging
-	 chunks from the dumped main arena.  So just return the
-	 existing pointer.  */
-      if (DUMPED_MAIN_ARENA_CHUNK (cp))
-	return ptr;
-      ptr = __libc_mtag_tag_region (__libc_mtag_new_tag (ptr),
-				    CHUNK_AVAILABLE_SIZE (cp) - CHUNK_HDR_SZ);
-    }
-  return ptr;
-}
-
-/* Generate a new (random) tag value for PTR, set the tags for the
-   memory to the new tag and initialize the memory contents to VAL.
-   In practice this function will only be called with VAL=0, but we
-   keep this parameter to maintain the same prototype as memset.  */
-static void *
-__mtag_tag_new_memset (void *ptr, int val, size_t size)
-{
-  return __libc_mtag_memset_with_tag (__libc_mtag_new_tag (ptr), val, size);
-}
+#if USE_TCACHE
+static void tcache_key_initialize (void);
 #endif
 
 static void
 ptmalloc_init (void)
 {
-  if (__malloc_initialized >= 0)
+  if (__malloc_initialized)
     return;
 
-  __malloc_initialized = 0;
+  __malloc_initialized = true;
+
+#if USE_TCACHE
+  tcache_key_initialize ();
+#endif
 
 #ifdef USE_MTAG
   if ((TUNABLE_GET_FULL (glibc, mem, tagging, int32_t, NULL) & 1) != 0)
@@ -335,24 +296,20 @@ ptmalloc_init (void)
 	 and that morecore does not support tagged regions, then
 	 disable it.  */
       if (__MTAG_SBRK_UNTAGGED)
-	__morecore = __failing_morecore;
+	__always_fail_morecore = true;
 
-      __mtag_mmap_flags = __MTAG_MMAP_FLAGS;
-      __tag_new_memset = __mtag_tag_new_memset;
-      __tag_region = __libc_mtag_tag_region;
-      __tag_new_usable = __mtag_tag_new_usable;
-      __tag_at = __libc_mtag_address_get_tag;
-      __mtag_granule_mask = ~(size_t)(__MTAG_GRANULE_SIZE - 1);
+      mtag_enabled = true;
+      mtag_mmap_flags = __MTAG_MMAP_FLAGS;
     }
 #endif
 
-#ifdef SHARED
+#if defined SHARED && IS_IN (libc)
   /* In case this libc copy is in a non-default namespace, never use
      brk.  Likewise if dlopened from statically linked program.  The
      generic sbrk implementation also enforces this, but it is not
      used on Hurd.  */
   if (!__libc_initial)
-    __morecore = __failing_morecore;
+    __always_fail_morecore = true;
 #endif
 
   thread_arena = &main_arena;
@@ -360,7 +317,6 @@ ptmalloc_init (void)
   malloc_init_state (&main_arena);
 
 #if HAVE_TUNABLES
-  TUNABLE_GET (check, int32_t, TUNABLE_CALLBACK (set_mallopt_check));
   TUNABLE_GET (top_pad, size_t, TUNABLE_CALLBACK (set_top_pad));
   TUNABLE_GET (perturb, int32_t, TUNABLE_CALLBACK (set_perturb_byte));
   TUNABLE_GET (mmap_threshold, size_t, TUNABLE_CALLBACK (set_mmap_threshold));
@@ -376,7 +332,6 @@ ptmalloc_init (void)
 # endif
   TUNABLE_GET (mxfast, size_t, TUNABLE_CALLBACK (set_mxfast));
 #else
-  const char *s = NULL;
   if (__glibc_likely (_environ != NULL))
     {
       char **runp = _environ;
@@ -395,10 +350,6 @@ ptmalloc_init (void)
 
           switch (len)
             {
-            case 6:
-              if (memcmp (envline, "CHECK_", 6) == 0)
-                s = &envline[7];
-              break;
             case 8:
               if (!__builtin_expect (__libc_enable_secure, 0))
                 {
@@ -438,16 +389,7 @@ ptmalloc_init (void)
             }
         }
     }
-  if (s && s[0] != '\0' && s[0] != '0')
-    __malloc_check_init ();
 #endif
-
-#if HAVE_MALLOC_INIT_HOOK
-  void (*hook) (void) = atomic_forced_read (__malloc_initialize_hook);
-  if (hook != NULL)
-    (*hook)();
-#endif
-  __malloc_initialized = 1;
 }
 
 /* Managing heaps and arenas (for concurrent threads) */
@@ -562,7 +504,7 @@ new_heap (size_t size, size_t top_pad)
             }
         }
     }
-  if (__mprotect (p2, size, MTAG_MMAP_FLAGS | PROT_READ | PROT_WRITE) != 0)
+  if (__mprotect (p2, size, mtag_mmap_flags | PROT_READ | PROT_WRITE) != 0)
     {
       __munmap (p2, HEAP_MAX_SIZE);
       return 0;
@@ -592,7 +534,7 @@ grow_heap (heap_info *h, long diff)
     {
       if (__mprotect ((char *) h + h->mprotect_size,
                       (unsigned long) new_size - h->mprotect_size,
-                      MTAG_MMAP_FLAGS | PROT_READ | PROT_WRITE) != 0)
+                      mtag_mmap_flags | PROT_READ | PROT_WRITE) != 0)
         return -2;
 
       h->mprotect_size = new_size;
@@ -716,6 +658,7 @@ heap_trim (heap_info *heap, size_t pad)
 
 /* Create a new arena with initial size "size".  */
 
+#if IS_IN (libc)
 /* If REPLACED_ARENA is not NULL, detach it from this thread.  Must be
    called while free_list_lock is held.  */
 static void
@@ -936,7 +879,7 @@ arena_get2 (size_t size, mstate avoid_arena)
             narenas_limit = mp_.arena_max;
           else if (narenas > mp_.arena_test)
             {
-              int n = __get_nprocs ();
+              int n = __get_nprocs_sched ();
 
               if (n >= 1)
                 narenas_limit = NARENAS_FROM_NCORES (n);
@@ -991,6 +934,7 @@ arena_get_retry (mstate ar_ptr, size_t bytes)
 
   return ar_ptr;
 }
+#endif
 
 void
 __malloc_arena_thread_freeres (void)

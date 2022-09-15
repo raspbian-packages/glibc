@@ -6,10 +6,6 @@ test-xfail-tst-cpuclock2 = yes
 test-xfail-tst-cputimer1 = yes
 test-xfail-tst-timer = yes
 
-# This is an upstream regression on multiple architectures
-# see https://sourceware.org/bugzilla/show_bug.cgi?id=19303
-test-xfail-tst-cancel24-static = yes
-
 # Due to the nature of this test, it's very sensitive to system load
 # in that, strangely, it wants more, not less.  Given that's hard to
 # control, we'll just let it fail
@@ -143,10 +139,6 @@ test-xfail-tst-signal3 = yes
 test-xfail-tst-timer4 = yes
 test-xfail-tst-waitid = yes
 test-xfail-tst-writev = yes
-
-# There is not support for protection key on Alpha yet, and there is a
-# disagreement between kernel and glibc how to report that.
-test-xfail-tst-pkey = yes
 endif
 
 
@@ -164,13 +156,6 @@ endif
 # arm64
 ######################################################################
 ifeq ($(config-machine)-$(config-os),aarch64-linux-gnu)
-# There is not support for protection key on ARM64 yet, and there is a
-# disagreement between kernel and glibc how to report that.
-test-xfail-tst-pkey = yes
-
-# In some conditions the kernel might not provide a heap, causing
-# some tests to fail. See bug#889817 for details.
-test-xfail-tst-malloc-usable-tunables = yes
 endif
 
 
@@ -178,9 +163,6 @@ endif
 # armel
 ######################################################################
 ifeq ($(config-machine)-$(config-os),arm-linux-gnueabi)
-# There is not support for protection key on ARM yet, and there is a
-# disagreement between kernel and glibc how to report that.
-test-xfail-tst-pkey = yes
 endif
 
 
@@ -188,9 +170,6 @@ endif
 # armhf
 ######################################################################
 ifeq ($(config-machine)-$(config-os),arm-linux-gnueabihf)
-# There is not support for protection key on ARM yet, and there is a
-# disagreement between kernel and glibc how to report that.
-test-xfail-tst-pkey = yes
 endif
 
 
@@ -226,6 +205,12 @@ test-xfail-tst-cond25 = yes
 # See https://sourceware.org/bugzilla/show_bug.cgi?id=24914
 test-xfail-tst-minsigstksz-1 = yes
 test-xfail-tst-xsigstack = yes
+
+# See https://sourceware.org/bugzilla/show_bug.cgi?id=27654
+test-xfail-tst-readdir64-compat = yes
+
+# https://www.spinics.net/lists/linux-parisc/msg15397.html
+test-xfail-tst-minsigstksz-5 = yes
 endif
 
 
@@ -241,10 +226,23 @@ test-xfail-tst-null-argv = yes
 tests-unsupported += tst-malloc-thread-fail
 tests-unsupported += tst-malloc-thread-fail-malloc-check
 tests-unsupported += tst-malloc-thread-fail-mcheck
+tests-unsupported += tst-malloc-thread-fail-malloc-hugetlb1
+tests-unsupported += tst-malloc-thread-fail-malloc-hugetlb2
 tests-unsupported += tst-dynarray-fail
+
+# This overflows pflocal with select requests
+tests-unsupported += tst-pthread_cancel-select-loop
+
+# These stay stuck
+tests-unsupported += tst-audit14
+tests-unsupported += tst-audit14a
+tests-unsupported += tst-audit15
+tests-unsupported += tst-audit16
 
 # We don't provide /proc/cpuinfo yet
 test-xfail-test-multiarch = yes
+test-xfail-tst-cpu-features-cpuinfo = yes
+test-xfail-tst-cpu-features-cpuinfo-static = yes
 
 # Need actual porting
 test-xfail-exe = yes
@@ -267,12 +265,24 @@ test-xfail-tst-audit2 = yes
 test-xfail-tst-audit3 = yes
 test-xfail-tst-audit8 = yes
 test-xfail-tst-audit9 = yes
-test-xfail-tst-audit11 = yes
-test-xfail-tst-audit12 = yes
 test-xfail-tst-audit14 = yes
+test-xfail-tst-audit14-cmp = yes
+test-xfail-tst-audit14a = yes
+test-xfail-tst-audit14a-cmp = yes
 test-xfail-tst-audit15 = yes
+test-xfail-tst-audit15-cmp = yes
 test-xfail-tst-audit16 = yes
-test-xfail-tst-auditmany = yes
+test-xfail-tst-audit16-cmp = yes
+test-xfail-tst-audit17 = yes
+test-xfail-tst-audit18 = yes
+test-xfail-tst-audit20 = yes
+test-xfail-tst-audit23 = yes
+test-xfail-tst-audit24a = yes
+test-xfail-tst-audit24b = yes
+test-xfail-tst-audit24c = yes
+test-xfail-tst-audit24d = yes
+test-xfail-tst-audit25a = yes
+test-xfail-tst-audit25b = yes
 
 # We always put LD_ORIGIN_PATH in the environment
 test-xfail-tst-execvpe5 = yes
@@ -292,6 +302,16 @@ tests-unsupported += test-lfs
 #test-xfail-test-lfs = yes
 test-xfail-tst-tzset = yes
 
+# want /proc/self/fd
+test-xfail-tst-if_index-long = yes
+test-xfail-tst-support_descriptors = yes
+test-xfail-tst-updwtmpx = yes
+test-xfail-tst-lchmod = yes
+test-xfail-tst-closefrom = yes
+test-xfail-tst-close_range = yes
+test-xfail-tst-support-open-dev-null-range = yes
+test-xfail-tst-spawn5 = yes
+
 # new in 2.22
 test-xfail-tst-prelink = yes
 test-xfail-tst-tls-atexit = yes
@@ -303,9 +323,6 @@ test-xfail-tst-spawn2 = yes
 test-xfail-tst-preadvwritev64 = yes
 test-xfail-tst-preadwrite64 = yes
 
-# happens on linux-i386 too
-test-xfail-annexc = yes
-
 # needs sigwaitinfo
 test-xfail-tst-waitid = yes
 test-xfail-tst-wait4 = yes
@@ -314,7 +331,6 @@ test-xfail-tst-wait4 = yes
 test-xfail-tst-posix_fallocate64 = yes
 test-xfail-tst-posix_fadvise = yes
 test-xfail-tst-posix_fadvise64 = yes
-test-xfail-tst-vfork3 = yes
 
 # new in 2.26
 test-xfail-tst-malloc-tcache-leak = yes
@@ -322,15 +338,7 @@ test-xfail-tst-dynarray-fail-mem = yes
 test-xfail-test-errno = yes
 
 # new in 2.27
-test-xfail-tst-gmon-static = yes
-test-xfail-tst-gmon-static-gprof = yes
 test-xfail-tst-tls1-static-non-pie = yes
-test-xfail-tst-libc_dlvsym-static = yes
-test-xfail-tst-libc_dlvsym = yes
-
-# want /proc/self/fd
-test-xfail-tst-if_index-long = yes
-test-xfail-tst-support_descriptors = yes
 
 # new in 2.30
 test-xfail-tst-nss-files-hosts-long = yes
@@ -338,25 +346,18 @@ test-xfail-tst-nss-files-hosts-long = yes
 # wants pthread_barrierattr_setpshared
 test-xfail-tst-pututxline-cache = yes
 test-xfail-tst-pututxline-lockfail = yes
-test-xfail-tst-mallocfork2 = yes
-test-xfail-tst-mallocfork2-mcheck = yes
-test-xfail-tst-mallocfork2-malloc-check = yes
-
-# wants /proc/self/fd
-test-xfail-tst-updwtmpx = yes
-test-xfail-tst-lchmod = yes
 
 # new in 2.32
 # Assumes some linuxish strings
 test-xfail-tst-strerror = yes
 # We always have several threads
 test-xfail-tst-single_threaded-pthread = yes
+# known to be fixed by the siginfo patch by fixing the returned value
+# #  But for dlsym errors it still returns 9 instead of 127...
 test-xfail-tst-latepthread = yes
 test-xfail-tst-initfinilazyfail = yes
 
 # new in 2.33
-test-xfail-tst-cpu-features-cpuinfo = yes
-test-xfail-tst-cpu-features-support = yes
 # Mach misses getting adjtime without privileges
 test-xfail-tst-adjtime = yes
 test-xfail-tst-join15 = yes
@@ -365,34 +366,40 @@ test-xfail-tst-reload2 = yes
 
 # fixed in 2.33
 test-xfail-tst-spawn4-compat = yes
-test-xfail-test-fesetexcept-traps = yes
 
 # new in 2.34
-test-xfail-tst-cpu-features-cpuinfo-static = yes
 test-xfail-test-cxa_atexit-race2 = yes
 test-xfail-tst-itimer = yes
-test-xfail-tst-timespec_getres = yes
 test-xfail-tst-wait3 = yes
-test-xfail-tst-mqueue10 = yes
-test-xfail-tst-closefrom = yes
-test-xfail-tst-spawn5 = yes
-
-# fixed in 2.34
-test-xfail-tst-res_hconf_reorder = yes
-test-xfail-tst-canon-bz26341 = yes
+test-xfail-tst-nss-compat1 = yes
+test-xfail-test-fesetexcept-traps = yes
+test-xfail-tst-dlinfo-phdr = yes
+test-xfail-tst-tls-allocation-failure-static-patched = yes
+test-xfail-tst-cancel29 = yes
 
 # new in 2.35
-test-xfail-tst-pthread_kill-exited = yes
-test-xfail-tst-pthread_kill-exiting = yes
 test-xfail-tst-compathooks-on = yes
-test-xfail-tst-support-open-dev-null-range = yes
-test-xfail-tst-audit14-cmp = yes
-test-xfail-tst-audit15-cmp = yes
-test-xfail-tst-audit16-cmp = yes
 test-xfail-tst-sched_getaffinity = yes
+test-xfail-tst-malloc-tcache-leak-malloc-hugetlb1 = yes
+test-xfail-tst-malloc-tcache-leak-malloc-hugetlb2 = yes
+test-xfail-tst-p_align3 = yes
+tests-unsupported += tst-spawn6
 
 # fixed in 2.35
 test-xfail-tst-safe-linking = yes
+test-xfail-tst-gmon-static = yes
+test-xfail-tst-gmon-static-gprof = yes
+test-xfail-tst-audit11 = yes
+test-xfail-tst-audit12 = yes
+test-xfail-tst-auditmany = yes
+test-xfail-tst-timespec_getres = yes
+test-xfail-tst-canon-bz26341 = yes
+# upstreamed in 2.35
+test-xfail-tst-mallocfork2 = yes
+test-xfail-tst-mallocfork2-mcheck = yes
+test-xfail-tst-mallocfork2-malloc-check = yes
+test-xfail-tst-vfork3 = yes
+test-xfail-tst-mqueue10 = yes
 
 # actually never succeded
 test-xfail-tst-create_format1 = yes
@@ -785,6 +792,7 @@ endif
 ######################################################################
 ifneq (,$(filter $(config-machine)-$(config-os), mips-linux-gnu mipsel-linux-gnu mips64-linux-gnuabi64 mips64el-linux-gnuabi64 mips64-linux-gnuabin32 mips64el-linux-gnuabin32))
 test-xfail-tst-stack4 = yes
+test-xfail-tst-ro-dynamic = yes
 
 # MIPS GCC does not use PT_GNU_STACK markers (this is a GCC issue)
 test-xfail-check-execstack = yes
@@ -811,9 +819,13 @@ test-xfail-test-float32-float64-sub = yes
 test-xfail-tst-strfrom = yes
 test-xfail-tst-strfrom-locale = yes
 
-# There is not support for protection key on MIPS yet, and there is a
-# disagreement between kernel and glibc how to report that.
-test-xfail-tst-pkey = yes
+# These audit failures seems to be due to the MIPS ELF specificities:
+test-xfail-tst-audit24a = yes
+test-xfail-tst-audit24b = yes
+test-xfail-tst-audit24c = yes
+test-xfail-tst-audit24d = yes
+test-xfail-tst-audit25a = yes
+test-xfail-tst-audit25b = yes
 endif
 
 
@@ -841,9 +853,6 @@ endif
 # O32 mips*
 ######################################################################
 ifneq (,$(filter $(config-machine)-$(config-os), mips64-linux-gnu mips64el-linux-gnu))
-# In some conditions the kernel might not provide a heap, causing
-# some tests to fail. See bug#889817 for details.
-test-xfail-tst-thread-exit-clobber = yes
 endif
 
 
@@ -851,9 +860,6 @@ endif
 # N64 mips*
 ######################################################################
 ifneq (,$(filter $(config-machine)-$(config-os), mips64-linux-gnuabi64 mips64el-linux-gnuabi64))
-# In some conditions the kernel might not provide a heap, causing
-# some tests to fail. See bug#889817 for details.
-test-xfail-tst-malloc-usable-tunables = yes
 endif
 
 
@@ -861,13 +867,6 @@ endif
 # ppc64el
 ######################################################################
 ifeq ($(config-machine)-$(config-os),powerpc64le-linux-gnu)
-# In some conditions the kernel might not provide a heap, causing
-# some tests to fail. See bug#889817 for details.
-test-xfail-tst-malloc-usable-tunables = yes
-
-# The glibc implementation of pkey_get and pkey_set are the stub
-# implementations.
-test-xfail-tst-pkey = yes
 endif
 
 
@@ -879,14 +878,6 @@ test-xfail-tst-backtrace5 = yes
 test-xfail-tst-backtrace6 = yes
 test-xfail-tst-mqueue5 = yes
 test-xfail-tst-waitid = yes
-
-# In some conditions the kernel might not provide a heap, causing
-# some tests to fail. See bug#889817 for details.
-test-xfail-tst-malloc-usable-tunables = yes
-
-# The glibc implementation of pkey_get and pkey_set are the stub
-# implementations.
-test-xfail-tst-pkey = yes
 endif
 
 
@@ -899,8 +890,7 @@ test-xfail-tst-backtrace6 = yes
 test-xfail-tst-mqueue5 = yes
 test-xfail-tst-waitid = yes
 
-# The glibc implementation of pkey_get and pkey_set are the stub
-# implementations.
+# The 32-bit protection key behavior is somewhat unclear on 32-bit powerpc.
 test-xfail-tst-pkey = yes
 endif
 
@@ -944,10 +934,6 @@ endif
 ifeq ($(config-machine)-$(config-os),s390x-linux-gnu)
 test-xfail-tst-protected1a = yes
 test-xfail-tst-protected1b = yes
-
-# In some conditions the kernel might not provide a heap, causing
-# some tests to fail. See bug#889817 for details.
-test-xfail-tst-malloc-usable-tunables = yes
 endif
 
 
@@ -998,10 +984,6 @@ test-xfail-tst-protected1b = yes
 test-xfail-tst-realloc = yes
 test-xfail-tst-waitid = yes
 test-xfail-test-float64x-float128-mul=yes
-
-# In some conditions the kernel might not provide a heap, causing
-# some tests to fail. See bug#889817 for details.
-test-xfail-tst-malloc-usable-tunables = yes
 endif
 
 

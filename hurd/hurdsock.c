@@ -103,7 +103,7 @@ retry:
   __mutex_unlock (&lock);
   HURD_CRITICAL_END;
   if (server == MACH_PORT_NULL && errno == EINTR)
-    /* Got a signal while inside an RPC of the critical section, retry.  */
+    /* Got a signal while inside an RPC of the critical section, retry again */
     goto retry;
 
   return server;

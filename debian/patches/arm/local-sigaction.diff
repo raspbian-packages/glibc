@@ -1,10 +1,10 @@
 ---
- sysdeps/unix/sysv/linux/arm/sigaction.c |   13 ++++---------
+ sysdeps/unix/sysv/linux/arm/libc_sigaction.c |   13 ++++---------
  1 file changed, 4 insertions(+), 9 deletions(-)
 
---- a/sysdeps/unix/sysv/linux/arm/sigaction.c
-+++ b/sysdeps/unix/sysv/linux/arm/sigaction.c
-@@ -22,15 +22,10 @@ extern void __default_rt_sa_restorer (void);
+--- a/sysdeps/unix/sysv/linux/arm/libc_sigaction.c
++++ b/sysdeps/unix/sysv/linux/arm/libc_sigaction.c
+@@ -22,15 +22,10 @@
  
  #define SET_SA_RESTORER(kact, act)				\
   ({								\

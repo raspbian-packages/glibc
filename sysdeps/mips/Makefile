@@ -17,11 +17,6 @@ CPPFLAGS-crti.S += $(pic-ccflag)
 CPPFLAGS-crtn.S += $(pic-ccflag)
 endif
 
-ifeq ($(subdir),nptl)
-CPPFLAGS-pt-crti.S += $(pic-ccflag)
-CPPFLAGS-crtn.S += $(pic-ccflag)
-endif
-
 ASFLAGS-.os += $(pic-ccflag)
 # libc.a and libc_p.a must be compiled with -fPIE/-fpie for static PIE.
 ASFLAGS-.o += $(pie-default)
@@ -69,7 +64,6 @@ fpabi_list=$(subst $(space),$(comma),$(patsubst tst-abi-%mod,o_%,\
 CPPFLAGS-tst-abi-interlink.c += -DFPABI_LIST=$(fpabi_list)
 CPPFLAGS-tst-abi-interlink.c += -DFPABI_COUNT=$(words $(fpabi-modules-names))
 CPPFLAGS-tst-abi-interlink.c += -DFPABI_NATIVE=o_fp$(o32-fpabi)
-$(objpfx)tst-abi-interlink: $(libdl)
 $(objpfx)tst-abi-interlink.out: $(patsubst %,$(objpfx)%.so,\
 					   $(fpabi-modules-names))
 endif
@@ -77,8 +71,6 @@ endif
 ifeq ($(mips-mode-switch),yes)
 ifeq ($(o32-fpabi),xx)
 tests += tst-mode-switch-1 tst-mode-switch-2 tst-mode-switch-3
-$(objpfx)tst-mode-switch-1: $(shared-thread-library)
-$(objpfx)tst-mode-switch-2: $(shared-thread-library)
 endif
 endif
 endif

@@ -5,7 +5,6 @@ ifeq ($(subdir),misc)
 sysdep_routines += ioperm iopl vm86
 
 tests += tst-bz21269
-$(objpfx)tst-bz21269: $(shared-thread-library)
 endif
 
 ifeq ($(subdir),elf)
@@ -15,12 +14,7 @@ install-bin += lddlibc4
 endif
 
 ifeq ($(subdir),io)
-sysdep_routines += libc-do-syscall
-endif
-
-ifeq ($(subdir),nptl)
-libpthread-sysdep_routines += libc-do-syscall
-libpthread-shared-only-routines += libc-do-syscall
+sysdep_routines += libc-do-syscall libc-do-syscall-int80
 endif
 
 ifeq ($(subdir),stdlib)
@@ -34,12 +28,6 @@ sysdep_routines += divdi3
 shared-only-routines += divdi3
 CPPFLAGS-divdi3.c = -Din_divdi3_c
 endif
-endif
-
-ifeq ($(subdir),nptl)
-# pull in __syscall_error routine
-libpthread-routines += sysdep
-libpthread-shared-only-routines += sysdep
 endif
 
 ifeq ($(subdir),rt)

@@ -18,8 +18,8 @@ Index: glibc-2.32/sysdeps/mach/hurd/i386/ld.abilist
 ===================================================================
 --- glibc-2.32.orig/sysdeps/mach/hurd/i386/ld.abilist
 +++ glibc-2.32/sysdeps/mach/hurd/i386/ld.abilist
-@@ -19,3 +19,4 @@ GLIBC_2.2.6 _r_debug D 0x14
- GLIBC_2.2.6 abort F
+@@ -17,3 +17,4 @@ GLIBC_2.2.6 _r_debug D 0x14
  GLIBC_2.3 ___tls_get_addr F
  GLIBC_2.3 __tls_get_addr F
+ GLIBC_2.34 __rtld_version_placeholder F
 +GLIBC_2.4 __stack_chk_guard D 0x4

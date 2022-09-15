@@ -77,17 +77,20 @@ remove_slotinfo (size_t idx, struct dtv_slotinfo_list *listp, size_t disp,
 	 object that wasn't fully set up.  */
       if (__glibc_likely (old_map != NULL))
 	{
-	  assert (old_map->l_tls_modid == idx);
-
-	  /* Mark the entry as unused. */
-	  listp->slotinfo[idx - disp].gen = GL(dl_tls_generation) + 1;
-	  listp->slotinfo[idx - disp].map = NULL;
+	  /* Mark the entry as unused.  These can be read concurrently.  */
+	  atomic_store_relaxed (&listp->slotinfo[idx - disp].gen,
+				GL(dl_tls_generation) + 1);
+	  atomic_store_relaxed (&listp->slotinfo[idx - disp].map, NULL);
 	}
 
       /* If this is not the last currently used entry no need to look
 	 further.  */
       if (idx != GL(dl_tls_max_dtv_idx))
-	return true;
+	{
+	  /* There is an unused dtv entry in the middle.  */
+	  GL(dl_tls_dtv_gaps) = true;
+	  return true;
+	}
     }
 
   while (idx - disp > (disp == 0 ? 1 + GL(dl_tls_static_nelem) : 0))
@@ -96,8 +99,8 @@ remove_slotinfo (size_t idx, struct dtv_slotinfo_list *listp, size_t disp,
 
       if (listp->slotinfo[idx - disp].map != NULL)
 	{
-	  /* Found a new last used index.  */
-	  GL(dl_tls_max_dtv_idx) = idx;
+	  /* Found a new last used index.  This can be read concurrently.  */
+	  atomic_store_relaxed (&GL(dl_tls_max_dtv_idx), idx);
 	  return true;
 	}
     }
@@ -263,9 +266,6 @@ _dl_close_worker (struct link_map *map, bool force)
 		 used + (nsid == LM_ID_BASE), true);
 
   /* Call all termination functions at once.  */
-#ifdef SHARED
-  bool do_audit = GLRO(dl_naudit) > 0 && !ns->_ns_loaded->l_auditing;
-#endif
   bool unload_any = false;
   bool scope_mem_left = false;
   unsigned int unload_global = 0;
@@ -299,22 +299,7 @@ _dl_close_worker (struct link_map *map, bool force)
 
 #ifdef SHARED
 	  /* Auditing checkpoint: we remove an object.  */
-	  if (__glibc_unlikely (do_audit))
-	    {
-	      struct audit_ifaces *afct = GLRO(dl_audit);
-	      for (unsigned int cnt = 0; cnt < GLRO(dl_naudit); ++cnt)
-		{
-		  if (afct->objclose != NULL)
-		    {
-		      struct auditstate *state
-			= link_map_audit_state (imap, cnt);
-		      /* Return value is ignored.  */
-		      (void) afct->objclose (&state->cookie);
-		    }
-
-		  afct = afct->next;
-		}
-	    }
+	  _dl_audit_objclose (imap);
 #endif
 
 	  /* This object must not be used anymore.  */
@@ -475,25 +460,7 @@ _dl_close_worker (struct link_map *map, bool force)
 
 #ifdef SHARED
   /* Auditing checkpoint: we will start deleting objects.  */
-  if (__glibc_unlikely (do_audit))
-    {
-      struct link_map *head = ns->_ns_loaded;
-      struct audit_ifaces *afct = GLRO(dl_audit);
-      /* Do not call the functions for any auditing object.  */
-      if (head->l_auditing == 0)
-	{
-	  for (unsigned int cnt = 0; cnt < GLRO(dl_naudit); ++cnt)
-	    {
-	      if (afct->activity != NULL)
-		{
-		  struct auditstate *state = link_map_audit_state (head, cnt);
-		  afct->activity (&state->cookie, LA_ACT_DELETE);
-		}
-
-	      afct = afct->next;
-	    }
-	}
-    }
+  _dl_audit_activity_nsid (nsid, LA_ACT_DELETE);
 #endif
 
   /* Notify the debugger we are about to remove some loaded objects.  */
@@ -546,6 +513,9 @@ _dl_close_worker (struct link_map *map, bool force)
   size_t tls_free_end;
   tls_free_start = tls_free_end = NO_TLS_OFFSET;
 
+  /* Protects global and module specitic TLS state.  */
+  __rtld_lock_lock_recursive (GL(dl_load_tls_lock));
+
   /* We modify the list of loaded objects.  */
   __rtld_lock_lock_recursive (GL(dl_load_write_lock));
 
@@ -571,7 +541,9 @@ _dl_close_worker (struct link_map *map, bool force)
 					GL(dl_tls_dtv_slotinfo_list), 0,
 					imap->l_init_called))
 		/* All dynamically loaded modules with TLS are unloaded.  */
-		GL(dl_tls_max_dtv_idx) = GL(dl_tls_static_nelem);
+		/* Can be read concurrently.  */
+		atomic_store_relaxed (&GL(dl_tls_max_dtv_idx),
+				      GL(dl_tls_static_nelem));
 
 	      if (imap->l_tls_offset != NO_TLS_OFFSET
 		  && imap->l_tls_offset != FORCED_DYNAMIC_TLS_OFFSET)
@@ -769,40 +741,23 @@ _dl_close_worker (struct link_map *map, bool force)
   /* If we removed any object which uses TLS bump the generation counter.  */
   if (any_tls)
     {
-      if (__glibc_unlikely (++GL(dl_tls_generation) == 0))
+      size_t newgen = GL(dl_tls_generation) + 1;
+      if (__glibc_unlikely (newgen == 0))
 	_dl_fatal_printf ("TLS generation counter wrapped!  Please report as described in "REPORT_BUGS_TO".\n");
+      /* Can be read concurrently.  */
+      atomic_store_relaxed (&GL(dl_tls_generation), newgen);
 
       if (tls_free_end == GL(dl_tls_static_used))
 	GL(dl_tls_static_used) = tls_free_start;
     }
 
+  /* TLS is cleaned up for the unloaded modules.  */
+  __rtld_lock_unlock_recursive (GL(dl_load_tls_lock));
+
 #ifdef SHARED
-  /* Auditing checkpoint: we have deleted all objects.  */
-  if (__glibc_unlikely (do_audit))
-    {
-      struct link_map *head = ns->_ns_loaded;
-      /* If head is NULL, the namespace has become empty, and the
-	 audit interface does not give us a way to signal
-	 LA_ACT_CONSISTENT for it because the first loaded module is
-	 used to identify the namespace.
-
-	 Furthermore, do not notify auditors of the cleanup of a
-	 failed audit module loading attempt.  */
-      if (head != NULL && head->l_auditing == 0)
-	{
-	  struct audit_ifaces *afct = GLRO(dl_audit);
-	  for (unsigned int cnt = 0; cnt < GLRO(dl_naudit); ++cnt)
-	    {
-	      if (afct->activity != NULL)
-		{
-		  struct auditstate *state = link_map_audit_state (head, cnt);
-		  afct->activity (&state->cookie, LA_ACT_CONSISTENT);
-		}
-
-	      afct = afct->next;
-	    }
-	}
-    }
+  /* Auditing checkpoint: we have deleted all objects.  Also, do not notify
+     auditors of the cleanup of a failed audit module loading attempt.  */
+  _dl_audit_activity_nsid (nsid, LA_ACT_CONSISTENT);
 #endif
 
   if (__builtin_expect (ns->_ns_loaded == NULL, 0)

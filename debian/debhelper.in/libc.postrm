@@ -6,19 +6,9 @@ if [ "$1" = remove ]; then
     # installed, removing the multiarch package will remove the dynamic
     # linker. Recreate it in the postinst.
     ARCH=${DPKG_MAINTSCRIPT_ARCH}
-    case "${ARCH}" in
-        kfreebsd-i386 | s390 | powerpc)
-            target="/lib32/ld.so.1"
-            ;;
-        i386 | sparc)
-            target="/lib32/ld-linux.so.2"
-            ;;
-        *)
-            target="$(dpkg-query -L LIBC-${ARCH} 2>/dev/null | grep -E '/lib.*/ld-[0-9.]+\.so$' || true)"
-            ;;
-    esac
-    if [ -f "$target" ] && ! [ -f RTLD_SO ] ; then
-        ln -sf ${target#$(dirname RTLD_SO)/} RTLD_SO
+    target=$(dpkg-query -L LIBC-${ARCH} 2>/dev/null | grep -E '/lib.+/(ld\.so|RTLD_SO)$' || true)
+    if [ -f "$target" ] && ! [ -f RTLDDIR/RTLD_SO ] ; then
+        ln -sf ${target#RTLDDIR/} RTLDDIR/RTLD_SO
     fi
 fi
 

@@ -183,7 +183,7 @@ Index: glibc-2.27/sysdeps/gnu/net/if_arp.h
 ===================================================================
 --- /dev/null
 +++ glibc-2.27/sysdeps/gnu/net/if_arp.h
-@@ -0,0 +1,183 @@
+@@ -0,0 +1,185 @@
 +/* Definitions for Address Resolution Protocol.
 +   Copyright (C) 1997-2021 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
@@ -281,6 +281,8 @@ Index: glibc-2.27/sysdeps/gnu/net/if_arp.h
 +#define ARPHRD_ROSE	270
 +#define ARPHRD_X25	271		/* CCITT X.25.  */
 +#define ARPHRD_HWX25	272		/* Boards with X.25 in firmware.  */
++#define ARPHRD_CAN	280		/* Controller Area Network.  */
++#define ARPHRD_MCTP	290
 +#define ARPHRD_PPP	512
 +#define ARPHRD_CISCO	513		/* Cisco HDLC.  */
 +#define ARPHRD_HDLC	ARPHRD_CISCO
@@ -1506,7 +1508,7 @@ Index: glibc-2.27/sysdeps/unix/sysv/linux/net/if_arp.h
 ===================================================================
 --- glibc-2.27.orig/sysdeps/unix/sysv/linux/net/if_arp.h
 +++ /dev/null
-@@ -1,183 +0,0 @@
+@@ -1,185 +0,0 @@
 -/* Definitions for Address Resolution Protocol.
 -   Copyright (C) 1997-2021 Free Software Foundation, Inc.
 -   This file is part of the GNU C Library.
@@ -1604,6 +1606,8 @@ Index: glibc-2.27/sysdeps/unix/sysv/linux/net/if_arp.h
 -#define ARPHRD_ROSE	270
 -#define ARPHRD_X25	271		/* CCITT X.25.  */
 -#define ARPHRD_HWX25	272		/* Boards with X.25 in firmware.  */
+-#define ARPHRD_CAN	280		/* Controller Area Network.  */
+-#define ARPHRD_MCTP	290
 -#define ARPHRD_PPP	512
 -#define ARPHRD_CISCO	513		/* Cisco HDLC.  */
 -#define ARPHRD_HDLC	ARPHRD_CISCO

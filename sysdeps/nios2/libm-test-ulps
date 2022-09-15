@@ -2,6 +2,7 @@
 
 # Maximal error of functions:
 Function: "acos":
+double: 1
 float: 1
 
 Function: "acosh":
@@ -9,6 +10,7 @@ double: 2
 float: 2
 
 Function: "asin":
+double: 1
 float: 1
 
 Function: "asinh":
@@ -16,10 +18,11 @@ double: 2
 float: 2
 
 Function: "atan":
+double: 1
 float: 1
 
 Function: "atan2":
-float: 1
+float: 2
 
 Function: "atanh":
 double: 2
@@ -112,6 +115,7 @@ double: 3
 float: 3
 
 Function: Imaginary part of "clog":
+double: 1
 float: 1
 
 Function: Real part of "clog10":

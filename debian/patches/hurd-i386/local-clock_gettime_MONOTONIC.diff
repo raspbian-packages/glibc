@@ -25,10 +25,10 @@ Index: glibc-2.27/sysdeps/mach/clock_gettime.c
        {
  	/* __host_get_time can only fail if passed an invalid host_t.
  	   __mach_host_self could theoretically fail (producing an
-Index: glibc-2.27/sysdeps/pthread/timer_create.c
+Index: glibc-2.27/rt/timer_create.c
 ===================================================================
---- glibc-2.27.orig/sysdeps/pthread/timer_create.c
-+++ glibc-2.27/sysdeps/pthread/timer_create.c
+--- glibc-2.27.orig/rt/timer_create.c
++++ glibc-2.27/rt/timer_create.c
 @@ -48,7 +48,7 @@ timer_create (clockid_t clock_id, struct
        return -1;
      }

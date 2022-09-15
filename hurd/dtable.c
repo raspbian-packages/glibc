@@ -230,8 +230,7 @@ retry:
 	      {
 		if (err == EINTR)
 		  {
-		    /* Got a signal while inside an RPC of the critical section,
-		       retry.  */
+		    /* Got a signal while inside an RPC of the critical section, retry again */
 		    __mutex_unlock (&_hurd_dtable_lock);
 		    HURD_CRITICAL_UNLOCK;
 		    goto retry;

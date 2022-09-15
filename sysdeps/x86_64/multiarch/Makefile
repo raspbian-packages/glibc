@@ -1,7 +1,6 @@
 ifeq ($(subdir),string)
 
 sysdep_routines += \
-  bzero \
   memchr-avx2 \
   memchr-avx2-rtm \
   memchr-evex \
@@ -18,6 +17,7 @@ sysdep_routines += \
   memmove-avx-unaligned-erms-rtm \
   memmove-avx512-no-vzeroupper \
   memmove-avx512-unaligned-erms \
+  memmove-erms \
   memmove-evex-unaligned-erms \
   memmove-sse2-unaligned-erms \
   memmove-ssse3 \
@@ -30,6 +30,7 @@ sysdep_routines += \
   memset-avx2-unaligned-erms-rtm \
   memset-avx512-no-vzeroupper \
   memset-avx512-unaligned-erms \
+  memset-erms \
   memset-evex-unaligned-erms \
   memset-sse2-unaligned-erms \
   rawmemchr-avx2 \
@@ -88,6 +89,7 @@ sysdep_routines += \
   strlen-avx2 \
   strlen-avx2-rtm \
   strlen-evex \
+  strlen-evex512 \
   strlen-sse2 \
   strncase_l-avx2 \
   strncase_l-avx2-rtm \
@@ -116,6 +118,7 @@ sysdep_routines += \
   strnlen-avx2 \
   strnlen-avx2-rtm \
   strnlen-evex \
+  strnlen-evex512 \
   strnlen-sse2 \
   strpbrk-c \
   strpbrk-sse2 \
@@ -125,6 +128,7 @@ sysdep_routines += \
   strrchr-sse2 \
   strspn-c \
   strspn-sse2 \
+  strstr-avx512 \
   strstr-sse2-unaligned \
   varshift \
 # sysdep_routines
@@ -132,6 +136,7 @@ CFLAGS-varshift.c += -msse4
 CFLAGS-strcspn-c.c += -msse4
 CFLAGS-strpbrk-c.c += -msse4
 CFLAGS-strspn-c.c += -msse4
+CFLAGS-strstr-avx512.c += -mavx512f -mavx512vl -mavx512dq -mavx512bw -mbmi -mbmi2 -O3
 endif
 
 ifeq ($(subdir),wcsmbs)
@@ -149,6 +154,7 @@ sysdep_routines += \
   wcslen-avx2 \
   wcslen-avx2-rtm \
   wcslen-evex \
+  wcslen-evex512 \
   wcslen-sse2 \
   wcslen-sse4_1 \
   wcsncmp-avx2 \
@@ -159,6 +165,7 @@ sysdep_routines += \
   wcsnlen-avx2-rtm \
   wcsnlen-c \
   wcsnlen-evex \
+  wcsnlen-evex512 \
   wcsnlen-sse4_1 \
   wcsrchr-avx2 \
   wcsrchr-avx2-rtm \

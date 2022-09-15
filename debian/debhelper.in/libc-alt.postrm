@@ -7,8 +7,8 @@ if [ "$1" = remove ]; then
     # multiarch package are installed, then the multiarch package is removed,
     # and then the biarch package is removed, the dynamic linker symlink
     # becomes a dangling symlink. Remove it in that case.
-    if [ -h RTLD_SO ] && [ ! -f RTLD_SO ]; then
-        rm RTLD_SO
+    if [ -h RTLDDIR/RTLD_SO ] && [ ! -f RTLDDIR/RTLD_SO ]; then
+        rm RTLDDIR/RTLD_SO
     fi
 fi
 

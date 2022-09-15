@@ -19,7 +19,7 @@
 #include <errno.h>
 #include "pthreadP.h"
 #include <atomic.h>
-
+#include <libc-lockP.h>
 
 int
 __pthread_setcancelstate (int state, int *oldstate)
@@ -31,41 +31,31 @@ __pthread_setcancelstate (int state, int *oldstate)
 
   self = THREAD_SELF;
 
-  int oldval = THREAD_GETMEM (self, cancelhandling);
+  int oldval = atomic_load_relaxed (&self->cancelhandling);
   while (1)
     {
       int newval = (state == PTHREAD_CANCEL_DISABLE
 		    ? oldval | CANCELSTATE_BITMASK
 		    : oldval & ~CANCELSTATE_BITMASK);
 
-      /* Store the old value.  */
       if (oldstate != NULL)
 	*oldstate = ((oldval & CANCELSTATE_BITMASK)
 		     ? PTHREAD_CANCEL_DISABLE : PTHREAD_CANCEL_ENABLE);
 
-      /* Avoid doing unnecessary work.  The atomic operation can
-	 potentially be expensive if the memory has to be locked and
-	 remote cache lines have to be invalidated.  */
       if (oldval == newval)
 	break;
 
-      /* Update the cancel handling word.  This has to be done
-	 atomically since other bits could be modified as well.  */
-      int curval = THREAD_ATOMIC_CMPXCHG_VAL (self, cancelhandling, newval,
-					      oldval);
-      if (__glibc_likely (curval == oldval))
+      if (atomic_compare_exchange_weak_acquire (&self->cancelhandling,
+						&oldval, newval))
 	{
-	  if (CANCEL_ENABLED_AND_CANCELED_AND_ASYNCHRONOUS (newval))
+	  if (cancel_enabled_and_canceled_and_async (newval))
 	    __do_cancel ();
 
 	  break;
 	}
-
-      /* Prepare for the next round.  */
-      oldval = curval;
     }
 
   return 0;
 }
-strong_alias (__pthread_setcancelstate, pthread_setcancelstate)
-hidden_def (__pthread_setcancelstate)
+libc_hidden_def (__pthread_setcancelstate)
+weak_alias (__pthread_setcancelstate, pthread_setcancelstate)

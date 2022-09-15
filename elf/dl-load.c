@@ -58,6 +58,7 @@ struct filebuf
 };
 
 #include "dynamic-link.h"
+#include "get-dynamic-info.h"
 #include <abi-tag.h>
 #include <stackinfo.h>
 #include <sysdep.h>
@@ -438,7 +439,23 @@ add_name_to_object (struct link_map *l, const char *name)
   newname->name = memcpy (newname + 1, name, name_len);
   newname->next = NULL;
   newname->dont_free = 0;
-  lastp->next = newname;
+  /* CONCURRENCY NOTES:
+
+     Make sure the initialization of newname happens before its address is
+     read from the lastp->next store below.
+
+     GL(dl_load_lock) is held here (and by other writers, e.g. dlclose), so
+     readers of libname_list->next (e.g. _dl_check_caller or the reads above)
+     can use that for synchronization, however the read in _dl_name_match_p
+     may be executed without holding the lock during _dl_runtime_resolve
+     (i.e. lazy symbol resolution when a function of library l is called).
+
+     The release MO store below synchronizes with the acquire MO load in
+     _dl_name_match_p.  Other writes need to synchronize with that load too,
+     however those happen either early when the process is single threaded
+     (dl_main) or when the library is unloaded (dlclose) and the user has to
+     synchronize library calls with unloading.  */
+  atomic_store_release (&lastp->next, newname);
 }
 
 /* Standard search directories.  */
@@ -1037,42 +1054,6 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
   /* This is the ELF header.  We read it in `open_verify'.  */
   header = (void *) fbp->buf;
 
-  /* Signal that we are going to add new objects.  */
-  if (r->r_state == RT_CONSISTENT)
-    {
-#ifdef SHARED
-      /* Auditing checkpoint: we are going to add new objects.  */
-      if ((mode & __RTLD_AUDIT) == 0
-	  && __glibc_unlikely (GLRO(dl_naudit) > 0))
-	{
-	  struct link_map *head = GL(dl_ns)[nsid]._ns_loaded;
-	  /* Do not call the functions for any auditing object.  */
-	  if (head->l_auditing == 0)
-	    {
-	      struct audit_ifaces *afct = GLRO(dl_audit);
-	      for (unsigned int cnt = 0; cnt < GLRO(dl_naudit); ++cnt)
-		{
-		  if (afct->activity != NULL)
-		    afct->activity (&link_map_audit_state (head, cnt)->cookie,
-				    LA_ACT_ADD);
-
-		  afct = afct->next;
-		}
-	    }
-	}
-#endif
-
-      /* Notify the debugger we have added some objects.  We need to
-	 call _dl_debug_initialize in a static program in case dynamic
-	 linking has not been used before.  */
-      r->r_state = RT_ADD;
-      _dl_debug_state ();
-      LIBC_PROBE (map_start, 2, nsid, r);
-      make_consistent = true;
-    }
-  else
-    assert (r->r_state == RT_ADD);
-
   /* Enter the new object in the list of loaded objects.  */
   l = _dl_new_object (realname, name, l_type, loader, mode, nsid);
   if (__glibc_unlikely (l == NULL))
@@ -1136,6 +1117,7 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 		 such a segment to avoid a crash later.  */
 	      l->l_ld = (void *) ph->p_vaddr;
 	      l->l_ldnum = ph->p_memsz / sizeof (ElfW(Dyn));
+	      l->l_ld_readonly = (ph->p_flags & PF_W) == 0;
 	    }
 	  break;
 
@@ -1278,7 +1260,7 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
   if (l->l_ld != 0)
     l->l_ld = (ElfW(Dyn) *) ((ElfW(Addr)) l->l_ld + l->l_addr);
 
-  elf_get_dynamic_info (l, NULL);
+  elf_get_dynamic_info (l, false, false);
 
   /* Make sure we are not dlopen'ing an object that has the
      DF_1_NOOPEN flag set, or a PIE object.  */
@@ -1354,7 +1336,11 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
       check_consistency ();
 #endif
 
+#if PTHREAD_IN_LIBC
+      errval = _dl_make_stacks_executable (stack_endp);
+#else
       errval = (*GL(dl_make_stack_executable_hook)) (stack_endp);
+#endif
       if (errval)
 	{
 	  errstring = N_("\
@@ -1480,7 +1466,7 @@ cannot enable executable stack as shared object requires");
 	     not set up TLS data structures, so don't use them now.  */
 	  || __glibc_likely (GL(dl_tls_dtv_slotinfo_list) != NULL)))
     /* Assign the next available module ID.  */
-    l->l_tls_modid = _dl_next_tls_modid ();
+    _dl_assign_tls_modid (l);
 
 #ifdef DL_AFTER_LOAD
   DL_AFTER_LOAD (l);
@@ -1489,24 +1475,32 @@ cannot enable executable stack as shared object requires");
   /* Now that the object is fully initialized add it to the object list.  */
   _dl_add_to_namespace_list (l, nsid);
 
+  /* Signal that we are going to add new objects.  */
+  if (r->r_state == RT_CONSISTENT)
+    {
+#ifdef SHARED
+      /* Auditing checkpoint: we are going to add new objects.  Since this
+         is called after _dl_add_to_namespace_list the namespace is guaranteed
+	 to not be empty.  */
+      if ((mode & __RTLD_AUDIT) == 0)
+	_dl_audit_activity_nsid (nsid, LA_ACT_ADD);
+#endif
+
+      /* Notify the debugger we have added some objects.  We need to
+	 call _dl_debug_initialize in a static program in case dynamic
+	 linking has not been used before.  */
+      r->r_state = RT_ADD;
+      _dl_debug_state ();
+      LIBC_PROBE (map_start, 2, nsid, r);
+      make_consistent = true;
+    }
+  else
+    assert (r->r_state == RT_ADD);
+
 #ifdef SHARED
   /* Auditing checkpoint: we have a new object.  */
-  if (__glibc_unlikely (GLRO(dl_naudit) > 0)
-      && !GL(dl_ns)[l->l_ns]._ns_loaded->l_auditing)
-    {
-      struct audit_ifaces *afct = GLRO(dl_audit);
-      for (unsigned int cnt = 0; cnt < GLRO(dl_naudit); ++cnt)
-	{
-	  if (afct->objopen != NULL)
-	    {
-	      struct auditstate *state = link_map_audit_state (l, cnt);
-	      state->bindflags = afct->objopen (l, nsid, &state->cookie);
-	      l->l_audit_any_plt |= state->bindflags != 0;
-	    }
-
-	  afct = afct->next;
-	}
-    }
+  if (!GL(dl_ns)[l->l_ns]._ns_loaded->l_auditing)
+    _dl_audit_objopen (l, nsid);
 #endif
 
   return l;
@@ -1602,32 +1596,20 @@ open_verify (const char *name, int fd,
 
 #ifdef SHARED
   /* Give the auditing libraries a chance.  */
-  if (__glibc_unlikely (GLRO(dl_naudit) > 0) && whatcode != 0
-      && loader->l_auditing == 0)
+  if (__glibc_unlikely (GLRO(dl_naudit) > 0))
     {
       const char *original_name = name;
-      struct audit_ifaces *afct = GLRO(dl_audit);
-      for (unsigned int cnt = 0; cnt < GLRO(dl_naudit); ++cnt)
-	{
-	  if (afct->objsearch != NULL)
-	    {
-	      struct auditstate *state = link_map_audit_state (loader, cnt);
-	      name = afct->objsearch (name, &state->cookie, whatcode);
-	      if (name == NULL)
-		/* Ignore the path.  */
-		return -1;
-	    }
-
-	  afct = afct->next;
-	}
+      name = _dl_audit_objsearch (name, loader, whatcode);
+      if (name == NULL)
+	return -1;
 
       if (fd != -1 && name != original_name && strcmp (name, original_name))
-        {
-          /* An audit library changed what we're supposed to open,
-             so FD no longer matches it.  */
-          __close_nocancel (fd);
-          fd = -1;
-        }
+	{
+	  /* An audit library changed what we're supposed to open,
+	     so FD no longer matches it.  */
+	  __close_nocancel (fd);
+	  fd = -1;
+	}
     }
 #endif
 
@@ -1943,11 +1925,11 @@ open_path (const char *name, size_t namelen, int mode,
 		{
 		  /* We failed to open machine dependent library.  Let's
 		     test whether there is any directory at all.  */
-		  struct stat64 st;
+		  struct __stat64_t64 st;
 
 		  buf[buflen - namelen - 1] = '\0';
 
-		  if (__stat64 (buf, &st) != 0
+		  if (__stat64_time64 (buf, &st) != 0
 		      || ! S_ISDIR (st.st_mode))
 		    /* The directory does not exist or it is no directory.  */
 		    this_dir->status[cnt] = nonexisting;
@@ -1965,9 +1947,9 @@ open_path (const char *name, size_t namelen, int mode,
 	      /* This is an extra security effort to make sure nobody can
 		 preload broken shared objects which are in the trusted
 		 directories and so exploit the bugs.  */
-	      struct stat64 st;
+	      struct __stat64_t64 st;
 
-	      if (__fstat64 (fd, &st) != 0
+	      if (__fstat64_time64 (fd, &st) != 0
 		  || (st.st_mode & S_ISUID) == 0)
 		{
 		  /* The shared object cannot be tested for being SUID
@@ -2081,36 +2063,17 @@ _dl_map_object (struct link_map *loader, const char *name,
 #ifdef SHARED
   /* Give the auditing libraries a chance to change the name before we
      try anything.  */
-  if (__glibc_unlikely (GLRO(dl_naudit) > 0)
-      && (loader == NULL || loader->l_auditing == 0))
+  if (__glibc_unlikely (GLRO(dl_naudit) > 0))
     {
-      struct audit_ifaces *afct = GLRO(dl_audit);
-      for (unsigned int cnt = 0; cnt < GLRO(dl_naudit); ++cnt)
+      const char *before = name;
+      name = _dl_audit_objsearch (name, loader, LA_SER_ORIG);
+      if (name == NULL)
 	{
-	  if (afct->objsearch != NULL)
-	    {
-	      const char *before = name;
-	      struct auditstate *state = link_map_audit_state (loader, cnt);
-	      name = afct->objsearch (name, &state->cookie, LA_SER_ORIG);
-	      if (name == NULL)
-		{
-		  /* Do not try anything further.  */
-		  fd = -1;
-		  goto no_file;
-		}
-	      if (before != name && strcmp (before, name) != 0)
-		{
-		  if (__glibc_unlikely (GLRO(dl_debug_mask) & DL_DEBUG_FILES))
-		    _dl_debug_printf ("audit changed filename %s -> %s\n",
-				      before, name);
-
-		  if (origname == NULL)
-		    origname = before;
-		}
-	    }
-
-	  afct = afct->next;
+	  fd = -1;
+	  goto no_file;
 	}
+      if (before != name && strcmp (before, name) != 0)
+	origname = before;
     }
 #endif
 

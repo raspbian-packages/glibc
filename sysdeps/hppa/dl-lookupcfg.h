@@ -57,7 +57,7 @@ void attribute_hidden _dl_unmap (struct link_map *map);
 {							\
   ElfW(Addr) addr;					\
   DL_DT_FUNCTION_ADDRESS(map, start, , addr)		\
-  init_t init = (init_t) addr; 				\
+  dl_init_t init = (dl_init_t) addr; 			\
   init (argc, argv, env);				\
 }
 
@@ -80,4 +80,9 @@ void attribute_hidden _dl_unmap (struct link_map *map);
 /* Extract the code address from a fixup value */
 #define DL_FIXUP_VALUE_CODE_ADDR(value) ((value).ip)
 #define DL_FIXUP_VALUE_ADDR(value) ((uintptr_t) &(value))
-#define DL_FIXUP_ADDR_VALUE(addr) (*(struct fdesc *) (addr))
+/* Clear the plabel bit to get the actual address of the descriptor.  */
+#define DL_FIXUP_ADDR_VALUE(addr) \
+  (*(DL_FIXUP_VALUE_TYPE *) ((uintptr_t) (addr) & ~2))
+#define DL_FIXUP_BINDNOW_ADDR_VALUE(addr) (addr)
+#define DL_FIXUP_BINDNOW_RELOC(value, new_value, st_value)	\
+  *(value) = *(DL_FIXUP_VALUE_TYPE *) ((uintptr_t) (new_value) & ~2)

@@ -51,7 +51,7 @@ retry:
   __mutex_unlock (&_hurd_id.lock);
   HURD_CRITICAL_END;
   if (egid == -1 && errno == EINTR)
-    /* Got a signal while inside an RPC of the critical section, retry.  */
+    /* Got a signal while inside an RPC of the critical section, retry again */
     goto retry;
 
   return egid;

@@ -43,6 +43,7 @@
 #include <dl-vdso.h>
 #include <dl-vdso-setup.h>
 #include <dl-auxv.h>
+#include <array_length.h>
 
 extern char *__progname;
 char **_dl_argv = &__progname;	/* This is checked for some error messages.  */
@@ -138,9 +139,9 @@ void *_dl_random;
 #include <dl-procruntime.c>
 #include <dl-procinfo.c>
 
-void (*_dl_init_static_tls) (struct link_map *) = &_dl_nothread_init_static_tls;
-
 size_t _dl_pagesize = EXEC_PAGESIZE;
+
+size_t _dl_minsigstacksize = CONSTANT_MINSIGSTKSZ;
 
 int _dl_inhibit_cache;
 
@@ -163,8 +164,8 @@ int _dl_correct_cache_id = _DL_CACHE_DEFAULT_ID;
 ElfW(auxv_t) *_dl_auxv;
 const ElfW(Phdr) *_dl_phdr;
 size_t _dl_phnum;
-uint64_t _dl_hwcap __attribute__ ((nocommon));
-uint64_t _dl_hwcap2 __attribute__ ((nocommon));
+uint64_t _dl_hwcap;
+uint64_t _dl_hwcap2;
 
 /* The value of the FPU control word the kernel will preset in hardware.  */
 fpu_control_t _dl_fpu_control = _FPU_DEFAULT;
@@ -176,25 +177,27 @@ fpu_control_t _dl_fpu_control = _FPU_DEFAULT;
    file.  Since there is no way to set this nonzero (we don't grok the
    LD_HWCAP_MASK environment variable here), there is no real point in
    setting _dl_hwcap nonzero below, but we do anyway.  */
-uint64_t _dl_hwcap_mask __attribute__ ((nocommon));
+uint64_t _dl_hwcap_mask;
 #endif
 
 /* Prevailing state of the stack.  Generally this includes PF_X, indicating it's
  * executable but this isn't true for all platforms.  */
 ElfW(Word) _dl_stack_flags = DEFAULT_STACK_PERMS;
 
+#if THREAD_GSCOPE_IN_TCB
+list_t _dl_stack_used;
+list_t _dl_stack_user;
+list_t _dl_stack_cache;
+size_t _dl_stack_cache_actsize;
+uintptr_t _dl_in_flight_stack;
+int _dl_stack_cache_lock;
+#else
 /* If loading a shared object requires that we make the stack executable
    when it was not, we do it by calling this function.
    It returns an errno code or zero on success.  */
 int (*_dl_make_stack_executable_hook) (void **) = _dl_make_stack_executable;
-
-
-#if THREAD_GSCOPE_IN_TCB
-list_t _dl_stack_used;
-list_t _dl_stack_user;
-int _dl_stack_cache_lock;
-#else
 int _dl_thread_gscope_count;
+void (*_dl_init_static_tls) (struct link_map *) = &_dl_nothread_init_static_tls;
 #endif
 struct dl_scope_free_list *_dl_scope_free_list;
 
@@ -227,93 +230,35 @@ __rtld_lock_define_initialized_recursive (, _dl_load_lock)
    list of loaded objects while an object is added to or removed from
    that list.  */
 __rtld_lock_define_initialized_recursive (, _dl_load_write_lock)
+  /* This lock protects global and module specific TLS related data.
+     E.g. it is held in dlopen and dlclose when GL(dl_tls_generation),
+     GL(dl_tls_max_dtv_idx) or GL(dl_tls_dtv_slotinfo_list) are
+     accessed and when TLS related relocations are processed for a
+     module.  It was introduced to keep pthread_create accessing TLS
+     state that is being set up.  */
+__rtld_lock_define_initialized_recursive (, _dl_load_tls_lock)
 
 
 #ifdef HAVE_AUX_VECTOR
+#include <dl-parse_auxv.h>
+
 int _dl_clktck;
 
 void
 _dl_aux_init (ElfW(auxv_t) *av)
 {
-  int seen = 0;
-  uid_t uid = 0;
-  gid_t gid = 0;
-
 #ifdef NEED_DL_SYSINFO
   /* NB: Avoid RELATIVE relocation in static PIE.  */
   GL(dl_sysinfo) = DL_SYSINFO_DEFAULT;
 #endif
 
   _dl_auxv = av;
-  for (; av->a_type != AT_NULL; ++av)
-    switch (av->a_type)
-      {
-      case AT_PAGESZ:
-	if (av->a_un.a_val != 0)
-	  GLRO(dl_pagesize) = av->a_un.a_val;
-	break;
-      case AT_CLKTCK:
-	GLRO(dl_clktck) = av->a_un.a_val;
-	break;
-      case AT_PHDR:
-	GL(dl_phdr) = (const void *) av->a_un.a_val;
-	break;
-      case AT_PHNUM:
-	GL(dl_phnum) = av->a_un.a_val;
-	break;
-      case AT_PLATFORM:
-	GLRO(dl_platform) = (void *) av->a_un.a_val;
-	break;
-      case AT_HWCAP:
-	GLRO(dl_hwcap) = (unsigned long int) av->a_un.a_val;
-	break;
-      case AT_HWCAP2:
-	GLRO(dl_hwcap2) = (unsigned long int) av->a_un.a_val;
-	break;
-      case AT_FPUCW:
-	GLRO(dl_fpu_control) = av->a_un.a_val;
-	break;
-#ifdef NEED_DL_SYSINFO
-      case AT_SYSINFO:
-	GL(dl_sysinfo) = av->a_un.a_val;
-	break;
-#endif
-#ifdef NEED_DL_SYSINFO_DSO
-      case AT_SYSINFO_EHDR:
-	GL(dl_sysinfo_dso) = (void *) av->a_un.a_val;
-	break;
-#endif
-      case AT_UID:
-	uid ^= av->a_un.a_val;
-	seen |= 1;
-	break;
-      case AT_EUID:
-	uid ^= av->a_un.a_val;
-	seen |= 2;
-	break;
-      case AT_GID:
-	gid ^= av->a_un.a_val;
-	seen |= 4;
-	break;
-      case AT_EGID:
-	gid ^= av->a_un.a_val;
-	seen |= 8;
-	break;
-      case AT_SECURE:
-	seen = -1;
-	__libc_enable_secure = av->a_un.a_val;
-	__libc_enable_secure_decided = 1;
-	break;
-      case AT_RANDOM:
-	_dl_random = (void *) av->a_un.a_val;
-	break;
-      DL_PLATFORM_AUXV
-      }
-  if (seen == 0xf)
-    {
-      __libc_enable_secure = uid != 0 || gid != 0;
-      __libc_enable_secure_decided = 1;
-    }
+  dl_parse_auxv_t auxv_values;
+  /* Use an explicit initialization loop here because memset may not
+     be available yet.  */
+  for (int i = 0; i < array_length (auxv_values); ++i)
+    auxv_values[i] = 0;
+  _dl_parse_auxv (av, auxv_values);
 }
 #endif
 
@@ -423,3 +368,11 @@ _dl_get_dl_main_map (void)
   return &_dl_main_map;
 }
 #endif
+
+/* This is used by _dl_runtime_profile, not used on static code.  */
+void
+DL_ARCH_FIXUP_ATTRIBUTE
+_dl_audit_pltexit (struct link_map *l, ElfW(Word) reloc_arg,
+		   const void *inregs, void *outregs)
+{
+}

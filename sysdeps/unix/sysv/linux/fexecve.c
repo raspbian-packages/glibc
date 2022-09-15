@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+#include <fd_to_filename.h>
 #include <sysdep.h>
 #include <sys/syscall.h>
 #include <kernel-features.h>
@@ -49,19 +50,16 @@ fexecve (int fd, char *const argv[], char *const envp[])
 
 #ifndef __ASSUME_EXECVEAT
   /* We use the /proc filesystem to get the information.  If it is not
-     mounted we fail.  */
-  char buf[sizeof "/proc/self/fd/" + sizeof (int) * 3];
-  __snprintf (buf, sizeof (buf), "/proc/self/fd/%d", fd);
-
-  /* We do not need the return value.  */
-  __execve (buf, argv, envp);
+     mounted we fail.  We do not need the return value.  */
+  struct fd_to_filename filename;
+  __execve (__fd_to_filename (fd, &filename), argv, envp);
 
   int save = errno;
 
   /* We come here only if the 'execve' call fails.  Determine whether
      /proc is mounted.  If not we return ENOSYS.  */
-  struct stat64 st;
-  if (__stat64 ("/proc/self/fd", &st) != 0 && errno == ENOENT)
+  struct __stat64_t64 st;
+  if (__stat64_time64 ("/proc/self/fd", &st) != 0 && errno == ENOENT)
     save = ENOSYS;
 
   __set_errno (save);

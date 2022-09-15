@@ -23,6 +23,12 @@
 /* On powerpc64, use @notoc.  */
 #undef  USE_PPC64_NOTOC
 
+/* On powerpc64, define if the compiler supports -mcpu=power10.  */
+#undef USE_PPC64_MCPU_POWER10
+
+/* On powerpc*, define if scv should be used for syscalls (when available).  */
+#undef USE_PPC_SCV
+
 /* Define if _Unwind_Find_FDE should be exported from glibc.  */
 #undef  EXPORT_UNWIND_FIND_FDE
 
@@ -118,6 +124,11 @@
 /* AArch64 PAC-RET code generation is enabled.  */
 #define HAVE_AARCH64_PAC_RET 0
 
+/* Assembler support ARMv8.2-A SVE.
+   This macro becomes obsolete when glibc increased the minimum
+   required version of GNU 'binutils' to 2.28 or later. */
+#define HAVE_AARCH64_SVE_ASM 0
+
 /* ARC big endian ABI */
 #undef HAVE_ARC_BE
 
@@ -160,9 +171,6 @@
 /* Define if your compiler defaults to -msecure-plt mode on ppc.  */
 #undef HAVE_PPC_SECURE_PLT
 
-/* Define if __stack_chk_guard canary should be randomized at program startup.  */
-#undef ENABLE_STACKGUARD_RANDOMIZE
-
 /* Define if memory tagging support should be enabled.  */
 #undef USE_MTAG
 
@@ -190,8 +198,18 @@
 /* Define if gcc supports attribute ifunc.  */
 #undef HAVE_GCC_IFUNC
 
+/* Define if CC supports attribute retain.  */
+#undef HAVE_GNU_RETAIN
+
 /* Define if the linker defines __ehdr_start.  */
 #undef HAVE_EHDR_START
+
+/* Define to 1 if the assembler needs intermediate aliases to define
+   multiple symbol versions for one symbol.  */
+#define SYMVER_NEEDS_ALIAS 0
+
+/* Define to 1 if libpthread actually resides in libc.  */
+#define PTHREAD_IN_LIBC 0
 
 /*
  */
@@ -267,10 +285,6 @@
 
 /* Define if static PIE is enabled.  */
 #define ENABLE_STATIC_PIE 0
-
-/* Some compiler options may now allow to use ebp in __asm__ (used mainly
-   in i386 6 argument syscall issue).  */
-#define CAN_USE_REGISTER_ASM_EBP 0
 
 /* The default value of x86 CET control.  */
 #define DEFAULT_DL_X86_CET_CONTROL cet_elf_property

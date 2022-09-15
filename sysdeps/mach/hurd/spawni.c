@@ -443,8 +443,7 @@ retry:
 
       if (err == EINTR)
 	{
-	  /* Got a signal while inside an RPC of the critical section,
-	     retry.  */
+	  /* Got a signal while inside an RPC of the critical section, retry again */
 	  __mach_port_deallocate (__mach_task_self (), auth);
 	  auth = MACH_PORT_NULL;
 	  goto retry;
@@ -504,6 +503,19 @@ retry:
 		return 0;
 	      }
 	    return EBADF;
+	  }
+
+	/* Close file descriptors in the child.  */
+	error_t do_closefrom (int lowfd)
+	  {
+	    while ((unsigned int) lowfd < dtablesize)
+	      {
+		error_t err = do_close (lowfd);
+		if (err != 0 && err != EBADF)
+		  return err;
+		lowfd++;
+	      }
+	    return 0;
 	  }
 
 	/* Make sure the dtable can hold NEWFD.  */
@@ -613,6 +625,10 @@ retry:
 
 	  case spawn_do_fchdir:
 	    err = child_fchdir (action->action.fchdir_action.fd);
+	    break;
+
+	  case spawn_do_closefrom:
+	    err = do_closefrom (action->action.closefrom_action.from);
 	    break;
 	  }
 

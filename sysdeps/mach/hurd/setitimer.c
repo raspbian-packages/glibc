@@ -359,7 +359,7 @@ retry:
   __spin_lock (&_hurd_itimer_lock);
   ret = setitimer_locked (new, old, crit, 0);
   if (ret == -1 && errno == EINTR)
-    /* Got a signal while inside an RPC of the critical section, retry.  */
+    /* Got a signal while inside an RPC of the critical section, retry again */
     goto retry;
 
   return ret;

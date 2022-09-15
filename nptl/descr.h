@@ -279,35 +279,25 @@ struct pthread
   int cancelhandling;
   /* Bit set if cancellation is disabled.  */
 #define CANCELSTATE_BIT		0
-#define CANCELSTATE_BITMASK	(0x01 << CANCELSTATE_BIT)
+#define CANCELSTATE_BITMASK	(1 << CANCELSTATE_BIT)
   /* Bit set if asynchronous cancellation mode is selected.  */
 #define CANCELTYPE_BIT		1
-#define CANCELTYPE_BITMASK	(0x01 << CANCELTYPE_BIT)
+#define CANCELTYPE_BITMASK	(1 << CANCELTYPE_BIT)
   /* Bit set if canceling has been initiated.  */
 #define CANCELING_BIT		2
-#define CANCELING_BITMASK	(0x01 << CANCELING_BIT)
+#define CANCELING_BITMASK	(1 << CANCELING_BIT)
   /* Bit set if canceled.  */
 #define CANCELED_BIT		3
-#define CANCELED_BITMASK	(0x01 << CANCELED_BIT)
+#define CANCELED_BITMASK	(1 << CANCELED_BIT)
   /* Bit set if thread is exiting.  */
 #define EXITING_BIT		4
-#define EXITING_BITMASK		(0x01 << EXITING_BIT)
+#define EXITING_BITMASK		(1 << EXITING_BIT)
   /* Bit set if thread terminated and TCB is freed.  */
 #define TERMINATED_BIT		5
-#define TERMINATED_BITMASK	(0x01 << TERMINATED_BIT)
+#define TERMINATED_BITMASK	(1 << TERMINATED_BIT)
   /* Bit set if thread is supposed to change XID.  */
 #define SETXID_BIT		6
-#define SETXID_BITMASK		(0x01 << SETXID_BIT)
-  /* Mask for the rest.  Helps the compiler to optimize.  */
-#define CANCEL_RESTMASK		0xffffff80
-
-#define CANCEL_ENABLED_AND_CANCELED(value) \
-  (((value) & (CANCELSTATE_BITMASK | CANCELED_BITMASK | EXITING_BITMASK	      \
-	       | CANCEL_RESTMASK | TERMINATED_BITMASK)) == CANCELED_BITMASK)
-#define CANCEL_ENABLED_AND_CANCELED_AND_ASYNCHRONOUS(value) \
-  (((value) & (CANCELSTATE_BITMASK | CANCELTYPE_BITMASK | CANCELED_BITMASK    \
-	       | EXITING_BITMASK | CANCEL_RESTMASK | TERMINATED_BITMASK))     \
-   == (CANCELTYPE_BITMASK | CANCELED_BITMASK))
+#define SETXID_BITMASK		(1 << SETXID_BIT)
 
   /* Flags.  Including those copied from the thread attribute.  */
   int flags;
@@ -340,8 +330,9 @@ struct pthread
   /* True if thread must stop at startup time.  */
   bool stopped_start;
 
-  /* Formerly used for dealing with cancellation.  */
-  int parent_cancelhandling_unsed;
+  /* Indicate that a thread creation setup has failed (for instance the
+     scheduler or affinity).  */
+  int setup_failed;
 
   /* Lock to synchronize access to the descriptor.  */
   int lock;
@@ -406,6 +397,12 @@ struct pthread
   /* Indicates whether is a C11 thread created by thrd_creat.  */
   bool c11;
 
+  /* Used in __pthread_kill_internal to detected a thread that has
+     exited or is about to exit.  exit_lock must only be acquired
+     after blocking signals.  */
+  bool exiting;
+  int exit_lock; /* A low-level lock (for use with __libc_lock_init etc).  */
+
   /* Used on strsignal.  */
   struct tls_internal_t tls_state;
 
@@ -416,5 +413,27 @@ struct pthread
   (sizeof (struct pthread) - offsetof (struct pthread, end_padding))
 } __attribute ((aligned (TCB_ALIGNMENT)));
 
+static inline bool
+cancel_enabled_and_canceled (int value)
+{
+  return (value & (CANCELSTATE_BITMASK | CANCELED_BITMASK | EXITING_BITMASK
+		   | TERMINATED_BITMASK))
+    == CANCELED_BITMASK;
+}
+
+static inline bool
+cancel_enabled_and_canceled_and_async (int value)
+{
+  return ((value) & (CANCELSTATE_BITMASK | CANCELTYPE_BITMASK | CANCELED_BITMASK
+		     | EXITING_BITMASK | TERMINATED_BITMASK))
+    == (CANCELTYPE_BITMASK | CANCELED_BITMASK);
+}
+
+/* This yields the pointer that TLS support code calls the thread pointer.  */
+#if TLS_TCB_AT_TP
+# define TLS_TPADJ(pd) (pd)
+#elif TLS_DTV_AT_TP
+# define TLS_TPADJ(pd) ((struct pthread *)((char *) (pd) + TLS_PRE_TCB_SIZE))
+#endif
 
 #endif	/* descr.h */

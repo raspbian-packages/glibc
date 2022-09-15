@@ -254,15 +254,23 @@ static __always_inline int
 futex_lock_pi64 (int *futex_word, const struct __timespec64 *abstime,
                  int private)
 {
-  int err = INTERNAL_SYSCALL_CALL (futex_time64, futex_word,
-                                   __lll_private_flag
-                                   (FUTEX_LOCK_PI, private), 0, abstime);
-#ifndef __ASSUME_TIME64_SYSCALLS
-  if (err == -ENOSYS)
+  int err;
+#ifdef __ASSUME_TIME64_SYSCALLS
+  err = INTERNAL_SYSCALL_CALL (futex_time64, futex_word,
+			       __lll_private_flag (FUTEX_LOCK_PI, private), 0,
+			       abstime);
+#else
+  bool need_time64 = abstime != NULL && !in_time_t_range (abstime->tv_sec);
+  if (need_time64)
     {
-      if (abstime != NULL && ! in_time_t_range (abstime->tv_sec))
-        return EOVERFLOW;
-
+      err = INTERNAL_SYSCALL_CALL (futex_time64, futex_word,
+				   __lll_private_flag (FUTEX_LOCK_PI, private),
+				   0, abstime);
+      if (err == -ENOSYS)
+	err = -EOVERFLOW;
+    }
+  else
+    {
       struct timespec ts32;
       if (abstime != NULL)
         ts32 = valid_timespec64_to_timespec (*abstime);
@@ -345,14 +353,14 @@ __futex_abstimed_wait_cancelable64 (unsigned int* futex_word,
                                     unsigned int expected, clockid_t clockid,
                                     const struct __timespec64* abstime,
                                     int private);
-libpthread_hidden_proto (__futex_abstimed_wait_cancelable64);
+libc_hidden_proto (__futex_abstimed_wait_cancelable64);
 
 int
 __futex_abstimed_wait64 (unsigned int* futex_word, unsigned int expected,
                          clockid_t clockid,
                          const struct __timespec64* abstime,
                          int private);
-libpthread_hidden_proto (__futex_abstimed_wait64);
+libc_hidden_proto (__futex_abstimed_wait64);
 
 
 static __always_inline int

@@ -21,9 +21,6 @@
 
 #include <hp-timing.h>
 
-/* Initialize the `__libc_enable_secure' flag.  */
-extern void __libc_init_secure (void);
-
 /* Discover the tick frequency of the machine if something goes wrong,
    we return 0, an impossible hertz.  */
 extern int __profile_frequency (void);
@@ -38,7 +35,11 @@ extern void __libc_freeres (void);
 libc_hidden_proto (__libc_freeres)
 
 /* Free resources stored in thread-local variables on thread exit.  */
-extern void __libc_thread_freeres (void);
+extern void __libc_thread_freeres (void)
+#if PTHREAD_IN_LIBC
+  attribute_hidden
+#endif
+  ;
 
 /* Define and initialize `__progname' et. al.  */
 extern void __init_misc (int, char **, char **) attribute_hidden;

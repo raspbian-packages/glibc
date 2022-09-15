@@ -91,6 +91,7 @@ extern int __setenv (const char *__name, const char *__value, int __replace)
 extern int __unsetenv (const char *__name) attribute_hidden;
 extern int __clearenv (void) attribute_hidden;
 extern char *__mktemp (char *__template) __THROW __nonnull ((1));
+libc_hidden_proto (__mktemp)
 extern char *__canonicalize_file_name (const char *__name);
 extern char *__realpath (const char *__name, char *__resolved);
 libc_hidden_proto (__realpath)
@@ -136,6 +137,12 @@ libc_hidden_proto (__libc_reallocarray)
 
 extern int __libc_system (const char *line);
 
+extern __typeof (getpt) __getpt;
+extern __typeof (ptsname_r) __ptsname_r;
+libc_hidden_proto (__getpt)
+libc_hidden_proto (__ptsname_r)
+libc_hidden_proto (grantpt)
+libc_hidden_proto (unlockpt)
 
 extern double __strtod_internal (const char *__restrict __nptr,
 				 char **__restrict __endptr, int __group)
@@ -298,9 +305,6 @@ libc_hidden_proto (__qfcvt_r)
 #  undef MB_CUR_MAX
 #  define MB_CUR_MAX (_NL_CURRENT_WORD (LC_CTYPE, _NL_CTYPE_MB_CUR_MAX))
 # endif
-
-extern void *__default_morecore (ptrdiff_t) __THROW;
-libc_hidden_proto (__default_morecore)
 
 struct abort_msg_s
 {

@@ -33,7 +33,7 @@ vpath %.c ../locale/programs ../intl
 iconv_prog-modules = iconv_charmap charmap charmap-dir linereader \
 		     dummy-repertoire simple-hash xstrdup xmalloc \
 		     record-status
-iconvconfig-modules = strtab xmalloc hash-string
+iconvconfig-modules = strtab xmalloc xasprintf xstrdup hash-string
 extra-objs	   = $(iconv_prog-modules:=.o) $(iconvconfig-modules:=.o)
 CFLAGS-iconv_prog.c += -I../locale/programs
 CFLAGS-iconv_charmap.c += -I../locale/programs
@@ -95,11 +95,12 @@ $(inst_bindir)/iconv: $(objpfx)iconv_prog $(+force)
 $(objpfx)iconv_prog: $(iconv_prog-modules:%=$(objpfx)%.o)
 $(objpfx)iconvconfig: $(iconvconfig-modules:%=$(objpfx)%.o)
 
-$(objpfx)test-iconvconfig.out: /dev/null $(objpfx)iconvconfig
+$(objpfx)test-iconvconfig.out: $(objpfx)iconvconfig
 	(set -e; \
 	 tmp=$(objpfx)gconv-modules.cache.$$$$; \
 	 rm -f $$tmp; \
-	 $(make-test-out) --output=$$tmp --nostdlib $(inst_gconvdir); \
+	 $(run-program-prefix) $(objpfx)iconvconfig \
+		--output=$$tmp --nostdlib $(inst_gconvdir); \
 	 cmp $$tmp $(inst_gconvdir)/gconv-modules.cache; \
 	 rm -f $$tmp) > $@; \
 	$(evaluate-test)

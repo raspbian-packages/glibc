@@ -50,7 +50,7 @@ extern void attribute_hidden _dl_unmap (struct link_map *map);
 {							\
   ElfW(Addr) addr;					\
   DL_DT_FUNCTION_ADDRESS(map, start, , addr)		\
-  init_t init = (init_t) addr; 				\
+  dl_init_t init = (dl_init_t) addr; 			\
   init (argc, argv, env);				\
 }
 
@@ -74,3 +74,6 @@ extern void attribute_hidden _dl_unmap (struct link_map *map);
 
 #define DL_FIXUP_VALUE_ADDR(value) ((uintptr_t) &(value))
 #define DL_FIXUP_ADDR_VALUE(addr) (*(struct fdesc *) (addr))
+#define DL_FIXUP_BINDNOW_ADDR_VALUE(addr) (addr)
+#define DL_FIXUP_BINDNOW_RELOC(value, new_value, st_value) \
+  (*value) = *(struct fdesc *) (st_value)

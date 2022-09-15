@@ -24,7 +24,6 @@
 #include <stdio.h>
 #include <sys/param.h>
 #include <array_length.h>
-#include <list.h>
 
 #ifdef SHARED
  #error makefile bug, this file is for static only
@@ -115,6 +114,8 @@ __libc_setup_tls (void)
 
   struct link_map *main_map = GL(dl_ns)[LM_ID_BASE]._ns_loaded;
 
+  __tls_pre_init_tp ();
+
   /* Look through the TLS segment if there is any.  */
   if (_dl_phdr != NULL)
     for (phdr = _dl_phdr; phdr < &_dl_phdr[_dl_phnum]; ++phdr)
@@ -143,11 +144,16 @@ __libc_setup_tls (void)
      _dl_allocate_tls_storage (in elf/dl-tls.c) does using __libc_memalign
      and dl_tls_static_align.  */
   tcb_offset = roundup (memsz + GLRO(dl_tls_static_surplus), max_align);
-  tlsblock = __sbrk (tcb_offset + TLS_INIT_TCB_SIZE + max_align);
+  tlsblock = _dl_early_allocate (tcb_offset + TLS_INIT_TCB_SIZE + max_align);
+  if (tlsblock == NULL)
+    _startup_fatal ("Fatal glibc error: Cannot allocate TLS block\n");
 #elif TLS_DTV_AT_TP
   tcb_offset = roundup (TLS_INIT_TCB_SIZE, align ?: 1);
-  tlsblock = __sbrk (tcb_offset + memsz + max_align
-		     + TLS_PRE_TCB_SIZE + GLRO(dl_tls_static_surplus));
+  tlsblock = _dl_early_allocate (tcb_offset + memsz + max_align
+				 + TLS_PRE_TCB_SIZE
+				 + GLRO(dl_tls_static_surplus));
+  if (tlsblock == NULL)
+    _startup_fatal ("Fatal glibc error: Cannot allocate TLS block\n");
   tlsblock += TLS_PRE_TCB_SIZE;
 #else
   /* In case a model with a different layout for the TCB and DTV
@@ -193,12 +199,7 @@ __libc_setup_tls (void)
 #endif
   if (__builtin_expect (lossage != NULL, 0))
     _startup_fatal (lossage);
-
-#if THREAD_GSCOPE_IN_TCB
-  INIT_LIST_HEAD (&_dl_stack_used);
-  INIT_LIST_HEAD (&_dl_stack_user);
-  list_add (&THREAD_SELF->list, &_dl_stack_user);
-#endif
+  __tls_init_tp ();
 
   /* Update the executable's link map with enough information to make
      the TLS routines happy.  */

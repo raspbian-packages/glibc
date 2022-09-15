@@ -68,7 +68,7 @@ endif # $(AUTOCONF) = no
 		   subdir_objs subdir_stubs subdir_testclean		\
 		   $(addprefix install-, no-libc.a bin lib data headers others)
 
-headers := limits.h values.h features.h gnu-versions.h \
+headers := limits.h values.h features.h features-time64.h gnu-versions.h \
 	   bits/xopen_lim.h gnu/libc-version.h stdc-predef.h \
 	   bits/libc-header-start.h
 
@@ -109,12 +109,6 @@ elf/ldso_install:
 # Ignore the error if we cannot update /etc/ld.so.cache.
 ifeq (no,$(cross-compiling))
 ifeq (yes,$(build-shared))
-install: install-symbolic-link
-.PHONY: install-symbolic-link
-install-symbolic-link: subdir_install
-	$(symbolic-link-prog) $(symbolic-link-list)
-	rm -f $(symbolic-link-list)
-
 install:
 	-test ! -x $(elf-objpfx)ldconfig || LC_ALL=C \
 	  $(elf-objpfx)ldconfig $(addprefix -r ,$(install_root)) \
@@ -144,8 +138,13 @@ builddir=`dirname "$$0"`
 GCONV_PATH="$${builddir}/iconvdata"
 
 usage () {
-  echo "usage: $$0 [--tool=strace] PROGRAM [ARGUMENTS...]" 2>&1
-  echo "       $$0 --tool=valgrind PROGRAM [ARGUMENTS...]" 2>&1
+cat << EOF
+Usage: $$0 [OPTIONS] <program> [ARGUMENTS...]
+
+  --tool=TOOL  Run with the specified TOOL. It can be strace, valgrind or
+               container. The container will run within support/test-container.
+EOF
+
   exit 1
 }
 

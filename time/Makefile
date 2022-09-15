@@ -36,7 +36,7 @@ routines := offtime asctime clock ctime ctime_r difftime \
 	    stime dysize timegm ftime			 \
 	    getdate strptime strptime_l			 \
 	    strftime wcsftime strftime_l wcsftime_l	 \
-	    timespec_get				 \
+	    timespec_get timespec_getres		 \
 	    clock_getcpuclockid clock_getres		 \
 	    clock_gettime clock_settime clock_nanosleep
 
@@ -48,7 +48,27 @@ tests	:= test_time clocktest tst-posixtz tst-strptime tst_wcsftime \
 	   tst-strptime3 bug-getdate1 tst-strptime-whitespace tst-ftime \
 	   tst-tzname tst-y2039 bug-mktime4 tst-strftime2 tst-strftime3 \
 	   tst-clock tst-clock2 tst-clock_nanosleep tst-cpuclock1 \
-	   tst-adjtime
+	   tst-adjtime tst-ctime tst-difftime tst-mktime4 tst-clock_settime \
+	   tst-settimeofday tst-itimer tst-gmtime tst-timegm \
+	   tst-timespec_get tst-timespec_getres
+
+tests-time64 := \
+  tst-adjtime-time64 \
+  tst-clock-time64 \
+  tst-clock2-time64 \
+  tst-clock_nanosleep-time64 \
+  tst-clock_settime-time64 \
+  tst-cpuclock1-time64 \
+  tst-ctime-time64 \
+  tst-difftime-time64 \
+  tst-gmtime-time64 \
+  tst-itimer-time64 \
+  tst-mktime4-time64 \
+  tst-settimeofday-time64 \
+  tst-timegm-time64 \
+  tst-timespec_get-time64 \
+  tst-timespec_getres-time64 \
+  tst-y2039-time64
 
 include ../Rules
 
@@ -65,6 +85,9 @@ $(objpfx)tst-strptime.out: $(gen-locales)
 $(objpfx)tst-strftime2.out: $(gen-locales)
 $(objpfx)tst-strftime3.out: $(gen-locales)
 endif
+
+$(objpfx)tst-clock_nanosleep: $(librt)
+$(objpfx)tst-clock_nanosleep-time64: $(librt)
 
 tz-cflags = -DTZDIR='"$(zonedir)"' \
 	    -DTZDEFAULT='"$(localtime-file)"' \

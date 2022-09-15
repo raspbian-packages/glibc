@@ -31,7 +31,8 @@ routines		= nsswitch getnssent getnssent_r digits_dots \
 			  compat-lookup nss_hash nss_files_fopen \
 			  nss_readline nss_parse_line_result \
 			  nss_fgetent_r nss_module nss_action \
-			  nss_action_parse nss_database
+			  nss_action_parse nss_database nss_files_data \
+			  nss_files_functions
 
 # These are the databases that go through nss dispatch.
 # Caution: if you add a database here, you must add its real name
@@ -59,10 +60,12 @@ tests			= test-netdb test-digits-dots tst-nss-getpwent bug17079 \
 			  tst-nss-test1 \
 			  tst-nss-test2 \
 			  tst-nss-test4 \
-			  tst-nss-test5
+			  tst-nss-test5 \
+			  tst-nss-test_errno
 xtests			= bug-erange
 
 tests-container = \
+			  tst-nss-compat1 \
 			  tst-nss-test3 \
 			  tst-nss-files-hosts-long \
 			  tst-nss-db-endpwent \
@@ -97,9 +100,19 @@ subdir-dirs = $(services:%=nss_%)
 vpath %.c $(subdir-dirs) ../locale/programs ../intl
 
 
-libnss_files-routines	:= $(addprefix files-, \
-			     $(filter-out key, $(databases))) \
-			   files-initgroups files-init
+routines += \
+  $(addprefix files-, $(filter-out key, $(databases))) \
+  files-init \
+  files-initgroups \
+  # routines
+
+# Build only an empty shared libnss_files.
+libnss_files-inhibit-o = $(filter-out .os,$(object-suffixes))
+
+# Pretend that libnss_files.so is a linker script, so that the symbolic link
+# is not installed.
+install-lib-ldscripts = libnss_files.so
+$(inst_libdir)/libnss_files.so:
 
 libnss_db-dbs		:= $(addprefix db-,\
 				       $(filter-out hosts network key alias,\
@@ -115,15 +128,12 @@ libnss_compat-routines	:= $(addprefix compat-,grp pwd spwd initgroups) \
 install-others		+= $(inst_vardbdir)/Makefile
 
 # Build static module into libc if requested
-libnss_files-inhibit-o	= $(filter-out .os,$(object-suffixes))
 libnss_db-inhibit-o	= $(filter-out .os,$(object-suffixes))
 libnss_compat-inhibit-o	= $(filter-out .os,$(object-suffixes))
 ifeq ($(build-static-nss),yes)
-routines                += $(libnss_files-routines)
-static-only-routines    += $(libnss_files-routines)
 tests-static		+= tst-nss-static
 endif
-extra-test-objs		+= nss_test1.os nss_test2.os
+extra-test-objs		+= nss_test1.os nss_test2.os nss_test_errno.os
 
 include ../Rules
 
@@ -136,8 +146,6 @@ libnss-libc = $(common-objpfx)linkobj/libc.so
 # RPC interfaces with the version of libc.so that makes them available
 # for new links:
 $(services:%=$(objpfx)libnss_%.so): libc-for-link = $(libnss-libc)
-
-$(objpfx)libnss_db.so: $(objpfx)libnss_files.so
 
 $(libnss_db-dbs:%=$(objpfx)%.c): $(objpfx)db-%.c: nss_files/files-%.c
 	@rm -f $@.new
@@ -159,31 +167,30 @@ rtld-tests-LDFLAGS += -Wl,--dynamic-list=nss_test.ver
 
 libof-nss_test1 = extramodules
 libof-nss_test2 = extramodules
+libof-nss_test_errno = extramodules
 $(objpfx)/libnss_test1.so: $(objpfx)nss_test1.os $(link-libc-deps)
 	$(build-module)
 $(objpfx)/libnss_test2.so: $(objpfx)nss_test2.os $(link-libc-deps)
 	$(build-module)
+$(objpfx)/libnss_test_errno.so: $(objpfx)nss_test_errno.os $(link-libc-deps)
+	$(build-module)
 $(objpfx)nss_test2.os : nss_test1.c
-ifdef libnss_test1.so-version
-$(objpfx)/libnss_test1.so$(libnss_test1.so-version): $(objpfx)/libnss_test1.so
+# Use the nss_files suffix for these objects as well.
+$(objpfx)/libnss_test1.so$(libnss_files.so-version): $(objpfx)/libnss_test1.so
 	$(make-link)
-endif
-ifdef libnss_test2.so-version
-$(objpfx)/libnss_test2.so$(libnss_test2.so-version): $(objpfx)/libnss_test2.so
+$(objpfx)/libnss_test2.so$(libnss_files.so-version): $(objpfx)/libnss_test2.so
 	$(make-link)
-endif
+$(objpfx)/libnss_test_errno.so$(libnss_files.so-version): \
+  $(objpfx)/libnss_test_errno.so
+	$(make-link)
 $(patsubst %,$(objpfx)%.out,$(tests) $(tests-container)) : \
-	$(objpfx)/libnss_test1.so$(libnss_test1.so-version) \
-	$(objpfx)/libnss_test2.so$(libnss_test2.so-version)
+	$(objpfx)/libnss_test1.so$(libnss_files.so-version) \
+	$(objpfx)/libnss_test2.so$(libnss_files.so-version) \
+	$(objpfx)/libnss_test_errno.so$(libnss_files.so-version)
 
 ifeq (yes,$(have-thread-library))
 $(objpfx)tst-cancel-getpwuid_r: $(shared-thread-library)
 endif
 
-$(objpfx)tst-nss-files-hosts-erange: $(libdl)
-$(objpfx)tst-nss-files-hosts-multi: $(libdl)
-$(objpfx)tst-nss-files-hosts-getent: $(libdl)
-$(objpfx)tst-nss-files-alias-leak: $(libdl)
 $(objpfx)tst-nss-files-alias-leak.out: $(objpfx)/libnss_files.so
-$(objpfx)tst-nss-files-alias-truncated: $(libdl)
 $(objpfx)tst-nss-files-alias-truncated.out: $(objpfx)/libnss_files.so

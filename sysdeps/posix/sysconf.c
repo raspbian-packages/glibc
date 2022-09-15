@@ -31,6 +31,8 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <regex.h>
+#include <signal.h>
+#include <sysconf-pthread_stack_min.h>
 
 #define NEED_SPEC_ARRAY 0
 #include <posix-conf-vars.h>
@@ -569,11 +571,7 @@ __sysconf (int name)
 #endif
 
     case _SC_THREAD_STACK_MIN:
-#ifdef	PTHREAD_STACK_MIN
-      return PTHREAD_STACK_MIN;
-#else
-      return -1;
-#endif
+      return __get_pthread_stack_min ();
 
     case _SC_THREAD_THREADS_MAX:
 #ifdef	PTHREAD_THREADS_MAX
@@ -1193,6 +1191,20 @@ __sysconf (int name)
 #else
       return -1;
 #endif
+
+    case _SC_SIGSTKSZ:
+#ifdef SIGSTKSZ
+      return SIGSTKSZ;
+#else
+      return -1;
+#endif
+
+    case _SC_MINSIGSTKSZ:
+#ifdef MINSIGSTKSZ
+      return MINSIGSTKSZ;
+#else
+      return -1;
+#endif
     }
 }
 
@@ -1215,8 +1227,8 @@ __sysconf_check_spec (const char *spec)
 		   "/POSIX_V6_", sizeof ("/POSIX_V6_") - 1),
 	  spec, speclen + 1);
 
-  struct stat64 st;
-  long int ret = __stat64 (name, &st) >= 0 ? 1 : -1;
+  struct __stat64_t64 st;
+  long int ret = __stat64_time64 (name, &st) >= 0 ? 1 : -1;
 
   __set_errno (save_errno);
   return ret;

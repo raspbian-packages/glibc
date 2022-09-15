@@ -16,10 +16,11 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <sys/platform/x86.h>
+#include <cpu-features.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 static char *cpu_flags;
 
@@ -54,7 +55,7 @@ get_cpuinfo (void)
 
 int
 check_proc (const char *proc_name, const char *search_name, int flag,
-	    int usable, const char *name)
+	    int active, const char *name)
 {
   int found = 0;
 
@@ -78,7 +79,7 @@ check_proc (const char *proc_name, const char *search_name, int flag,
 
   if (found != flag)
     {
-      if (found || usable)
+      if (found || active)
 	printf (" *** failure ***\n");
       else
 	{
@@ -99,6 +100,7 @@ static int
 do_test (int argc, char **argv)
 {
   int fails = 0;
+  const struct cpu_features *cpu_features = __get_cpu_features ();
 
   get_cpuinfo ();
   fails += CHECK_PROC (acpi, ACPI);
@@ -159,7 +161,24 @@ do_test (int argc, char **argv)
   fails += CHECK_PROC (hle, HLE);
   fails += CHECK_PROC (ht, HTT);
   fails += CHECK_PROC (hybrid, HYBRID);
-  fails += CHECK_PROC (ibrs, IBRS_IBPB);
+  if (cpu_features->basic.kind == arch_kind_intel)
+    {
+      fails += CHECK_PROC (ibrs, IBRS_IBPB);
+      fails += CHECK_PROC (stibp, STIBP);
+    }
+  else if (cpu_features->basic.kind == arch_kind_amd)
+    {
+      fails += CHECK_PROC (ibpb, AMD_IBPB);
+
+      /* The IBRS feature on AMD processors is reported using the Intel feature
+       * on KVM guests (synthetic bit).  In both cases the cpuinfo entry is the
+       * same.  */
+      if (HAS_CPU_FEATURE (IBRS_IBPB))
+        fails += CHECK_PROC (ibrs, IBRS_IBPB);
+      else
+        fails += CHECK_PROC (ibrs, AMD_IBRS);
+      fails += CHECK_PROC (stibp, AMD_STIBP);
+    }
   fails += CHECK_PROC (ibt, IBT);
   fails += CHECK_PROC (invariant_tsc, INVARIANT_TSC);
   fails += CHECK_PROC (invpcid, INVPCID);
@@ -199,6 +218,7 @@ do_test (int argc, char **argv)
   fails += CHECK_PROC (popcnt, POPCNT);
   fails += CHECK_PROC (3dnowprefetch, PREFETCHW);
   fails += CHECK_PROC (prefetchwt1, PREFETCHWT1);
+  fails += CHECK_PROC (ptwrite, PTWRITE);
   fails += CHECK_PROC (pse, PSE);
   fails += CHECK_PROC (pse36, PSE_36);
   fails += CHECK_PROC (psn, PSN);
@@ -220,7 +240,21 @@ do_test (int argc, char **argv)
   fails += CHECK_PROC (smep, SMEP);
   fails += CHECK_PROC (smx, SMX);
   fails += CHECK_PROC (ss, SS);
-  fails += CHECK_PROC (ssbd, SSBD);
+  if (cpu_features->basic.kind == arch_kind_intel)
+    fails += CHECK_PROC (ssbd, SSBD);
+  else if (cpu_features->basic.kind == arch_kind_amd)
+    {
+      /* This feature is implemented in 2 different ways on AMD processors:
+	 newer systems provides AMD_SSBD (function 8000_0008, EBX[24]),
+	 while older system proviseds AMD_VIRT_SSBD (function 8000_008,
+	 EBX[25]).  However for AMD_VIRT_SSBD, kernel shows both 'ssbd'
+	 and 'virt_ssbd' on /proc/cpuinfo; while for AMD_SSBD only 'ssbd'
+	 is provided.  */
+      if (HAS_CPU_FEATURE (AMD_SSBD))
+	fails += CHECK_PROC (ssbd, AMD_SSBD);
+      else if (HAS_CPU_FEATURE (AMD_VIRT_SSBD))
+	fails += CHECK_PROC (virt_ssbd, AMD_VIRT_SSBD);
+    }
   fails += CHECK_PROC (sse, SSE);
   fails += CHECK_PROC (sse2, SSE2);
   fails += CHECK_PROC (pni, SSE3);
@@ -228,7 +262,6 @@ do_test (int argc, char **argv)
   fails += CHECK_PROC (sse4_2, SSE4_2);
   fails += CHECK_PROC (sse4a, SSE4A);
   fails += CHECK_PROC (ssse3, SSSE3);
-  fails += CHECK_PROC (stibp, STIBP);
   fails += CHECK_PROC (svm, SVM);
 #ifdef __x86_64__
   /* NB: SYSCALL_SYSRET is 64-bit only.  */

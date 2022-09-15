@@ -59,7 +59,7 @@ __pthread_clockjoin_ex (pthread_t threadid, void **thread_return,
 	   && (pd->cancelhandling
 	       & (CANCELING_BITMASK | CANCELED_BITMASK | EXITING_BITMASK
 		  | TERMINATED_BITMASK)) == 0))
-      && !CANCEL_ENABLED_AND_CANCELED (self->cancelhandling))
+      && !cancel_enabled_and_canceled (self->cancelhandling))
     /* This is a deadlock situation.  The threads are waiting for each
        other to finish.  Note that this is a "may" error.  To be 100%
        sure we catch this error we would have to lock the data
@@ -122,7 +122,7 @@ __pthread_clockjoin_ex (pthread_t threadid, void **thread_return,
 	*thread_return = pd_result;
 
       /* Free the TCB.  */
-      __free_tcb (pd);
+      __nptl_free_tcb (pd);
     }
   else
     pd->joinid = NULL;

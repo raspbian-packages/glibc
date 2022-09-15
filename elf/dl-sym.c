@@ -189,7 +189,6 @@ _dl_vsym (void *handle, const char *name, const char *version, void *who)
   return do_sym (handle, name, who, &vers, 0);
 }
 
-
 void *
 _dl_sym (void *handle, const char *name, void *who)
 {

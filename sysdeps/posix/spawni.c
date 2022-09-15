@@ -28,7 +28,7 @@
 #include <not-cancel.h>
 #include <local-setxid.h>
 #include <shlib-compat.h>
-#include <nptl/pthreadP.h>
+#include <pthreadP.h>
 #include <dl-sysdep.h>
 #include <libc-pointer-arith.h>
 #include <ldsodefs.h>
@@ -231,6 +231,10 @@ __spawni_child (void *arguments)
 	      if (__fchdir (action->action.fchdir_action.fd) != 0)
 		goto fail;
 	      break;
+
+	    case spawn_do_closefrom:
+	      __set_errno (EINVAL);
+	      goto fail;
 	    }
 	}
     }

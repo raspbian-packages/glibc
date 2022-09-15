@@ -24,6 +24,7 @@
 #define SUPPORT_H
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <stddef.h>
 #include <sys/cdefs.h>
 /* For mode_t.  */
@@ -86,14 +87,24 @@ int support_descriptor_supports_holes (int fd);
 /* Error-checking wrapper functions which terminate the process on
    error.  */
 
-void *xmalloc (size_t) __attribute__ ((malloc));
-void *xcalloc (size_t n, size_t s) __attribute__ ((malloc));
-void *xrealloc (void *p, size_t n);
-void *xposix_memalign (size_t alignment, size_t n);
+extern void *xmalloc (size_t n)
+  __attribute_malloc__ __attribute_alloc_size__ ((1)) __attr_dealloc_free
+  __returns_nonnull;
+extern void *xcalloc (size_t n, size_t s)
+  __attribute_malloc__ __attribute_alloc_size__ ((1, 2)) __attr_dealloc_free
+  __returns_nonnull;
+extern void *xrealloc (void *o, size_t n)
+  __attribute_malloc__ __attribute_alloc_size__ ((2)) __attr_dealloc_free;
+extern char *xstrdup (const char *) __attribute_malloc__ __attr_dealloc_free
+  __returns_nonnull;
+void *xposix_memalign (size_t alignment, size_t n)
+  __attribute_malloc__ __attribute_alloc_size__ ((2)) __attr_dealloc_free
+  __returns_nonnull;
 char *xasprintf (const char *format, ...)
-  __attribute__ ((format (printf, 1, 2), malloc));
-char *xstrdup (const char *);
-char *xstrndup (const char *, size_t);
+  __attribute__ ((format (printf, 1, 2), malloc)) __attr_dealloc_free
+  __returns_nonnull;
+char *xstrdup (const char *) __attr_dealloc_free __returns_nonnull;
+char *xstrndup (const char *, size_t) __attr_dealloc_free __returns_nonnull;
 char *xsetlocale (int category, const char *locale);
 locale_t xnewlocale (int category_mask, const char *locale, locale_t base);
 char *xuselocale (locale_t newloc);
@@ -130,6 +141,21 @@ extern void support_copy_file (const char *from, const char *to);
 extern ssize_t support_copy_file_range (int, off64_t *, int, off64_t *,
 					size_t, unsigned int);
 
+/* Return true if PATH supports 64-bit time_t interfaces for file
+   operations (such as fstatat or utimensat).  */
+extern bool support_path_support_time64_value (const char *path, int64_t at,
+					       int64_t mt);
+static __inline bool support_path_support_time64 (const char *path)
+{
+  /* 1s and 2s after y2038 limit.  */
+  return support_path_support_time64_value (path, 0x80000001ULL,
+					    0x80000002ULL);
+}
+
+/* Return true if stat supports nanoseconds resolution.  PATH is used
+   for tests and its ctime may change.  */
+extern bool support_stat_nanoseconds (const char *path);
+
 /* Return true if select modify the timeout to reflect the amount of time
    no slept.  */
 extern bool support_select_modifies_timeout (void);
@@ -137,6 +163,51 @@ extern bool support_select_modifies_timeout (void);
 /* Return true if select normalize the timeout input by taking in account
    tv_usec larger than 1000000.  */
 extern bool support_select_normalizes_timeout (void);
+
+/* Return true if socket FD supports 64-bit timestamps with the SOL_SOCKET
+   and SO_TIMESTAMP/SO_TIMESTAMPNS.  */
+extern bool support_socket_so_timestamp_time64 (int fd);
+
+/* Create a timer that trigger after SEC seconds and NSEC nanoseconds.  If
+   REPEAT is true the timer will repeat indefinitely.  If CALLBACK is not
+   NULL, the function will be called when the timer expires; otherwise a
+   dummy empty function is used instead.
+   This is implemented with POSIX per-process timer with SIGEV_SIGNAL.  */
+timer_t support_create_timer (uint64_t sec, long int nsec, bool repeat,
+			      void (*callback)(int));
+/* Disable the timer TIMER.  */
+void support_delete_timer (timer_t timer);
+
+/* Wait until all threads except the current thread have exited (as
+   far as the kernel is concerned).  */
+void support_wait_for_thread_exit (void);
+
+struct support_stack
+{
+  void *stack;
+  size_t size;
+  size_t guardsize;
+};
+
+/* Allocate stack suitable to used with xclone or sigaltstack call. The stack
+   will have a minimum size of SIZE + MINSIGSTKSZ bytes, rounded up to a whole
+   number of pages.  There will be a large (at least 1 MiB) inaccessible guard
+   bands on either side of it.
+   The returned value on ALLOC_BASE and ALLOC_SIZE will be the usable stack
+   region, excluding the GUARD_SIZE allocated area.
+   It also terminates the process on error.  */
+struct support_stack support_stack_alloc (size_t size);
+
+/* Deallocate the STACK.  */
+void support_stack_free (struct support_stack *stack);
+
+
+/* Create a range of NUM opened '/dev/null' file descriptors using FLAGS and
+   MODE.  The function takes care of restarting the open range if a file
+   descriptor is found within the specified range and also increases
+   RLIMIT_NOFILE if required.
+   The returned value is the lowest file descriptor number.  */
+int support_open_dev_null_range (int num, int flags, mode_t mode);
 
 __END_DECLS
 

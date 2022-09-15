@@ -32,7 +32,6 @@
 #include <fpu_control.h>
 #include <hp-timing.h>
 #include <libc-lock.h>
-#include "dynamic-link.h"
 #include <dl-librecon.h>
 #include <unsecvars.h>
 #include <dl-cache.h>
@@ -48,11 +47,20 @@
 #include <array_length.h>
 #include <libc-early-init.h>
 #include <dl-main.h>
-#include <list.h>
 #include <gnu/lib-names.h>
 #include <dl-tunables.h>
+#include <get-dynamic-info.h>
+#include <dl-audit-check.h>
 
 #include <assert.h>
+
+/* This #define produces dynamic linking inline functions for
+   bootstrap relocation instead of general-purpose relocation.
+   Since ld.so must not have any undefined symbols the result
+   is trivial: always the map of ld.so itself.  */
+#define RTLD_BOOTSTRAP
+#define RESOLVE_MAP(map, scope, sym, version, flags) map
+#include "dynamic-link.h"
 
 /* Only enables rtld profiling for architectures which provides non generic
    hp-timing support.  The generic support requires either syscall
@@ -164,8 +172,7 @@ uintptr_t __stack_chk_guard attribute_relro;
 
 /* Only exported for architectures that don't store the pointer guard
    value in thread local area.  */
-uintptr_t __pointer_chk_guard_local
-     attribute_relro attribute_hidden __attribute__ ((nocommon));
+uintptr_t __pointer_chk_guard_local attribute_relro attribute_hidden;
 #ifndef THREAD_SET_POINTER_GUARD
 strong_alias (__pointer_chk_guard_local, __pointer_chk_guard)
 #endif
@@ -324,6 +331,7 @@ struct rtld_global _rtld_global =
 #ifdef _LIBC_REENTRANT
     ._dl_load_lock = _RTLD_LOCK_RECURSIVE_INITIALIZER,
     ._dl_load_write_lock = _RTLD_LOCK_RECURSIVE_INITIALIZER,
+    ._dl_load_tls_lock = _RTLD_LOCK_RECURSIVE_INITIALIZER,
 #endif
     ._dl_nns = 1,
     ._dl_ns =
@@ -368,6 +376,8 @@ struct rtld_global_ro _rtld_global_ro attribute_relro =
     ._dl_lookup_symbol_x = _dl_lookup_symbol_x,
     ._dl_open = _dl_open,
     ._dl_close = _dl_close,
+    ._dl_catch_error = _rtld_catch_error,
+    ._dl_error_free = _dl_error_free,
     ._dl_tls_get_addr_soft = _dl_tls_get_addr_soft,
 #ifdef HAVE_DL_DISCOVER_OSVERSION
     ._dl_discover_osversion = _dl_discover_osversion
@@ -379,6 +389,7 @@ struct rtld_global_ro _rtld_global_ro attribute_relro =
    visibility attribute.  */
 extern struct rtld_global_ro _rtld_local_ro
     __attribute__ ((alias ("_rtld_global_ro"), visibility ("hidden")));
+
 
 static void dl_main (const ElfW(Phdr) *phdr, ElfW(Word) phnum,
 		     ElfW(Addr) *user_entry, ElfW(auxv_t) *auxv);
@@ -462,6 +473,7 @@ _dl_start_final (void *arg, struct dl_start_final_info *info)
 #ifndef DONT_USE_BOOTSTRAP_MAP
   GL(dl_rtld_map).l_addr = info->l.l_addr;
   GL(dl_rtld_map).l_ld = info->l.l_ld;
+  GL(dl_rtld_map).l_ld_readonly = info->l.l_ld_readonly;
   memcpy (GL(dl_rtld_map).l_info, info->l.l_info,
 	  sizeof GL(dl_rtld_map).l_info);
   GL(dl_rtld_map).l_mach = info->l.l_mach;
@@ -498,28 +510,19 @@ _dl_start_final (void *arg, struct dl_start_final_info *info)
   return start_addr;
 }
 
+#ifdef DONT_USE_BOOTSTRAP_MAP
+# define bootstrap_map GL(dl_rtld_map)
+#else
+# define bootstrap_map info.l
+#endif
+
 static ElfW(Addr) __attribute_used__
 _dl_start (void *arg)
 {
 #ifdef DONT_USE_BOOTSTRAP_MAP
-# define bootstrap_map GL(dl_rtld_map)
-#else
-  struct dl_start_final_info info;
-# define bootstrap_map info.l
-#endif
-
-  /* This #define produces dynamic linking inline functions for
-     bootstrap relocation instead of general-purpose relocation.
-     Since ld.so must not have any undefined symbols the result
-     is trivial: always the map of ld.so itself.  */
-#define RTLD_BOOTSTRAP
-#define BOOTSTRAP_MAP (&bootstrap_map)
-#define RESOLVE_MAP(sym, version, flags) BOOTSTRAP_MAP
-#include "dynamic-link.h"
-
-#ifdef DONT_USE_BOOTSTRAP_MAP
   rtld_timer_start (&start_time);
 #else
+  struct dl_start_final_info info;
   rtld_timer_start (&info.start_time);
 #endif
 
@@ -545,14 +548,15 @@ _dl_start (void *arg)
 
   /* Read our own dynamic section and fill in the info array.  */
   bootstrap_map.l_ld = (void *) bootstrap_map.l_addr + elf_machine_dynamic ();
-  elf_get_dynamic_info (&bootstrap_map, NULL);
+  bootstrap_map.l_ld_readonly = DL_RO_DYN_SECTION;
+  elf_get_dynamic_info (&bootstrap_map, true, false);
 
 #if NO_TLS_OFFSET != 0
   bootstrap_map.l_tls_offset = NO_TLS_OFFSET;
 #endif
 
 #ifdef ELF_MACHINE_BEFORE_RTLD_RELOC
-  ELF_MACHINE_BEFORE_RTLD_RELOC (bootstrap_map.l_info);
+  ELF_MACHINE_BEFORE_RTLD_RELOC (&bootstrap_map, bootstrap_map.l_info);
 #endif
 
   if (bootstrap_map.l_addr || ! bootstrap_map.l_info[VALIDX(DT_GNU_PRELINKED)])
@@ -560,7 +564,7 @@ _dl_start (void *arg)
       /* Relocate ourselves so we can do normal function calls and
 	 data access using the global offset table.  */
 
-      ELF_DYNAMIC_RELOCATE (&bootstrap_map, 0, 0, 0);
+      ELF_DYNAMIC_RELOCATE (&bootstrap_map, NULL, 0, 0, 0);
     }
   bootstrap_map.l_relocated = 1;
 
@@ -804,9 +808,7 @@ cannot allocate TLS data structures for initial thread\n");
   const char *lossage = TLS_INIT_TP (tcbp);
   if (__glibc_unlikely (lossage != NULL))
     _dl_fatal_printf ("cannot set up thread-local storage: %s\n", lossage);
-#if THREAD_GSCOPE_IN_TCB
-  list_add (&THREAD_SELF->list, &GL (dl_stack_user));
-#endif
+  __tls_init_tp ();
   tls_init_tp_called = true;
 
   return tcbp;
@@ -842,22 +844,6 @@ ERROR: ld.so: object '%s' from %s cannot be preloaded (%s): ignored.\n",
   /* Nothing loaded.  */
   return 0;
 }
-
-#if defined SHARED && defined _LIBC_REENTRANT \
-    && defined __rtld_lock_default_lock_recursive
-static void
-rtld_lock_default_lock_recursive (void *lock)
-{
-  __rtld_lock_default_lock_recursive (lock);
-}
-
-static void
-rtld_lock_default_unlock_recursive (void *lock)
-{
-  __rtld_lock_default_unlock_recursive (lock);
-}
-#endif
-
 
 static void
 security_init (void)
@@ -1005,7 +991,7 @@ file=%s [%lu]; audit interface function la_version returned zero; ignored.\n",
       return;
     }
 
-  if (lav > LAV_CURRENT)
+  if (!_dl_audit_check_version (lav))
     {
       _dl_debug_printf ("\
 ERROR: audit interface '%s' requires version %d (maximum supported version %d); ignored.\n",
@@ -1030,13 +1016,7 @@ ERROR: audit interface '%s' requires version %d (maximum supported version %d); 
     "la_objsearch\0"
     "la_objopen\0"
     "la_preinit\0"
-#if __ELF_NATIVE_CLASS == 32
-    "la_symbind32\0"
-#elif __ELF_NATIVE_CLASS == 64
-    "la_symbind64\0"
-#else
-# error "__ELF_NATIVE_CLASS must be defined"
-#endif
+    LA_SYMBIND "\0"
 #define STRING(s) __STRING (s)
     "la_" STRING (ARCH_LA_PLTENTER) "\0"
     "la_" STRING (ARCH_LA_PLTEXIT) "\0"
@@ -1078,25 +1058,6 @@ ERROR: audit interface '%s' requires version %d (maximum supported version %d); 
   dlmargs.map->l_auditing = 1;
 }
 
-/* Notify the the audit modules that the object MAP has already been
-   loaded.  */
-static void
-notify_audit_modules_of_loaded_object (struct link_map *map)
-{
-  struct audit_ifaces *afct = GLRO(dl_audit);
-  for (unsigned int cnt = 0; cnt < GLRO(dl_naudit); ++cnt)
-    {
-      if (afct->objopen != NULL)
-	{
-	  struct auditstate *state = link_map_audit_state (map, cnt);
-	  state->bindflags = afct->objopen (map, LM_ID_BASE, &state->cookie);
-	  map->l_audit_any_plt |= state->bindflags != 0;
-	}
-
-      afct = afct->next;
-    }
-}
-
 /* Load all audit modules.  */
 static void
 load_audit_modules (struct link_map *main_map, struct audit_list *audit_list)
@@ -1115,9 +1076,65 @@ load_audit_modules (struct link_map *main_map, struct audit_list *audit_list)
      program and the dynamic linker itself).  */
   if (GLRO(dl_naudit) > 0)
     {
-      notify_audit_modules_of_loaded_object (main_map);
-      notify_audit_modules_of_loaded_object (&GL(dl_rtld_map));
+      _dl_audit_objopen (main_map, LM_ID_BASE);
+      _dl_audit_objopen (&GL(dl_rtld_map), LM_ID_BASE);
     }
+}
+
+/* Adjusts the contents of the stack and related globals for the user
+   entry point.  The ld.so processed skip_args arguments and bumped
+   _dl_argv and _dl_argc accordingly.  Those arguments are removed from
+   argv here.  */
+static void
+_dl_start_args_adjust (int skip_args)
+{
+  void **sp = (void **) (_dl_argv - skip_args - 1);
+  void **p = sp + skip_args;
+
+  if (skip_args == 0)
+    return;
+
+  /* Sanity check.  */
+  intptr_t argc = (intptr_t) sp[0] - skip_args;
+  assert (argc == _dl_argc);
+
+  /* Adjust argc on stack.  */
+  sp[0] = (void *) (intptr_t) _dl_argc;
+
+  /* Update globals in rtld.  */
+  _dl_argv -= skip_args;
+  _environ -= skip_args;
+
+  /* Shuffle argv down.  */
+  do
+    *++sp = *++p;
+  while (*p != NULL);
+
+  assert (_environ == (char **) (sp + 1));
+
+  /* Shuffle envp down.  */
+  do
+    *++sp = *++p;
+  while (*p != NULL);
+
+#ifdef HAVE_AUX_VECTOR
+  void **auxv = (void **) GLRO(dl_auxv) - skip_args;
+  GLRO(dl_auxv) = (ElfW(auxv_t) *) auxv; /* Aliasing violation.  */
+  assert (auxv == sp + 1);
+
+  /* Shuffle auxv down. */
+  ElfW(auxv_t) ax;
+  char *oldp = (char *) (p + 1);
+  char *newp = (char *) (sp + 1);
+  do
+    {
+      memcpy (&ax, oldp, sizeof (ax));
+      memcpy (newp, &ax, sizeof (ax));
+      oldp += sizeof (ax);
+      newp += sizeof (ax);
+    }
+  while (ax.a_type != AT_NULL);
+#endif
 }
 
 static void
@@ -1139,22 +1156,13 @@ dl_main (const ElfW(Phdr) *phdr,
   struct dl_main_state state;
   dl_main_state_init (&state);
 
-  GL(dl_init_static_tls) = &_dl_nothread_init_static_tls;
+  __tls_pre_init_tp ();
 
-#if defined SHARED && defined _LIBC_REENTRANT \
-    && defined __rtld_lock_default_lock_recursive
-  GL(dl_rtld_lock_recursive) = rtld_lock_default_lock_recursive;
-  GL(dl_rtld_unlock_recursive) = rtld_lock_default_unlock_recursive;
-#endif
-
-#if THREAD_GSCOPE_IN_TCB
-  INIT_LIST_HEAD (&GL (dl_stack_used));
-  INIT_LIST_HEAD (&GL (dl_stack_user));
-#endif
-
+#if !PTHREAD_IN_LIBC
   /* The explicit initialization here is cheaper than processing the reloc
      in the _rtld_local definition's initializer.  */
   GL(dl_make_stack_executable_hook) = &_dl_make_stack_executable;
+#endif
 
   /* Process the environment variable which control the behaviour.  */
   process_envvars (&state);
@@ -1185,6 +1193,7 @@ dl_main (const ElfW(Phdr) *phdr,
       rtld_is_main = true;
 
       char *argv0 = NULL;
+      char **orig_argv = _dl_argv;
 
       /* Note the place where the dynamic linker actually came from.  */
       GL(dl_rtld_map).l_name = rtld_progname;
@@ -1199,7 +1208,6 @@ dl_main (const ElfW(Phdr) *phdr,
 		GLRO(dl_lazy) = -1;
 	      }
 
-	    ++_dl_skip_args;
 	    --_dl_argc;
 	    ++_dl_argv;
 	  }
@@ -1208,14 +1216,12 @@ dl_main (const ElfW(Phdr) *phdr,
 	    if (state.mode != rtld_mode_help)
 	      state.mode = rtld_mode_verify;
 
-	    ++_dl_skip_args;
 	    --_dl_argc;
 	    ++_dl_argv;
 	  }
 	else if (! strcmp (_dl_argv[1], "--inhibit-cache"))
 	  {
 	    GLRO(dl_inhibit_cache) = 1;
-	    ++_dl_skip_args;
 	    --_dl_argc;
 	    ++_dl_argv;
 	  }
@@ -1225,7 +1231,6 @@ dl_main (const ElfW(Phdr) *phdr,
 	    state.library_path = _dl_argv[2];
 	    state.library_path_source = "--library-path";
 
-	    _dl_skip_args += 2;
 	    _dl_argc -= 2;
 	    _dl_argv += 2;
 	  }
@@ -1234,7 +1239,6 @@ dl_main (const ElfW(Phdr) *phdr,
 	  {
 	    GLRO(dl_inhibit_rpath) = _dl_argv[2];
 
-	    _dl_skip_args += 2;
 	    _dl_argc -= 2;
 	    _dl_argv += 2;
 	  }
@@ -1242,14 +1246,12 @@ dl_main (const ElfW(Phdr) *phdr,
 	  {
 	    audit_list_add_string (&state.audit_list, _dl_argv[2]);
 
-	    _dl_skip_args += 2;
 	    _dl_argc -= 2;
 	    _dl_argv += 2;
 	  }
 	else if (! strcmp (_dl_argv[1], "--preload") && _dl_argc > 2)
 	  {
 	    state.preloadarg = _dl_argv[2];
-	    _dl_skip_args += 2;
 	    _dl_argc -= 2;
 	    _dl_argv += 2;
 	  }
@@ -1257,7 +1259,6 @@ dl_main (const ElfW(Phdr) *phdr,
 	  {
 	    argv0 = _dl_argv[2];
 
-	    _dl_skip_args += 2;
 	    _dl_argc -= 2;
 	    _dl_argv += 2;
 	  }
@@ -1265,7 +1266,6 @@ dl_main (const ElfW(Phdr) *phdr,
 		 && _dl_argc > 2)
 	  {
 	    state.glibc_hwcaps_prepend = _dl_argv[2];
-	    _dl_skip_args += 2;
 	    _dl_argc -= 2;
 	    _dl_argv += 2;
 	  }
@@ -1273,7 +1273,6 @@ dl_main (const ElfW(Phdr) *phdr,
 		 && _dl_argc > 2)
 	  {
 	    state.glibc_hwcaps_mask = _dl_argv[2];
-	    _dl_skip_args += 2;
 	    _dl_argc -= 2;
 	    _dl_argv += 2;
 	  }
@@ -1282,7 +1281,6 @@ dl_main (const ElfW(Phdr) *phdr,
 	  {
 	    state.mode = rtld_mode_list_tunables;
 
-	    ++_dl_skip_args;
 	    --_dl_argc;
 	    ++_dl_argv;
 	  }
@@ -1291,7 +1289,6 @@ dl_main (const ElfW(Phdr) *phdr,
 	  {
 	    state.mode = rtld_mode_list_diagnostics;
 
-	    ++_dl_skip_args;
 	    --_dl_argc;
 	    ++_dl_argv;
 	  }
@@ -1337,7 +1334,6 @@ dl_main (const ElfW(Phdr) *phdr,
 	    _dl_usage (ld_so_name, NULL);
 	}
 
-      ++_dl_skip_args;
       --_dl_argc;
       ++_dl_argv;
 
@@ -1441,6 +1437,9 @@ dl_main (const ElfW(Phdr) *phdr,
       /* Set the argv[0] string now that we've processed the executable.  */
       if (argv0 != NULL)
         _dl_argv[0] = argv0;
+
+      /* Adjust arguments for the application entry point.  */
+      _dl_start_args_adjust (_dl_argv - orig_argv);
     }
   else
     {
@@ -1496,6 +1495,7 @@ dl_main (const ElfW(Phdr) *phdr,
 	/* This tells us where to find the dynamic section,
 	   which tells us everything we need to do.  */
 	main_map->l_ld = (void *) main_map->l_addr + ph->p_vaddr;
+	main_map->l_ld_readonly = (ph->p_flags & PF_W) == 0;
 	break;
       case PT_INTERP:
 	/* This "interpreter segment" was used by the program loader to
@@ -1641,7 +1641,7 @@ dl_main (const ElfW(Phdr) *phdr,
   if (! rtld_is_main)
     {
       /* Extract the contents of the dynamic section for easy access.  */
-      elf_get_dynamic_info (main_map, NULL);
+      elf_get_dynamic_info (main_map, false, false);
 
       /* If the main map is libc.so, update the base namespace to
 	 refer to this map.  If libc.so is loaded later, this happens
@@ -1749,7 +1749,7 @@ dl_main (const ElfW(Phdr) *phdr,
   /* Add the dynamic linker to the TLS list if it also uses TLS.  */
   if (GL(dl_rtld_map).l_tls_blocksize != 0)
     /* Assign a module ID.  Do this before loading any audit modules.  */
-    GL(dl_rtld_map).l_tls_modid = _dl_next_tls_modid ();
+    _dl_assign_tls_modid (&GL(dl_rtld_map));
 
   audit_list_add_dynamic_tag (&state.audit_list, main_map, DT_AUDIT);
   audit_list_add_dynamic_tag (&state.audit_list, main_map, DT_DEPAUDIT);
@@ -1811,18 +1811,7 @@ dl_main (const ElfW(Phdr) *phdr,
 
   /* Auditing checkpoint: we are ready to signal that the initial map
      is being constructed.  */
-  if (__glibc_unlikely (GLRO(dl_naudit) > 0))
-    {
-      struct audit_ifaces *afct = GLRO(dl_audit);
-      for (unsigned int cnt = 0; cnt < GLRO(dl_naudit); ++cnt)
-	{
-	  if (afct->activity != NULL)
-	    afct->activity (&link_map_audit_state (main_map, cnt)->cookie,
-			    LA_ACT_ADD);
-
-	  afct = afct->next;
-	}
-    }
+  _dl_audit_activity_map (main_map, LA_ACT_ADD);
 
   /* We have two ways to specify objects to preload: via environment
      variable and via the file /etc/ld.so.preload.  The latter can also
@@ -1945,6 +1934,12 @@ dl_main (const ElfW(Phdr) *phdr,
 	} while (l);
       assert (i == npreloads);
     }
+
+#ifdef NEED_DL_SYSINFO_DSO
+  /* Now that the audit modules are opened, call la_objopen for the vDSO.  */
+  if (GLRO(dl_sysinfo_map) != NULL)
+    _dl_audit_objopen (GLRO(dl_sysinfo_map), LM_ID_BASE);
+#endif
 
   /* Load all the libraries specified by DT_NEEDED entries.  If LD_PRELOAD
      specified some libraries to load, these are inserted before the actual
@@ -2368,6 +2363,9 @@ dl_main (const ElfW(Phdr) *phdr,
 	 loader.  */
       __rtld_malloc_init_real (main_map);
 
+      /* Likewise for the locking implementation.  */
+      __rtld_mutex_init ();
+
       /* Mark all the objects so we know they have been already relocated.  */
       for (struct link_map *l = main_map; l != NULL; l = l->l_next)
 	{
@@ -2444,7 +2442,7 @@ dl_main (const ElfW(Phdr) *phdr,
      into the main thread's TLS area, which we allocated above.
      Note: thread-local variables must only be accessed after completing
      the next step.  */
-  _dl_allocate_tls_init (tcbp);
+  _dl_allocate_tls_init (tcbp, false);
 
   /* And finally install it for the main thread.  */
   if (! tls_init_tp_called)
@@ -2453,9 +2451,7 @@ dl_main (const ElfW(Phdr) *phdr,
       if (__glibc_unlikely (lossage != NULL))
 	_dl_fatal_printf ("cannot set up thread-local storage: %s\n",
 			  lossage);
-#if THREAD_GSCOPE_IN_TCB
-      list_add (&THREAD_SELF->list, &GL (dl_stack_user));
-#endif
+      __tls_init_tp ();
     }
 
   /* Make sure no new search directories have been added.  */
@@ -2474,6 +2470,9 @@ dl_main (const ElfW(Phdr) *phdr,
 	 its symbols (and potentially calling IFUNC resolvers) is safe
 	 at this point.  */
       __rtld_malloc_init_real (main_map);
+
+      /* Likewise for the locking implementation.  */
+      __rtld_mutex_init ();
 
       RTLD_TIMING_VAR (start);
       rtld_timer_start (&start);
@@ -2499,23 +2498,7 @@ dl_main (const ElfW(Phdr) *phdr,
 
 #ifdef SHARED
   /* Auditing checkpoint: we have added all objects.  */
-  if (__glibc_unlikely (GLRO(dl_naudit) > 0))
-    {
-      struct link_map *head = GL(dl_ns)[LM_ID_BASE]._ns_loaded;
-      /* Do not call the functions for any auditing object.  */
-      if (head->l_auditing == 0)
-	{
-	  struct audit_ifaces *afct = GLRO(dl_audit);
-	  for (unsigned int cnt = 0; cnt < GLRO(dl_naudit); ++cnt)
-	    {
-	      if (afct->activity != NULL)
-		afct->activity (&link_map_audit_state (head, cnt)->cookie,
-				LA_ACT_CONSISTENT);
-
-	      afct = afct->next;
-	    }
-	}
-    }
+  _dl_audit_activity_nsid (LM_ID_BASE, LA_ACT_CONSISTENT);
 #endif
 
   /* Notify the debugger all new objects are now ready to go.  We must re-get

@@ -16,11 +16,11 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <pthread.h>
 #include <stdio.h>
 
-/* Force linking against libpthread.  */
-void *pthread_create_reference = pthread_create;
+/* Force linking against tst-dlopenfailnodelmod.so.  */
+void no_delete_mod_function (void);
+void *function_reference = no_delete_mod_function;
 
 static void __attribute__ ((constructor))
 init (void)

@@ -62,7 +62,7 @@ retry:
 
   HURD_CRITICAL_END;
   if (err == EINTR)
-    /* Got a signal while inside an RPC of the critical section, retry.  */
+    /* Got a signal while inside an RPC of the critical section, retry again */
     goto retry;
 
   return err ? __hurd_fail (err) : _hurd_pgrp;

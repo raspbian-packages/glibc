@@ -62,8 +62,8 @@ _dl_diagnostics_cpu (void)
            cpu_features->features[index].cpuid_array[reg]);
       for (unsigned int reg = 0; reg < 4; ++reg)
         print_cpu_feature_internal
-          (index, "usable", reg,
-           cpu_features->features[index].usable_array[reg]);
+          (index, "active", reg,
+           cpu_features->features[index].active_array[reg]);
     }
 
   /* The preferred indicators are not part of the ABI and need to be
@@ -85,6 +85,8 @@ _dl_diagnostics_cpu (void)
                             cpu_features->non_temporal_threshold);
   print_cpu_features_value ("rep_movsb_threshold",
                             cpu_features->rep_movsb_threshold);
+  print_cpu_features_value ("rep_movsb_stop_threshold",
+                            cpu_features->rep_movsb_stop_threshold);
   print_cpu_features_value ("rep_stosb_threshold",
                             cpu_features->rep_stosb_threshold);
   print_cpu_features_value ("level1_icache_size",

@@ -174,7 +174,7 @@ __faccessat_common (int fd, const char *file, int type, int at_flags,
 
       HURD_CRITICAL_END;
       if (err == EINTR)
-	/* Got a signal while inside an RPC of the critical section, retry.  */
+	/* Got a signal while inside an RPC of the critical section, retry again */
 	goto retry;
 
       if (rcrdir != MACH_PORT_NULL)

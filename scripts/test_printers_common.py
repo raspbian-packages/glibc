@@ -72,7 +72,8 @@ try:
     # The gdb version string is "GNU gdb <PKGVERSION><version>", where
     # PKGVERSION can be any text.  We assume that there'll always be a space
     # between PKGVERSION and the version number for the sake of the regexp.
-    version_match = re.search(r'GNU gdb .* ([1-9]+)\.([0-9]+)', gdb_version_out)
+    version_match = re.search(r'GNU gdb .* ([1-9][0-9]*)\.([0-9]+)',
+                              gdb_version_out)
 
     if not version_match:
         print('The gdb version string (gdb -v) is incorrectly formatted.')
@@ -159,6 +160,17 @@ def init_test(test_bin, printer_files, printer_names):
         pretty_printers (list of strings): A list with the names of the pretty
             printer files.
     """
+
+    # Disable debuginfod to avoid GDB messages like:
+    #
+    # This GDB supports auto-downloading debuginfo from the following URLs:
+    # https://debuginfod.fedoraproject.org/
+    # Enable debuginfod for this session? (y or [n])
+    #
+    try:
+        test('set debuginfod enabled off')
+    except Exception:
+        pass
 
     # Load all the pretty printer files.  We're assuming these are safe.
     for printer_file in printer_files:

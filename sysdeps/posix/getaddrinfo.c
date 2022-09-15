@@ -720,9 +720,7 @@ gaih_inet (const char *name, const struct gaih_service *service,
 	    }
 #endif
 
-	  no_more = __nss_database_lookup2 ("hosts", NULL,
-					    "dns [!UNAVAIL=return] files",
-					    &nip);
+	  no_more = !__nss_database_get (nss_database_hosts, &nip);
 
 	  /* If we are looking for both IPv4 and IPv6 address we don't
 	     want the lookup functions to automatically promote IPv4
@@ -1638,16 +1636,17 @@ static int gaiconf_reload_flag_ever_set;
 /* Last modification time.  */
 #ifdef _STATBUF_ST_NSEC
 
-static struct timespec gaiconf_mtime;
+static struct __timespec64 gaiconf_mtime;
 
 static inline void
-save_gaiconf_mtime (const struct stat64 *st)
+save_gaiconf_mtime (const struct __stat64_t64 *st)
 {
-  gaiconf_mtime = st->st_mtim;
+  gaiconf_mtime = (struct __timespec64) { st->st_mtim.tv_sec,
+					  st->st_mtim.tv_nsec };
 }
 
 static inline bool
-check_gaiconf_mtime (const struct stat64 *st)
+check_gaiconf_mtime (const struct __stat64_t64 *st)
 {
   return (st->st_mtim.tv_sec == gaiconf_mtime.tv_sec
           && st->st_mtim.tv_nsec == gaiconf_mtime.tv_nsec);
@@ -1658,13 +1657,13 @@ check_gaiconf_mtime (const struct stat64 *st)
 static time_t gaiconf_mtime;
 
 static inline void
-save_gaiconf_mtime (const struct stat64 *st)
+save_gaiconf_mtime (const struct __stat64_t64 *st)
 {
   gaiconf_mtime = st->st_mtime;
 }
 
 static inline bool
-check_gaiconf_mtime (const struct stat64 *st)
+check_gaiconf_mtime (const struct __stat64_t64 *st)
 {
   return st->st_mtime == gaiconf_mtime;
 }
@@ -1779,8 +1778,8 @@ gaiconf_init (void)
   FILE *fp = fopen (GAICONF_FNAME, "rce");
   if (fp != NULL)
     {
-      struct stat64 st;
-      if (__fstat64 (fileno (fp), &st) != 0)
+      struct __stat64_t64 st;
+      if (__fstat64_time64 (fileno (fp), &st) != 0)
 	{
 	  fclose (fp);
 	  goto no_file;
@@ -2009,6 +2008,7 @@ gaiconf_init (void)
 	      l = l->next;
 	    }
 	  free_prefixlist (labellist);
+	  labellist = NULL;
 
 	  /* Sort the entries so that the most specific ones are at
 	     the beginning.  */
@@ -2047,6 +2047,7 @@ gaiconf_init (void)
 	      l = l->next;
 	    }
 	  free_prefixlist (precedencelist);
+	  precedencelist = NULL;
 
 	  /* Sort the entries so that the most specific ones are at
 	     the beginning.  */
@@ -2132,8 +2133,8 @@ gaiconf_init (void)
 static void
 gaiconf_reload (void)
 {
-  struct stat64 st;
-  if (__stat64 (GAICONF_FNAME, &st) != 0
+  struct __stat64_t64 st;
+  if (__stat64_time64 (GAICONF_FNAME, &st) != 0
       || !check_gaiconf_mtime (&st))
     gaiconf_init ();
 }

@@ -28,11 +28,10 @@
    AS-safe, with the exception of the actual cancellation, because they
    are called by wrappers around AS-safe functions like write().*/
 int
-attribute_hidden
 __pthread_enable_asynccancel (void)
 {
   struct pthread *self = THREAD_SELF;
-  int oldval = THREAD_GETMEM (self, cancelhandling);
+  int oldval = atomic_load_relaxed (&self->cancelhandling);
 
   while (1)
     {
@@ -41,30 +40,26 @@ __pthread_enable_asynccancel (void)
       if (newval == oldval)
 	break;
 
-      int curval = THREAD_ATOMIC_CMPXCHG_VAL (self, cancelhandling, newval,
-					      oldval);
-      if (__glibc_likely (curval == oldval))
+      if (atomic_compare_exchange_weak_acquire (&self->cancelhandling,
+						&oldval, newval))
 	{
-	  if (CANCEL_ENABLED_AND_CANCELED_AND_ASYNCHRONOUS (newval))
+	  if (cancel_enabled_and_canceled_and_async (newval))
 	    {
-	      THREAD_SETMEM (self, result, PTHREAD_CANCELED);
+	      self->result = PTHREAD_CANCELED;
 	      __do_cancel ();
 	    }
 
 	  break;
 	}
-
-      /* Prepare the next round.  */
-      oldval = curval;
     }
 
   return oldval;
 }
+libc_hidden_def (__pthread_enable_asynccancel)
 
 /* See the comment for __pthread_enable_asynccancel regarding
    the AS-safety of this function.  */
 void
-attribute_hidden
 __pthread_disable_asynccancel (int oldtype)
 {
   /* If asynchronous cancellation was enabled before we do not have
@@ -74,31 +69,24 @@ __pthread_disable_asynccancel (int oldtype)
 
   struct pthread *self = THREAD_SELF;
   int newval;
-
-  int oldval = THREAD_GETMEM (self, cancelhandling);
-
-  while (1)
+  int oldval = atomic_load_relaxed (&self->cancelhandling);
+  do
     {
       newval = oldval & ~CANCELTYPE_BITMASK;
-
-      int curval = THREAD_ATOMIC_CMPXCHG_VAL (self, cancelhandling, newval,
-					      oldval);
-      if (__glibc_likely (curval == oldval))
-	break;
-
-      /* Prepare the next round.  */
-      oldval = curval;
     }
+  while (!atomic_compare_exchange_weak_acquire (&self->cancelhandling,
+						&oldval, newval));
 
   /* We cannot return when we are being canceled.  Upon return the
      thread might be things which would have to be undone.  The
      following loop should loop until the cancellation signal is
      delivered.  */
-  while (__builtin_expect ((newval & (CANCELING_BITMASK | CANCELED_BITMASK))
-			   == CANCELING_BITMASK, 0))
+  while (__glibc_unlikely ((newval & (CANCELING_BITMASK | CANCELED_BITMASK))
+			   == CANCELING_BITMASK))
     {
       futex_wait_simple ((unsigned int *) &self->cancelhandling, newval,
 			 FUTEX_PRIVATE);
-      newval = THREAD_GETMEM (self, cancelhandling);
+      newval = atomic_load_relaxed (&self->cancelhandling);
     }
 }
+libc_hidden_def (__pthread_disable_asynccancel)

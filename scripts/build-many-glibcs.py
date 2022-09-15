@@ -188,6 +188,9 @@ class Context(object):
                         gcc_cfg=['--with-float=hard', '--with-cpu=arm926ej-s'],
                         extra_glibcs=[{'variant': 'v7a',
                                        'ccopts': '-march=armv7-a -mfpu=vfpv3'},
+                                      {'variant': 'thumb',
+                                       'ccopts':
+                                       '-mthumb -march=armv7-a -mfpu=vfpv3'},
                                       {'variant': 'v7a-disable-multi-arch',
                                        'ccopts': '-march=armv7-a -mfpu=vfpv3',
                                        'cfg': ['--disable-multi-arch']}])
@@ -422,6 +425,16 @@ class Context(object):
                                 {'arch': 'i686', 'ccopts': '-m32 -march=i686'}],
                         extra_glibcs=[{'variant': 'disable-multi-arch',
                                        'cfg': ['--disable-multi-arch']},
+                                      {'variant': 'minimal',
+                                       'cfg': ['--disable-multi-arch',
+                                               '--disable-profile',
+                                               '--disable-timezone-tools',
+                                               '--disable-mathvec',
+                                               '--disable-tunables',
+                                               '--disable-crypt',
+                                               '--disable-experimental-malloc',
+                                               '--disable-build-nscd',
+                                               '--disable-nscd']},
                                       {'variant': 'static-pie',
                                        'cfg': ['--enable-static-pie']},
                                       {'variant': 'x32-static-pie',
@@ -670,7 +683,7 @@ class Context(object):
 
     def do_build(self):
         """Do the actual build."""
-        cmd = ['make', '-j%d' % self.parallelism]
+        cmd = ['make', '-O', '-j%d' % self.parallelism]
         subprocess.run(cmd, cwd=self.builddir, check=True)
 
     def build_host_libraries(self):
@@ -765,11 +778,11 @@ class Context(object):
 
     def checkout(self, versions):
         """Check out the desired component versions."""
-        default_versions = {'binutils': 'vcs-2.35',
-                            'gcc': 'vcs-10',
+        default_versions = {'binutils': 'vcs-2.36',
+                            'gcc': 'vcs-11',
                             'glibc': 'vcs-mainline',
                             'gmp': '6.2.1',
-                            'linux': '5.10',
+                            'linux': '5.14',
                             'mpc': '1.2.1',
                             'mpfr': '4.1.0',
                             'mig': 'vcs-mainline',

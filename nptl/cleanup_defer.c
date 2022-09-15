@@ -18,11 +18,11 @@
 
 #include <stdlib.h>
 #include "pthreadP.h"
-
+#include <shlib-compat.h>
 
 void
 __cleanup_fct_attribute
-__pthread_register_cancel_defer (__pthread_unwind_buf_t *buf)
+___pthread_register_cancel_defer (__pthread_unwind_buf_t *buf)
 {
   struct pthread_unwind_buf *ibuf = (struct pthread_unwind_buf *) buf;
   struct pthread *self = THREAD_SELF;
@@ -31,23 +31,18 @@ __pthread_register_cancel_defer (__pthread_unwind_buf_t *buf)
   ibuf->priv.data.prev = THREAD_GETMEM (self, cleanup_jmp_buf);
   ibuf->priv.data.cleanup = THREAD_GETMEM (self, cleanup);
 
-  int cancelhandling = THREAD_GETMEM (self, cancelhandling);
-
-  /* Disable asynchronous cancellation for now.  */
+  int cancelhandling = atomic_load_relaxed (&self->cancelhandling);
   if (__glibc_unlikely (cancelhandling & CANCELTYPE_BITMASK))
-    while (1)
-      {
-	int curval = THREAD_ATOMIC_CMPXCHG_VAL (self, cancelhandling,
-						cancelhandling
-						& ~CANCELTYPE_BITMASK,
-						cancelhandling);
-	if (__glibc_likely (curval == cancelhandling))
-	  /* Successfully replaced the value.  */
-	  break;
-
-	/* Prepare for the next round.  */
-	cancelhandling = curval;
-      }
+    {
+      int newval;
+      do
+	{
+	  newval = cancelhandling & ~CANCELTYPE_BITMASK;
+	}
+      while (!atomic_compare_exchange_weak_acquire (&self->cancelhandling,
+						    &cancelhandling,
+						    newval));
+    }
 
   ibuf->priv.data.canceltype = (cancelhandling & CANCELTYPE_BITMASK
 				? PTHREAD_CANCEL_ASYNCHRONOUS
@@ -56,36 +51,48 @@ __pthread_register_cancel_defer (__pthread_unwind_buf_t *buf)
   /* Store the new cleanup handler info.  */
   THREAD_SETMEM (self, cleanup_jmp_buf, (struct pthread_unwind_buf *) buf);
 }
+versioned_symbol (libc, ___pthread_register_cancel_defer,
+		  __pthread_register_cancel_defer, GLIBC_2_34);
 
+#if OTHER_SHLIB_COMPAT (libpthread, GLIBC_2_3_3, GLIBC_2_34)
+compat_symbol (libpthread, ___pthread_register_cancel_defer,
+	       __pthread_register_cancel_defer, GLIBC_2_3_3);
+#endif
 
 void
 __cleanup_fct_attribute
-__pthread_unregister_cancel_restore (__pthread_unwind_buf_t *buf)
+___pthread_unregister_cancel_restore (__pthread_unwind_buf_t *buf)
 {
   struct pthread *self = THREAD_SELF;
   struct pthread_unwind_buf *ibuf = (struct pthread_unwind_buf *) buf;
 
   THREAD_SETMEM (self, cleanup_jmp_buf, ibuf->priv.data.prev);
 
-  int cancelhandling;
-  if (ibuf->priv.data.canceltype != PTHREAD_CANCEL_DEFERRED
-      && ((cancelhandling = THREAD_GETMEM (self, cancelhandling))
-	  & CANCELTYPE_BITMASK) == 0)
+  if (ibuf->priv.data.canceltype == PTHREAD_CANCEL_DEFERRED)
+    return;
+
+  int cancelhandling = atomic_load_relaxed (&self->cancelhandling);
+  if ((cancelhandling & CANCELTYPE_BITMASK) == 0)
     {
-      while (1)
+      int newval;
+      do
 	{
-	  int curval = THREAD_ATOMIC_CMPXCHG_VAL (self, cancelhandling,
-						  cancelhandling
-						  | CANCELTYPE_BITMASK,
-						  cancelhandling);
-	  if (__glibc_likely (curval == cancelhandling))
-	    /* Successfully replaced the value.  */
-	    break;
-
-	  /* Prepare for the next round.  */
-	  cancelhandling = curval;
+	  newval = cancelhandling | CANCELTYPE_BITMASK;
 	}
+      while (!atomic_compare_exchange_weak_acquire (&self->cancelhandling,
+						    &cancelhandling, newval));
 
-      CANCELLATION_P (self);
+      if (cancel_enabled_and_canceled (cancelhandling))
+	{
+	  self->result = PTHREAD_CANCELED;
+	  __do_cancel ();
+	}
     }
 }
+versioned_symbol (libc, ___pthread_unregister_cancel_restore,
+		  __pthread_unregister_cancel_restore, GLIBC_2_34);
+
+#if OTHER_SHLIB_COMPAT (libpthread, GLIBC_2_3_3, GLIBC_2_34)
+compat_symbol (libpthread, ___pthread_unregister_cancel_restore,
+	       __pthread_unregister_cancel_restore, GLIBC_2_3_3);
+#endif

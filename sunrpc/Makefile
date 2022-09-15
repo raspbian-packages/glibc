@@ -71,8 +71,7 @@ xtests := tst-getmyaddr
 
 ifeq ($(have-thread-library),yes)
 xtests += thrsvc
-tests += tst-udp-garbage
-tests-internal += tst-svc_register
+tests += tst-udp-garbage tst-svc_register
 endif
 
 ifeq (yes,$(build-shared))

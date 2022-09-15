@@ -19,7 +19,7 @@
 -"le sont aussi pour les options de   courte."
 +"le sont aussi pour les options de forme courte."
  
- #: argp/argp-help.c:1600
+ #: argp/argp-help.c:1713
  msgid "Usage:"
 @@ -5651,7 +5651,7 @@
  #. TRANS modes on an ordinary file.

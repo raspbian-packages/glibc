@@ -61,10 +61,12 @@ sysdep_routines += adjtimex clone umount umount2 readahead sysctl \
 		   open_by_handle_at mlock2 pkey_mprotect pkey_set pkey_get \
 		   timerfd_gettime timerfd_settime prctl \
 		   process_vm_readv process_vm_writev clock_adjtime \
-		   time64-support pselect32 \
+		   pselect32 \
 		   xstat fxstat lxstat xstat64 fxstat64 lxstat64 \
 		   fxstatat fxstatat64 \
-		   xmknod xmknodat
+		   xmknod xmknodat convert_scm_timestamps \
+		   closefrom_fallback \
+		   clone3 clone-internal
 
 CFLAGS-gethostid.c = -fexceptions
 CFLAGS-tee.c = -fexceptions -fasynchronous-unwind-tables
@@ -100,14 +102,58 @@ sysdep_headers += sys/mount.h sys/acct.h \
 		  bits/types/struct_msqid_ds.h \
 		  bits/types/struct_shmid_ds.h \
 		  bits/ipc-perm.h \
-		  bits/struct_stat.h
+		  bits/struct_stat.h \
+		  bits/struct_stat_time64_helper.h \
+		  bits/types/struct_msqid64_ds.h \
+		  bits/types/struct_msqid64_ds_helper.h \
+		  bits/types/struct_semid64_ds.h \
+		  bits/types/struct_semid64_ds_helper.h \
+		  bits/types/struct_shmid64_ds.h \
+		  bits/types/struct_shmid64_ds_helper.h \
+		  bits/pthread_stack_min.h bits/pthread_stack_min-dynamic.h
 
 tests += tst-clone tst-clone2 tst-clone3 tst-fanotify tst-personality \
 	 tst-quota tst-sync_file_range tst-sysconf-iov_max tst-ttyname \
 	 test-errno-linux tst-memfd_create tst-mlock2 tst-pkey \
 	 tst-rlimit-infinity tst-ofdlocks tst-gettid tst-gettid-kill \
-	 tst-tgkill tst-sysvsem-linux tst-sysvmsg-linux tst-sysvshm-linux
-tests-internal += tst-ofdlocks-compat tst-sigcontext-get_pc
+	 tst-tgkill tst-sysvsem-linux tst-sysvmsg-linux tst-sysvshm-linux \
+	 tst-timerfd tst-ppoll \
+	 tst-clock_adjtime tst-adjtimex tst-ntp_adjtime tst-ntp_gettime \
+	 tst-ntp_gettimex tst-sigtimedwait tst-misalign-clone \
+  tst-close_range \
+  tst-prctl \
+  tst-scm_rights \
+  tst-getauxval \
+  # tests
+
+# Test for the symbol version of fcntl that was replaced in glibc 2.28.
+ifeq ($(have-GLIBC_2.27)$(build-shared),yesyes)
+tests += tst-ofdlocks-compat
+endif
+
+tests-internal += tst-sigcontext-get_pc
+
+tests-time64 += \
+  tst-adjtimex-time64 \
+  tst-clock_adjtime-time64 \
+  tst-ntp_adjtime-time64 \
+  tst-ntp_gettime-time64 \
+  tst-ntp_gettimex-time64 \
+  tst-ppoll-time64 \
+  tst-sigtimedwait-time64 \
+  tst-timerfd-time64 \
+  tst-prctl-time64 \
+  tst-scm_rights-time64 \
+  # tests-time64
+
+tests-clone-internal = \
+  tst-align-clone-internal \
+  tst-clone2-internal \
+  tst-clone3-internal \
+  tst-getpid1-internal \
+  tst-misalign-clone-internal
+tests-internal += $(tests-clone-internal)
+tests-static += $(tests-clone-internal)
 
 CFLAGS-tst-sigcontext-get_pc.c = -fasynchronous-unwind-tables
 
@@ -170,8 +216,6 @@ $(objpfx)tst-glibcsyscalls.out: \
 # Separate object file for access to the constant from the UAPI header.
 $(objpfx)tst-sysconf-iov_max: $(objpfx)tst-sysconf-iov_max-uapi.o
 
-$(objpfx)tst-pkey: $(shared-thread-library)
-
 tests-special += $(objpfx)tst-mman-consts.out
 $(objpfx)tst-mman-consts.out: ../sysdeps/unix/sysv/linux/tst-mman-consts.py
 	$(sysdeps-linux-python) \
@@ -180,16 +224,18 @@ $(objpfx)tst-mman-consts.out: ../sysdeps/unix/sysv/linux/tst-mman-consts.py
 	  < /dev/null > $@ 2>&1; $(evaluate-test)
 $(objpfx)tst-mman-consts.out: $(sysdeps-linux-python-deps)
 
-$(objpfx)tst-gettid: $(shared-thread-library)
-$(objpfx)tst-gettid-kill: $(shared-thread-library)
-$(objpfx)tst-tgkill: $(shared-thread-library)
-
 endif # $(subdir) == misc
 
 ifeq ($(subdir),time)
 sysdep_headers += sys/timex.h bits/timex.h
 
 sysdep_routines += ntp_gettime ntp_gettimex
+
+tests += \
+  tst-clock_gettime-clobber \
+  tst-gettimeofday-clobber \
+  tst-time-clobber \
+  # tests
 endif
 
 ifeq ($(subdir),signal)
@@ -216,6 +262,15 @@ sysdep_headers += net/if_ppp.h net/ppp-comp.h \
 sysdep_routines += cmsg_nxthdr
 CFLAGS-recvmmsg.c = -fexceptions -fasynchronous-unwind-tables
 CFLAGS-sendmmsg.c = -fexceptions -fasynchronous-unwind-tables
+
+tests += \
+  tst-socket-timestamp \
+  tst-socket-timestamp-compat \
+  # tests
+tests-time64 += \
+  tst-socket-timestamp-time64 \
+  tst-socket-timestamp-compat-time64
+  # tests-time64
 
 tests-special += $(objpfx)tst-socket-consts.out
 $(objpfx)tst-socket-consts.out: ../sysdeps/unix/sysv/linux/tst-socket-consts.py
@@ -264,15 +319,19 @@ inhibit-glue = yes
 ifeq ($(subdir),dirent)
 sysdep_routines += getdirentries getdirentries64
 tests += tst-getdents64
-tests-internal += tst-readdir64-compat
+
+# The tested readdir64 symbol was replaced in glibc 2.2.
+ifeq ($(have-GLIBC_2.1.3)$(build-shared),yesyes)
+tests += tst-readdir64-compat
 endif
+endif # $(subdir) == dirent
 
 ifeq ($(subdir),nis)
 CFLAGS-ypclnt.c = -DUSE_BINDINGDIR=1
 endif
 
 ifeq ($(subdir),io)
-sysdep_routines += xstatconv internal_statvfs internal_statvfs64 \
+sysdep_routines += xstatconv internal_statvfs \
 		   sync_file_range fallocate fallocate64 \
 		   close_nocancel fcntl_nocancel \
 		   open_nocancel open64_nocancel \

@@ -20,7 +20,7 @@ amd64_libdir = /usr/lib64
 
 define amd64_extra_install
 cp debian/tmp-amd64/usr/bin/ldd \
-	debian/tmp-libc/usr/bin
+	debian/tmp/usr/bin
 endef
 
 define libc6-dev-amd64_extra_pkg_install

@@ -5,20 +5,31 @@ endif
 ifeq ($(subdir),elf)
 sysdep_routines += get-cpuid-feature-leaf
 sysdep-dl-routines += dl-get-cpu-features
-sysdep_headers += sys/platform/x86.h
+sysdep_headers += sys/platform/x86.h bits/platform/x86.h
+
+CFLAGS-get-cpuid-feature-leaf.o += $(no-stack-protector)
 
 tests += tst-get-cpu-features tst-get-cpu-features-static \
-	 tst-cpu-features-cpuinfo tst-cpu-features-supports
-tests-static += tst-get-cpu-features-static
+	 tst-cpu-features-cpuinfo tst-cpu-features-cpuinfo-static \
+	 tst-cpu-features-supports tst-cpu-features-supports-static
+tests-static += tst-get-cpu-features-static \
+		tst-cpu-features-cpuinfo-static \
+		tst-cpu-features-supports-static
 ifeq (yes,$(have-ifunc))
+ifeq (yes,$(have-gcc-ifunc))
 tests += \
   tst-ifunc-isa-1 \
-  tst-ifunc-isa-1-static \
+  tst-ifunc-isa-1-static
+tests-static += \
+  tst-ifunc-isa-1-static
+ifneq ($(have-tunables),no)
+tests += \
   tst-ifunc-isa-2 \
   tst-ifunc-isa-2-static
 tests-static += \
-  tst-ifunc-isa-1-static \
   tst-ifunc-isa-2-static
+endif
+endif
 endif
 ifeq (yes,$(enable-x86-isa-level))
 tests += tst-isa-level-1
@@ -44,7 +55,6 @@ CFLAGS-tst-isa-level-mod-1-v4.c += -DINCLUDE_X86_ISA_LEVEL \
 				   -DISA_LEVEL=0xf \
 				   -march=x86-64
 
-$(objpfx)tst-isa-level-1: $(libdl)
 $(objpfx)tst-isa-level-1.out: $(objpfx)tst-isa-level-mod-1-baseline.so \
 			      $(objpfx)tst-isa-level-mod-1-v2.so \
 			      $(objpfx)tst-isa-level-mod-1-v3.so \
@@ -158,38 +168,30 @@ $(objpfx)tst-cet-legacy-1: $(objpfx)tst-cet-legacy-mod-1.so \
 		       $(objpfx)tst-cet-legacy-mod-2.so
 $(objpfx)tst-cet-legacy-1a: $(objpfx)tst-cet-legacy-mod-1.so \
 		       $(objpfx)tst-cet-legacy-mod-2.so
-$(objpfx)tst-cet-legacy-2: $(objpfx)tst-cet-legacy-mod-2.so $(libdl)
+$(objpfx)tst-cet-legacy-2: $(objpfx)tst-cet-legacy-mod-2.so
 $(objpfx)tst-cet-legacy-2.out: $(objpfx)tst-cet-legacy-mod-1.so
-$(objpfx)tst-cet-legacy-2a: $(objpfx)tst-cet-legacy-mod-2.so $(libdl)
+$(objpfx)tst-cet-legacy-2a: $(objpfx)tst-cet-legacy-mod-2.so
 $(objpfx)tst-cet-legacy-2a.out: $(objpfx)tst-cet-legacy-mod-1.so
-$(objpfx)tst-cet-legacy-4: $(libdl)
 $(objpfx)tst-cet-legacy-4.out: $(objpfx)tst-cet-legacy-mod-4.so
-$(objpfx)tst-cet-legacy-5a: $(libdl)
 $(objpfx)tst-cet-legacy-5a.out: $(objpfx)tst-cet-legacy-mod-5a.so \
 				$(objpfx)tst-cet-legacy-mod-5b.so
 $(objpfx)tst-cet-legacy-mod-5a.so: $(objpfx)tst-cet-legacy-mod-5c.so
 $(objpfx)tst-cet-legacy-mod-5b.so: $(objpfx)tst-cet-legacy-mod-5c.so
-$(objpfx)tst-cet-legacy-6a: $(libdl)
 $(objpfx)tst-cet-legacy-6a.out: $(objpfx)tst-cet-legacy-mod-6a.so \
 				$(objpfx)tst-cet-legacy-mod-6b.so
 $(objpfx)tst-cet-legacy-mod-6a.so: $(objpfx)tst-cet-legacy-mod-6c.so
 $(objpfx)tst-cet-legacy-mod-6b.so: $(objpfx)tst-cet-legacy-mod-6c.so
 LDFLAGS-tst-cet-legacy-mod-6c.so = -Wl,--enable-new-dtags,-z,nodelete
 ifneq (no,$(have-tunables))
-$(objpfx)tst-cet-legacy-4a: $(libdl)
 $(objpfx)tst-cet-legacy-4a.out: $(objpfx)tst-cet-legacy-mod-4.so
 tst-cet-legacy-4a-ENV = GLIBC_TUNABLES=glibc.cpu.x86_shstk=permissive
-$(objpfx)tst-cet-legacy-4b: $(libdl)
 $(objpfx)tst-cet-legacy-4b.out: $(objpfx)tst-cet-legacy-mod-4.so
 tst-cet-legacy-4b-ENV = GLIBC_TUNABLES=glibc.cpu.x86_shstk=on
-$(objpfx)tst-cet-legacy-4c: $(libdl)
 $(objpfx)tst-cet-legacy-4c.out: $(objpfx)tst-cet-legacy-mod-4.so
 tst-cet-legacy-4c-ENV = GLIBC_TUNABLES=glibc.cpu.x86_shstk=off
-$(objpfx)tst-cet-legacy-5b: $(libdl)
 $(objpfx)tst-cet-legacy-5b.out: $(objpfx)tst-cet-legacy-mod-5a.so \
 				$(objpfx)tst-cet-legacy-mod-5b.so
 tst-cet-legacy-5b-ENV = GLIBC_TUNABLES=glibc.cpu.hwcaps=-IBT,-SHSTK
-$(objpfx)tst-cet-legacy-6b: $(libdl)
 $(objpfx)tst-cet-legacy-6b.out: $(objpfx)tst-cet-legacy-mod-6a.so \
 				$(objpfx)tst-cet-legacy-mod-6b.so
 tst-cet-legacy-6b-ENV = GLIBC_TUNABLES=glibc.cpu.hwcaps=-IBT,-SHSTK

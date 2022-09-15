@@ -588,6 +588,7 @@ ac_unique_file="include/features.h"
 enable_option_checking=no
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+pthread_in_libc
 RELEASE
 VERSION
 mach_interface_list
@@ -769,7 +770,6 @@ enable_profile
 enable_static_pie
 enable_timezone_tools
 enable_hardcoded_path_in_tests
-enable_stackguard_randomization
 enable_hidden_plt
 enable_bind_now
 enable_stack_protector
@@ -791,6 +791,7 @@ enable_pt_chown
 enable_tunables
 enable_mathvec
 enable_cet
+enable_scv
 with_cpu
 '
       ac_precious_vars='build_alias
@@ -1429,9 +1430,6 @@ Optional Features:
   --enable-hardcoded-path-in-tests
                           hardcode newly built glibc path in tests
                           [default=no]
-  --enable-stackguard-randomization
-                          initialize __stack_chk_guard canary with a random
-                          number at program start
   --disable-hidden-plt    do not hide internal function calls to avoid PLT
   --enable-bind-now       disable lazy relocations in DSOs
   --enable-stack-protector=[yes|no|all|strong]
@@ -1466,6 +1464,8 @@ Optional Features:
                           depends on architecture]
   --enable-cet            enable Intel Control-flow Enforcement Technology
                           (CET), x86 only
+  --disable-scv           syscalls will not use scv instruction, even if the
+                          kernel supports it, powerpc only
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1745,6 +1745,43 @@ fi
   as_fn_set_status $ac_retval
 
 } # ac_fn_c_try_link
+
+# ac_fn_c_try_cpp LINENO
+# ----------------------
+# Try to preprocess conftest.$ac_ext, and return whether this succeeded.
+ac_fn_c_try_cpp ()
+{
+  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
+  if { { ac_try="$ac_cpp conftest.$ac_ext"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
+$as_echo "$ac_try_echo"; } >&5
+  (eval "$ac_cpp conftest.$ac_ext") 2>conftest.err
+  ac_status=$?
+  if test -s conftest.err; then
+    grep -v '^ *+' conftest.err >conftest.er1
+    cat conftest.er1 >&5
+    mv -f conftest.er1 conftest.err
+  fi
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; } > conftest.i && {
+	 test -z "$ac_c_preproc_warn_flag$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       }; then :
+  ac_retval=0
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+    ac_retval=1
+fi
+  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
+  as_fn_set_status $ac_retval
+
+} # ac_fn_c_try_cpp
 cat >config.log <<_ACEOF
 This file contains any messages produced by compilers while
 running configure, to aid debugging if configure makes a mistake.
@@ -3335,7 +3372,7 @@ fi
 if test "${with_default_link+set}" = set; then :
   withval=$with_default_link; use_default_link=$withval
 else
-  use_default_link=default
+  use_default_link=no
 fi
 
 
@@ -3395,18 +3432,6 @@ else
 fi
 
 
-
-# Check whether --enable-stackguard-randomization was given.
-if test "${enable_stackguard_randomization+set}" = set; then :
-  enableval=$enable_stackguard_randomization; enable_stackguard_randomize=$enableval
-else
-  enable_stackguard_randomize=no
-fi
-
-if test "$enable_stackguard_randomize" = yes; then
-  $as_echo "#define ENABLE_STACKGUARD_RANDOMIZE 1" >>confdefs.h
-
-fi
 
 # Check whether --enable-hidden-plt was given.
 if test "${enable_hidden_plt+set}" = set; then :
@@ -3762,6 +3787,7 @@ else
 fi
 
 
+
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -3776,12 +3802,12 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_c_try_cpp "$LINENO"; then :
   libc_cv_compiler_default_cet=yes
 else
   libc_cv_compiler_default_cet=no
 fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+rm -f conftest.err conftest.i conftest.$ac_ext
 
 # Check whether --enable-cet was given.
 if test "${enable_cet+set}" = set; then :
@@ -3790,6 +3816,19 @@ else
   enable_cet=$libc_cv_compiler_default_cet
 fi
 
+
+# Check whether --enable-scv was given.
+if test "${enable_scv+set}" = set; then :
+  enableval=$enable_scv; use_scv=$enableval
+else
+  use_scv=yes
+fi
+
+
+if test "$use_scv" != "no"; then :
+  $as_echo "#define USE_PPC_SCV 1" >>confdefs.h
+
+fi
 
 # We keep the original values in `$config_*' and never modify them, so we
 # can write them unchanged into config.make.  Everything else uses
@@ -4104,6 +4143,31 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $libc_cv_textrel_ifunc" >&5
 $as_echo "$libc_cv_textrel_ifunc" >&6; }
 
+
+# Check if CC supports attribute retain as it is used in attribute_used_retain macro.
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for GNU attribute retain support" >&5
+$as_echo_n "checking for GNU attribute retain support... " >&6; }
+if ${libc_cv_gnu_retain+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat > conftest.c <<EOF
+static int var  __attribute__ ((used, retain, section ("__libc_atexit")));
+EOF
+libc_cv_gnu_retain=no
+if ${CC-cc} -Werror -c conftest.c -o /dev/null 1>&5 \
+   2>&5 ; then
+  libc_cv_gnu_retain=yes
+fi
+rm -f conftest*
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $libc_cv_gnu_retain" >&5
+$as_echo "$libc_cv_gnu_retain" >&6; }
+if test $libc_cv_gnu_retain = yes; then
+  $as_echo "#define HAVE_GNU_RETAIN 1" >>confdefs.h
+
+fi
+config_vars="$config_vars
+have-gnu-retain = $libc_cv_gnu_retain"
 
 # Check if gcc warns about alias for function with incompatible types.
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking if compiler warns about alias for function with incompatible types" >&5
@@ -4734,7 +4798,6 @@ fi
 fi
 
 # These programs are version sensitive.
-
 for ac_prog in gnumake gmake make
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
@@ -5135,12 +5198,12 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_c_try_cpp "$LINENO"; then :
   libc_cv_compiler_ok=yes
 else
   libc_cv_compiler_ok=no
 fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+rm -f conftest.err conftest.i conftest.$ac_ext
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $libc_cv_compiler_ok" >&5
 $as_echo "$libc_cv_compiler_ok" >&6; }
@@ -5874,6 +5937,40 @@ fi
 $as_echo "$libc_linker_feature" >&6; }
 
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for linker that supports -z start-stop-gc" >&5
+$as_echo_n "checking for linker that supports -z start-stop-gc... " >&6; }
+libc_linker_feature=no
+if test x"$gnu_ld" = x"yes"; then
+  libc_linker_check=`$LD -v --help 2>/dev/null | grep "\-z start-stop-gc"`
+  if test -n "$libc_linker_check"; then
+    cat > conftest.c <<EOF
+int _start (void) { return 42; }
+EOF
+    if { ac_try='${CC-cc} $CFLAGS $CPPFLAGS $LDFLAGS $no_ssp
+				-Wl,-z,start-stop-gc -nostdlib -nostartfiles
+				-fPIC -shared -o conftest.so conftest.c
+				1>&5'
+  { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_try\""; } >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; }
+    then
+      libc_linker_feature=yes
+    fi
+    rm -f conftest*
+  fi
+fi
+if test $libc_linker_feature = yes; then
+  libc_cv_z_start_stop_gc=yes
+else
+  libc_cv_z_start_stop_gc=no
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $libc_linker_feature" >&5
+$as_echo "$libc_linker_feature" >&6; }
+config_vars="$config_vars
+have-z-start-stop-gc = $libc_cv_z_start_stop_gc"
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for linker that supports --no-dynamic-linker" >&5
 $as_echo_n "checking for linker that supports --no-dynamic-linker... " >&6; }
 libc_linker_feature=no
@@ -5978,69 +6075,6 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $libc_cv_hashstyle" >&5
 $as_echo "$libc_cv_hashstyle" >&6; }
 
-
-# The linker's default -shared behavior is good enough if it
-# does these things that our custom linker scripts ensure that
-# all allocated NOTE sections come first.
-if test "$use_default_link" = default; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sufficient default -shared layout" >&5
-$as_echo_n "checking for sufficient default -shared layout... " >&6; }
-if ${libc_cv_use_default_link+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-    libc_cv_use_default_link=no
-  cat > conftest.s <<\EOF
-	  .section .note.a,"a",%note
-	  .balign 4
-	  .long 4,4,9
-	  .string "GNU"
-	  .string "foo"
-	  .section .note.b,"a",%note
-	  .balign 4
-	  .long 4,4,9
-	  .string "GNU"
-	  .string "bar"
-EOF
-  if { ac_try='  ${CC-cc} $ASFLAGS -shared -o conftest.so conftest.s 1>&5'
-  { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_try\""; } >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; } &&
-       ac_try=`$READELF -S conftest.so | sed -n \
-	 '${x;p;}
-	  s/^ *\[ *[1-9][0-9]*\]  *\([^ ][^ ]*\)  *\([^ ][^ ]*\) .*$/\2 \1/
-	  t a
-	  b
-	  : a
-	  H'`
-  then
-    libc_seen_a=no libc_seen_b=no
-    set -- $ac_try
-    while test $# -ge 2 -a "$1" = NOTE; do
-      case "$2" in
-      .note.a) libc_seen_a=yes ;;
-      .note.b) libc_seen_b=yes ;;
-      esac
-      shift 2
-    done
-    case "$libc_seen_a$libc_seen_b" in
-    yesyes)
-      libc_cv_use_default_link=yes
-      ;;
-    *)
-      echo >&5 "\
-$libc_seen_a$libc_seen_b from:
-$ac_try"
-      ;;
-    esac
-  fi
-  rm -f conftest*
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $libc_cv_use_default_link" >&5
-$as_echo "$libc_cv_use_default_link" >&6; }
-  use_default_link=$libc_cv_use_default_link
-fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for GLOB_DAT reloc" >&5
 $as_echo_n "checking for GLOB_DAT reloc... " >&6; }
@@ -6593,6 +6627,34 @@ elif test "$libc_cv_ehdr_start" = broken; then
 $as_echo "$as_me: WARNING: linker is broken -- you should upgrade" >&2;}
 fi
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether the assembler requires one version per symbol" >&5
+$as_echo_n "checking whether the assembler requires one version per symbol... " >&6; }
+if ${libc_cv_symver_needs_alias+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+    cat > conftest.s <<EOF
+        .text
+testfunc:
+        .globl testfunc
+        .symver testfunc, testfunc1@VERSION1
+        .symver testfunc, testfunc1@VERSION2
+EOF
+  libc_cv_symver_needs_alias=no
+  if ${CC-cc} $ASFLAGS -c conftest.s 2>&5; then
+    libc_cv_symver_needs_alias=no
+  else
+    libc_cv_symver_needs_alias=yes
+  fi
+  rm conftest.*
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $libc_cv_symver_needs_alias" >&5
+$as_echo "$libc_cv_symver_needs_alias" >&6; }
+if test "$libc_cv_symver_needs_alias" = yes; then
+  $as_echo "#define SYMVER_NEEDS_ALIAS 1" >>confdefs.h
+
+fi
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for __builtin_trap with no external dependencies" >&5
 $as_echo_n "checking for __builtin_trap with no external dependencies... " >&6; }
 if ${libc_cv_builtin_trap+:} false; then :
@@ -6696,6 +6758,7 @@ libc_cv_sysconfdir=$sysconfdir
 libc_cv_localstatedir=$localstatedir
 libc_cv_gcc_unwind_find_fde=no
 libc_cv_idn=no
+pthread_in_libc=yes
 
 # Iterate over all the sysdep directories we will use, running their
 # configure fragments.
@@ -6739,6 +6802,8 @@ if test x"$libc_cv_gcc_indirect_function" = xyes; then
   $as_echo "#define HAVE_GCC_IFUNC 1" >>confdefs.h
 
 fi
+config_vars="$config_vars
+have-gcc-ifunc = $libc_cv_gcc_indirect_function"
 
 # This is far from the AC_ARG_ENABLE that sets it so that a sysdeps
 # configure fragment can override the value to prevent this AC_DEFINE.
@@ -6851,6 +6916,12 @@ enable-static-pie = $static_pie"
 VERSION=`sed -n -e 's/^#define VERSION "\([^"]*\)"/\1/p' < $srcdir/version.h`
 RELEASE=`sed -n -e 's/^#define RELEASE "\([^"]*\)"/\1/p' < $srcdir/version.h`
 
+
+
+if test "$pthread_in_libc" = yes; then
+  $as_echo "#define PTHREAD_IN_LIBC 1" >>confdefs.h
+
+fi
 
 
 ac_config_files="$ac_config_files config.make Makefile"

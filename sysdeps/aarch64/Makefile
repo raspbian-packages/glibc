@@ -10,6 +10,26 @@ endif
 
 ifeq ($(subdir),elf)
 sysdep-dl-routines += dl-bti
+
+tests += tst-audit26 \
+	 tst-audit27
+
+modules-names += \
+    tst-audit26mod \
+    tst-auditmod26 \
+    tst-audit27mod \
+    tst-auditmod27
+
+$(objpfx)tst-audit26: $(objpfx)tst-audit26mod.so \
+		      $(objpfx)tst-auditmod26.so
+LDFLAGS-tst-audit26 += -Wl,-z,lazy
+tst-audit26-ENV = LD_AUDIT=$(objpfx)tst-auditmod26.so
+
+$(objpfx)tst-audit27: $(objpfx)tst-audit27mod.so \
+		      $(objpfx)tst-auditmod27.so
+$(objpfx)tst-audit27mod.so: $(libsupport)
+LDFLAGS-tst-audit27 += -Wl,-z,lazy
+tst-audit27-ENV = LD_AUDIT=$(objpfx)tst-auditmod27.so
 endif
 
 ifeq ($(subdir),elf)
@@ -40,9 +60,10 @@ endif
 
 ifeq ($(subdir),misc)
 sysdep_headers += sys/ifunc.h
-sysdep_routines += __mtag_address_get_tag \
-		   __mtag_memset_tag \
-		   __mtag_new_tag \
+sysdep_routines += __mtag_tag_zero_region \
 		   __mtag_tag_region
+endif
 
+ifeq ($(subdir),malloc)
+sysdep_malloc_debug_routines = __mtag_tag_zero_region __mtag_tag_region
 endif

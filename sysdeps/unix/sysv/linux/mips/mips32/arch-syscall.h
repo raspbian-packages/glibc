@@ -49,6 +49,7 @@
 #define __NR_epoll_create1 4326
 #define __NR_epoll_ctl 4249
 #define __NR_epoll_pwait 4313
+#define __NR_epoll_pwait2 4441
 #define __NR_epoll_wait 4250
 #define __NR_eventfd 4319
 #define __NR_eventfd2 4325
@@ -92,6 +93,7 @@
 #define __NR_ftruncate64 4212
 #define __NR_futex 4238
 #define __NR_futex_time64 4422
+#define __NR_futex_waitv 4449
 #define __NR_futimesat 4292
 #define __NR_get_kernel_syms 4130
 #define __NR_get_mempolicy 4269
@@ -151,6 +153,9 @@
 #define __NR_kexec_load 4311
 #define __NR_keyctl 4282
 #define __NR_kill 4037
+#define __NR_landlock_add_rule 4445
+#define __NR_landlock_create_ruleset 4444
+#define __NR_landlock_restrict_self 4446
 #define __NR_lchown 4016
 #define __NR_lgetxattr 4228
 #define __NR_link 4009
@@ -182,6 +187,7 @@
 #define __NR_mmap2 4210
 #define __NR_modify_ldt 4123
 #define __NR_mount 4021
+#define __NR_mount_setattr 4442
 #define __NR_move_mount 4429
 #define __NR_move_pages 4308
 #define __NR_mprotect 4125
@@ -233,6 +239,7 @@
 #define __NR_preadv2 4361
 #define __NR_prlimit64 4338
 #define __NR_process_madvise 4440
+#define __NR_process_mrelease 4448
 #define __NR_process_vm_readv 4345
 #define __NR_process_vm_writev 4346
 #define __NR_prof 4044
@@ -246,6 +253,7 @@
 #define __NR_pwritev2 4362
 #define __NR_query_module 4187
 #define __NR_quotactl 4131
+#define __NR_quotactl_fd 4443
 #define __NR_read 4003
 #define __NR_readahead 4223
 #define __NR_readdir 4089
@@ -300,6 +308,7 @@
 #define __NR_sendmsg 4179
 #define __NR_sendto 4180
 #define __NR_set_mempolicy 4270
+#define __NR_set_mempolicy_home_node 4450
 #define __NR_set_robust_list 4309
 #define __NR_set_thread_area 4283
 #define __NR_set_tid_address 4252

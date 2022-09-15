@@ -17,6 +17,7 @@
    <https://www.gnu.org/licenses/>.  */
 
 #include <time.h>
+#include <shlib-compat.h>
 #include "thrd_priv.h"
 
 int
@@ -29,16 +30,22 @@ __cnd_timedwait64 (cnd_t *restrict cond, mtx_t *restrict mutex,
   return thrd_err_map (err_code);
 }
 
-#if __TIMESIZE != 64
-libpthread_hidden_def (__cnd_timedwait64)
+#if __TIMESIZE == 64
+strong_alias (__cnd_timedwait64, ___cnd_timedwait)
+#else
+libc_hidden_def (__cnd_timedwait64)
 
 int
-__cnd_timedwait (cnd_t *restrict cond, mtx_t *restrict mutex,
-                 const struct timespec *restrict time_point)
+___cnd_timedwait (cnd_t *restrict cond, mtx_t *restrict mutex,
+                  const struct timespec *restrict time_point)
 {
   struct __timespec64 ts64 = valid_timespec_to_timespec64 (*time_point);
 
   return __cnd_timedwait64(cond, mutex, &ts64);
 }
+#endif /* __TIMESIZE == 64 */
+versioned_symbol (libc, ___cnd_timedwait, cnd_timedwait, GLIBC_2_34);
+
+#if OTHER_SHLIB_COMPAT (libpthread, GLIBC_2_28, GLIBC_2_34)
+compat_symbol (libpthread, ___cnd_timedwait, cnd_timedwait, GLIBC_2_28);
 #endif
-weak_alias (__cnd_timedwait, cnd_timedwait)

@@ -18,7 +18,6 @@
 #include <mach.h>
 #include <mach/mig_support.h>
 #include <unistd.h>
-#include <shlib-compat.h>
 
 mach_port_t __mach_task_self_;
 mach_port_t __mach_host_self_;
@@ -52,13 +51,3 @@ __mach_init (void)
 #endif
 }
 weak_alias (__mach_init, mach_init)
-
-#if SHLIB_COMPAT (libc, GLIBC_2_21, GLIBC_2_32)
-extern void __mach_print(const char *s);
-void
-__mach_print_2_21 (const char *str)
-{
-	__mach_print (str);
-}
-compat_symbol (libc, __mach_print_2_21, mach_print, GLIBC_2_21);
-#endif

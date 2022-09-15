@@ -417,12 +417,13 @@ link-extra-libs-tests = $(libsupport)
 
 # Command for linking PIE programs with the C library.
 ifndef +link-pie
-+link-pie-before-libc = $(if $($(@F)-no-pie),$(no-pie-ldflag),-pie) \
-	     -Wl,-O1 -nostdlib -nostartfiles -o $@ \
++link-pie-before-inputs = $(if $($(@F)-no-pie),$(no-pie-ldflag),-pie) \
+	     -Wl,-O1 -nostdlib -nostartfiles \
 	     $(sysdep-LDFLAGS) $(LDFLAGS) $(LDFLAGS-$(@F)) \
 	     $(combreloc-LDFLAGS) $(relro-LDFLAGS) $(hashstyle-LDFLAGS) \
 	     $(firstword $(CRT-$(@F)) $(csu-objpfx)S$(start-installed-name)) \
-	     $(+preinit) $(+prectorS) \
+	     $(+preinit) $(+prectorS)
++link-pie-before-libc = -o $@ $(+link-pie-before-inputs) \
 	     $(filter-out $(addprefix $(csu-objpfx),start.o \
 						    S$(start-installed-name))\
 			  $(+preinit) $(link-extra-libs) \
@@ -447,11 +448,12 @@ endef
 endif
 # Command for statically linking programs with the C library.
 ifndef +link-static
-+link-static-before-libc = -nostdlib -nostartfiles -static -o $@ \
++link-static-before-inputs = -nostdlib -nostartfiles -static \
 	      $(if $($(@F)-no-pie),$(no-pie-ldflag),$(default-pie-ldflag)) \
 	      $(sysdep-LDFLAGS) $(LDFLAGS) $(LDFLAGS-$(@F))  \
 	      $(firstword $(CRT-$(@F)) $(csu-objpfx)$(real-static-start-installed-name)) \
-	      $(+preinit) $(+prectorT) \
+	      $(+preinit) $(+prectorT)
++link-static-before-libc = -o $@ $(+link-static-before-inputs) \
 	      $(filter-out $(addprefix $(csu-objpfx),start.o \
 						     $(start-installed-name))\
 			   $(+preinit) $(link-extra-libs-static) \
@@ -478,13 +480,16 @@ endif
 ifeq (yes,$(build-pie-default))
 +link = $(+link-pie)
 +link-tests = $(+link-pie-tests)
++link-tests-before-inputs = $(+link-pie-before-inputs) $(rtld-tests-LDFLAGS)
++link-tests-after-inputs = $(link-libc-tests) $(+link-pie-after-libc)
 +link-printers-tests = $(+link-pie-printers-tests)
 else  # not build-pie-default
-+link-before-libc = -nostdlib -nostartfiles -o $@ \
++link-before-inputs = -nostdlib -nostartfiles \
 	      $(sysdep-LDFLAGS) $(LDFLAGS) $(LDFLAGS-$(@F)) \
 	      $(combreloc-LDFLAGS) $(relro-LDFLAGS) $(hashstyle-LDFLAGS) \
 	      $(firstword $(CRT-$(@F)) $(csu-objpfx)$(start-installed-name)) \
-	      $(+preinit) $(+prector) \
+	      $(+preinit) $(+prector)
++link-before-libc = -o $@ $(+link-before-inputs) \
 	      $(filter-out $(addprefix $(csu-objpfx),start.o \
 						     $(start-installed-name))\
 			   $(+preinit) $(link-extra-libs) \
@@ -496,6 +501,8 @@ $(CC) $(link-libc-rpath-link) $(+link-before-libc) $(rtld-LDFLAGS) \
   $(link-extra-flags) $(link-libc) $(+link-after-libc)
 $(call after-link,$@)
 endef
++link-tests-before-inputs = $(+link-before-inputs) $(rtld-tests-LDFLAGS)
++link-tests-after-inputs = $(link-libc-tests) $(+link-after-libc)
 define +link-tests
 $(CC) $(+link-before-libc) $(rtld-tests-LDFLAGS) $(link-libc-tests) \
 		     $(+link-after-libc)
@@ -510,6 +517,8 @@ endif  # build-pie-default
 else  # build-static
 +link = $(+link-static)
 +link-tests = $(+link-static-tests)
++link-tests-before-inputs = $(+link-static-before-inputs)
++link-tests-after-inputs = $(link-libc-static-tests) $(+link-static-after-libc)
 +link-printers-tests = $(+link-static-tests)
 endif  # build-shared
 endif  # +link
@@ -865,6 +874,14 @@ ifneq ($(stack-protector),)
 +stack-protector=$(stack-protector)
 endif
 
+# Some routines are unsafe to build with stack-protection since they're called
+# before the stack check guard is set up.  Provide a way to disable stack
+# protector.  The first argument is the extension (.o, .os, .oS) and the second
+# is a list of routines that this path should be applied to.
+define elide-stack-protector
+$(if $(filter $(@F),$(patsubst %,%$(1),$(2))), $(no-stack-protector))
+endef
+
 # This is the program that generates makefile dependencies from C source files.
 # The -MP flag tells GCC >= 3.2 (which we now require) to produce dummy
 # targets for headers so that removed headers don't break the build.
@@ -924,8 +941,12 @@ ifeq	"$(strip $(+cflags))" ""
 +cflags	:= $(default_cflags)
 endif	# $(+cflags) == ""
 
+# Force building with -fno-common because hidden_def, compat_symbol
+# and other constructs do not work for common symbols (and would
+# otherwise require specifying __attribute__ ((nocommon)) on a
+# case-by-case basis).
 +cflags += $(cflags-cpu) $(+gccwarn) $(+merge-constants) $(+math-flags) \
-	   $(+stack-protector)
+	   $(+stack-protector) -fno-common
 +gcc-nowarn := -w
 
 # Each sysdeps directory can contain header files that both will be
@@ -971,7 +992,7 @@ module-cppflags-real = -include $(common-objpfx)libc-modules.h \
 # facility.  In fact, shlib-versions should not use it because that will
 # create a circular dependency as libc-modules.h is generated from
 # shlib-versions.
-module-cppflags = $(if $(filter %.v.i,$(@F)),,$(module-cppflags-real))
+module-cppflags = $(if $(filter %.mk.i %.v.i,$(@F)),,$(module-cppflags-real))
 
 # These are the variables that the implicit compilation rules use.
 # Note that we can't use -std=* in CPPFLAGS, because it overrides
@@ -1236,6 +1257,20 @@ $(common-objpfx)versions.stmp: $(common-objpfx)Versions.all \
 	touch $@
 endif # avoid-generated
 endif # $(build-shared) = yes
+
+-include $(common-objpfx)time64-compat.mk
+postclean-generated += time64-compat.mk
+
+$(common-objpfx)time64-compat.mk: $(common-objpfx)time64-compat.mk.i \
+				  $(sysd-versions-force)
+	sed '/^[        ]*#/d;/^[       ]*$$/d' $< > $@T
+	mv -f $@T $@
+$(common-objpfx)time64-compat.mk.i: $(..)Makeconfig
+	printf "#include <time64-compat.h>\n#ifdef TIME64_NON_DEFAULT\nhave-time64-compat = yes\n#endif" \
+	| $(CC) -E -undef $(CPPFLAGS) -x assembler-with-cpp - > $@T
+	mv -f $@T $@
+
+
 endif # sysd-sorted-done
 
 # The name under which the run-time dynamic linker is installed.
@@ -1255,12 +1290,6 @@ endif
 
 endif # build-shared
 
-
-ifeq ($(build-shared),yes)
-libdl = $(common-objpfx)dlfcn/libdl.so$(libdl.so-version)
-else
-libdl = $(common-objpfx)dlfcn/libdl.a
-endif
 
 ifeq ($(build-shared),yes)
 libm = $(common-objpfx)math/libm.so$(libm.so-version)
@@ -1328,6 +1357,19 @@ endif
 # Compute just the target patterns.  Makeconfig has set sysd-rules-patterns.
 sysd-rules-targets := $(sort $(foreach p,$(sysd-rules-patterns),\
 					 $(firstword $(subst :, ,$p))))
+
+# $(libpthread-routines-var) and $(librt-routines-var) are the make
+# variable to which pthread routines need to be added to land in the
+# right library.
+ifeq ($(pthread-in-libc),yes)
+libpthread-routines-var = routines
+librt-routines-var = routines
+libanl-routines-var = routines
+else
+libpthread-routines-var = libpthread-routines
+librt-routines-var = librt-routines
+libanl-routines-var = libanl-routines
+endif
 
 # A sysdeps Makeconfig fragment may set libc-reentrant to yes.
 ifeq (yes,$(libc-reentrant))

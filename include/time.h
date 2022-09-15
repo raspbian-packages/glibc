@@ -28,6 +28,9 @@ libc_hidden_proto (__clock_gettime)
 extern __typeof (clock_settime) __clock_settime;
 libc_hidden_proto (__clock_settime)
 
+extern __typeof (clock_getres) __clock_getres;
+libc_hidden_proto (__clock_getres)
+
 extern __typeof (clock_nanosleep) __clock_nanosleep;
 libc_hidden_proto (__clock_nanosleep);
 
@@ -215,7 +218,11 @@ libc_hidden_proto (__futimens64);
 #else
 extern int __timer_gettime64 (timer_t timerid, struct __itimerspec64 *value);
 extern int __timerfd_gettime64 (int fd, struct __itimerspec64 *value);
-librt_hidden_proto (__timer_gettime64);
+# if PTHREAD_IN_LIBC
+libc_hidden_proto (__timer_gettime64)
+# else
+librt_hidden_proto (__timer_gettime64)
+# endif
 libc_hidden_proto (__timerfd_gettime64);
 #endif
 
@@ -229,7 +236,11 @@ extern int __timer_settime64 (timer_t timerid, int flags,
 extern int __timerfd_settime64 (int fd, int flags,
                                 const struct __itimerspec64 *value,
                                 struct __itimerspec64 *ovalue);
-librt_hidden_proto (__timer_settime64);
+# if PTHREAD_IN_LIBC
+libc_hidden_proto (__timer_settime64)
+#else
+librt_hidden_proto (__timer_settime64)
+#endif
 libc_hidden_proto (__timerfd_settime64);
 #endif
 
@@ -280,8 +291,8 @@ hidden_proto (__nanosleep64)
 #endif
 
 
-extern int __getdate_r (const char *__string, struct tm *__resbufp)
-  attribute_hidden;
+extern int __getdate_r (const char *__string, struct tm *__resbufp);
+libc_hidden_proto (__getdate_r);
 
 
 /* Determine CLK_TCK value.  */
@@ -306,6 +317,7 @@ extern double __difftime (time_t time1, time_t time0);
 # define __clock_nanosleep_time64 __clock_nanosleep
 # define __clock_gettime64 __clock_gettime
 # define __timespec_get64 __timespec_get
+# define __timespec_getres64 __timespec_getres
 #else
 extern int __clock_nanosleep_time64 (clockid_t clock_id,
                                      int flags, const struct __timespec64 *req,
@@ -315,6 +327,8 @@ extern int __clock_gettime64 (clockid_t clock_id, struct __timespec64 *tp);
 libc_hidden_proto (__clock_gettime64)
 extern int __timespec_get64 (struct __timespec64 *ts, int base);
 libc_hidden_proto (__timespec_get64)
+extern int __timespec_getres64 (struct __timespec64 *ts, int base);
+libc_hidden_proto (__timespec_getres64)
 #endif
 
 #if __TIMESIZE == 64
@@ -500,6 +514,14 @@ time_now (void)
 {
   struct timespec ts;
   __clock_gettime (TIME_CLOCK_GETTIME_CLOCKID, &ts);
+  return ts.tv_sec;
+}
+
+static inline __time64_t
+time64_now (void)
+{
+  struct __timespec64 ts;
+  __clock_gettime64 (TIME_CLOCK_GETTIME_CLOCKID, &ts);
   return ts.tv_sec;
 }
 

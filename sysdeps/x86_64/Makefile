@@ -13,10 +13,6 @@ sysdep_routines += _mcount
 sysdep_noprof += _mcount
 endif
 
-ifeq ($(subdir),malloc)
-tests += tst-mallocalign1
-endif
-
 ifeq ($(subdir),string)
 sysdep_routines += strcasecmp_l-nonascii strncase_l-nonascii
 gen-as-const-headers += locale-defines.sym
@@ -184,6 +180,8 @@ ifeq (no,$(build-hardcoded-path-in-tests))
 # interferes with its test objectives.
 tests-container += tst-glibc-hwcaps-cache
 endif
+
+tests-internal += tst-x86-64-tls-1
 
 endif # $(subdir) == elf
 

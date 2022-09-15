@@ -138,6 +138,10 @@ libc {
   GLIBC_2.11 {
     execvpe;
   }
+  GLIBC_2.15 {
+    posix_spawn;
+    posix_spawnp;
+  }
   GLIBC_2.27 {
     glob; glob64;
   }
@@ -147,8 +151,14 @@ libc {
   }
   GLIBC_2.30 {
   }
+  GLIBC_2.34 {
+    _Fork;
+    execveat;
+    posix_spawn_file_actions_addclosefrom_np;
+  }
   GLIBC_PRIVATE {
     __libc_fork; __libc_pread; __libc_pwrite;
     __nanosleep_nocancel; __pause_nocancel;
+    __shm_get_name;
   }
 }

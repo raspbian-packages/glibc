@@ -31,12 +31,29 @@ routines := accept bind connect getpeername getsockname getsockopt	\
 	    setsockopt shutdown socket socketpair isfdtype opensock	\
 	    sockatmark accept4 recvmmsg sendmmsg sockaddr_un_set
 
-tests := tst-accept4
+tests := \
+  tst-accept4 \
+  tst-sockopt \
+  tst-cmsghdr \
+  # tests
 
 tests-internal := \
   tst-sockaddr_un_set \
   # tests-internal
 
+tests-time64 := \
+  tst-sockopt-time64 \
+  # tests
+
 aux	 := sa_len
 
 include ../Rules
+
+CFLAGS-recv.c += -fexceptions -fasynchronous-unwind-tables
+CFLAGS-recvfrom.c += -fexceptions -fasynchronous-unwind-tables
+CFLAGS-sendto.c += -fexceptions -fasynchronous-unwind-tables
+CFLAGS-recvmsg.c += -fexceptions -fasynchronous-unwind-tables
+CFLAGS-sendmsg.c += -fexceptions -fasynchronous-unwind-tables
+CFLAGS-send.c += -fexceptions -fasynchronous-unwind-tables
+CFLAGS-connect.c += -fexceptions -fasynchronous-unwind-tables
+CFLAGS-accept.c += -fexceptions -fasynchronous-unwind-tables

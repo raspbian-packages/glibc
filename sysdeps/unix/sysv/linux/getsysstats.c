@@ -17,102 +17,88 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <alloca.h>
+#include <array_length.h>
 #include <assert.h>
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
-#include <fcntl.h>
-#include <mntent.h>
-#include <paths.h>
+#include <ldsodefs.h>
+#include <limits.h>
+#include <not-cancel.h>
 #include <stdio.h>
 #include <stdio_ext.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+#include <sys/mman.h>
 #include <sys/sysinfo.h>
+#include <sysdep.h>
 
-#include <atomic.h>
-#include <not-cancel.h>
+int
+__get_nprocs_sched (void)
+{
+  enum
+    {
+      max_num_cpus = 32768,
+      cpu_bits_size = CPU_ALLOC_SIZE (32768)
+    };
 
-
-/* How we can determine the number of available processors depends on
-   the configuration.  There is currently (as of version 2.0.21) no
-   system call to determine the number.  It is planned for the 2.1.x
-   series to add this, though.
-
-   One possibility to implement it for systems using Linux 2.0 is to
-   examine the pseudo file /proc/cpuinfo.  Here we have one entry for
-   each processor.
-
-   But not all systems have support for the /proc filesystem.  If it
-   is not available we simply return 1 since there is no way.  */
-
-
-/* Other architectures use different formats for /proc/cpuinfo.  This
-   provides a hook for alternative parsers.  */
-#ifndef GET_NPROCS_PARSER
-# define GET_NPROCS_PARSER(FD, BUFFER, CP, RE, BUFFER_END, RESULT) \
-  do									\
-    {									\
-      (RESULT) = 0;							\
-      /* Read all lines and count the lines starting with the string	\
-	 "processor".  We don't have to fear extremely long lines since	\
-	 the kernel will not generate them.  8192 bytes are really	\
-	 enough.  */							\
-      char *l;								\
-      while ((l = next_line (FD, BUFFER, &CP, &RE, BUFFER_END)) != NULL) \
-	if (strncmp (l, "processor", 9) == 0)				\
-	  ++(RESULT);							\
-    }									\
-  while (0)
-#endif
-
+  /* This cannot use malloc because it is used on malloc initialization.  */
+  __cpu_mask cpu_bits[cpu_bits_size / sizeof (__cpu_mask)];
+  int r = INTERNAL_SYSCALL_CALL (sched_getaffinity, 0, cpu_bits_size,
+				 cpu_bits);
+  if (r > 0)
+    return CPU_COUNT_S (r, (cpu_set_t*) cpu_bits);
+  else if (r == -EINVAL)
+    /* The input buffer is still not enough to store the number of cpus.  This
+       is an arbitrary values assuming such systems should be rare and there
+       is no offline cpus.  */
+    return max_num_cpus;
+  /* Some other error.  */
+  return 0;
+}
 
 static char *
 next_line (int fd, char *const buffer, char **cp, char **re,
-	   char *const buffer_end)
+           char *const buffer_end)
 {
   char *res = *cp;
   char *nl = memchr (*cp, '\n', *re - *cp);
   if (nl == NULL)
     {
       if (*cp != buffer)
-	{
-	  if (*re == buffer_end)
-	    {
-	      memmove (buffer, *cp, *re - *cp);
-	      *re = buffer + (*re - *cp);
-	      *cp = buffer;
+        {
+          if (*re == buffer_end)
+            {
+              memmove (buffer, *cp, *re - *cp);
+              *re = buffer + (*re - *cp);
+              *cp = buffer;
 
-	      ssize_t n = __read_nocancel (fd, *re, buffer_end - *re);
-	      if (n < 0)
-		return NULL;
+              ssize_t n = __read_nocancel (fd, *re, buffer_end - *re);
+              if (n < 0)
+                return NULL;
 
-	      *re += n;
+              *re += n;
 
-	      nl = memchr (*cp, '\n', *re - *cp);
-	      while (nl == NULL && *re == buffer_end)
-		{
-		  /* Truncate too long lines.  */
-		  *re = buffer + 3 * (buffer_end - buffer) / 4;
-		  n = __read_nocancel (fd, *re, buffer_end - *re);
-		  if (n < 0)
-		    return NULL;
+              nl = memchr (*cp, '\n', *re - *cp);
+              while (nl == NULL && *re == buffer_end)
+                {
+                  /* Truncate too long lines.  */
+                  *re = buffer + 3 * (buffer_end - buffer) / 4;
+                  n = __read_nocancel (fd, *re, buffer_end - *re);
+                  if (n < 0)
+                    return NULL;
 
-		  nl = memchr (*re, '\n', n);
-		  **re = '\n';
-		  *re += n;
-		}
-	    }
-	  else
-	    nl = memchr (*cp, '\n', *re - *cp);
+                  nl = memchr (*re, '\n', n);
+                  **re = '\n';
+                  *re += n;
+                }
+            }
+          else
+            nl = memchr (*cp, '\n', *re - *cp);
 
-	  res = *cp;
-	}
+          res = *cp;
+        }
 
       if (nl == NULL)
-	nl = *re - 1;
+        nl = *re - 1;
     }
 
   *cp = nl + 1;
@@ -121,23 +107,40 @@ next_line (int fd, char *const buffer, char **cp, char **re,
   return res == *re ? NULL : res;
 }
 
-
-int
-__get_nprocs (void)
+static int
+get_nproc_stat (void)
 {
-  static int cached_result = -1;
-  static time_t timestamp;
+  enum { buffer_size = 1024 };
+  char buffer[buffer_size];
+  char *buffer_end = buffer + buffer_size;
+  char *cp = buffer_end;
+  char *re = buffer_end;
+  int result = 0;
 
-  time_t now = time_now ();
-  time_t prev = timestamp;
-  atomic_read_barrier ();
-  if (now == prev && cached_result > -1)
-    return cached_result;
+  const int flags = O_RDONLY | O_CLOEXEC;
+  int fd = __open_nocancel ("/proc/stat", flags);
+  if (fd != -1)
+    {
+      char *l;
+      while ((l = next_line (fd, buffer, &cp, &re, buffer_end)) != NULL)
+	/* The current format of /proc/stat has all the cpu* entries
+	   at the front.  We assume here that stays this way.  */
+	if (strncmp (l, "cpu", 3) != 0)
+	  break;
+	else if (isdigit (l[3]))
+	  ++result;
 
-  /* XXX Here will come a test for the new system call.  */
+      __close_nocancel_nostatus (fd);
+    }
 
-  const size_t buffer_size = __libc_use_alloca (8192) ? 8192 : 512;
-  char *buffer = alloca (buffer_size);
+  return result;
+}
+
+static int
+get_nprocs_cpu_online (void)
+{
+  enum { buffer_size = 1024 };
+  char buffer[buffer_size];
   char *buffer_end = buffer + buffer_size;
   char *cp = buffer_end;
   char *re = buffer_end;
@@ -173,7 +176,8 @@ __get_nprocs (void)
 		  }
 	      }
 
-	    result += m - n + 1;
+	    if (m >= n)
+	      result += m - n + 1;
 
 	    l = endp;
 	    if (l < re && *l == ',')
@@ -182,68 +186,18 @@ __get_nprocs (void)
 	while (l < re && *l != '\n');
 
       __close_nocancel_nostatus (fd);
-
-      if (result > 0)
-	goto out;
     }
-
-  cp = buffer_end;
-  re = buffer_end;
-
-  /* Default to an SMP system in case we cannot obtain an accurate
-     number.  */
-  result = 2;
-
-  /* The /proc/stat format is more uniform, use it by default.  */
-  fd = __open_nocancel ("/proc/stat", flags);
-  if (fd != -1)
-    {
-      result = 0;
-
-      while ((l = next_line (fd, buffer, &cp, &re, buffer_end)) != NULL)
-	/* The current format of /proc/stat has all the cpu* entries
-	   at the front.  We assume here that stays this way.  */
-	if (strncmp (l, "cpu", 3) != 0)
-	  break;
-	else if (isdigit (l[3]))
-	  ++result;
-
-      __close_nocancel_nostatus (fd);
-    }
-  else
-    {
-      fd = __open_nocancel ("/proc/cpuinfo", flags);
-      if (fd != -1)
-	{
-	  GET_NPROCS_PARSER (fd, buffer, cp, re, buffer_end, result);
-	  __close_nocancel_nostatus (fd);
-	}
-    }
-
- out:
-  cached_result = result;
-  atomic_write_barrier ();
-  timestamp = now;
 
   return result;
 }
-libc_hidden_def (__get_nprocs)
-weak_alias (__get_nprocs, get_nprocs)
 
-
-/* On some architectures it is possible to distinguish between configured
-   and active cpus.  */
-int
-__get_nprocs_conf (void)
+static int
+get_nprocs_cpu (void)
 {
-  /* XXX Here will come a test for the new system call.  */
-
-  /* Try to use the sysfs filesystem.  It has actual information about
-     online processors.  */
+  int count = 0;
   DIR *dir = __opendir ("/sys/devices/system/cpu");
   if (dir != NULL)
     {
-      int count = 0;
       struct dirent64 *d;
 
       while ((d = __readdir64 (dir)) != NULL)
@@ -258,28 +212,57 @@ __get_nprocs_conf (void)
 
       __closedir (dir);
 
-      return count;
     }
+  return count;
+}
 
-  int result = 1;
+static int
+get_nprocs_fallback (void)
+{
+  int result;
 
-#ifdef GET_NPROCS_CONF_PARSER
-  /* If we haven't found an appropriate entry return 1.  */
-  FILE *fp = fopen ("/proc/cpuinfo", "rce");
-  if (fp != NULL)
-    {
-      char buffer[8192];
+  /* Try /proc/stat first.  */
+  result = get_nproc_stat ();
+  if (result != 0)
+    return result;
 
-      /* No threads use this stream.  */
-      __fsetlocking (fp, FSETLOCKING_BYCALLER);
-      GET_NPROCS_CONF_PARSER (fp, buffer, result);
-      fclose (fp);
-    }
-#else
-  result = __get_nprocs ();
-#endif
+  /* Try sched_getaffinity.  */
+  result = __get_nprocs_sched ();
+  if (result != 0)
+    return result;
 
-  return result;
+  /* We failed to obtain an accurate number.  Be conservative: return
+     the smallest number meaning that this is not a uniprocessor system,
+     so atomics are needed.  */
+  return 2;
+}
+
+int
+__get_nprocs (void)
+{
+  /* Try /sys/devices/system/cpu/online first.  */
+  int result = get_nprocs_cpu_online ();
+  if (result != 0)
+    return result;
+
+  /* Fall back to /proc/stat and sched_getaffinity.  */
+  return get_nprocs_fallback ();
+}
+libc_hidden_def (__get_nprocs)
+weak_alias (__get_nprocs, get_nprocs)
+
+/* On some architectures it is possible to distinguish between configured
+   and active cpus.  */
+int
+__get_nprocs_conf (void)
+{
+  /* Try /sys/devices/system/cpu/ first.  */
+  int result = get_nprocs_cpu ();
+  if (result != 0)
+    return result;
+
+  /* Fall back to /proc/stat and sched_getaffinity.  */
+  return get_nprocs_fallback ();
 }
 libc_hidden_def (__get_nprocs_conf)
 weak_alias (__get_nprocs_conf, get_nprocs_conf)

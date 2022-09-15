@@ -35,6 +35,7 @@
 #include <libc-internal.h>
 #include <array_length.h>
 #include <libc-early-init.h>
+#include <gnu/lib-names.h>
 
 #include <dl-dst.h>
 #include <dl-prop.h>
@@ -64,6 +65,9 @@ struct dl_open_args
      already been done before, and whether to roll back the cached
      libc_map value in the namespace in case of a dlopen failure.  */
   bool libc_already_loaded;
+
+  /* Set to true if the end of dl_open_worker_begin was reached.  */
+  bool worker_continue;
 
   /* Original parameters to the program and the current environment.  */
   int argc;
@@ -395,9 +399,12 @@ update_tls_slotinfo (struct link_map *new)
 	}
     }
 
-  if (__builtin_expect (++GL(dl_tls_generation) == 0, 0))
+  size_t newgen = GL(dl_tls_generation) + 1;
+  if (__glibc_unlikely (newgen == 0))
     _dl_fatal_printf (N_("\
 TLS generation counter wrapped!  Please report this."));
+  /* Can be read concurrently.  */
+  atomic_store_relaxed (&GL(dl_tls_generation), newgen);
 
   /* We need a second pass for static tls data, because
      _dl_update_slotinfo must not be run while calls to
@@ -426,7 +433,7 @@ TLS generation counter wrapped!  Please report this."));
 	  _dl_update_slotinfo (imap->l_tls_modid);
 #endif
 
-	  GL(dl_init_static_tls) (imap);
+	  dl_init_static_tls (imap);
 	  assert (imap->l_need_tls_init == 0);
 	}
     }
@@ -478,7 +485,7 @@ call_dl_init (void *closure)
 }
 
 static void
-dl_open_worker (void *a)
+dl_open_worker_begin (void *a)
 {
   struct dl_open_args *args = a;
   const char *file = args->file;
@@ -587,30 +594,24 @@ dl_open_worker (void *a)
   /* So far, so good.  Now check the versions.  */
   for (unsigned int i = 0; i < new->l_searchlist.r_nlist; ++i)
     if (new->l_searchlist.r_list[i]->l_real->l_versions == NULL)
-      (void) _dl_check_map_versions (new->l_searchlist.r_list[i]->l_real,
-				     0, 0);
+      {
+	struct link_map *map = new->l_searchlist.r_list[i]->l_real;
+	_dl_check_map_versions (map, 0, 0);
+#ifndef SHARED
+	/* During static dlopen, check if ld.so has been loaded.
+	   Perform partial initialization in this case.  This must
+	   come after the symbol versioning initialization in
+	   _dl_check_map_versions.  */
+	if (map->l_info[DT_SONAME] != NULL
+	    && strcmp (((const char *) D_PTR (map, l_info[DT_STRTAB])
+			+ map->l_info[DT_SONAME]->d_un.d_val), LD_SO) == 0)
+	  __rtld_static_init (map);
+#endif
+      }
 
 #ifdef SHARED
   /* Auditing checkpoint: we have added all objects.  */
-  if (__glibc_unlikely (GLRO(dl_naudit) > 0))
-    {
-      struct link_map *head = GL(dl_ns)[new->l_ns]._ns_loaded;
-      /* Do not call the functions for any auditing object.  */
-      if (head->l_auditing == 0)
-	{
-	  struct audit_ifaces *afct = GLRO(dl_audit);
-	  for (unsigned int cnt = 0; cnt < GLRO(dl_naudit); ++cnt)
-	    {
-	      if (afct->activity != NULL)
-		{
-		  struct auditstate *state = link_map_audit_state (head, cnt);
-		  afct->activity (&state->cookie, LA_ACT_CONSISTENT);
-		}
-
-	      afct = afct->next;
-	    }
-	}
-    }
+  _dl_audit_activity_nsid (new->l_ns, LA_ACT_CONSISTENT);
 #endif
 
   /* Notify the debugger all new objects are now ready to go.  */
@@ -753,21 +754,40 @@ dl_open_worker (void *a)
      namespace.  */
   if (!args->libc_already_loaded)
     {
+      /* dlopen cannot be used to load an initial libc by design.  */
       struct link_map *libc_map = GL(dl_ns)[args->nsid].libc_map;
-#ifdef SHARED
-      bool initial = libc_map->l_ns == LM_ID_BASE;
-#else
-      /* In the static case, there is only one namespace, but it
-	 contains a secondary libc (the primary libc is statically
-	 linked).  */
-      bool initial = false;
-#endif
-      _dl_call_libc_early_init (libc_map, initial);
+      _dl_call_libc_early_init (libc_map, false);
     }
 
-#ifndef SHARED
-  DL_STATIC_INIT (new);
-#endif
+  args->worker_continue = true;
+}
+
+static void
+dl_open_worker (void *a)
+{
+  struct dl_open_args *args = a;
+
+  args->worker_continue = false;
+
+  {
+    /* Protects global and module specific TLS state.  */
+    __rtld_lock_lock_recursive (GL(dl_load_tls_lock));
+
+    struct dl_exception ex;
+    int err = _dl_catch_exception (&ex, dl_open_worker_begin, args);
+
+    __rtld_lock_unlock_recursive (GL(dl_load_tls_lock));
+
+    if (__glibc_unlikely (ex.errstring != NULL))
+      /* Reraise the error.  */
+      _dl_signal_exception (err, &ex, NULL);
+  }
+
+  if (!args->worker_continue)
+    return;
+
+  int mode = args->mode;
+  struct link_map *new = args->map;
 
   /* Run the initializer functions of new objects.  Temporarily
      disable the exception handler, so that lazy binding failures are
@@ -887,24 +907,12 @@ no more namespaces available for dlmopen()"));
 	 state if relocation failed, for example.  */
       if (args.map)
 	{
-	  /* Maybe some of the modules which were loaded use TLS.
-	     Since it will be removed in the following _dl_close call
-	     we have to mark the dtv array as having gaps to fill the
-	     holes.  This is a pessimistic assumption which won't hurt
-	     if not true.  There is no need to do this when we are
-	     loading the auditing DSOs since TLS has not yet been set
-	     up.  */
-	  if ((mode & __RTLD_AUDIT) == 0)
-	    GL(dl_tls_dtv_gaps) = true;
-
 	  _dl_close_worker (args.map, true);
 
 	  /* All l_nodelete_pending objects should have been deleted
 	     at this point, which is why it is not necessary to reset
 	     the flag here.  */
 	}
-
-      assert (_dl_debug_initialize (0, args.nsid)->r_state == RT_CONSISTENT);
 
       /* Release the lock.  */
       __rtld_lock_unlock_recursive (GL(dl_load_lock));

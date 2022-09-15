@@ -1,4 +1,4 @@
-/* List of types and symbols in libpthread examined by libthread_db.
+/* List of types and symbols in libc examined by libthread_db.
    Copyright (C) 2003-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -22,16 +22,20 @@
 # define STRUCTS_DEF_DEFAULTS 1
 #endif
 
-#ifndef DB_RTLD_VARIABLE
-# define DB_RTLD_VARIABLE(name) DB_VARIABLE (name)
-#endif
-
+/* DB_MAIN_VARIABLE, DB_MAIN_SYMBOL, DB_MAIN_ARRAY_VARIABLE are not
+   covered by the libc symbol check in db-symbols.awk.  */
 #ifndef DB_MAIN_VARIABLE
 # define DB_MAIN_VARIABLE(name) DB_VARIABLE (name)
 #endif
+#ifndef DB_MAIN_SYMBOL
+# define DB_MAIN_SYMBOL(name) DB_SYMBOL (name)
+#endif
+#ifndef DB_MAIN_ARRAY_VARIABLE
+# define DB_MAIN_ARRAY_VARIABLE(name) DB_ARRAY_VARIABLE (name)
+#endif
 
 #ifndef DB_RTLD_GLOBAL_FIELD
-# if !IS_IN (libpthread)
+# if !IS_IN (libc)
 #  define DB_RTLD_GLOBAL_FIELD(field)		\
   DB_STRUCT_FIELD (rtld_global, _##field)	\
   DB_MAIN_VARIABLE (_##field)
@@ -69,13 +73,13 @@ DB_STRUCT (td_eventbuf_t)
 DB_STRUCT_FIELD (td_eventbuf_t, eventnum)
 DB_STRUCT_FIELD (td_eventbuf_t, eventdata)
 
-DB_SYMBOL (nptl_version)
-DB_FUNCTION (__nptl_create_event)
-DB_FUNCTION (__nptl_death_event)
+DB_SYMBOL (__nptl_version)
+DB_SYMBOL (__nptl_create_event)
+DB_SYMBOL (__nptl_death_event)
 DB_SYMBOL (__nptl_threads_events)
 DB_VARIABLE (__nptl_nthreads)
 DB_VARIABLE (__nptl_last_event)
-DB_VARIABLE (__nptl_initial_report_events)
+DB_MAIN_VARIABLE (__nptl_initial_report_events)
 
 DB_ARRAY_VARIABLE (__pthread_keys)
 DB_STRUCT (pthread_key_struct)
@@ -95,11 +99,11 @@ DB_STRUCT_ARRAY_FIELD (dtv, dtv)
 #define pointer_val pointer.val /* Field of anonymous struct in dtv_t.  */
 DB_STRUCT_FIELD (dtv_t, pointer_val)
 DB_STRUCT_FIELD (dtv_t, counter)
-#if !IS_IN (libpthread) || TLS_TCB_AT_TP
+#if !IS_IN (libc) || TLS_TCB_AT_TP
 DB_STRUCT_FIELD (pthread, dtvp)
 #endif
 
-#if !(IS_IN (libpthread) && !defined SHARED)
+#if !(IS_IN (libc) && !defined SHARED)
 DB_VARIABLE (__nptl_rtld_global)
 #endif
 DB_RTLD_GLOBAL_FIELD (dl_tls_dtv_slotinfo_list)

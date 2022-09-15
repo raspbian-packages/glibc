@@ -21,8 +21,8 @@
 # This file can list all potential system calls.  The names are only
 # used if the installed kernel headers also provide them.
 
-# The list of system calls is current as of Linux 5.10.
-kernel 5.10
+# The list of system calls is current as of Linux 5.19.
+kernel 5.19
 
 FAST_atomic_update
 FAST_cmpxchg
@@ -95,6 +95,7 @@ epoll_create1
 epoll_ctl
 epoll_ctl_old
 epoll_pwait
+epoll_pwait2
 epoll_wait
 epoll_wait_old
 eventfd
@@ -145,6 +146,7 @@ ftruncate
 ftruncate64
 futex
 futex_time64
+futex_waitv
 futimesat
 get_kernel_syms
 get_mempolicy
@@ -223,6 +225,9 @@ kexec_file_load
 kexec_load
 keyctl
 kill
+landlock_add_rule
+landlock_create_ruleset
+landlock_restrict_self
 lchown
 lchown32
 lgetxattr
@@ -243,6 +248,7 @@ madvise
 mbind
 membarrier
 memfd_create
+memfd_secret
 memory_ordering
 migrate_pages
 mincore
@@ -257,6 +263,7 @@ mmap
 mmap2
 modify_ldt
 mount
+mount_setattr
 move_mount
 move_pages
 mprotect
@@ -434,6 +441,7 @@ preadv
 preadv2
 prlimit64
 process_madvise
+process_mrelease
 process_vm_readv
 process_vm_writev
 prof
@@ -447,6 +455,7 @@ pwritev
 pwritev2
 query_module
 quotactl
+quotactl_fd
 read
 readahead
 readdir
@@ -514,6 +523,7 @@ sendmmsg
 sendmsg
 sendto
 set_mempolicy
+set_mempolicy_home_node
 set_robust_list
 set_thread_area
 set_tid_address

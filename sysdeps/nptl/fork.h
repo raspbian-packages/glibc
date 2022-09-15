@@ -1,6 +1,6 @@
-/* Copyright (C) 2002-2021 Free Software Foundation, Inc.
+/* System specific fork hooks.  Linux version.
+   Copyright (C) 2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
-   Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -16,51 +16,138 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <lowlevellock.h>
+#ifndef _FORK_H
+#define _FORK_H
 
-/* The fork generation counter, defined in libpthread.  */
-extern unsigned long int __fork_generation attribute_hidden;
+#include <assert.h>
+#include <kernel-posix-timers.h>
+#include <ldsodefs.h>
+#include <list.h>
+#include <mqueue.h>
+#include <pthreadP.h>
+#include <sysdep.h>
 
-/* Pointer to the fork generation counter in the thread library.  */
-extern unsigned long int *__fork_generation_pointer attribute_hidden;
-
-/* Elements of the fork handler lists.  */
-struct fork_handler
+static inline void
+fork_system_setup (void)
 {
-  void (*prepare_handler) (void);
-  void (*parent_handler) (void);
-  void (*child_handler) (void);
-  void *dso_handle;
-};
+  /* See __pthread_once.  */
+  __fork_generation += __PTHREAD_ONCE_FORK_GEN_INCR;
+}
 
-/* Function to call to unregister fork handlers.  */
-extern void __unregister_atfork (void *dso_handle) attribute_hidden;
-#define UNREGISTER_ATFORK(dso_handle) __unregister_atfork (dso_handle)
-
-enum __run_fork_handler_type
+static void
+fork_system_setup_after_fork (void)
 {
-  atfork_run_prepare,
-  atfork_run_child,
-  atfork_run_parent
-};
+  /* There is one thread running.  */
+  __nptl_nthreads = 1;
 
-/* Run the atfork handlers and lock/unlock the internal lock depending
-   of the WHO argument:
+  /* Initialize thread library locks.  */
+  GL (dl_stack_cache_lock) = LLL_LOCK_INITIALIZER;
+  __default_pthread_attr_lock = LLL_LOCK_INITIALIZER;
 
-   - atfork_run_prepare: run all the PREPARE_HANDLER in reverse order of
-			 insertion and locks the internal lock.
-   - atfork_run_child: run all the CHILD_HANDLER and unlocks the internal
-		       lock.
-   - atfork_run_parent: run all the PARENT_HANDLER and unlocks the internal
-			lock.
+  call_function_static_weak (__mq_notify_fork_subprocess);
+  call_function_static_weak (__timer_fork_subprocess);
+}
 
-   Perform locking only if DO_LOCKING.  */
-extern void __run_fork_handlers (enum __run_fork_handler_type who,
-				 _Bool do_locking) attribute_hidden;
+/* In case of a fork() call the memory allocation in the child will be
+   the same but only one thread is running.  All stacks except that of
+   the one running thread are not used anymore.  We have to recycle
+   them.  */
+static void
+reclaim_stacks (void)
+{
+  struct pthread *self = (struct pthread *) THREAD_SELF;
 
-/* C library side function to register new fork handlers.  */
-extern int __register_atfork (void (*__prepare) (void),
-			      void (*__parent) (void),
-			      void (*__child) (void),
-			      void *dso_handle);
-libc_hidden_proto (__register_atfork)
+  /* No locking necessary.  The caller is the only stack in use.  But
+     we have to be aware that we might have interrupted a list
+     operation.  */
+
+  if (GL (dl_in_flight_stack) != 0)
+    {
+      bool add_p = GL (dl_in_flight_stack) & 1;
+      list_t *elem = (list_t *) (GL (dl_in_flight_stack) & ~(uintptr_t) 1);
+
+      if (add_p)
+	{
+	  /* We always add at the beginning of the list.  So in this case we
+	     only need to check the beginning of these lists to see if the
+	     pointers at the head of the list are inconsistent.  */
+	  list_t *l = NULL;
+
+	  if (GL (dl_stack_used).next->prev != &GL (dl_stack_used))
+	    l = &GL (dl_stack_used);
+	  else if (GL (dl_stack_cache).next->prev != &GL (dl_stack_cache))
+	    l = &GL (dl_stack_cache);
+
+	  if (l != NULL)
+	    {
+	      assert (l->next->prev == elem);
+	      elem->next = l->next;
+	      elem->prev = l;
+	      l->next = elem;
+	    }
+	}
+      else
+	{
+	  /* We can simply always replay the delete operation.  */
+	  elem->next->prev = elem->prev;
+	  elem->prev->next = elem->next;
+	}
+
+      GL (dl_in_flight_stack) = 0;
+    }
+
+  /* Mark all stacks except the still running one as free.  */
+  list_t *runp;
+  list_for_each (runp, &GL (dl_stack_used))
+    {
+      struct pthread *curp = list_entry (runp, struct pthread, list);
+      if (curp != self)
+	{
+	  /* This marks the stack as free.  */
+	  curp->tid = 0;
+
+	  /* Account for the size of the stack.  */
+	  GL (dl_stack_cache_actsize) += curp->stackblock_size;
+
+	  if (curp->specific_used)
+	    {
+	      /* Clear the thread-specific data.  */
+	      memset (curp->specific_1stblock, '\0',
+		      sizeof (curp->specific_1stblock));
+
+	      curp->specific_used = false;
+
+	      for (size_t cnt = 1; cnt < PTHREAD_KEY_1STLEVEL_SIZE; ++cnt)
+		if (curp->specific[cnt] != NULL)
+		  {
+		    memset (curp->specific[cnt], '\0',
+			    sizeof (curp->specific_1stblock));
+
+		    /* We have allocated the block which we do not
+		       free here so re-set the bit.  */
+		    curp->specific_used = true;
+		  }
+	    }
+	}
+    }
+
+  /* Add the stack of all running threads to the cache.  */
+  list_splice (&GL (dl_stack_used), &GL (dl_stack_cache));
+
+  /* Remove the entry for the current thread to from the cache list
+     and add it to the list of running threads.  Which of the two
+     lists is decided by the user_stack flag.  */
+  list_del (&self->list);
+
+  /* Re-initialize the lists for all the threads.  */
+  INIT_LIST_HEAD (&GL (dl_stack_used));
+  INIT_LIST_HEAD (&GL (dl_stack_user));
+
+  if (__glibc_unlikely (THREAD_GETMEM (self, user_stack)))
+    list_add (&self->list, &GL (dl_stack_user));
+  else
+    list_add (&self->list, &GL (dl_stack_used));
+}
+
+
+#endif

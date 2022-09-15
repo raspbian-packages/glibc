@@ -262,3 +262,4 @@ retry:
 
   return retval;
 }
+libc_hidden_def (grantpt)

@@ -22,16 +22,10 @@ alpha/submitted-fts64.diff
 alpha/submitted-makecontext.diff
 
 arm/local-sigaction.diff
-arm/local-vfp-sysdeps.diff
 arm/unsubmitted-ldso-multilib.diff
 arm/local-arm-futex.diff
 
 hppa/local-inlining.diff
-hppa/git-fcntl.h-update.diff
-
-# 2.34
-hurd-i386/git-tiocflush.diff
-hurd-i386/git-eintr.diff
 
 # 2.35
 hurd-i386/git-drop-rmh.diff
@@ -39,6 +33,8 @@ hurd-i386/git-AT_NO_AUTOMOUNT.diff
 hurd-i386/git-get_errlist.diff
 hurd-i386/git-msync.diff
 hurd-i386/git-htl-init_sigset.diff
+hurd-i386/git-machrules-chk_fail.diff
+hurd-i386/git-random-getrandom.diff
 hurd-i386/git-lib-map.diff
 hurd-i386/git-large-text.diff
 hurd-i386/git-get_dtable.diff
@@ -48,10 +44,21 @@ hurd-i386/git-ttydefaults.diff
 hurd-i386/git-const.diff
 hurd-i386/git-pthread_kill_exited.diff
 hurd-i386/git-reply_bogus.diff
+hurd-i386/git-global.diff
+hurd-i386/git-loadfail.diff
 
 # 2.36
 hurd-i386/pthread_key.diff
+hurd-i386/tg-EIEIO-fr.diff
+hurd-i386/tg-EGREGIOUS-fr.diff
 hurd-i386/git-spawni-reauth.diff
+
+# 2.37
+hurd-i386/git-htl-pthread-self-early.diff
+hurd-i386/git-ipv6.diff
+hurd-i386/git-ip_mreqn.diff
+hurd-i386/git-bootstrap-enable_secure.diff
+hurd-i386/git-cond-destroy.diff
 
 hurd-i386/local-enable-ldconfig.diff
 hurd-i386/tg-sysvshm.diff
@@ -64,13 +71,10 @@ hurd-i386/local-madvise_warn.diff
 hurd-i386/tg-hooks.diff
 hurd-i386/local-usr.diff
 hurd-i386/tg-ifaddrs_v6.diff
-hurd-i386/tg-EIEIO-fr.diff
-hurd-i386/tg-EGREGIOUS-fr.diff
 hurd-i386/unsubmitted-clock_t_centiseconds.diff
 hurd-i386/submitted-path_mounted.diff
 hurd-i386/submitted-bind_umask2.diff
 hurd-i386/tg-bootstrap.diff
-hurd-i386/local-mach_print.diff
 hurd-i386/tg-libc_rwlock_recursive.diff
 hurd-i386/local-no_unsupported_ioctls.diff
 hurd-i386/local-exec_filename.diff
@@ -100,8 +104,6 @@ m68k/submitted-gcc34-seccomment.diff
 mips/submitted-rld_map.diff
 
 powerpc/local-powerpc8xx-dcbz.diff
-
-riscv64/local-asin-acos-raise-invalid.diff
 
 sh4/local-fpscr_values.diff
 

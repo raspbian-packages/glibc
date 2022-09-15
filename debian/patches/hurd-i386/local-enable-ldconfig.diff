@@ -15,23 +15,23 @@
 
 --- a/sysdeps/mach/hurd/configure
 +++ b/sysdeps/mach/hurd/configure
-@@ -45,3 +45,5 @@
- if test -n "$sysheaders"; then
-   CPPFLAGS=$OLD_CPPFLAGS
- fi
+@@ -49,3 +49,5 @@
+ 
+ # Hurd has libpthread as a separate library.
+ pthread_in_libc=no
 +
 +use_ldconfig=yes
 --- a/sysdeps/mach/hurd/configure.ac
 +++ b/sysdeps/mach/hurd/configure.ac
-@@ -26,3 +26,5 @@
- if test -n "$sysheaders"; then
-   CPPFLAGS=$OLD_CPPFLAGS
- fi
+@@ -29,3 +29,5 @@
+ 
+ # Hurd has libpthread as a separate library.
+ pthread_in_libc=no
 +
 +use_ldconfig=yes
 --- a/elf/ldconfig.c
 +++ b/elf/ldconfig.c
-@@ -65,6 +65,10 @@
+@@ -66,6 +66,10 @@
  
  #define PACKAGE _libc_intl_domainname
  

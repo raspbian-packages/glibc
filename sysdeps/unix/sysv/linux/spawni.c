@@ -16,22 +16,17 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <spawn.h>
-#include <fcntl.h>
-#include <paths.h>
-#include <string.h>
-#include <sys/resource.h>
-#include <sys/wait.h>
-#include <sys/param.h>
-#include <sys/mman.h>
-#include <not-cancel.h>
-#include <local-setxid.h>
-#include <shlib-compat.h>
-#include <nptl/pthreadP.h>
-#include <dl-sysdep.h>
-#include <libc-pointer-arith.h>
+#include <internal-signals.h>
 #include <ldsodefs.h>
-#include "spawn_int.h"
+#include <local-setxid.h>
+#include <not-cancel.h>
+#include <paths.h>
+#include <shlib-compat.h>
+#include <spawn.h>
+#include <spawn_int.h>
+#include <sysdep.h>
+#include <sys/resource.h>
+#include <clone_internal.h>
 
 /* The Linux implementation of posix_spawn{p} uses the clone syscall directly
    with CLONE_VM and CLONE_VFORK flags and an allocated stack.  The new stack
@@ -58,21 +53,6 @@
    available methods.  The committee chose to signal an error by a
    normal program exit with the exit code 127.  */
 #define SPAWN_ERROR	127
-
-#ifdef __ia64__
-# define CLONE(__fn, __stackbase, __stacksize, __flags, __args) \
-  __clone2 (__fn, __stackbase, __stacksize, __flags, __args, 0, 0, 0)
-#else
-# define CLONE(__fn, __stack, __stacksize, __flags, __args) \
-  __clone (__fn, __stack, __flags, __args)
-#endif
-
-/* Since ia64 wants the stackbase w/clone2, re-use the grows-up macro.  */
-#if _STACK_GROWS_UP || defined (__ia64__)
-# define STACK(__stack, __stack_size) (__stack)
-#elif _STACK_GROWS_DOWN
-# define STACK(__stack, __stack_size) (__stack + __stack_size)
-#endif
 
 
 struct posix_spawn_args
@@ -280,6 +260,14 @@ __spawni_child (void *arguments)
 	      if (__fchdir (action->action.fchdir_action.fd) != 0)
 		goto fail;
 	      break;
+
+	    case spawn_do_closefrom:
+	      {
+		int lowfd = action->action.closefrom_action.from;
+	        int r = INLINE_SYSCALL_CALL (close_range, lowfd, ~0U, 0);
+		if (r != 0 && !__closefrom_fallback (lowfd, false))
+		  goto fail;
+	      } break;
 	    }
 	}
     }
@@ -344,7 +332,9 @@ __spawnix (pid_t * pid, const char *file,
   /* We need at least a few pages in case the compiler's stack checking is
      enabled.  In some configs, it is known to use at least 24KiB.  We use
      32KiB to be "safe" from anything the compiler might do.  Besides, the
-     extra pages won't actually be allocated unless they get used.  */
+     extra pages won't actually be allocated unless they get used.
+     It also acts the slack for spawn_closefrom (including MIPS64 getdents64
+     where it might use about 1k extra stack space).  */
   argv_size += (32 * 1024);
   size_t stack_size = ALIGN_UP (argv_size, GLRO(dl_pagesize));
   void *stack = __mmap (NULL, stack_size, prot,
@@ -354,8 +344,7 @@ __spawnix (pid_t * pid, const char *file,
 
   /* Disable asynchronous cancellation.  */
   int state;
-  __libc_ptf_call (__pthread_setcancelstate,
-                   (PTHREAD_CANCEL_DISABLE, &state), 0);
+  __pthread_setcancelstate (PTHREAD_CANCEL_DISABLE, &state);
 
   /* Child must set args.err to something non-negative - we rely on
      the parent and child sharing VM.  */
@@ -379,8 +368,14 @@ __spawnix (pid_t * pid, const char *file,
      need for CLONE_SETTLS.  Although parent and child share the same TLS
      namespace, there will be no concurrent access for TLS variables (errno
      for instance).  */
-  new_pid = CLONE (__spawni_child, STACK (stack, stack_size), stack_size,
-		   CLONE_VM | CLONE_VFORK | SIGCHLD, &args);
+  struct clone_args clone_args =
+    {
+      .flags = CLONE_VM | CLONE_VFORK,
+      .exit_signal = SIGCHLD,
+      .stack = (uintptr_t) stack,
+      .stack_size = stack_size,
+    };
+  new_pid = __clone_internal (&clone_args, __spawni_child, &args);
 
   /* It needs to collect the case where the auxiliary process was created
      but failed to execute the file (due either any preparation step or
@@ -413,7 +408,7 @@ __spawnix (pid_t * pid, const char *file,
 
   __libc_signal_restore_set (&args.oldmask);
 
-  __libc_ptf_call (__pthread_setcancelstate, (state, NULL), 0);
+  __pthread_setcancelstate (state, NULL);
 
   return ec;
 }

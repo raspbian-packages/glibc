@@ -22,10 +22,6 @@ libc {
 %endif
   GLIBC_PRIVATE {
     # functions used in other libraries
-    _dl_addr;
-    _dl_open_hook; _dl_open_hook2;
-    _dl_sym; _dl_vsym;
-    __libc_dlclose; __libc_dlopen_mode; __libc_dlsym; __libc_dlvsym;
     __libc_early_init;
 
     # Internal error handling support.  Interposes the functions in ld.so.
@@ -52,6 +48,9 @@ ld {
     # stack canary
     __stack_chk_guard;
   }
+  GLIBC_2.34 {
+    __rtld_version_placeholder;
+  }
   GLIBC_PRIVATE {
     # Those are in the dynamic linker, but used by libc.so.
     __libc_enable_secure;
@@ -59,6 +58,7 @@ ld {
     _dl_argv; _dl_find_dso_for_object; _dl_get_tls_static_info;
     _dl_deallocate_tls; _dl_make_stack_executable;
     _dl_rtld_di_serinfo; _dl_starting_up; _dl_fatal_printf;
+    _dl_audit_symbind_alt; _dl_audit_preinit;
     _rtld_global; _rtld_global_ro;
 
     # Only here for gdb while a better method is developed.
@@ -72,7 +72,7 @@ ld {
 
     # Internal error handling support.  Interposed by libc.so.
     _dl_signal_exception; _dl_catch_exception;
-    _dl_signal_error; _dl_catch_error; _dl_catch_error_ptr;
+    _dl_signal_error; _dl_catch_error;
 
     # Set value of a tunable.
     __tunable_get_val;

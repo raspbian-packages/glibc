@@ -1398,7 +1398,7 @@ add_locales_to_archive (size_t nlist, char *list[], bool replace)
 		    {
 		      char fullname[fnamelen + 2 * strlen (d->d_name) + 7];
 
-		      if (d_type == DT_UNKNOWN)
+		      if (d_type == DT_UNKNOWN || d_type == DT_LNK)
 			{
 			  strcpy (stpcpy (stpcpy (fullname, fname), "/"),
 				  d->d_name);
@@ -1749,6 +1749,7 @@ show_archive_content (const char *fname, int verbose)
 			: locnames[idx]);
 	      }
 	}
+      free (files);
     }
   else
     for (cnt = 0; cnt < used; ++cnt)

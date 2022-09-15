@@ -61,7 +61,7 @@ tests = tst_swprintf tst_wprintf tst_swscanf tst_wscanf tst_getwc tst_putwc   \
 	bug-ungetc2 bug-ftell bug-ungetc3 bug-ungetc4 tst-fopenloc2 \
 	tst-memstream1 tst-memstream2 tst-memstream3 tst-memstream4 \
 	tst-wmemstream1 tst-wmemstream2 tst-wmemstream3 tst-wmemstream4 \
-	bug-memstream1 bug-wmemstream1 \
+	tst-wmemstream5 bug-memstream1 bug-wmemstream1 \
 	tst-setvbuf1 tst-popen1 tst-fgetwc bug-wsetpos tst-fseek \
 	tst-fwrite-error tst-ftell-partial-wide tst-ftell-active-handler \
 	tst-ftell-append tst-fputws tst-bz22415 tst-fgetc-after-eof \
@@ -165,10 +165,14 @@ LDFLAGS-tst-bz24228 = -Wl,--version-script=tst-bz24228.map
 
 tst_wprintf2-ARGS = "Some Text"
 
-test-fmemopen-ENV = MALLOC_TRACE=$(objpfx)test-fmemopen.mtrace
-tst-fopenloc-ENV = MALLOC_TRACE=$(objpfx)tst-fopenloc.mtrace
-tst-bz22415-ENV = MALLOC_TRACE=$(objpfx)tst-bz22415.mtrace
-tst-bz24228-ENV = MALLOC_TRACE=$(objpfx)tst-bz24228.mtrace
+test-fmemopen-ENV = MALLOC_TRACE=$(objpfx)test-fmemopen.mtrace \
+		    LD_PRELOAD=$(common-objpfx)/malloc/libc_malloc_debug.so
+tst-fopenloc-ENV = MALLOC_TRACE=$(objpfx)tst-fopenloc.mtrace \
+		   LD_PRELOAD=$(common-objpfx)/malloc/libc_malloc_debug.so
+tst-bz22415-ENV = MALLOC_TRACE=$(objpfx)tst-bz22415.mtrace \
+		  LD_PRELOAD=$(common-objpfx)/malloc/libc_malloc_debug.so
+tst-bz24228-ENV = MALLOC_TRACE=$(objpfx)tst-bz24228.mtrace \
+		  LD_PRELOAD=$(common-objpfx)/malloc/libc_malloc_debug.so
 
 generated += test-fmemopen.mtrace test-fmemopen.check
 generated += tst-fopenloc.mtrace tst-fopenloc.check
@@ -194,6 +198,26 @@ ifeq (yes,$(build-shared))
 # library is enabled since they depend on tst-fopenloc.out.
 tests-special += $(objpfx)tst-fopenloc-cmp.out $(objpfx)tst-fopenloc-mem.out \
 		 $(objpfx)tst-bz24228-mem.out
+endif
+
+tests += tst-cleanup-default tst-cleanup-default-static
+tests-static += tst-cleanup-default-static
+tests-special += $(objpfx)tst-cleanup-default-cmp.out $(objpfx)tst-cleanup-default-static-cmp.out
+LDFLAGS-tst-cleanup-default = -Wl,--gc-sections
+LDFLAGS-tst-cleanup-default-static = -Wl,--gc-sections
+
+ifeq ($(have-gnu-retain)$(have-z-start-stop-gc),yesyes)
+tests += tst-cleanup-start-stop-gc tst-cleanup-start-stop-gc-static \
+		tst-cleanup-nostart-stop-gc tst-cleanup-nostart-stop-gc-static
+tests-static += tst-cleanup-start-stop-gc-static tst-cleanup-nostart-stop-gc-static
+tests-special += $(objpfx)tst-cleanup-start-stop-gc-cmp.out \
+		$(objpfx)tst-cleanup-start-stop-gc-static-cmp.out \
+		$(objpfx)tst-cleanup-nostart-stop-gc-cmp.out \
+		$(objpfx)tst-cleanup-nostart-stop-gc-static-cmp.out
+LDFLAGS-tst-cleanup-start-stop-gc := -Wl,--gc-sections,-z,start-stop-gc
+LDFLAGS-tst-cleanup-start-stop-gc-static := -Wl,--gc-sections,-z,start-stop-gc
+LDFLAGS-tst-cleanup-nostart-stop-gc := -Wl,--gc-sections,-z,nostart-stop-gc
+LDFLAGS-tst-cleanup-nostart-stop-gc-static := -Wl,--gc-sections,-z,nostart-stop-gc
 endif
 endif
 
@@ -223,6 +247,14 @@ $(objpfx)tst-widetext.out: $(gen-locales)
 $(objpfx)tst_wprintf2.out: $(gen-locales)
 $(objpfx)tst-wfile-sync.out: $(gen-locales)
 endif
+
+define gen-tst-cleanup
+$(objpfx)tst-cleanup-$1-cmp.out: tst-cleanup.exp $(objpfx)tst-cleanup-$1.out
+	cmp $$^ > $$@; $$(evaluate-test)
+endef
+
+$(foreach t,default default-static start-stop-gc start-stop-gc-static nostart-stop-gc nostart-stop-gc-static, \
+  $(eval $(call gen-tst-cleanup,$(t))))
 
 $(objpfx)test-freopen.out: test-freopen.sh $(objpfx)test-freopen
 	$(SHELL) $< $(common-objpfx) '$(test-program-prefix)'	\

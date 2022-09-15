@@ -249,7 +249,7 @@ _dl_receive_error (receiver_fct fct, void (*operate) (void *), void *args)
   receiver = old_receiver;
 }
 
-/* Forwarder used for initializing _dl_catch_error_ptr.  */
+/* Forwarder used for initializing GLRO (_dl_catch_error).  */
 int
 _rtld_catch_error (const char **objname, const char **errstring,
 		   bool *mallocedp, void (*operate) (void *),
@@ -259,8 +259,5 @@ _rtld_catch_error (const char **objname, const char **errstring,
      point to the implementation in libc.so.  */
   return _dl_catch_error (objname, errstring, mallocedp, operate, args);
 }
-
-__typeof (_dl_catch_error) *_dl_catch_error_ptr = _rtld_catch_error;
-rtld_hidden_data_def (_dl_catch_error_ptr);
 
 #endif /* DL_ERROR_BOOTSTRAP */

@@ -90,6 +90,12 @@ if 'CFLAGS' is specified it must enable optimization.  For example:
      library will still be usable, but functionality may be lost--for
      example, you can't build a shared libc with old binutils.
 
+'--with-default-link'
+     With '--with-default-link', the build system does not use a custom
+     linker script for linking shared objects.  The default is
+     '--without-default-link', because the custom linker script is
+     needed for full RELRO protection.
+
 '--with-nonshared-cflags=CFLAGS'
      Use additional compiler flags CFLAGS to build the parts of the
      library which are always statically linked into applications and
@@ -253,6 +259,10 @@ if 'CFLAGS' is specified it must enable optimization.  For example:
      (set glibc.malloc.tcache_count to zero), this option can be used to
      remove it from the build completely.
 
+'--disable-scv'
+     Disable using 'scv' instruction for syscalls.  All syscalls will
+     use 'sc' instead, even if the kernel supports 'scv'.  PowerPC only.
+
 '--build=BUILD-SYSTEM'
 '--host=HOST-SYSTEM'
      These options are for cross-compiling.  If you specify both options
@@ -347,6 +357,21 @@ is the absolute directory name for the main source directory and
 HOSTNAME is the host name of a system that can run the newly built
 binaries of the GNU C Library.  The source and build directories must be
 visible at the same locations on both the build system and HOSTNAME.
+The 'cross-test-ssh.sh' script requires 'flock' from 'util-linux' to
+work when GLIBC_TEST_ALLOW_TIME_SETTING environment variable is set.
+
+   It is also possible to execute tests, which require setting the date
+on the target machine.  Following use cases are supported:
+   * 'GLIBC_TEST_ALLOW_TIME_SETTING' is set in the environment in which
+     eligible tests are executed and have the privilege to run
+     'clock_settime'.  In this case, nothing prevents those tests from
+     running in parallel, so the caller shall assure that those tests
+     are serialized or provide a proper wrapper script for them.
+
+   * The 'cross-test-ssh.sh' script is used and one passes the
+     '--allow-time-setting' flag.  In this case, both sets
+     'GLIBC_TEST_ALLOW_TIME_SETTING' and serialization of test execution
+     are assured automatically.
 
    In general, when testing the GNU C Library, 'test-wrapper' may be set
 to the name and arguments of any program to run newly built binaries.
@@ -364,6 +389,10 @@ directly assigned, then 'test-wrapper-env-only' must be set; its use has
 the same syntax as 'test-wrapper-env', the only difference in its
 semantics being starting with an empty set of environment variables
 rather than the ambient set.
+
+   For AArch64 with SVE, when testing the GNU C Library, 'test-wrapper'
+may be set to "SRCDIR/sysdeps/unix/sysv/linux/aarch64/vltest.py
+VECTOR-LENGTH" to change Vector Length.
 
 Installing the C Library
 ========================
@@ -468,7 +497,7 @@ build the GNU C Library:
      GCC 6.2 or higher is required.  In general it is recommended to use
      the newest version of the compiler that is known to work for
      building the GNU C Library, as newer compilers usually produce
-     better code.  As of release time, GCC 10.2 is the newest compiler
+     better code.  As of release time, GCC 11.2 is the newest compiler
      verified to work to build the GNU C Library.
 
      For PowerPC 64-bits little-endian (powerpc64le), a GCC version with
@@ -540,7 +569,7 @@ build the GNU C Library:
 
      Perl is not required, but if present it is used in some tests and
      the 'mtrace' program, to build the GNU C Library manual.  As of
-     release time 'perl' version 5.32.0 is the newest verified to work
+     release time 'perl' version 5.32.1 is the newest verified to work
      to build the GNU C Library.
 
    * GNU 'sed' 3.02 or newer
@@ -552,7 +581,7 @@ build the GNU C Library:
    * Python 3.4 or later
 
      Python is required to build the GNU C Library.  As of release time,
-     Python 3.8.6 is the newest verified to work for building and
+     Python 3.9.6 is the newest verified to work for building and
      testing the GNU C Library.
 
    * PExpect 4.0
@@ -569,7 +598,7 @@ build the GNU C Library:
      use the pretty printers.  Notice that your system having Python
      available doesn't imply that GDB supports it, nor that your
      system's Python and GDB's have the same version.  As of release
-     time GNU 'debugger' 10.1 is the newest verified to work to test the
+     time GNU 'debugger' 10.2 is the newest verified to work to test the
      pretty printers.
 
      Unless Python, PExpect and GDB with Python support are present, the

@@ -5,9 +5,14 @@ libc.so.0.3 #PACKAGE# #MINVER#
  (symver|optional)HURD_CTHREADS_0.3 2.11
  __errno_location@GLIBC_2.2.6 2.29-8~
  __h_errno_location@GLIBC_2.2.6 2.29-8~
+### sysconf(_SC_MINSIGSTKSZ) and sysconf(_SC_SIGSTKSZ) added in glibc 2.34
+ __sysconf@GLIBC_2.2.6 2.34
+ sysconf@GLIBC_2.2.6 2.34
 libBrokenLocale.so.1 #PACKAGE# #MINVER#
 #include "symbols.wildcards"
 libSegFault.so #PACKAGE# #MINVER#
+#include "symbols.wildcards"
+libc_malloc_debug.so.0 #PACKAGE# #MINVER#
 #include "symbols.wildcards"
 libdl.so.2 #PACKAGE# #MINVER#
 #include "symbols.wildcards"

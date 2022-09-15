@@ -1,4 +1,5 @@
-/* Copyright (C) 2005-2021 Free Software Foundation, Inc.
+/* Check stack alignment.  PowerPC version.
+   Copyright (C) 2005-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -15,10 +16,7 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <stdio.h>
-#include <stdint.h>
-
-#define TEST_STACK_ALIGN() \
+#define TEST_STACK_ALIGN_INIT() \
   ({									     \
     /* Altivec __vector int etc. needs 16byte aligned stack.		     \
        Instead of using altivec.h here, use aligned attribute instead.  */   \
@@ -27,20 +25,9 @@
         int _i __attribute__((aligned (16)));				     \
 	int _j[3];							     \
       } _s = { ._i = 18, ._j[0] = 19, ._j[1] = 20, ._j[2] = 21 };	     \
-    double _d = 12.0;							     \
-    long double _ld = 15.0;						     \
-    int _ret = 0;							     \
     printf ("__vector int:  { %d, %d, %d, %d } %p %zu\n", _s._i, _s._j[0],   \
             _s._j[1], _s._j[2], &_s, __alignof (_s));			     \
-    if ((((uintptr_t) &_s) & (__alignof (_s) - 1)) != 0)		     \
-      _ret = 1;								     \
-									     \
-    printf ("double:  %g %p %zu\n", _d, &_d, __alignof (double));	     \
-    if ((((uintptr_t) &_d) & (__alignof (double) - 1)) != 0)		     \
-      _ret = 1;								     \
-									     \
-    printf ("ldouble: %Lg %p %zu\n", _ld, &_ld, __alignof (long double));    \
-    if ((((uintptr_t) &_ld) & (__alignof (long double) - 1)) != 0)	     \
-      _ret = 1;								     \
-    _ret;								     \
-    })
+    is_aligned (&_s, __alignof (_s));					     \
+   })
+
+#include_next <tst-stack-align.h>

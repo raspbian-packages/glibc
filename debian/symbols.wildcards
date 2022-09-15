@@ -1,4 +1,4 @@
-| #PACKAGE# (>> 2.33), #PACKAGE# (<< 2.34)
+| #PACKAGE# (>> 2.34), #PACKAGE# (<< 2.35)
  (symver|optional)GLIBC_PRIVATE 0 1
  (symver|optional)GLIBC_2.0 2.0
  (symver|optional)GLIBC_2.1 2.1
@@ -48,4 +48,5 @@
  (symver|optional)GLIBC_2.31 2.31
  (symver|optional)GLIBC_2.32 2.32
  (symver|optional)GLIBC_2.33 2.33
+ (symver|optional)GLIBC_2.34 2.34
  (symver|optional)GCC_3.0 2.3.6

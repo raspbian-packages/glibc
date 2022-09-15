@@ -43,18 +43,12 @@ dlerror_run (void (*operate) (void *), void *args)
   const char *last_errstring = NULL;
   bool malloced;
 
-#ifdef SHARED
-  int result = (_dl_catch_error_ptr (&objname, &last_errstring, &malloced,
-				     operate, args)
+  int result = (GLRO (dl_catch_error) (&objname, &last_errstring, &malloced,
+				       operate, args)
 		?: last_errstring != NULL);
-#else
-  int result = (_dl_catch_error (&objname, &last_errstring, &malloced,
-				 operate, args)
-		?: last_errstring != NULL);
-#endif
 
   if (result && malloced)
-    free ((char *) last_errstring);
+    GLRO (dl_error_free) ((char *) last_errstring);
 
   return result;
 }
@@ -132,32 +126,7 @@ do_dlclose (void *ptr)
   GLRO(dl_close) ((struct link_map *) ptr);
 }
 
-/* This code is to support __libc_dlopen from __libc_dlopen'ed shared
-   libraries.  We need to ensure the statically linked __libc_dlopen
-   etc. functions are used instead of the dynamically loaded.  */
-struct dl_open_hook
-{
-  void *(*dlopen_mode) (const char *name, int mode);
-  void *(*dlsym) (void *map, const char *name);
-  int (*dlclose) (void *map);
-  void *(*dlvsym) (void *map, const char *name, const char *version);
-};
-
-#ifdef SHARED
-extern struct dl_open_hook *_dl_open_hook;
-libc_hidden_proto (_dl_open_hook);
-struct dl_open_hook *_dl_open_hook __attribute__ ((nocommon));
-libc_hidden_data_def (_dl_open_hook);
-
-/* The dlvsym member was added retroactively to struct dl_open_hook.
-   Static applications which have it will set _dl_open_hook2 in
-   addition to _dl_open_hook.  */
-extern struct dl_open_hook *_dl_open_hook2;
-libc_hidden_proto (_dl_open_hook2);
-struct dl_open_hook *_dl_open_hook2 __attribute__ ((nocommon));
-libc_hidden_data_def (_dl_open_hook2);
-
-#else
+#ifndef SHARED
 static void
 do_dlsym_private (void *ptr)
 {
@@ -175,14 +144,6 @@ do_dlsym_private (void *ptr)
 				args->map->l_scope, &vers, 0, 0, NULL);
   args->loadbase = l;
 }
-
-static struct dl_open_hook _dl_open_hook =
-  {
-    .dlopen_mode = __libc_dlopen_mode,
-    .dlsym = __libc_dlsym,
-    .dlclose = __libc_dlclose,
-    .dlvsym = __libc_dlvsym,
-  };
 #endif
 
 /* ... and these functions call dlerror_run. */
@@ -196,19 +157,11 @@ __libc_dlopen_mode (const char *name, int mode)
   args.caller_dlopen = RETURN_ADDRESS (0);
 
 #ifdef SHARED
-  if (!rtld_active ())
-    return _dl_open_hook->dlopen_mode (name, mode);
-  return (dlerror_run (do_dlopen, &args) ? NULL : (void *) args.map);
-#else
-  if (dlerror_run (do_dlopen, &args))
-    return NULL;
-
-  __libc_register_dl_open_hook (args.map);
-  __libc_register_dlfcn_hook (args.map);
-  return (void *) args.map;
+  if (GLRO (dl_dlfcn_hook) != NULL)
+    return GLRO (dl_dlfcn_hook)->libc_dlopen_mode (name, mode);
 #endif
+  return dlerror_run (do_dlopen, &args) ? NULL : (void *) args.map;
 }
-libc_hidden_def (__libc_dlopen_mode)
 
 #ifndef SHARED
 void *
@@ -222,21 +175,6 @@ __libc_dlsym_private (struct link_map *map, const char *name)
     return DL_SYMBOL_ADDRESS (sargs.loadbase, sargs.ref);
   return NULL;
 }
-
-void
-__libc_register_dl_open_hook (struct link_map *map)
-{
-  struct dl_open_hook **hook;
-
-  hook = (struct dl_open_hook **) __libc_dlsym_private (map, "_dl_open_hook");
-  if (hook != NULL)
-    *hook = &_dl_open_hook;
-
-  /* For dlvsym support.  */
-  hook = (struct dl_open_hook **) __libc_dlsym_private (map, "_dl_open_hook2");
-  if (hook != NULL)
-    *hook = &_dl_open_hook;
-}
 #endif
 
 void *
@@ -247,13 +185,12 @@ __libc_dlsym (void *map, const char *name)
   args.name = name;
 
 #ifdef SHARED
-  if (!rtld_active ())
-    return _dl_open_hook->dlsym (map, name);
+  if (GLRO (dl_dlfcn_hook) != NULL)
+    return GLRO (dl_dlfcn_hook)->libc_dlsym (map, name);
 #endif
   return (dlerror_run (do_dlsym, &args) ? NULL
 	  : (void *) (DL_SYMBOL_ADDRESS (args.loadbase, args.ref)));
 }
-libc_hidden_def (__libc_dlsym)
 
 /* Replacement for dlvsym.  MAP must be a real map.  This function
    returns NULL without setting the dlerror value in case of static
@@ -262,14 +199,8 @@ void *
 __libc_dlvsym (void *map, const char *name, const char *version)
 {
 #ifdef SHARED
-  if (!rtld_active ())
-    {
-      /* The static application is too old and does not provide the
-	 dlvsym hook.  */
-      if (_dl_open_hook2 == NULL)
-	return NULL;
-      return _dl_open_hook2->dlvsym (map, name, version);
-    }
+  if (GLRO (dl_dlfcn_hook) != NULL)
+    return GLRO (dl_dlfcn_hook)->libc_dlvsym (map, name, version);
 #endif
 
   struct do_dlvsym_args args;
@@ -286,18 +217,16 @@ __libc_dlvsym (void *map, const char *name, const char *version)
 	  : (void *) (DL_SYMBOL_ADDRESS (args.dlsym.loadbase,
 					 args.dlsym.ref)));
 }
-libc_hidden_def (__libc_dlvsym)
 
 int
 __libc_dlclose (void *map)
 {
 #ifdef SHARED
-  if (!rtld_active ())
-    return _dl_open_hook->dlclose (map);
+  if (GLRO (dl_dlfcn_hook) != NULL)
+    return GLRO (dl_dlfcn_hook)->libc_dlclose (map);
 #endif
   return dlerror_run (do_dlclose, map);
 }
-libc_hidden_def (__libc_dlclose)
 
 
 static bool __libc_freeres_fn_section

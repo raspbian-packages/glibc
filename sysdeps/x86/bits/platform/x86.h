@@ -29,13 +29,14 @@ enum
   CPUID_INDEX_80000007,
   CPUID_INDEX_80000008,
   CPUID_INDEX_7_ECX_1,
-  CPUID_INDEX_19
+  CPUID_INDEX_19,
+  CPUID_INDEX_14_ECX_0
 };
 
 struct cpuid_feature
 {
   unsigned int cpuid_array[4];
-  unsigned int usable_array[4];
+  unsigned int active_array[4];
 };
 
 enum cpuid_register_index
@@ -277,6 +278,11 @@ enum
        + cpuid_register_index_ebx * 8 * sizeof (unsigned int)),
 
   x86_cpu_WBNOINVD		= x86_cpu_index_80000008_ebx + 9,
+  x86_cpu_AMD_IBPB	        = x86_cpu_index_80000008_ebx + 12,
+  x86_cpu_AMD_IBRS	        = x86_cpu_index_80000008_ebx + 14,
+  x86_cpu_AMD_STIBP	        = x86_cpu_index_80000008_ebx + 15,
+  x86_cpu_AMD_SSBD	        = x86_cpu_index_80000008_ebx + 24,
+  x86_cpu_AMD_VIRT_SSBD	        = x86_cpu_index_80000008_ebx + 25,
 
   x86_cpu_index_7_ecx_1_eax
     = (CPUID_INDEX_7_ECX_1 * 8 * 4 * sizeof (unsigned int)
@@ -295,5 +301,11 @@ enum
        + cpuid_register_index_ebx * 8 * sizeof (unsigned int)),
 
   x86_cpu_AESKLE		= x86_cpu_index_19_ebx,
-  x86_cpu_WIDE_KL		= x86_cpu_index_19_ebx + 2
+  x86_cpu_WIDE_KL		= x86_cpu_index_19_ebx + 2,
+
+  x86_cpu_index_14_ecx_0_ebx
+    = (CPUID_INDEX_14_ECX_0 * 8 * 4 * sizeof (unsigned int)
+       + cpuid_register_index_ebx * 8 * sizeof (unsigned int)),
+
+  x86_cpu_PTWRITE		= x86_cpu_index_14_ecx_0_ebx + 4
 };

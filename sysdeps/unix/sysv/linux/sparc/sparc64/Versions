@@ -1,3 +1,4 @@
+!libc_pre_versions
 libc {
   GLIBC_2.0 {
     # Exception handling support functions from libgcc
@@ -7,13 +8,5 @@ libc {
   GLIBC_2.2.2 {
     # w*
     wordexp;
-  }
-}
-
-librt {
-  GLIBC_2.3.3 {
-    # Changed timer_t.
-    timer_create; timer_delete; timer_getoverrun; timer_gettime;
-    timer_settime;
   }
 }

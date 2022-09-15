@@ -32,6 +32,29 @@ BEGIN {
   sort = "sort -t. -k 1,1 -k 2n,2n -k 3 > " tmpfile;
 }
 
+# GNU awk does not implement the ord and chr functions.
+# <https://www.gnu.org/software/gawk/manual/html_node/Ordinal-Functions.html>
+# says that they are "written very nicely", using code similar to what
+# is included here.
+function chr(c) {
+    return sprintf("%c", c)
+}
+
+BEGIN {
+    for (c = 1; c < 127; c++) {
+	ord_table[chr(c)] = c;
+    }
+}
+
+function ord(c) {
+    if (ord_table[c]) {
+	return ord_table[c];
+    } else {
+	printf("Invalid character reference: '%c'\n", c) > "/dev/stderr";
+	++lossage;
+    }
+}
+
 # Remove comment lines.
 /^ *#/ {
   next;
@@ -70,12 +93,29 @@ BEGIN {
   printf("%s %s %s\n", actlib, sortver, $0) | sort;
 }
 
+# Some targets do not set the ABI baseline for libdl.  As a result,
+# symbols originally in libdl need to be moved under historic symbol
+# versions, without altering the baseline version for libc itself.
+/^ *!libc_pre_versions/ {
+    libc_pre_versions_active = 1;
+}
+
+function libc_pre_versions() {
+    # No local: * here, so that we do not have to update this script
+    # if symbols are moved into libc.  The abilist files and the other
+    # targets (with a real GLIBC_2.0 baseline) provide testing
+    # coverage.
+    printf("\
+GLIBC_2.0 {\n\
+};\n\
+GLIBC_2.1 {\n\
+} GLIBC_2.0;\n\
+") > outfile;
+    return "GLIBC_2.1";
+}
 
 function closeversion(name, oldname) {
-  if (firstinfile) {
-    printf("  local:\n    *;\n") > outfile;
-    firstinfile = 0;
-  }
+  printf("  local:\n    *;\n") > outfile;
   # This version inherits from the last one only if they
   # have the same nonnumeric prefix, i.e. GLIBC_x.y and GLIBC_x.z
   # or FOO_x and FOO_y but not GLIBC_x and FOO_y.
@@ -88,6 +128,17 @@ function closeversion(name, oldname) {
 function close_and_move(name, real_name) {
   close(name);
   system(move_if_change " " name " " real_name " >&2");
+}
+
+# ELF hash, for use with symbol versions.
+function elf_hash(s, i, acc) {
+  acc = 0;
+  for (i = 1; i <= length(s); ++i) {
+      acc = and(lshift(acc, 4) + ord(substr(s, i, 1)), 0xffffffff);
+      top = and(acc, 0xf0000000);
+      acc = and(xor(acc, rshift(top, 24)), compl(top));
+  }
+  return acc;
 }
 
 # Now print the accumulated information.
@@ -123,8 +174,11 @@ END {
       oldlib = $1;
       real_outfile = buildroot oldlib ".map";
       outfile = real_outfile "T";
-      firstinfile = 1;
-      veryoldver = "";
+      if ($1 == "libc" && libc_pre_versions_active) {
+	  veryoldver = libc_pre_versions();
+      } else {
+	  veryoldver = "";
+      }
       printf(" %s.map", oldlib);
     }
     if ($2 != oldver) {
@@ -145,6 +199,8 @@ END {
 	  && oldver ~ "^GLIBC_[0-9]" \
 	  && sym ~ "^[A-Za-z0-9_]*$") {
 	ver_val = oldver;
+	printf("#define %s_STRING \"%s\"\n", first_ver_macro, ver_val) > first_ver_header;
+	printf("#define %s_HASH 0x%x\n", first_ver_macro, elf_hash(ver_val)) > first_ver_header;
 	gsub("\\.", "_", ver_val);
 	printf("#define %s %s\n", first_ver_macro, ver_val) > first_ver_header;
 	first_ver_seen[first_ver_macro] = 1;

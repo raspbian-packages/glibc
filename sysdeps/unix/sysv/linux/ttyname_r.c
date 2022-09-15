@@ -26,20 +26,20 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <_itoa.h>
+#include <fd_to_filename.h>
 
 #include "ttyname.h"
 
 static int getttyname_r (char *buf, size_t buflen,
-			 const struct stat64 *mytty, int save,
+			 const struct __stat64_t64 *mytty, int save,
 			 int *dostat);
 
 static int
 attribute_compat_text_section
-getttyname_r (char *buf, size_t buflen, const struct stat64 *mytty,
+getttyname_r (char *buf, size_t buflen, const struct __stat64_t64 *mytty,
 	      int save, int *dostat)
 {
-  struct stat64 st;
+  struct __stat64_t64 st;
   DIR *dirstream;
   struct dirent64 *d;
   size_t devlen = strlen (buf);
@@ -71,7 +71,7 @@ getttyname_r (char *buf, size_t buflen, const struct stat64 *mytty,
 	cp = __stpncpy (buf + devlen, d->d_name, needed);
 	cp[0] = '\0';
 
-	if (__stat64 (buf, &st) == 0
+	if (__stat64_time64 (buf, &st) == 0
 	    && is_mytty (mytty, &st))
 	  {
 	    (void) __closedir (dirstream);
@@ -92,8 +92,8 @@ getttyname_r (char *buf, size_t buflen, const struct stat64 *mytty,
 int
 __ttyname_r (int fd, char *buf, size_t buflen)
 {
-  char procname[30];
-  struct stat64 st, st1;
+  struct fd_to_filename filename;
+  struct __stat64_t64 st, st1;
   int dostat = 0;
   int doispty = 0;
   int save = errno;
@@ -118,13 +118,11 @@ __ttyname_r (int fd, char *buf, size_t buflen)
   if (__glibc_unlikely (__tcgetattr (fd, &term) < 0))
     return errno;
 
-  if (__fstat64 (fd, &st) < 0)
+  if (__fstat64_time64 (fd, &st) < 0)
     return errno;
 
   /* We try using the /proc filesystem.  */
-  *_fitoa_word (fd, __stpcpy (procname, "/proc/self/fd/"), 10, 0) = '\0';
-
-  ssize_t ret = __readlink (procname, buf, buflen - 1);
+  ssize_t ret = __readlink (__fd_to_filename (fd, &filename), buf, buflen - 1);
   if (__glibc_unlikely (ret == -1 && errno == ENAMETOOLONG))
     {
       __set_errno (ERANGE);
@@ -146,7 +144,7 @@ __ttyname_r (int fd, char *buf, size_t buflen)
 
       /* Verify readlink result, fall back on iterating through devices.  */
       if (buf[0] == '/'
-	  && __stat64 (buf, &st1) == 0
+	  && __stat64_time64 (buf, &st1) == 0
 	  && is_mytty (&st, &st1))
 	return 0;
 
@@ -157,7 +155,7 @@ __ttyname_r (int fd, char *buf, size_t buflen)
   memcpy (buf, "/dev/pts/", sizeof ("/dev/pts/"));
   buflen -= sizeof ("/dev/pts/") - 1;
 
-  if (__stat64 (buf, &st1) == 0 && S_ISDIR (st1.st_mode))
+  if (__stat64_time64 (buf, &st1) == 0 && S_ISDIR (st1.st_mode))
     {
       ret = getttyname_r (buf, buflen, &st, save,
 			  &dostat);
@@ -196,5 +194,5 @@ __ttyname_r (int fd, char *buf, size_t buflen)
 
   return ret;
 }
-
+libc_hidden_def (__ttyname_r)
 weak_alias (__ttyname_r, ttyname_r)

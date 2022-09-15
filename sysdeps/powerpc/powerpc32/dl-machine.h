@@ -25,6 +25,8 @@
 #include <dl-tls.h>
 #include <dl-irel.h>
 #include <hwcapinfo.h>
+#include <dl-static-tls.h>
+#include <dl-machine-rel.h>
 
 /* Translate a processor specific dynamic tag to the index
    in l_info array.  */
@@ -109,8 +111,6 @@ elf_machine_load_address (void)
   return runtime_dynamic - elf_machine_dynamic ();
 }
 
-#define ELF_MACHINE_BEFORE_RTLD_RELOC(dynamic_info) /* nothing */
-
 /* The PLT uses Elf32_Rela relocs.  */
 #define elf_machine_relplt elf_machine_rela
 
@@ -147,10 +147,6 @@ __elf_preferred_address(struct link_map *loader, size_t maplength,
 /* A reloc type used for ld.so cmdline arg lookups to reject PLT entries.  */
 #define ELF_MACHINE_JMP_SLOT	R_PPC_JMP_SLOT
 
-/* The PowerPC never uses REL relocations.  */
-#define ELF_MACHINE_NO_REL 1
-#define ELF_MACHINE_NO_RELA 0
-
 /* We define an initialization function to initialize HWCAP/HWCAP2 and
    platform data so it can be copied into the TCB later.  This is called
    very early in _dl_sysdep_start for dynamically linked binaries.  */
@@ -172,7 +168,7 @@ extern int __elf_machine_runtime_setup (struct link_map *map,
 					int lazy, int profile);
 
 static inline int
-elf_machine_runtime_setup (struct link_map *map,
+elf_machine_runtime_setup (struct link_map *map, struct r_scope_elem *scope[],
 			   int lazy, int profile)
 {
   if (map->l_info[DT_JMPREL] == 0)
@@ -286,9 +282,10 @@ extern void _dl_reloc_overflow (struct link_map *map,
    LOADADDR is the load address of the object; INFO is an array indexed
    by DT_* of the .dynamic section info.  */
 
-auto inline void __attribute__ ((always_inline))
-elf_machine_rela (struct link_map *map, const Elf32_Rela *reloc,
-		  const Elf32_Sym *sym, const struct r_found_version *version,
+static inline void __attribute__ ((always_inline))
+elf_machine_rela (struct link_map *map, struct r_scope_elem *scope[],
+		  const Elf32_Rela *reloc, const Elf32_Sym *sym,
+		  const struct r_found_version *version,
 		  void *const reloc_addr_arg, int skip_ifunc)
 {
   Elf32_Addr *const reloc_addr = reloc_addr_arg;
@@ -317,7 +314,7 @@ elf_machine_rela (struct link_map *map, const Elf32_Rela *reloc,
     }
   else
     {
-      sym_map = RESOLVE_MAP (&sym, version, r_type);
+      sym_map = RESOLVE_MAP (map, scope, &sym, version, r_type);
       value = SYMBOL_ADDRESS (sym_map, sym, true);
     }
   value += reloc->r_addend;
@@ -441,7 +438,7 @@ elf_machine_rela (struct link_map *map, const Elf32_Rela *reloc,
     }
 }
 
-auto inline void __attribute__ ((always_inline))
+static inline void __attribute__ ((always_inline))
 elf_machine_rela_relative (Elf32_Addr l_addr, const Elf32_Rela *reloc,
 			   void *const reloc_addr_arg)
 {
@@ -449,8 +446,8 @@ elf_machine_rela_relative (Elf32_Addr l_addr, const Elf32_Rela *reloc,
   *reloc_addr = l_addr + reloc->r_addend;
 }
 
-auto inline void __attribute__ ((always_inline))
-elf_machine_lazy_rel (struct link_map *map,
+static inline void __attribute__ ((always_inline))
+elf_machine_lazy_rel (struct link_map *map, struct r_scope_elem *scope[],
 		      Elf32_Addr l_addr, const Elf32_Rela *reloc,
 		      int skip_ifunc)
 {

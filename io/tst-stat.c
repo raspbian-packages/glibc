@@ -25,6 +25,7 @@
 #include <support/xunistd.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
+#include <stdio.h>
 #include <unistd.h>
 
 static void
@@ -68,6 +69,14 @@ do_test (void)
   TEST_VERIFY_EXIT (fd >= 0);
   support_write_file_string (path, "abc");
 
+  /* This should help to prevent delayed allocation, which may result
+     in a spurious stx_blocks/st_blocks difference.  */
+  fsync (fd);
+
+  bool check_ns = support_stat_nanoseconds (path);
+  if (!check_ns)
+    printf ("warning: timestamp with nanoseconds not supported\n");
+
   struct statx stx;
   TEST_COMPARE (statx (fd, path, 0, STATX_BASIC_STATS, &stx), 0);
 
@@ -91,9 +100,12 @@ do_test (void)
       TEST_COMPARE (stx.stx_blocks, st.st_blocks);
 
       TEST_COMPARE (stx.stx_ctime.tv_sec, st.st_ctim.tv_sec);
-      TEST_COMPARE (stx.stx_ctime.tv_nsec, st.st_ctim.tv_nsec);
       TEST_COMPARE (stx.stx_mtime.tv_sec, st.st_mtim.tv_sec);
-      TEST_COMPARE (stx.stx_mtime.tv_nsec, st.st_mtim.tv_nsec);
+      if (check_ns)
+	{
+	  TEST_COMPARE (stx.stx_ctime.tv_nsec, st.st_ctim.tv_nsec);
+	  TEST_COMPARE (stx.stx_mtime.tv_nsec, st.st_mtim.tv_nsec);
+	}
     }
 
   return 0;

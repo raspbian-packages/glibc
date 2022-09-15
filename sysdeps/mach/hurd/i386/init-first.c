@@ -38,10 +38,6 @@ extern void __init_misc (int, char **, char **);
 unsigned long int __hurd_threadvar_stack_offset;
 unsigned long int __hurd_threadvar_stack_mask;
 
-#ifndef SHARED
-int __libc_enable_secure;
-#endif
-
 extern int __libc_argc attribute_hidden;
 extern char **__libc_argv attribute_hidden;
 extern char **_dl_argv;
@@ -99,8 +95,13 @@ init1 (int argc, char *arg0, ...)
   d = (void *) ++envp;
 
   if ((void *) d == argv[0])
-    /* No Hurd data block to process.  */
-    return;
+    {
+      /* No Hurd data block to process.  */
+#ifndef SHARED
+      __libc_enable_secure = 0;
+#endif
+      return;
+    }
 
 #ifndef SHARED
   __libc_enable_secure = d->flags & EXEC_SECURE;

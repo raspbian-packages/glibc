@@ -150,9 +150,9 @@ __tzfile_read (const char *file, size_t extra, char **extrap)
     }
 
   /* If we were already using tzfile, check whether the file changed.  */
-  struct stat64 st;
+  struct __stat64_t64 st;
   if (was_using_tzfile
-      && __stat64 (file, &st) == 0
+      && __stat64_time64 (file, &st) == 0
       && tzfile_ino == st.st_ino && tzfile_dev == st.st_dev
       && tzfile_mtime == st.st_mtime)
     goto done;  /* Nothing to do.  */
@@ -164,7 +164,7 @@ __tzfile_read (const char *file, size_t extra, char **extrap)
     goto ret_free_transitions;
 
   /* Get information about the file we are actually using.  */
-  if (__fstat64 (__fileno (f), &st) != 0)
+  if (__fstat64_time64 (__fileno (f), &st) != 0)
     goto lose;
 
   free ((void *) transitions);
@@ -431,8 +431,8 @@ __tzfile_read (const char *file, size_t extra, char **extrap)
   if (__tzname[0] == NULL)
     {
       /* This should only happen if there are no transition rules.
-	 In this case there should be only one single type.  */
-      assert (num_types == 1);
+	 In this case there's usually only one single type, unless
+	 e.g. the data file has a truncated time-range.  */
       __tzname[0] = __tzstring (zone_names);
     }
   if (__tzname[1] == NULL)
@@ -765,8 +765,7 @@ __tzfile_compute (__time64_t timer, int use_localtime,
   *leap_correct = leaps[i].change;
 
   if (timer == leaps[i].transition /* Exactly at the transition time.  */
-      && ((i == 0 && leaps[i].change > 0)
-	  || leaps[i].change > leaps[i - 1].change))
+      && (leaps[i].change > (i == 0 ? 0 : leaps[i - 1].change)))
     {
       *leap_hit = 1;
       while (i > 0

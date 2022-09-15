@@ -487,7 +487,7 @@ retry:
   /* Safe to let signals happen now.  */
   _hurd_critical_section_unlock (ss);
   if (err == EINTR)
-    /* Got a signal while inside an RPC of the critical section, retry.  */
+    /* Got a signal while inside an RPC of the critical section, retry again */
     goto retry;
 
  outargs:

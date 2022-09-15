@@ -30,6 +30,8 @@
 #include <string.h>
 #include <link.h>
 #include <dl-tls.h>
+#include <dl-static-tls.h>
+#include <dl-machine-rel.h>
 
 /* Dynamic Linking ABI for ARCv2 ISA.
 
@@ -86,7 +88,7 @@
 
 /* Return nonzero iff ELF header is compatible with the running host.  */
 static inline int
-elf_machine_matches_host (const Elf32_Ehdr *ehdr)
+elf_machine_matches_host (const ElfW(Ehdr) *ehdr)
 {
   return (ehdr->e_machine == EM_ARCV2		 /* ARC HS.  */
 	  || ehdr->e_machine == EM_ARC_COMPACT); /* ARC 700.  */
@@ -122,9 +124,10 @@ elf_machine_load_address (void)
 
 static inline int
 __attribute__ ((always_inline))
-elf_machine_runtime_setup (struct link_map *l, int lazy, int profile)
+elf_machine_runtime_setup (struct link_map *l, struct r_scope_elem *scope[],
+			   int lazy, int profile)
 {
-  extern void _dl_runtime_resolve (Elf32_Word);
+  extern void _dl_runtime_resolve (void);
 
   if (l->l_info[DT_JMPREL] && lazy)
     {
@@ -202,28 +205,19 @@ __start:								\n\
 /* A reloc type used for ld.so cmdline arg lookups to reject PLT entries.  */
 #define ELF_MACHINE_JMP_SLOT  R_ARC_JUMP_SLOT
 
-/* ARC uses Elf32_Rela relocations.  */
-#define ELF_MACHINE_NO_REL 1
-#define ELF_MACHINE_NO_RELA 0
-
 /* Fixup a PLT entry to bounce directly to the function at VALUE.  */
 
 static inline ElfW(Addr)
 elf_machine_fixup_plt (struct link_map *map, lookup_t t,
 		       const ElfW(Sym) *refsym, const ElfW(Sym) *sym,
-		       const Elf32_Rela *reloc,
+		       const ElfW(Rela) *reloc,
 		       ElfW(Addr) *reloc_addr, ElfW(Addr) value)
 {
   return *reloc_addr = value;
 }
 
 /* Return the final value of a plt relocation.  */
-static inline ElfW(Addr)
-elf_machine_plt_value (struct link_map *map, const Elf32_Rela *reloc,
-                       ElfW(Addr) value)
-{
-  return value;
-}
+#define elf_machine_plt_value(map, reloc, value) (value)
 
 /* Names of the architecture-specific auditing callback functions.  */
 #define ARCH_LA_PLTENTER arc_gnu_pltenter
@@ -233,14 +227,16 @@ elf_machine_plt_value (struct link_map *map, const Elf32_Rela *reloc,
 
 #ifdef RESOLVE_MAP
 
-inline void
+static inline void
 __attribute__ ((always_inline))
-elf_machine_rela (struct link_map *map, const ElfW(Rela) *reloc,
-                  const ElfW(Sym) *sym, const struct r_found_version *version,
+elf_machine_rela (struct link_map *map, struct r_scope_elem *scope[],
+		  const ElfW(Rela) *reloc, const ElfW(Sym) *sym,
+		  const struct r_found_version *version,
                   void *const reloc_addr_arg, int skip_ifunc)
 {
+  ElfW(Addr) r_info = reloc->r_info;
+  const unsigned long int r_type = ELFW (R_TYPE) (r_info);
   ElfW(Addr) *const reloc_addr = reloc_addr_arg;
-  const unsigned int r_type = ELF32_R_TYPE (reloc->r_info);
 
   if (__glibc_unlikely (r_type == R_ARC_RELATIVE))
     *reloc_addr += map->l_addr;
@@ -249,7 +245,8 @@ elf_machine_rela (struct link_map *map, const ElfW(Rela) *reloc,
   else
     {
       const ElfW(Sym) *const refsym = sym;
-      struct link_map *sym_map = RESOLVE_MAP (&sym, version, r_type);
+      struct link_map *sym_map = RESOLVE_MAP (map, scope, &sym, version,
+					      r_type);
       ElfW(Addr) value = SYMBOL_ADDRESS (sym_map, sym, true);
 
       switch (r_type)
@@ -319,7 +316,7 @@ elf_machine_rela (struct link_map *map, const ElfW(Rela) *reloc,
     }
 }
 
-inline void
+static inline void
 __attribute__ ((always_inline))
 elf_machine_rela_relative (ElfW(Addr) l_addr, const ElfW(Rela) *reloc,
                            void *const reloc_addr_arg)
@@ -328,17 +325,19 @@ elf_machine_rela_relative (ElfW(Addr) l_addr, const ElfW(Rela) *reloc,
   *reloc_addr += l_addr;
 }
 
-inline void
+static inline void
 __attribute__ ((always_inline))
-elf_machine_lazy_rel (struct link_map *map, ElfW(Addr) l_addr,
-                      const ElfW(Rela) *reloc, int skip_ifunc)
+elf_machine_lazy_rel (struct link_map *map, struct r_scope_elem *scope[],
+		      ElfW(Addr) l_addr, const ElfW(Rela) *reloc,
+		      int skip_ifunc)
 {
   ElfW(Addr) *const reloc_addr = (void *) (l_addr + reloc->r_offset);
+  const unsigned int r_type = ELFW (R_TYPE) (reloc->r_info);
 
-  if (ELF32_R_TYPE (reloc->r_info) == R_ARC_JUMP_SLOT)
+  if (r_type == R_ARC_JUMP_SLOT)
     *reloc_addr += l_addr;
   else
-    _dl_reloc_bad_type (map, ELF32_R_TYPE (reloc->r_info), 1);
+    _dl_reloc_bad_type (map, r_type, 1);
 }
 
 #endif /* RESOLVE_MAP */

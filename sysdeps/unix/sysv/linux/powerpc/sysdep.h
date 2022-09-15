@@ -56,7 +56,9 @@
        "0:"								\
        : "+r" (r0), "+r" (r3), "+r" (r4), "+r" (r5),  "+r" (r6),        \
          "+r" (r7), "+r" (r8)						\
-       : : "r9", "r10", "r11", "r12", "cr0", "ctr", "lr", "memory");	\
+       : : "r9", "r10", "r11", "r12",					\
+           "cr0", "cr1", "cr5", "cr6", "cr7",				\
+           "xer", "lr", "ctr", "memory");				\
     __asm__ __volatile__ ("" : "=r" (rval) : "r" (r3));		        \
     (long int) r0 & (1 << 28) ? -rval : rval;				\
   })
@@ -86,7 +88,8 @@
 	 "=&r" (r6), "=&r" (r7), "=&r" (r8)	\
        : ASM_INPUT_##nr			\
        : "r9", "r10", "r11", "r12",		\
-	 "lr", "ctr", "memory");		\
+	 "cr0", "cr1", "cr5", "cr6", "cr7",	\
+	 "xer", "lr", "ctr", "memory"); 	\
     r3;					\
   })
 
@@ -101,7 +104,7 @@
 	 "=&r" (r6), "=&r" (r7), "=&r" (r8)	\
        : ASM_INPUT_##nr			\
        : "r9", "r10", "r11", "r12",		\
-	 "cr0", "ctr", "memory");		\
+	 "xer", "cr0", "ctr", "memory");	\
     r0 & (1 << 28) ? -r3 : r3;			\
   })
 
@@ -122,7 +125,7 @@
 
 /* When inside the dynamic loader, the thread pointer may not have been
    initialized yet, so don't check for scv support in that case.  */
-# if !IS_IN(rtld)
+# if defined(USE_PPC_SCV) && !IS_IN(rtld)
 #  undef TRY_SYSCALL_SCV
 #  define TRY_SYSCALL_SCV(nr)						\
   CHECK_THREAD_POINTER && THREAD_GET_HWCAP() & PPC_FEATURE2_SCV ?	\

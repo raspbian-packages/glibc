@@ -40,7 +40,7 @@ retry:
       __mutex_unlock (&_hurd_id.lock);
       _hurd_critical_section_unlock (crit);
       if (err == EINTR)
-	/* Got a signal while inside an RPC of the critical section, retry.  */
+	/* Got a signal while inside an RPC of the critical section, retry again */
 	goto retry;
       return __hurd_fail (err);
     }

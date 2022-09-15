@@ -29,7 +29,7 @@
 
 enum
 {
-  CPUID_INDEX_MAX = CPUID_INDEX_19 + 1
+  CPUID_INDEX_MAX = CPUID_INDEX_14_ECX_0 + 1
 };
 
 enum
@@ -43,11 +43,11 @@ enum
 
 /* Only used directly in cpu-features.c.  */
 #define CPU_FEATURE_SET(ptr, name) \
-  ptr->features[index_cpu_##name].usable.reg_##name |= bit_cpu_##name;
+  ptr->features[index_cpu_##name].active.reg_##name |= bit_cpu_##name;
 #define CPU_FEATURE_UNSET(ptr, name) \
-  ptr->features[index_cpu_##name].usable.reg_##name &= ~bit_cpu_##name;
-#define CPU_FEATURE_SET_USABLE(ptr, name) \
-  ptr->features[index_cpu_##name].usable.reg_##name \
+  ptr->features[index_cpu_##name].active.reg_##name &= ~bit_cpu_##name;
+#define CPU_FEATURE_SET_ACTIVE(ptr, name) \
+  ptr->features[index_cpu_##name].active.reg_##name \
      |= ptr->features[index_cpu_##name].cpuid.reg_##name & bit_cpu_##name;
 #define CPU_FEATURE_PREFERRED_P(ptr, name) \
   ((ptr->preferred[index_arch_##name] & bit_arch_##name) != 0)
@@ -55,10 +55,14 @@ enum
 #define CPU_FEATURE_CHECK_P(ptr, name, check) \
   ((ptr->features[index_cpu_##name].check.reg_##name \
     & bit_cpu_##name) != 0)
-#define CPU_FEATURE_CPU_P(ptr, name) \
+#define CPU_FEATURE_PRESENT_P(ptr, name) \
   CPU_FEATURE_CHECK_P (ptr, name, cpuid)
+#define CPU_FEATURE_ACTIVE_P(ptr, name) \
+  CPU_FEATURE_CHECK_P (ptr, name, active)
+#define CPU_FEATURE_CPU_P(ptr, name) \
+  CPU_FEATURE_PRESENT_P (ptr, name)
 #define CPU_FEATURE_USABLE_P(ptr, name) \
-  CPU_FEATURE_CHECK_P (ptr, name, usable)
+  CPU_FEATURE_ACTIVE_P (ptr, name)
 
 /* HAS_CPU_FEATURE evaluates to true if CPU supports the feature.  */
 #define HAS_CPU_FEATURE(name) \
@@ -289,6 +293,11 @@ enum
 
 /* EBX.  */
 #define bit_cpu_WBNOINVD	(1u << 9)
+#define bit_cpu_AMD_IBPB	(1u << 12)
+#define bit_cpu_AMD_IBRS	(1u << 14)
+#define bit_cpu_AMD_STIBP	(1u << 15)
+#define bit_cpu_AMD_SSBD	(1u << 24)
+#define bit_cpu_AMD_VIRT_SSBD	(1u << 25)
 
 /* CPUID_INDEX_7_ECX_1.  */
 
@@ -306,6 +315,11 @@ enum
 /* EBX.  */
 #define bit_cpu_AESKLE		(1u << 0)
 #define bit_cpu_WIDE_KL		(1u << 2)
+
+/* CPUID_INDEX_14_ECX_0.  */
+
+/* EBX.  */
+#define bit_cpu_PTWRITE		(1u << 4)
 
 /* CPUID_INDEX_1.  */
 
@@ -514,6 +528,11 @@ enum
 
 /* EBX.  */
 #define index_cpu_WBNOINVD	CPUID_INDEX_80000008
+#define index_cpu_AMD_IBPB	CPUID_INDEX_80000008
+#define index_cpu_AMD_IBRS	CPUID_INDEX_80000008
+#define index_cpu_AMD_STIBP	CPUID_INDEX_80000008
+#define index_cpu_AMD_SSBD	CPUID_INDEX_80000008
+#define index_cpu_AMD_VIRT_SSBD	CPUID_INDEX_80000008
 
 /* CPUID_INDEX_7_ECX_1.  */
 
@@ -531,6 +550,11 @@ enum
 /* EBX.  */
 #define index_cpu_AESKLE	CPUID_INDEX_19
 #define index_cpu_WIDE_KL	CPUID_INDEX_19
+
+/* CPUID_INDEX_14_ECX_0.  */
+
+/* EBX.  */
+#define index_cpu_PTWRITE	CPUID_INDEX_14_ECX_0
 
 /* CPUID_INDEX_1.  */
 
@@ -739,6 +763,11 @@ enum
 
 /* EBX.  */
 #define reg_WBNOINVD		ebx
+#define reg_AMD_IBPB		ebx
+#define reg_AMD_IBRS		ebx
+#define reg_AMD_STIBP		ebx
+#define reg_AMD_SSBD		ebx
+#define reg_AMD_VIRT_SSBD	ebx
 
 /* CPUID_INDEX_7_ECX_1.  */
 
@@ -756,6 +785,11 @@ enum
 /* EBX.  */
 #define reg_AESKLE		ebx
 #define reg_WIDE_KL		ebx
+
+/* CPUID_INDEX_14_ECX_0.  */
+
+/* EBX.  */
+#define reg_PTWRITE		ebx
 
 /* PREFERRED_FEATURE_INDEX_1.  First define the bitindex values
    sequentially, then define the bit_arch* and index_arch_* lookup
@@ -819,8 +853,8 @@ struct cpuid_feature_internal
     };
   union
     {
-      unsigned int usable_array[4];
-      struct cpuid_registers usable;
+      unsigned int active_array[4];
+      struct cpuid_registers active;
     };
 };
 
@@ -913,6 +947,6 @@ extern void _dl_x86_init_cpu_features (void) attribute_hidden;
 # define HAS_CPUID 1
 # define HAS_I586 1
 # define HAS_I686 1
-# endif
+#endif
 
 #endif /* include/cpu-features.h */

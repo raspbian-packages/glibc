@@ -37,6 +37,7 @@
 #define __NR_epoll_create1 1073742115
 #define __NR_epoll_ctl 1073742057
 #define __NR_epoll_pwait 1073742105
+#define __NR_epoll_pwait2 1073742265
 #define __NR_epoll_wait 1073742056
 #define __NR_eventfd 1073742108
 #define __NR_eventfd2 1073742114
@@ -73,6 +74,7 @@
 #define __NR_fsync 1073741898
 #define __NR_ftruncate 1073741901
 #define __NR_futex 1073742026
+#define __NR_futex_waitv 1073742273
 #define __NR_futimesat 1073742085
 #define __NR_get_mempolicy 1073742063
 #define __NR_get_robust_list 1073742355
@@ -128,6 +130,9 @@
 #define __NR_kexec_load 1073742352
 #define __NR_keyctl 1073742074
 #define __NR_kill 1073741886
+#define __NR_landlock_add_rule 1073742269
+#define __NR_landlock_create_ruleset 1073742268
+#define __NR_landlock_restrict_self 1073742270
 #define __NR_lchown 1073741918
 #define __NR_lgetxattr 1073742016
 #define __NR_link 1073741910
@@ -144,6 +149,7 @@
 #define __NR_mbind 1073742061
 #define __NR_membarrier 1073742148
 #define __NR_memfd_create 1073742143
+#define __NR_memfd_secret 1073742271
 #define __NR_migrate_pages 1073742080
 #define __NR_mincore 1073741851
 #define __NR_mkdir 1073741907
@@ -156,6 +162,7 @@
 #define __NR_mmap 1073741833
 #define __NR_modify_ldt 1073741978
 #define __NR_mount 1073741989
+#define __NR_mount_setattr 1073742266
 #define __NR_move_mount 1073742253
 #define __NR_move_pages 1073742357
 #define __NR_mprotect 1073741834
@@ -202,6 +209,7 @@
 #define __NR_preadv2 1073742370
 #define __NR_prlimit64 1073742126
 #define __NR_process_madvise 1073742264
+#define __NR_process_mrelease 1073742272
 #define __NR_process_vm_readv 1073742363
 #define __NR_process_vm_writev 1073742364
 #define __NR_pselect6 1073742094
@@ -211,6 +219,7 @@
 #define __NR_pwritev 1073742359
 #define __NR_pwritev2 1073742371
 #define __NR_quotactl 1073742003
+#define __NR_quotactl_fd 1073742267
 #define __NR_read 1073741824
 #define __NR_readahead 1073742011
 #define __NR_readlink 1073741913
@@ -261,6 +270,7 @@
 #define __NR_sendmsg 1073742342
 #define __NR_sendto 1073741868
 #define __NR_set_mempolicy 1073742062
+#define __NR_set_mempolicy_home_node 1073742274
 #define __NR_set_robust_list 1073742354
 #define __NR_set_thread_area 1073742029
 #define __NR_set_tid_address 1073742042

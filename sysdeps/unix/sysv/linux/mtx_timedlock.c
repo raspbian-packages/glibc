@@ -17,6 +17,7 @@
    <https://www.gnu.org/licenses/>.  */
 
 #include <time.h>
+#include <shlib-compat.h>
 #include "thrd_priv.h"
 
 int
@@ -28,16 +29,22 @@ __mtx_timedlock64 (mtx_t *restrict mutex,
   return thrd_err_map (err_code);
 }
 
-#if __TIMESIZE != 64
-libpthread_hidden_def (__mtx_timedlock64)
+#if __TIMESIZE == 64
+strong_alias (__mtx_timedlock64, ___mtx_timedlock)
+#else
+libc_hidden_def (__mtx_timedlock64)
 
 int
-__mtx_timedlock (mtx_t *restrict mutex,
-                 const struct timespec *restrict time_point)
+___mtx_timedlock (mtx_t *restrict mutex,
+                  const struct timespec *restrict time_point)
 {
   struct __timespec64 ts64 = valid_timespec_to_timespec64 (*time_point);
 
   return __mtx_timedlock64 (mutex, &ts64);
 }
+#endif /* __TIMESIZE == 64 */
+versioned_symbol (libc, ___mtx_timedlock, mtx_timedlock, GLIBC_2_34);
+
+#if OTHER_SHLIB_COMPAT (libpthread, GLIBC_2_28, GLIBC_2_34)
+compat_symbol (libpthread, ___mtx_timedlock, mtx_timedlock, GLIBC_2_28);
 #endif
-weak_alias (__mtx_timedlock, mtx_timedlock)

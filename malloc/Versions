@@ -9,7 +9,7 @@ libc {
     __libc_valloc;
     __malloc_initialize_hook; __free_hook; __malloc_hook; __realloc_hook;
     __memalign_hook; __after_morecore_hook;
-    __malloc_initialized; __default_morecore; __morecore;
+    __default_morecore; __morecore;
 
     # functions used in inline functions or macros
     _obstack_allocated_p; _obstack_begin; _obstack_begin_1;
@@ -25,8 +25,8 @@ libc {
     free;
 
     # m*
-    mallinfo; malloc; malloc_get_state; malloc_set_state; malloc_stats;
-    malloc_trim; malloc_usable_size; mallopt; memalign; mprobe; mtrace;
+    mallinfo; malloc; malloc_stats;
+    malloc_trim; malloc_usable_size; mallopt; mcheck; memalign; mprobe; mtrace;
     muntrace;
 
     # o*
@@ -96,5 +96,50 @@ libc {
     __libc_alloc_buffer_copy_bytes;
     __libc_alloc_buffer_copy_string;
     __libc_alloc_buffer_create_failure;
+  }
+}
+
+# Keep in sync with symbols in libc.
+libc_malloc_debug {
+  GLIBC_2.0 {
+    calloc;
+    free;
+    malloc;
+    memalign;
+    pvalloc;
+    realloc;
+    valloc;
+
+    __free_hook;
+    __malloc_hook;
+    __memalign_hook;
+    __realloc_hook;
+
+    mcheck;
+    mprobe;
+    mtrace;
+    muntrace;
+
+    mallinfo;
+    malloc_get_state;
+    malloc_set_state;
+    malloc_stats;
+    malloc_trim;
+    malloc_usable_size;
+    mallopt;
+  }
+  GLIBC_2.2 {
+    mcheck_check_all;
+    mcheck_pedantic;
+    posix_memalign;
+  }
+  GLIBC_2.10 {
+    malloc_info;
+  }
+  GLIBC_2.16 {
+    aligned_alloc;
+  }
+  GLIBC_2.33 {
+    mallinfo2;
   }
 }

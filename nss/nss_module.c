@@ -26,18 +26,13 @@
 #include <dlfcn.h>
 #include <gnu/lib-names.h>
 #include <libc-lock.h>
+#include <nss_dns.h>
+#include <nss_files.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#ifdef LINK_OBSOLETE_NSL
-# define DEFAULT_CONFIG    "compat [NOTFOUND=return] files"
-# define DEFAULT_DEFCONFIG "nis [NOTFOUND=return] files"
-#else
-# define DEFAULT_CONFIG    "files"
-# define DEFAULT_DEFCONFIG "files"
-#endif
+#include <sysdep.h>
 
 /* Suffix after .so of NSS service modules.  This is a bit of magic,
    but we assume LIBNSS_FILES_SO looks like "libnss_files.so.2" and we
@@ -118,10 +113,71 @@ static const function_name nss_function_name_array[] =
 #include "function.def"
   };
 
+/* Loads a built-in module, binding the symbols using the supplied
+   callback function.  Always returns true.  */
+static bool
+module_load_builtin (struct nss_module *module,
+		     void (*bind) (nss_module_functions_untyped))
+{
+  /* Initialize the function pointers, following the double-checked
+     locking idiom.  */
+  __libc_lock_lock (nss_module_list_lock);
+  switch ((enum nss_module_state) atomic_load_acquire (&module->state))
+    {
+    case nss_module_uninitialized:
+    case nss_module_failed:
+      bind (module->functions.untyped);
+
+#ifdef PTR_MANGLE
+      for (int i = 0; i < nss_module_functions_count; ++i)
+	PTR_MANGLE (module->functions.untyped[i]);
+#endif
+
+      module->handle = NULL;
+      /* Synchronizes with unlocked __nss_module_load atomic_load_acquire.  */
+      atomic_store_release (&module->state, nss_module_loaded);
+      break;
+    case nss_module_loaded:
+      /* Nothing to clean up.  */
+      break;
+    }
+  __libc_lock_unlock (nss_module_list_lock);
+  return true;
+}
+
+/* Loads the built-in nss_files module.  */
+static bool
+module_load_nss_files (struct nss_module *module)
+{
+#ifdef USE_NSCD
+  if (is_nscd)
+    {
+      void (*cb) (size_t, struct traced_file *) = nscd_init_cb;
+# ifdef PTR_DEMANGLE
+      PTR_DEMANGLE (cb);
+# endif
+      _nss_files_init (cb);
+    }
+#endif
+  return module_load_builtin (module, __nss_files_functions);
+}
+
+/* Loads the built-in nss_dns module.  */
+static bool
+module_load_nss_dns (struct nss_module *module)
+{
+  return module_load_builtin (module, __nss_dns_functions);
+}
+
 /* Internal implementation of __nss_module_load.  */
 static bool
 module_load (struct nss_module *module)
 {
+  if (strcmp (module->name, "files") == 0)
+    return module_load_nss_files (module);
+  if (strcmp (module->name, "dns") == 0)
+    return module_load_nss_dns (module);
+
   void *handle;
   {
     char *shlib_name;
@@ -274,8 +330,18 @@ name_search (const void *left, const void *right)
 void *
 __nss_module_get_function (struct nss_module *module, const char *name)
 {
+  /* A successful dlopen might clobber errno.   */
+  int saved_errno = errno;
+
   if (!__nss_module_load (module))
-    return NULL;
+    {
+      /* Reporting module load failure is currently inaccurate.  See
+	 bug 22041.  Not changing errno is the conservative choice.  */
+      __set_errno (saved_errno);
+      return NULL;
+    }
+
+  __set_errno (saved_errno);
 
   function_name *name_entry = bsearch (name, nss_function_name_array,
                                        array_length (nss_function_name_array),
@@ -292,11 +358,11 @@ __nss_module_get_function (struct nss_module *module, const char *name)
 #if defined SHARED && defined USE_NSCD
 /* Load all libraries for the service.  */
 static void
-nss_load_all_libraries (const char *service, const char *def)
+nss_load_all_libraries (enum nss_database service)
 {
   nss_action_list ni = NULL;
 
-  if (__nss_database_lookup2 (service, NULL, def, &ni) == 0)
+  if (__nss_database_get (service, &ni))
     while (ni->module != NULL)
       {
         __nss_module_load (ni->module);
@@ -323,10 +389,10 @@ __nss_disable_nscd (void (*cb) (size_t, struct traced_file *))
   is_nscd = true;
 
   /* Find all the relevant modules so that the init functions are called.  */
-  nss_load_all_libraries ("passwd", DEFAULT_CONFIG);
-  nss_load_all_libraries ("group", DEFAULT_CONFIG);
-  nss_load_all_libraries ("hosts", "dns [!UNAVAIL=return] files");
-  nss_load_all_libraries ("services", NULL);
+  nss_load_all_libraries (nss_database_passwd);
+  nss_load_all_libraries (nss_database_group);
+  nss_load_all_libraries (nss_database_hosts);
+  nss_load_all_libraries (nss_database_services);
 
   /* Make sure NSCD purges its cache if nsswitch.conf changes.  */
   init_traced_file (&pwd_traced_file.file, _PATH_NSSWITCH_CONF, 0);
@@ -368,7 +434,9 @@ __nss_module_freeres (void)
   struct nss_module *current = nss_module_list;
   while (current != NULL)
     {
-      if (current->state == nss_module_loaded)
+      /* Ignore built-in modules (which have a NULL handle).  */
+      if (current->state == nss_module_loaded
+	  && current->handle != NULL)
         __libc_dlclose (current->handle);
 
       struct nss_module *next = current->next;

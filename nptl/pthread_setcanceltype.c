@@ -29,31 +29,24 @@ __pthread_setcanceltype (int type, int *oldtype)
 
   volatile struct pthread *self = THREAD_SELF;
 
-  int oldval = THREAD_GETMEM (self, cancelhandling);
+  int oldval = atomic_load_relaxed (&self->cancelhandling);
   while (1)
     {
       int newval = (type == PTHREAD_CANCEL_ASYNCHRONOUS
 		    ? oldval | CANCELTYPE_BITMASK
 		    : oldval & ~CANCELTYPE_BITMASK);
 
-      /* Store the old value.  */
       if (oldtype != NULL)
 	*oldtype = ((oldval & CANCELTYPE_BITMASK)
 		    ? PTHREAD_CANCEL_ASYNCHRONOUS : PTHREAD_CANCEL_DEFERRED);
 
-      /* Avoid doing unnecessary work.  The atomic operation can
-	 potentially be expensive if the memory has to be locked and
-	 remote cache lines have to be invalidated.  */
       if (oldval == newval)
 	break;
 
-      /* Update the cancel handling word.  This has to be done
-	 atomically since other bits could be modified as well.  */
-      int curval = THREAD_ATOMIC_CMPXCHG_VAL (self, cancelhandling, newval,
-					      oldval);
-      if (__glibc_likely (curval == oldval))
+      if (atomic_compare_exchange_weak_acquire (&self->cancelhandling,
+						&oldval, newval))
 	{
-	  if (CANCEL_ENABLED_AND_CANCELED_AND_ASYNCHRONOUS (newval))
+	  if (cancel_enabled_and_canceled_and_async (newval))
 	    {
 	      THREAD_SETMEM (self, result, PTHREAD_CANCELED);
 	      __do_cancel ();
@@ -61,11 +54,9 @@ __pthread_setcanceltype (int type, int *oldtype)
 
 	  break;
 	}
-
-      /* Prepare for the next round.  */
-      oldval = curval;
     }
 
   return 0;
 }
-strong_alias (__pthread_setcanceltype, pthread_setcanceltype)
+libc_hidden_def (__pthread_setcanceltype)
+weak_alias (__pthread_setcanceltype, pthread_setcanceltype)

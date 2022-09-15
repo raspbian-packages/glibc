@@ -73,7 +73,7 @@ routines := brk sbrk sstk ioctl \
 	    fgetxattr flistxattr fremovexattr fsetxattr getxattr \
 	    listxattr lgetxattr llistxattr lremovexattr lsetxattr \
 	    removexattr setxattr getauxval ifunc-impl-list makedev \
-	    allocate_once fd_to_filename single_threaded
+	    allocate_once fd_to_filename single_threaded unwind-link
 
 generated += tst-error1.mtrace tst-error1-mem.out \
   tst-allocate_once.mtrace tst-allocate_once-mem.out
@@ -88,7 +88,14 @@ tests := tst-dirname tst-tsearch tst-fdset tst-mntent tst-hsearch \
 	 tst-preadvwritev tst-preadvwritev64 tst-makedev tst-empty \
 	 tst-preadvwritev2 tst-preadvwritev64v2 tst-warn-wide \
 	 tst-ldbl-warn tst-ldbl-error tst-dbl-efgcvt tst-ldbl-efgcvt \
-	 tst-mntent-autofs tst-syscalls tst-mntent-escape tst-select
+	 tst-mntent-autofs tst-syscalls tst-mntent-escape tst-select \
+	 tst-ioctl
+
+tests-time64 := \
+  tst-select-time64 \
+  tst-pselect-time64 \
+  tst-ioctl-time64 \
+  # tests-time64
 
 # Tests which need libdl.
 ifeq (yes,$(build-shared))
@@ -148,15 +155,20 @@ $(objpfx)libg.a: $(dep-dummy-lib); $(make-dummy-lib)
 
 $(objpfx)tst-tsearch: $(libm)
 
-tst-error1-ENV = MALLOC_TRACE=$(objpfx)tst-error1.mtrace
+tst-error1-ENV = MALLOC_TRACE=$(objpfx)tst-error1.mtrace \
+		 LD_PRELOAD=$(common-objpfx)/malloc/libc_malloc_debug.so
 tst-error1-ARGS = $(objpfx)tst-error1.out
 $(objpfx)tst-error1-mem.out: $(objpfx)tst-error1.out
 	$(common-objpfx)malloc/mtrace $(objpfx)tst-error1.mtrace > $@; \
 	$(evaluate-test)
 
-tst-allocate_once-ENV = MALLOC_TRACE=$(objpfx)tst-allocate_once.mtrace
+tst-allocate_once-ENV = MALLOC_TRACE=$(objpfx)tst-allocate_once.mtrace \
+			LD_PRELOAD=$(common-objpfx)/malloc/libc_malloc_debug.so
 $(objpfx)tst-allocate_once-mem.out: $(objpfx)tst-allocate_once.out
 	$(common-objpfx)malloc/mtrace $(objpfx)tst-allocate_once.mtrace > $@; \
 	$(evaluate-test)
 
-$(objpfx)tst-gethostid: $(libdl)
+$(objpfx)tst-select: $(librt)
+$(objpfx)tst-select-time64: $(librt)
+$(objpfx)tst-pselect: $(librt)
+$(objpfx)tst-pselect-time64: $(librt)

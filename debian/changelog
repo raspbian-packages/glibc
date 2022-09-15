@@ -1,15 +1,412 @@
-glibc (2.33-8+rpi1) bookworm-staging; urgency=medium
+glibc (2.34-7+rpi1) bookworm-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
 
-  [changes introduced in 2.32-4+rpi1 by Peter Michale Green]
-  * Change mode on sysdeps/x86_64/configure to 644, dgit does
-    like modes being changed by patches, the corresponding files
-    for other architectures are all 644 and we don't really care
-    about x86-64 in raspbian anyway.
+ -- Peter Michael Green <plugwash@raspbian.org>  Thu, 15 Sep 2022 03:05:05 +0000
 
- -- Raspbian forward porter <root@raspbian.org>  Sat, 23 Jul 2022 07:19:44 +0000
+glibc (2.34-7) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/debhelper.in/libc.install, debian/debhelper.in/libc-udeb.install:
+    Allow installing /lib/ld.so, it's required on hurd-i386.
+
+  [ Aurelien Jarno ]
+  * debian/rules, debian/rules.d/build.mk, debian/rules.d/debhelper.mk: read
+    ld.so and libc.so names from upstream generated soversions.mk instead of
+    looking directly for generated binaries.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sat, 27 Aug 2022 13:38:11 +0200
+
+glibc (2.34-6) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/rules.d/debhelper.mk: fix regular expression to remove static
+    libraries in the stage1 build profile.  Closes: #1018071.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Thu, 25 Aug 2022 19:16:34 +0200
+
+glibc (2.34-5) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * control: Bump hurd break: glibc now using getrandom() at process
+    initialization makes random bootstrap more complex and the system startup
+    hang if not done properly.
+  * debian/patches/hurd-i386/local-no-bootstrap-fs-access.2.diff: Fix
+    another access call which poses problem during bootstrap.
+  * debian/patches/hurd-i386/git-bootstrap-enable_secure.diff: Fix spurious
+    checks during initialization of processes running at bootstrap.
+  * debian/testsuite-xfail-debian.mk: Filter out tests that stay stuck.
+  * debian/patches/hurd-i386/git-global.diff: Fix elf/global missing
+    dependency.
+  * debian/patches/hurd-i386/git-loadfail.diff: Fix elf/loadfail missing
+    dependency.
+  * debian/patches/hurd-i386/git-cond-destroy.diff: Fix tst-cond20.
+  * debian/debhelper.in/libc-udeb.install.hurd-i386: ship the dynamic linker in
+    libc0.3-udeb.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fixes generic brk system call emulation in __brk_call.  Closes:
+      #1017113.
+  * debian/debhelper.in/libc-dev.NEWS: fix a typo.
+  * debian/control.in/libc: drop duplicate breaks entry.
+  * debian/patches/*: fix typos in patch description.
+  * debian/rules: drop trailing whitespaces.
+  * debian/debhelper.in/glibc-source.lintian-overrides: drop unused overrides.
+  * debian/debhelper.in/libc-bin.lintian-overrides: drop unused overrides.
+  * debian/source/lintian-overrides: drop unused overrides.
+  * debian/debhelper.in/libc-devtools.lintian-overrides: rename overrides
+    following lintian changes.
+  * debian/debhelper.in/libc{,-otherbuild].lintian-overrides: rename overrides
+    following lintian changes.
+  * debian/*: use /usr/share/dpkg/pkg-info.mk instead of parsing changelog
+    with dpkg-parsechangelog.
+  * debian/rules.d/build.mk, debian/rules.d/debhelper.mk: update NPTL pretty
+    printer path following the merge of libpthread into libc.
+  * debian/compat, debian/control.in/main, debian/rules.d/debhelper.mk:
+    increase debhelper compat to 13, the declarative way, and replace calls to
+    dh_systemd_enable and dh_systemd_start by dh_installsystemd.
+  * debian/rules.d/build.mk, debian/rules.d/control.mk,
+    debian/rules.d/debhelper.mk: remove support for armel/armhf biarch. It has
+    never been used in Debian, and has stopped being used in Ubuntu.
+  * debian/rules.d/debhelper.mk: stop removing comments from .install files.
+  * debian/rules.d/debhelper.mk: stop cleaning nonexistent files.
+  * debian/debhelper.in/*.install, debian/rules, debian/rules.d/debhelper.mk:
+    use substitution variables from debhelper 13.
+  * debian/rules, debian/rules.d/build.mk, debian/rules.d/debhelper.mk,
+    debian/sysdeps/*.mk: install the main flavor into debian/tmp instead of
+    debian/tmp-libc.
+  * debian/debhelper.in/*.install*, debian/rules.d/debhelper.mk: simplify
+    dh_install files by using the auto source/dest features of debhelper.
+  * debian/debhelper.in/libc.lintian-overrides, debian/rules.d/debhelper.mk:
+    drop package name for lintian overrides files.
+  * debian/control.in/main: bump Standards-Version to 4.6.1 (no changes).
+
+ -- Aurelien Jarno <aurel32@debian.org>  Wed, 24 Aug 2022 23:19:48 +0200
+
+glibc (2.34-4) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/git-ipv6.diff: Add ipv6 RFC options.
+  * debian/patches/hurd-i386/git-ip_mreqn.diff: Move ip_mreqn structure from
+    Linux to generic.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fixes mbstowcs attributes.  Closes: #1017367.
+  * debian/debhelper.in/libc.{pre,post}: only set LC_ALL=C after loading
+    debconf.  Closes: #1017406.
+
+  [ наб ]
+  * debian/local/manpages/locale-gen.8: rewrite.
+  * debian/local/manpages/locale-gen.8.sgml: drop, replaced by above.
+  * debian/local/usr_sbin/locale-gen: clean up and optimize.
+  * debian/local/manpages/locale.alias.5: drop, unused.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Tue, 16 Aug 2022 23:35:10 +0200
+
+glibc (2.34-3) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/rules.d/debhelper.mk: make libc.so and ld.so executable also for
+    libc6-udeb.  Closes: #1016868.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Mon, 08 Aug 2022 19:38:30 +0200
+
+glibc (2.34-2) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+  * debian/control.in/libc: provides libc-dev as versioned.
+  * debian/control.in/libc: Add breaks in libc6-dev against catch (<=
+    1.12.2-0.1).  See: #993515.
+  * debian/rules.d/debhelper.mk: Do not exclude libc.so and ld.so from
+    dh_fixperms, explicitly change the permissions afterwards.  Closes:
+    #1010233.
+  * debian/control.in/libc: temporary remove the breaks against
+    heimdal-multidev to break the build-dependency loop between heimdal and
+    openldap.
+  * debian/debhelper.in/libc-udeb.install: ship the dynamic linker in
+    libc6-udeb.
+
+  [ Samuel Thibault ]
+  * debian/testsuite-xfail-debian.mk: Update hurd-i386 xfails.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Mon, 08 Aug 2022 15:24:00 +0200
+
+glibc (2.34-1) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/submitted-net.diff: Refresh.
+  * debian/testsuite-xfail-debian.mk: Disable tst-pthread_cancel-select-loop
+    which overflows pflocal.
+  * debian/patches/hurd-i386/git-htl-pthread-self-early.diff: Fix calling
+    pthread_self very early.  Closes: #1016106.
+
+  [ Aurelien Jarno ]
+  * debian/control.in/libc: Update breaks against libnetcdf-dev.
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+  * debian/control.in/libc: Add breaks in libc6-dev against dev packages that
+    provide static libraries using __res_* symbols that have been moved from
+    libresolv.a to libc.a:
+    - heimdal-multidev (<= 7.7.0+dfsg-4)
+    - igblast (<= 1.19.0-1)
+    - libasyncns-dev (<= 0.8-6+b2)
+    - libatm1-dev (<= 1:2.5.1-4)
+    - libaws20-dev (<= 20.2-2+b1)
+    - libboinc-app-dev (<= 7.20.2+dfsg-1)
+    - libcups2-dev (<= 2.4.2-1)
+    - libdkim-dev (<= 1:1.0.21-4+b2)
+    - libghc-resolv-dev (<= 0.1.2.0-3)
+    - libghc-resolv-prof (<= 0.1.2.0-3)
+    - libglib2.0-dev (<= 2.72.3-1)
+    - libgloox-dev (<= 1.0.24-2+b1)
+    - libhesiod-dev (<= 3.2.1-3.1+b1)
+    - libinfinity-0.7-dev (<= 0.7.2-1+b1)
+    - libldap-dev (<= 2.5.12+dfsg-2)
+    - libloudmouth1-dev (<= 1.5.4-1)
+    - libmongoc-dev (<= 1.22.1-1)
+    - libmysqlclient-dev (<= 8.0.29-1)
+    - libnfsidmap-dev (<= 1:2.6.1-2)
+    - libola-dev (<= 0.10.8.nojsmin-2)
+    - libopenafs-dev (<= 1.8.8.1-3)
+    - libopendkim-dev (<= 2.11.0~beta2-7)
+    - libopendmarc-dev (<= 1.4.2-1)
+    - libopenzwave1.6-dev (<= 1.6.1914+ds-1)
+    - libpg-query-dev (<= 13-2.1.2-2)
+    - librbl-dev (<= 2.11.0~beta2-7)
+    - libre-dev (<= 1.1.0-1+b1)
+    - libshishi-dev (<= 1.0.2-11)
+    - libslurm-dev (<= 21.08.8.2-1)
+    - libsocksd0-dev (<= 1.4.2+dfsg-7+b4)
+    - libspf2-dev (<= 1.2.10-7.1+b1)
+    - libstrophe-dev (<= 0.12.1-2)
+    - libtaningia-dev (<= 0.2.2-2+b1)
+    - libvbr-dev (<= 2.11.0~beta2-7)
+    - open-vm-tools-dev (<= 2:12.0.5-2)
+    - pidgin-librvp (<= 0.9.7cvs-3)
+    - proftpd-dev (<= 1.3.7d+dfsg-2)
+    - slurm-wlm-basic-plugins-dev (<= 21.08.8.2-1)
+  * debian/debhelper.in/libc-dev.NEWS: New file to explain how to update
+    programs to use the TI-RPC library instead of the Sun RPC one.  Closes:
+    #1014735.
+  * debian/control.in/main: tighten build-dependency on g++-11 on riscv64 to
+    get the fix for GCC PR95115.
+  * debian/patches/riscv64/local-asin-acos-raise-invalid.diff: Drop now that
+    GCC is fixed.
+  * debian/debhelper.in/*.lintian-overrides: update lintian override once
+    more, sigh.
+  * debian/debhelper.in/libc-bin.install, debian/rules.d/build.mk,
+    debian/rules: rename the C.UTF-8 locale into C.utf8 to match upstream
+    naming.
+  * debian/control.in/libc: Update breaks against libvtk7-dev.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 07 Aug 2022 22:00:25 +0200
+
+glibc (2.34-0experimental5) experimental; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - debian/patches/powerpc/local-powerpc8xx-dcbz.diff: rebase.
+    - debian/rules.d/build.mk: stop passing --with-default-link=no which is
+      now the default.
+  * debian/control.in/libc: Add breaks in libc6-dev against dev packages that
+    encode the path to libpthread.so, librt.so or libutil.so, they need to be
+    binNMUed:
+    - libassimp-dev (<= 5.2.4~ds0-1)
+    - libbson-dev (<= 1.22.0-1)
+    - libdeal.ii-dev (<= 9.4.0-1)
+    - libdolfin-dev-common (<= 2019.2.0~git20220407.d29e24d-5)
+    - libeckit-dev (<= 1.20.0-1)
+    - libfclib-dev (<= 3.1.0+dfsg-2)
+    - libfltk1.3-dev (<= 1.3.8-4+b1)
+    - libinsighttoolkit4-dev (<= 4.13.3withdata-dfsg2-3+b1)
+    - libinsighttoolkit5-dev (<= 5.2.1-5+b1)
+    - libismrmrd-dev (<= 1.8.0-2)
+    - liblog4cplus-dev (<= 2.0.7-1)
+    - libmgl-dev (<= 8.0.1-2)
+    - libmimalloc2.0 (<= 2.0.6+ds-1)
+    - libminc-dev (<= 2.4.03-5)
+    - libmrpt-ros1bridge-dev (<= 1:2.4.9+ds-4+b2)
+    - libnetcdf-dev (<= 1:4.9.0-2)
+    - libnetcdf-mpi-dev (<= 1:4.9.0-1)
+    - libnetcdf-pnetcdf-dev (<= 1:4.9.0-1)
+    - libns3-dev (<= 3.36.1+dfsg-4)
+    - libopenms-dev (<= 2.6.0+cleaned1-3+b1)
+    - libtrilinos-amesos2-dev (<= 13.2.0-3)
+    - libtrilinos-amesos-dev (<= 13.2.0-3)
+    - libtrilinos-anasazi-dev (<= 13.2.0-3)
+    - libtrilinos-aztecoo-dev (<= 13.2.0-3)
+    - libtrilinos-belos-dev (<= 13.2.0-3)
+    - libtrilinos-epetra-dev (<= 13.2.0-3)
+    - libtrilinos-epetraext-dev (<= 13.2.0-3)
+    - libtrilinos-galeri-dev (<= 13.2.0-3)
+    - libtrilinos-ifpack2-dev (<= 13.2.0-3)
+    - libtrilinos-ifpack-dev (<= 13.2.0-3)
+    - libtrilinos-intrepid2-dev (<= 13.2.0-3)
+    - libtrilinos-intrepid-dev (<= 13.2.0-3)
+    - libtrilinos-isorropia-dev (<= 13.2.0-3)
+    - libtrilinos-kokkos-dev (<= 13.2.0-3)
+    - libtrilinos-kokkos-kernels-dev (<= 13.2.0-3)
+    - libtrilinos-komplex-dev (<= 13.2.0-3)
+    - libtrilinos-ml-dev (<= 13.2.0-3)
+    - libtrilinos-moertel-dev (<= 13.2.0-3)
+    - libtrilinos-muelu-dev (<= 13.2.0-3)
+    - libtrilinos-nox-dev (<= 13.2.0-3)
+    - libtrilinos-phalanx-dev (<= 13.2.0-3)
+    - libtrilinos-pike-dev (<= 13.2.0-3)
+    - libtrilinos-piro-dev (<= 13.2.0-3)
+    - libtrilinos-pliris-dev (<= 13.2.0-3)
+    - libtrilinos-rol-dev (<= 13.2.0-3)
+    - libtrilinos-rtop-dev (<= 13.2.0-3)
+    - libtrilinos-rythmos-dev (<= 13.2.0-3)
+    - libtrilinos-sacado-dev (<= 13.2.0-3)
+    - libtrilinos-shylu-dev (<= 13.2.0-3)
+    - libtrilinos-stokhos-dev (<= 13.2.0-3)
+    - libtrilinos-stratimikos-dev (<= 13.2.0-3)
+    - libtrilinos-teko-dev (<= 13.2.0-3)
+    - libtrilinos-teuchos-dev (<= 13.2.0-3)
+    - libtrilinos-thyra-dev (<= 13.2.0-3)
+    - libtrilinos-tpetra-dev (<= 13.2.0-3)
+    - libtrilinos-trilinoscouplings-dev (<= 13.2.0-3)
+    - libtrilinos-triutils-dev (<= 13.2.0-3)
+    - libtrilinos-xpetra-dev (<= 13.2.0-3)
+    - libtrilinos-zoltan2-dev (<= 13.2.0-3)
+    - libvisp-dev (<= 3.5.0-2+b1)
+    - libvotca-dev (<= 2022-3)
+    - libvtk6-dev (<= 6.3.0+dfsg2-8.1+b1)
+    - libvtk7-dev (<= 7.1.1+dfsg2-10.1+b2)
+  * debian/testsuite-xfail-debian.mk: XFAIL recently backports audit tests on
+    MIPS.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Mon, 11 Jul 2022 19:30:26 +0200
+
+glibc (2.34-0experimental4) experimental; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fixes spurious EINTR when thread cancellation is disabled.  Closes:
+      #1008174.
+    - debian/patches/any/local-revert-bz13979.diff: refresh.
+
+  [ Johannes Schauer Marin Rodrigues ]
+  * debian/debhelper.in/libc.postinst: do not re-exec init if DPKG_ROOT is
+    set.  Closes: #1006692.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sat, 16 Apr 2022 13:10:56 +0200
+
+glibc (2.34-0experimental3) experimental; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/testsuite-xfail-debian.mk: whitelist again test-xfail-tst-pkey on
+    powerpc, as 32-bit protection key support on powerpc is unclear.
+  * debian/testsuite-xfail-debian.mk: whitelist dirent/tst-readdir64-compat
+    and signal/tst-minsigstksz-5.  Closes: #1002041.
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+  * debian/rules.d/build.mk: Move the dynamic linker into the slibdir location
+    and replace it with a symlink. This is needed for TCC which is not able to
+    find the dynamic linker if it is not in a lib directory.
+  * debian/rules.d/build.mk, debian/debhelper.in/libc.postrm: correctly
+    recreate the dynamic linker symlink with the new naming scheme.
+  * debian/libc*.symbols.*: force __sysconf@GLIBC_2.* and sysconf@GLIBC_2.*
+    dependencies to 2.34 to correctly support the new definition of MINSIGSTKSZ
+    and SIGSTKSZ.
+  * debian/debhelper.in/libc*.fixperms: remove, they are ignored by
+    dh_fixperms.
+  * debian/debhelper.in/libc-alt.lintian-overrides: adjust overrides for the
+    case slibdir = rtlddir.
+
+  [ Samuel Thibault ]
+  * debian/testsuite-xfail-debian.mk: Update hurd tests.
+  * debian/patches/hurd-i386/git-random-getrandom.diff: Fix random translator
+    startup.
+  * debian/control: Break hurd << 1:0.9.git20211230-2 accordingly.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Mon, 21 Feb 2022 12:53:23 +0100
+
+glibc (2.34-0experimental2) experimental; urgency=medium
+
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+  * debhelper.in/libc.lintian-overrides, debhelper.in/libc.lintian-overrides,
+    debhelper.in/libc-otherbuild.lintian-overrides: use wildcards to match the
+    dynamic linker name. This changes the overrides files to be identical on
+    all architectures and make them multiarch installable.  Closes: #1001967.
+  * debian/libc-dev.lintian-overrides, debian/libc-dev-alt.lintian-overrides:
+    add lintian overrides for now empty libpthread.a, libdl.a, libutil.a,
+    and libanl.a.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Mon, 20 Dec 2021 00:01:20 +0100
+
+glibc (2.34-0experimental1) experimental; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/testsuite-xfail-debian.mk: Update hurd tests.
+  * debian/patches/hurd-i386/git-machrules-chk_fail.diff: Fix static link.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+  * debian/patches/arm/local-vfp-sysdeps.diff: drop, causes issues with GCC
+    11, the other compilers have probably been fixed during the last 9 years.
+  * debian/testsuite-xfail-debian.mk: whitelist failing new test on mips*.
+  * debian/testsuite-xfail-debian.mk: drop whitelist for kernel bug #889817
+    now that oldstable and newer kernels are fixed.
+  * debian/testsuite-xfail-debian.mk: drop whitelist for tst-cancel24-static,
+    fixed since glibc 2.25.
+  * debian/testsuite-xfail-debian.mk: drop whitelist for test-xfail-tst-pkey,
+    fixed since glibc 2.31.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sat, 18 Dec 2021 00:15:36 +0100
+
+glibc (2.34-0experimental0) experimental; urgency=medium
+
+  [ Aurelien Jarno ]
+  * New upstream release:
+    - Treat 'W' as a distinct character in sv_SE locale.  Closes: #511357.
+    - Fix a deadlock between pthread_create and ctors.  Closes: #903514,
+      #904544, #906516.
+    - Add y2106 support for mips64.  Closes: #983769.
+    - debian/symbols.wildcard: add 2.34.
+    - debian/libc6.symbols.common, debian/libc6.1.symbols.alpha,
+      debian/libc0.1.symbols.common, debian/libc0.3.symbols.hurd-i386: add
+      libc_malloc_debug.so.0.
+    - debian/patches/arm/local-sigaction.diff: rebased.
+    - debian/patches/hppa/git-fcntl.h-update.diff: upstreamed.
+    - debian/patches/hurd-i386/git-tiocflush.diff: upstreamed.
+    - debian/patches/hurd-i386/git-eintr.diff: upstreamed.
+    - debian/patches/hurd-i386/local-enable-ldconfig.diff: rebased.
+    - debian/patches/hurd-i386/local-clock_gettime_MONOTONIC.diff: rebased.
+    - debian/patches/hurd-i386/local-fix-nss.diff: rebased.
+    - debian/patches/all/submitted-po-fr-fixes.diff: rebased.
+    - debian/patches/any/local-ldso-disable-hwcap.diff: rebased.
+    - debian/patches/any/submitted-nptl-invalid-td.patch: rebased.
+    - debian/debhelper.in/libc-udeb.install{,.hurd-i386}: adjust paths
+      following the drop of the version number from the soname.
+    - debian/rules.d/build.mk: do not create symlink for ld.so.
+    - debian/rules.d/debhelper.mk: Stop making libpthread.so.0 executable and
+      strip it differently now that it is an empty library.
+    - debian/rules.d/debhelper.mk, debian/debhelper.in/libc.fixperms,
+      debian/debhelper.in/libc-alt.fixperms,
+      debian/debhelper.in/libc-otherbuild.fixperm: Use dh_fixperms to keep
+      ld.so and libc.so.6 executable now that they have a version independent
+      name.
+    - debian/rules.d/debhelper.mk, debian/debhelper.in/libc.postrm,
+      debian/debhelper.in/libc-otherbuild.lintian-overrides,
+      debian/debhelper.in/libc.lintian-overrides: change RTLD_SO to only
+      contain the basename instead of the absolute path.
+    - debhelper.in/libc.lintian-overrides, debhelper.in/libc.lintian-overrides,
+      debhelper.in/libc-otherbuild.lintian-overrides: update for the new
+      library naming.
+  * debian/control.in/main, debian/rules.d/control.mk, debian/rules: build
+    with GCC 11.
+
+  [ Samuel Thibault ]
+  * debian/testsuite-xfail-debian.mk: Update hurd tests.
+  * debian/patches/hurd-i386/tg-glibc-2.24-restore-malloc-hook.diff: Drop
+    patch.
+  * debian/patches/hurd-i386/local-mach_print.diff: Drop patch.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 12 Dec 2021 23:52:06 +0100
 
 glibc (2.33-8) unstable; urgency=medium
 
@@ -17635,4 +18032,3 @@ glibc (2.1-1) unstable; urgency=low
   * Removed hurd-utimes patch, it is integrated upstream.
 
  -- Joel Klecker <espy@debian.org>  Sat,  6 Feb 1999 12:26:10 -0800
-

@@ -65,9 +65,10 @@ distinguish_extX (const struct statfs *fsbuf, const char *file, int fd)
 {
   char buf[64];
   char path[PATH_MAX];
-  struct stat64 st;
+  struct __stat64_t64 st;
 
-  if ((file == NULL ? __fstat64 (fd, &st) : __stat64 (file, &st)) != 0)
+  if ((file == NULL ? __fstat64_time64 (fd, &st)
+		    : __stat64_time64 (file, &st)) != 0)
     /* Strange.  The statfd call worked, but stat fails.  Default to
        the more pessimistic value.  */
     return EXT2_LINK_MAX;
@@ -109,8 +110,8 @@ distinguish_extX (const struct statfs *fsbuf, const char *file, int fd)
 	      && strcmp (mntbuf.mnt_type, "ext4") != 0)
 	    continue;
 
-	  struct stat64 fsst;
-	  if (__stat64 (mntbuf.mnt_dir, &fsst) >= 0
+	  struct __stat64_t64 fsst;
+	  if (__stat64_time64 (mntbuf.mnt_dir, &fsst) >= 0
 	      && st.st_dev == fsst.st_dev)
 	    {
 	      if (strcmp (mntbuf.mnt_type, "ext4") == 0)
