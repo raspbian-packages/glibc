@@ -135,3 +135,4 @@ any/local-cudacc-float128.diff
 any/local-test-install.diff
 any/local-cross.patch
 any/git-localedef-check-magic.patch
+auto-2.34-7+rpi1-de346af12a6cb5181ed2ab174fb35c88f3b64f4b-1663212931
