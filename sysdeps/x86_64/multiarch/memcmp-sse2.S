@@ -17,8 +17,8 @@
    <https://www.gnu.org/licenses/>.  */
 
 #if IS_IN (libc)
-# ifndef memcmp
-#  define memcmp __memcmp_sse2
+# ifndef MEMCMP
+#  define MEMCMP __memcmp_sse2
 # endif
 
 # ifdef SHARED
