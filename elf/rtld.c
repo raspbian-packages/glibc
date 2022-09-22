@@ -1652,9 +1652,11 @@ dl_main (const ElfW(Phdr) *phdr,
 	  case AT_ENTRY:
 	    av->a_un.a_val = *user_entry;
 	    break;
+# ifdef AT_EXECFN
 	  case AT_EXECFN:
 	    av->a_un.a_val = (uintptr_t) _dl_argv[0];
 	    break;
+# endif
 	  }
 #endif
 
