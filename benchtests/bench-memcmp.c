@@ -1,5 +1,5 @@
 /* Measure memcmp functions.
-   Copyright (C) 2013-2021 Free Software Foundation, Inc.
+   Copyright (C) 2013-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -17,17 +17,21 @@
    <https://www.gnu.org/licenses/>.  */
 
 #define TEST_MAIN
-#ifdef WIDE
+#ifdef TEST_MEMCMPEQ
+# define TEST_NAME "__memcmpeq"
+# define SIMPLE_MEMCMP simple_memcmpeq
+#elif defined WIDE
 # define TEST_NAME "wmemcmp"
+# define SIMPLE_MEMCMP simple_wmemcmp
 #else
 # define TEST_NAME "memcmp"
+# define SIMPLE_MEMCMP simple_memcmp
 #endif
 #include "bench-string.h"
 #ifdef WIDE
 
-# define SIMPLE_MEMCMP simple_wmemcmp
 int
-simple_wmemcmp (const wchar_t *s1, const wchar_t *s2, size_t n)
+SIMPLE_MEMCMP (const wchar_t *s1, const wchar_t *s2, size_t n)
 {
   int ret = 0;
   /* Warning!
@@ -40,10 +44,8 @@ simple_wmemcmp (const wchar_t *s1, const wchar_t *s2, size_t n)
 #else
 # include <limits.h>
 
-# define SIMPLE_MEMCMP simple_memcmp
-
 int
-simple_memcmp (const char *s1, const char *s2, size_t n)
+SIMPLE_MEMCMP (const char *s1, const char *s2, size_t n)
 {
   int ret = 0;
 
@@ -63,7 +65,7 @@ static void
 do_one_test (json_ctx_t *json_ctx, impl_t *impl, const CHAR *s1,
 	     const CHAR *s2, size_t len, int exp_result)
 {
-  size_t i, iters = INNER_LOOP_ITERS8;
+  size_t i, iters = INNER_LOOP_ITERS_LARGE;
   timing_t start, stop, cur;
 
   TIMING_NOW (start);
@@ -103,20 +105,19 @@ do_test (json_ctx_t *json_ctx, size_t align1, size_t align2, size_t len,
   json_attr_uint (json_ctx, "result", (double) exp_result);
   json_array_begin (json_ctx, "timings");
 
+  s1 = (CHAR *)(buf1 + align1);
+  s2 = (CHAR *)(buf2 + align2);
+
+  for (i = 0; i < len; i++)
+    s1[i] = s2[i] = 1 + (23 << ((CHARBYTES - 1) * 8)) * i % MAX_CHAR;
+
+  s1[len] = align1;
+  s2[len] = align2;
+  s2[len - 1] -= exp_result;
+
   FOR_EACH_IMPL (impl, 0)
     {
-      s1 = (CHAR *) (buf1 + align1);
-      s2 = (CHAR *) (buf2 + align2);
-
-      for (i = 0; i < len; i++)
-	s1[i] = s2[i] = 1 + (23 << ((CHARBYTES - 1) * 8)) * i % MAX_CHAR;
-
-      s1[len] = align1;
-      s2[len] = align2;
-      s2[len - 1] -= exp_result;
-
       do_one_test (json_ctx, impl, s1, s2, len, exp_result);
-      alloc_bufs ();
     }
 
   json_array_end (json_ctx);

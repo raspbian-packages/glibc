@@ -1,5 +1,5 @@
 /* Close a range of file descriptors.  Linux version.
-   Copyright (C) 2021 Free Software Foundation, Inc.
+   Copyright (C) 2021-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -20,6 +20,8 @@
 #include <dirent.h>
 #include <not-cancel.h>
 #include <stdbool.h>
+
+#if !__ASSUME_CLOSE_RANGE
 
 /* Fallback code: iterates over /proc/self/fd, closing each file descriptor
    that fall on the criteria.  If DIRFD_FALLBACK is set, a failure on
@@ -48,7 +50,7 @@ __closefrom_fallback (int from, _Bool dirfd_fallback)
       dirfd = __open_nocancel (FD_TO_FILENAME_PREFIX, O_RDONLY | O_DIRECTORY,
                                0);
       if (dirfd == -1)
-        goto err;
+        return false;
     }
 
   char buffer[1024];
@@ -97,3 +99,5 @@ err:
   __close_nocancel (dirfd);
   return ret;
 }
+
+#endif

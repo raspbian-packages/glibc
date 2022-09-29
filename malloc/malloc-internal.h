@@ -1,5 +1,5 @@
 /* Internal declarations for malloc, for use within libc.
-   Copyright (C) 2016-2021 Free Software Foundation, Inc.
+   Copyright (C) 2016-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -22,6 +22,7 @@
 #include <malloc-machine.h>
 #include <malloc-sysdep.h>
 #include <malloc-size.h>
+#include <malloc-hugepages.h>
 
 /* Called in the parent process before a fork.  */
 void __malloc_fork_lock_parent (void) attribute_hidden;

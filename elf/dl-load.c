@@ -1,5 +1,6 @@
 /* Map in a shared object's segments from the file.
-   Copyright (C) 1995-2021 Free Software Foundation, Inc.
+   Copyright (C) 1995-2022 Free Software Foundation, Inc.
+   Copyright The GNU Toolchain Authors.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -950,7 +951,7 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
   /* Initialize to keep the compiler happy.  */
   const char *errstring = NULL;
   int errval = 0;
-  struct r_debug *r = _dl_debug_initialize (0, nsid);
+  struct r_debug *r = _dl_debug_update (nsid);
   bool make_consistent = false;
 
   /* Get file information.  To match the kernel behavior, do not fill
@@ -1027,6 +1028,10 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
       /* Refer to the real descriptor.  */
       l->l_real = &GL(dl_rtld_map);
 
+      /* Copy l_addr and l_ld to avoid a GDB warning with dlmopen().  */
+      l->l_addr = l->l_real->l_addr;
+      l->l_ld = l->l_real->l_ld;
+
       /* No need to bump the refcount of the real object, ld.so will
 	 never be unloaded.  */
       __close_nocancel (fd);
@@ -1096,6 +1101,7 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
     size_t nloadcmds = 0;
     bool has_holes = false;
     bool empty_dynamic = false;
+    ElfW(Addr) p_align_max = 0;
 
     /* The struct is initialized to zero so this is not necessary:
     l->l_ld = 0;
@@ -1128,16 +1134,11 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 	case PT_LOAD:
 	  /* A load command tells us to map in part of the file.
 	     We record the load commands and process them all later.  */
-	  if (__glibc_unlikely ((ph->p_align & (GLRO(dl_pagesize) - 1)) != 0))
-	    {
-	      errstring = N_("ELF load command alignment not page-aligned");
-	      goto lose;
-	    }
 	  if (__glibc_unlikely (((ph->p_vaddr - ph->p_offset)
-				 & (ph->p_align - 1)) != 0))
+				 & (GLRO(dl_pagesize) - 1)) != 0))
 	    {
 	      errstring
-		= N_("ELF load command address/offset not properly aligned");
+		= N_("ELF load command address/offset not page-aligned");
 	      goto lose;
 	    }
 
@@ -1146,6 +1147,9 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 	  c->mapend = ALIGN_UP (ph->p_vaddr + ph->p_filesz, GLRO(dl_pagesize));
 	  c->dataend = ph->p_vaddr + ph->p_filesz;
 	  c->allocend = ph->p_vaddr + ph->p_memsz;
+	  /* Remember the maximum p_align.  */
+	  if (powerof2 (ph->p_align) && ph->p_align > p_align_max)
+	    p_align_max = ph->p_align;
 	  c->mapoff = ALIGN_DOWN (ph->p_offset, GLRO(dl_pagesize));
 
 	  /* Determine whether there is a gap between the last segment
@@ -1219,6 +1223,10 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 	errstring = N_("object file has no loadable segments");
 	goto lose;
       }
+
+    /* Align all PT_LOAD segments to the maximum p_align.  */
+    for (size_t i = 0; i < nloadcmds; i++)
+      loadcmds[i].mapalign = p_align_max;
 
     /* dlopen of an executable is not valid because it is not possible
        to perform proper relocations, handle static TLS, or run the
@@ -2125,6 +2133,21 @@ _dl_map_object (struct link_map *loader, const char *name,
 			    &main_map->l_rpath_dirs,
 			    &realname, &fb, loader ?: main_map, LA_SER_RUNPATH,
 			    &found_other_class);
+
+	  /* Also try DT_RUNPATH in the executable for LD_AUDIT dlopen
+	     call.  */
+	  if (__glibc_unlikely (mode & __RTLD_AUDIT)
+	      && fd == -1 && !did_main_map
+	      && main_map != NULL && main_map->l_type != lt_loaded)
+	    {
+	      struct r_search_path_struct l_rpath_dirs;
+	      l_rpath_dirs.dirs = NULL;
+	      if (cache_rpath (main_map, &l_rpath_dirs,
+			       DT_RUNPATH, "RUNPATH"))
+		fd = open_path (name, namelen, mode, &l_rpath_dirs,
+				&realname, &fb, loader ?: main_map,
+				LA_SER_RUNPATH, &found_other_class);
+	    }
 	}
 
       /* Try the LD_LIBRARY_PATH environment variable.  */

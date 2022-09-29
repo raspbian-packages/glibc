@@ -1,4 +1,4 @@
-# Copyright (C) 1998-2021 Free Software Foundation, Inc.
+# Copyright (C) 1998-2022 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -124,7 +124,8 @@ $(testdata)/XT%: testdata/XT%
 	$(make-target-directory)
 	cp $< $@
 
-$(testdata)/XT%: testdata/gen-XT%.sh
+$(testdata)/XT5: testdata/gen-XT5.sh
+	$(make-target-directory)
 	$(SHELL) $< > $@.tmp
 	mv $@.tmp $@
 

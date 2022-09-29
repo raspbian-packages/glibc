@@ -1,5 +1,5 @@
 /* Run-time dynamic linker data structures for loaded ELF shared objects.
-   Copyright (C) 1995-2021 Free Software Foundation, Inc.
+   Copyright (C) 1995-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -247,6 +247,13 @@ enum allowmask
   };
 
 
+/* DSO sort algorithm to use (check dl-sort-maps.c).  */
+enum dso_sort_algorithm
+  {
+    dso_sort_algorithm_original,
+    dso_sort_algorithm_dfs
+  };
+
 struct audit_ifaces
 {
   void (*activity) (uintptr_t *, unsigned int);
@@ -364,7 +371,7 @@ struct rtld_global
       void (*free) (void *);
     } _ns_unique_sym_table;
     /* Keep track of changes to each namespace' list.  */
-    struct r_debug _ns_debug;
+    struct r_debug_extended _ns_debug;
   } _dl_ns[DL_NNS];
   /* One higher than index of last used namespace.  */
   EXTERN size_t _dl_nns;
@@ -472,7 +479,7 @@ struct rtld_global
   /* Generation counter for the dtv.  */
   EXTERN size_t _dl_tls_generation;
 
-#if !THREAD_GSCOPE_IN_TCB
+#if !PTHREAD_IN_LIBC
   EXTERN void (*_dl_init_static_tls) (struct link_map *);
 #endif
 
@@ -482,7 +489,7 @@ struct rtld_global
     size_t count;
     void *list[50];
   } *_dl_scope_free_list;
-#if THREAD_GSCOPE_IN_TCB
+#if PTHREAD_IN_LIBC
   /* List of active thread stacks, with memory managed by glibc.  */
   EXTERN list_t _dl_stack_used;
 
@@ -503,7 +510,13 @@ struct rtld_global
   /* Mutex protecting the stack lists.  */
   EXTERN int _dl_stack_cache_lock;
 #else
-  EXTERN int _dl_thread_gscope_count;
+  /* The total number of thread IDs currently in use, or on the list of
+     available thread IDs.  */
+  EXTERN int _dl_pthread_num_threads;
+
+  /* Array of __pthread structures and its lock.  */
+  EXTERN struct __pthread **_dl_pthread_threads;
+  __libc_rwlock_define (EXTERN, _dl_pthread_threads_lock)
 #endif
 #ifdef SHARED
 };
@@ -674,6 +687,8 @@ struct rtld_global_ro
      platforms.  */
   EXTERN uint64_t _dl_hwcap2;
 
+  EXTERN enum dso_sort_algorithm _dl_dso_sort_algo;
+
 #ifdef SHARED
   /* We add a function table to _rtld_global which is then used to
      call the function instead of going through the PLT.  The result
@@ -699,6 +714,15 @@ struct rtld_global_ro
      namespace.  */
   void (*_dl_error_free) (void *);
   void *(*_dl_tls_get_addr_soft) (struct link_map *);
+
+  /* Called from __libc_shared to deallocate malloc'ed memory.  */
+  void (*_dl_libc_freeres) (void);
+
+  /* Implementation of _dl_find_object.  The public entry point is in
+     libc, and this is patched by __rtld_static_init to support static
+     dlopen.  */
+  int (*_dl_find_object) (void *, struct dl_find_object *);
+
 #ifdef HAVE_DL_DISCOVER_OSVERSION
   int (*_dl_discover_osversion) (void);
 #endif
@@ -1098,9 +1122,11 @@ extern void _dl_init (struct link_map *main_map, int argc, char **argv,
    initializer functions have completed.  */
 extern void _dl_fini (void) attribute_hidden;
 
-/* Sort array MAPS according to dependencies of the contained objects.  */
+/* Sort array MAPS according to dependencies of the contained objects.
+   If FORCE_FIRST, MAPS[0] keeps its place even if the dependencies
+   say otherwise.  */
 extern void _dl_sort_maps (struct link_map **maps, unsigned int nmaps,
-			   char *used, bool for_fini) attribute_hidden;
+			   bool force_first, bool for_fini) attribute_hidden;
 
 /* The dynamic linker calls this function before and having changing
    any shared object mappings.  The `r_state' member of `struct r_debug'
@@ -1109,11 +1135,15 @@ extern void _dl_sort_maps (struct link_map **maps, unsigned int nmaps,
 extern void _dl_debug_state (void);
 rtld_hidden_proto (_dl_debug_state)
 
-/* Initialize `struct r_debug' if it has not already been done.  The
-   argument is the run-time load address of the dynamic linker, to be put
-   in the `r_ldbase' member.  Returns the address of the structure.  */
+/* Initialize `struct r_debug_extended' for the namespace NS.  LDBASE
+   is the run-time load address of the dynamic linker, to be put in the
+   `r_ldbase' member.  Return the address of the structure.  */
 extern struct r_debug *_dl_debug_initialize (ElfW(Addr) ldbase, Lmid_t ns)
      attribute_hidden;
+
+/* Update the `r_map' member and return the address of `struct r_debug'
+   of the namespace NS.  */
+extern struct r_debug *_dl_debug_update (Lmid_t ns) attribute_hidden;
 
 /* Initialize the basic data structure for the search paths.  SOURCE
    is either "LD_LIBRARY_PATH" or "--library-path".
@@ -1232,6 +1262,18 @@ extern struct link_map * _dl_get_dl_main_map (void)
    brk.  */
 void *_dl_early_allocate (size_t size) attribute_hidden;
 
+/* Initialize the DSO sort algorithm to use.  */
+#if !HAVE_TUNABLES
+static inline void
+__always_inline
+_dl_sort_maps_init (void)
+{
+  /* This is optimized out if tunables are not enabled.  */
+}
+#else
+extern void _dl_sort_maps_init (void) attribute_hidden;
+#endif
+
 /* Initialization of libpthread for statically linked applications.
    If libpthread is not linked in, this is an empty function.  */
 void __pthread_initialize_minimal (void) weak_function;
@@ -1318,13 +1360,13 @@ extern void _dl_aux_init (ElfW(auxv_t) *av)
 
 /* Initialize the static TLS space for the link map in all existing
    threads. */
-#if THREAD_GSCOPE_IN_TCB
+#if PTHREAD_IN_LIBC
 void _dl_init_static_tls (struct link_map *map) attribute_hidden;
 #endif
 static inline void
 dl_init_static_tls (struct link_map *map)
 {
-#if THREAD_GSCOPE_IN_TCB
+#if PTHREAD_IN_LIBC
   /* The stack list is available to ld.so, so the initialization can
      be handled within ld.so directly.  */
   _dl_init_static_tls (map);
@@ -1443,10 +1485,11 @@ __rtld_mutex_init (void)
 }
 #endif /* !PTHREAD_IN_LIBC */
 
-#if THREAD_GSCOPE_IN_TCB
+/* Implementation of GL (dl_libc_freeres).  */
+void __rtld_libc_freeres (void) attribute_hidden;
+
 void __thread_gscope_wait (void) attribute_hidden;
 # define THREAD_GSCOPE_WAIT() __thread_gscope_wait ()
-#endif
 
 __END_DECLS
 

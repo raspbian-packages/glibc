@@ -1,5 +1,5 @@
 /* Multiple versions of strcasecmp_l.
-   Copyright (C) 2013-2021 Free Software Foundation, Inc.
+   Copyright (C) 2013-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -32,7 +32,7 @@ extern __typeof (__strcasecmp_l) __strcasecmp_l_power7 attribute_hidden;
 
 extern __typeof (__strcasecmp_l) __libc_strcasecmp_l;
 libc_ifunc (__libc_strcasecmp_l,
-	    (hwcap & PPC_FEATURE_HAS_VSX)
+	    (hwcap & PPC_FEATURE_ARCH_2_06)
             ? __strcasecmp_l_power7
             : __strcasecmp_l_ppc);
 

@@ -1,5 +1,5 @@
 /* Check for large timeout with mq_timedsend and mq_timedreceive.
-   Copyright (C) 2021 Free Software Foundation, Inc.
+   Copyright (C) 2021-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -25,7 +25,7 @@
 #include <support/temp_file.h>
 #include <unistd.h>
 
-static char name[sizeof "/tst-mqueue2-" + INT_BUFSIZE_BOUND (pid_t)];
+static char name[sizeof "/tst-mqueue10-" + INT_BUFSIZE_BOUND (pid_t)];
 
 static void
 do_cleanup (void)
@@ -37,13 +37,21 @@ do_cleanup (void)
 static int
 do_test (void)
 {
-  snprintf (name, sizeof (name), "/tst-mqueue2-%u", getpid ());
+  snprintf (name, sizeof (name), "/tst-mqueue10-%u", getpid ());
 
   char msg[8] = { 0x55 };
 
   struct mq_attr attr = { .mq_maxmsg = 1, .mq_msgsize = sizeof (msg) };
   mqd_t q = mq_open (name, O_CREAT | O_EXCL | O_RDWR, 0600, &attr);
-  TEST_VERIFY_EXIT (q != (mqd_t) -1);
+
+  if (q == (mqd_t) -1)
+    {
+      if (errno == ENOSYS)
+	FAIL_UNSUPPORTED ("mq_open not supported");
+
+      printf ("mq_open failed with: %m\n");
+      return 1;
+    }
 
   struct timespec ts = { TYPE_MAXIMUM (time_t), 0 };
 

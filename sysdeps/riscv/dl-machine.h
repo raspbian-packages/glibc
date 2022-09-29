@@ -1,5 +1,5 @@
 /* Machine-dependent ELF dynamic relocation inline functions.  RISC-V version.
-   Copyright (C) 2011-2021 Free Software Foundation, Inc.
+   Copyright (C) 2011-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -75,26 +75,25 @@ elf_machine_matches_host (const ElfW(Ehdr) *ehdr)
   return 1;
 }
 
+/* Return the run-time load address of the shared object.  */
+static inline ElfW(Addr)
+elf_machine_load_address (void)
+{
+  extern const ElfW(Ehdr) __ehdr_start attribute_hidden;
+  return (ElfW(Addr)) &__ehdr_start;
+}
+
 /* Return the link-time address of _DYNAMIC.  */
 static inline ElfW(Addr)
 elf_machine_dynamic (void)
 {
-  extern ElfW(Addr) _GLOBAL_OFFSET_TABLE_ __attribute__ ((visibility ("hidden")));
-  return _GLOBAL_OFFSET_TABLE_;
+  extern ElfW(Dyn) _DYNAMIC[] attribute_hidden;
+  return (ElfW(Addr)) _DYNAMIC - elf_machine_load_address ();
 }
 
 #define STRINGXP(X) __STRING (X)
 #define STRINGXV(X) STRINGV_ (X)
 #define STRINGV_(...) # __VA_ARGS__
-
-/* Return the run-time load address of the shared object.  */
-static inline ElfW(Addr)
-elf_machine_load_address (void)
-{
-  ElfW(Addr) load_addr;
-  asm ("lla %0, _DYNAMIC" : "=r" (load_addr));
-  return load_addr - elf_machine_dynamic ();
-}
 
 /* Initial entry point code for the dynamic linker.
    The C function `_dl_start' is the real entry point;

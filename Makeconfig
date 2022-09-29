@@ -1,4 +1,5 @@
-# Copyright (C) 1991-2021 Free Software Foundation, Inc.
+# Copyright (C) 1991-2022 Free Software Foundation, Inc.
+# Copyright The GNU Toolchain Authors.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -381,19 +382,24 @@ LDFLAGS.so += $(hashstyle-LDFLAGS)
 LDFLAGS-rtld += $(hashstyle-LDFLAGS)
 endif
 
-ifeq (yes,$(enable-static-pie))
+ifeq (no,$(build-pie-default))
+pie-default = $(no-pie-ccflag)
+else # build-pie-default
 pic-default = -DPIC
 # Compile libc.a and libc_p.a with -fPIE/-fpie for static PIE.
 pie-default = $(pie-ccflag)
+
+ifeq (yes,$(enable-static-pie))
 ifeq (yes,$(have-static-pie))
-default-pie-ldflag = -static-pie
+static-pie-ldflag = -static-pie
 else
 # Static PIE can't have dynamic relocations in read-only segments since
 # static PIE is mapped into memory by kernel.  --eh-frame-hdr is needed
 # for PIE to support exception.
-default-pie-ldflag = -Wl,-pie,--no-dynamic-linker,--eh-frame-hdr,-z,text
-endif
-endif
+static-pie-ldflag = -Wl,-pie,--no-dynamic-linker,--eh-frame-hdr,-z,text
+endif # have-static-pie
+endif # enable-static-pie
+endif # build-pie-default
 
 # If lazy relocations are disabled, add the -z now flag.  Use
 # LDFLAGS-lib.so instead of LDFLAGS.so, to avoid adding the flag to
@@ -449,7 +455,7 @@ endif
 # Command for statically linking programs with the C library.
 ifndef +link-static
 +link-static-before-inputs = -nostdlib -nostartfiles -static \
-	      $(if $($(@F)-no-pie),$(no-pie-ldflag),$(default-pie-ldflag)) \
+	      $(if $($(@F)-no-pie),$(no-pie-ldflag),$(static-pie-ldflag)) \
 	      $(sysdep-LDFLAGS) $(LDFLAGS) $(LDFLAGS-$(@F))  \
 	      $(firstword $(CRT-$(@F)) $(csu-objpfx)$(real-static-start-installed-name)) \
 	      $(+preinit) $(+prectorT)
@@ -484,7 +490,7 @@ ifeq (yes,$(build-pie-default))
 +link-tests-after-inputs = $(link-libc-tests) $(+link-pie-after-libc)
 +link-printers-tests = $(+link-pie-printers-tests)
 else  # not build-pie-default
-+link-before-inputs = -nostdlib -nostartfiles \
++link-before-inputs = -nostdlib -nostartfiles $(no-pie-ldflag) \
 	      $(sysdep-LDFLAGS) $(LDFLAGS) $(LDFLAGS-$(@F)) \
 	      $(combreloc-LDFLAGS) $(relro-LDFLAGS) $(hashstyle-LDFLAGS) \
 	      $(firstword $(CRT-$(@F)) $(csu-objpfx)$(start-installed-name)) \
@@ -574,8 +580,10 @@ link-libc-rpath-link = -Wl,-rpath-link=$(rpath-link)
 # build-hardcoded-path-in-tests.
 ifeq (yes,$(build-hardcoded-path-in-tests))
 link-libc-tests-rpath-link = $(link-libc-rpath)
+link-test-modules-rpath-link = $(link-libc-rpath)
 else
 link-libc-tests-rpath-link = $(link-libc-rpath-link)
+link-test-modules-rpath-link =
 endif  # build-hardcoded-path-in-tests
 
 link-libc-between-gnulib = $(common-objpfx)libc.so$(libc.so-version) \
@@ -869,6 +877,13 @@ endif
 # -fno-math-errno.
 +extra-math-flags = $(if $(filter libm,$(in-module)),-fno-math-errno,-fmath-errno)
 
+# Use 64 bit time_t support for installed programs
+installed-modules = nonlib nscd lddlibc4 ldconfig locale_programs \
+		    iconvprogs libnss_files libnss_compat libnss_db libnss_hesiod \
+		    libutil libpcprofile libSegFault
++extra-time-flags = $(if $(filter $(installed-modules),\
+                           $(in-module)),-D_TIME_BITS=64 -D_FILE_OFFSET_BITS=64)
+
 # We might want to compile with some stack-protection flag.
 ifneq ($(stack-protector),)
 +stack-protector=$(stack-protector)
@@ -881,13 +896,6 @@ endif
 define elide-stack-protector
 $(if $(filter $(@F),$(patsubst %,%$(1),$(2))), $(no-stack-protector))
 endef
-
-# This is the program that generates makefile dependencies from C source files.
-# The -MP flag tells GCC >= 3.2 (which we now require) to produce dummy
-# targets for headers so that removed headers don't break the build.
-ifndef +mkdep
-+mkdep = $(CC) -M -MP
-endif
 
 # The program that makes Emacs-style TAGS files.
 ETAGS	:= etags
@@ -973,7 +981,7 @@ libio-include = -I$(..)libio
 built-modules = iconvprogs iconvdata ldconfig lddlibc4 libmemusage \
 		libSegFault libpcprofile librpcsvc locale-programs \
 		memusagestat nonlib nscd extramodules libnldbl libsupport \
-		testsuite
+		testsuite testsuite-internal
 
 in-module = $(subst -,_,$(firstword $(libof-$(basename $(@F))) \
 				    $(libof-$(<F)) \
@@ -1013,7 +1021,7 @@ endif
 
 override CFLAGS	= -std=gnu11 -fgnu89-inline $(config-extra-cflags) \
 		  $(filter-out %frame-pointer,$(+cflags)) $(+gccwarn-c) \
-		  $(+extra-math-flags) \
+		  $(+extra-math-flags) $(+extra-time-flags) \
 		  $(sysdep-CFLAGS) $(CFLAGS-$(suffix $@)) $(CFLAGS-$(<F)) \
 		  $(CFLAGS-$(@F)) $(tls-model) \
 		  $(foreach lib,$(libof-$(basename $(@F))) \
@@ -1056,6 +1064,7 @@ PIC-ccflag = -fPIC
 endif
 # This can be changed by a sysdep makefile
 pie-ccflag = -fpie
+no-pie-ccflag = -fno-pie
 # This one should always stay like this unless there is a very good reason.
 PIE-ccflag = -fPIE
 ifeq (yes,$(build-profile))
@@ -1203,6 +1212,15 @@ $(common-objpfx)dl-tunable-list.stmp: \
 	$(move-if-change) ${@:stmp=T} ${@:stmp=h}
 	touch $@
 endif
+
+# Dump the GCC macros used by the default compiler flags to a header
+# file, so that they can be inspected when using different compiler
+# flags.  Add the GCCMACRO prefix to make these macro names unique.
+$(common-objpfx)gcc-macros.h.in: $(common-objpfx)config.status
+	$(CC) $(CFLAGS) $(CPPFLAGS) -E -dM -x c -o $@ /dev/null
+$(common-objpfx)gcc-macros.h: $(common-objpfx)gcc-macros.h.in
+	sed 's/^#define /#define GCCMACRO/' < $< > $@
+before-compile += $(common-objpfx)gcc-macros.h
 
 # Generate version maps, but wait until sysdep-subdirs is known
 ifeq ($(sysd-sorted-done),t)

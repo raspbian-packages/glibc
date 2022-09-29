@@ -1,5 +1,5 @@
 /* Definitions for thread-local data handling.  Hurd/i386 version.
-   Copyright (C) 2003-2021 Free Software Foundation, Inc.
+   Copyright (C) 2003-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -49,7 +49,6 @@ typedef struct
   mach_port_t reply_port;      /* This thread's reply port.  */
   struct hurd_sigstate *_hurd_sigstate;
 } tcbhead_t;
-#endif
 
 /* Return tcbhead_t from a TLS segment descriptor.  */
 # define HURD_DESC_TLS(desc)						      \
@@ -60,10 +59,18 @@ typedef struct
   })
 
 /* Return 1 if TLS is not initialized yet.  */
+#ifndef SHARED
+extern unsigned short __init1_desc;
+#define __HURD_DESC_INITIAL(gs, ds) ((gs) == (ds) || (gs) == __init1_desc)
+#else
+#define __HURD_DESC_INITIAL(gs, ds) ((gs) == (ds))
+#endif
+
 #define __LIBC_NO_TLS()							      \
   ({ unsigned short ds, gs;						      \
      asm ("movw %%ds,%w0; movw %%gs,%w1" : "=q" (ds), "=q" (gs));	      \
-     __builtin_expect (ds == gs, 0); })
+     __builtin_expect(__HURD_DESC_INITIAL(gs, ds), 0); })
+#endif
 
 /* The TCB can have any size and the memory following the address the
    thread pointer points to is unspecified.  Allocate the TCB there.  */
@@ -368,6 +375,25 @@ _hurd_tls_new (thread_t child, struct i386_thread_state *state, tcbhead_t *tcb)
   state->gs = sel;
   return err;
 }
+
+/* Global scope switch support.  */
+# define THREAD_GSCOPE_FLAG_UNUSED 0
+# define THREAD_GSCOPE_FLAG_USED   1
+# define THREAD_GSCOPE_FLAG_WAIT   2
+
+# define THREAD_GSCOPE_SET_FLAG() \
+  THREAD_SETMEM (THREAD_SELF, gscope_flag, THREAD_GSCOPE_FLAG_USED)
+
+# define THREAD_GSCOPE_RESET_FLAG() \
+  ({                                                                         \
+    int __flag;                                                              \
+    asm volatile ("xchgl %0, %%gs:%P1"                                       \
+                  : "=r" (__flag)                                            \
+                  : "i" (offsetof (tcbhead_t, gscope_flag)),                 \
+                    "0" (THREAD_GSCOPE_FLAG_UNUSED));                        \
+    if (__flag == THREAD_GSCOPE_FLAG_WAIT)                                   \
+      lll_wake (THREAD_SELF->gscope_flag, LLL_PRIVATE);                      \
+  })
 
 #endif	/* !__ASSEMBLER__ */
 

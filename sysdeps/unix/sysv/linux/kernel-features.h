@@ -1,6 +1,6 @@
 /* Set flags signalling availability of kernel features based on given
    kernel version number.
-   Copyright (C) 1999-2021 Free Software Foundation, Inc.
+   Copyright (C) 1999-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -218,6 +218,22 @@
 # define __ASSUME_FACCESSAT2 1
 #else
 # define __ASSUME_FACCESSAT2 0
+#endif
+
+/* The close_range system call was introduced across all architectures
+   in Linux 5.9.  */
+#if __LINUX_KERNEL_VERSION >= 0x050900
+# define __ASSUME_CLOSE_RANGE 1
+#else
+# define __ASSUME_CLOSE_RANGE 0
+#endif
+
+/* The FUTEX_LOCK_PI2 operation was introduced across all architectures in Linux
+   5.14.  */
+#if __LINUX_KERNEL_VERSION >= 0x050e00
+# define __ASSUME_FUTEX_LOCK_PI2 1
+#else
+# define __ASSUME_FUTEX_LOCK_PI2 0
 #endif
 
 #endif /* kernel-features.h */

@@ -1,5 +1,5 @@
 /* Multiple versions of bzero. PowerPC64 version.
-   Copyright (C) 2013-2021 Free Software Foundation, Inc.
+   Copyright (C) 2013-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -38,11 +38,13 @@ libc_ifunc (__bzero,
 	     && hwcap & PPC_FEATURE_HAS_VSX)
 	    ? __bzero_power10 :
 # endif
-            (hwcap2 & PPC_FEATURE2_ARCH_2_07)
+	    (hwcap2 & PPC_FEATURE2_ARCH_2_07
+	     && hwcap & PPC_FEATURE_HAS_ALTIVEC)
             ? __bzero_power8 :
 	      (hwcap & PPC_FEATURE_HAS_VSX)
 	      ? __bzero_power7 :
-		(hwcap & PPC_FEATURE_ARCH_2_05)
+		(hwcap & PPC_FEATURE_ARCH_2_05
+		 && hwcap & PPC_FEATURE_HAS_ALTIVEC)
 		? __bzero_power6 :
 		  (hwcap & PPC_FEATURE_POWER4)
 		  ? __bzero_power4

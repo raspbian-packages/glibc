@@ -1,5 +1,5 @@
 /* Dynamic linker system dependencies for Linux.
-   Copyright (C) 1995-2021 Free Software Foundation, Inc.
+   Copyright (C) 1995-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -108,6 +108,9 @@ _dl_sysdep_start (void **start_argptr,
   dl_hwcap_check ();
 
   __tunables_init (_environ);
+
+  /* Initialize DSO sorting algorithm after tunables.  */
+  _dl_sort_maps_init ();
 
   __brk (0);			/* Initialize the break.  */
 

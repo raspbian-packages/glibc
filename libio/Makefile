@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2021 Free Software Foundation, Inc.
+# Copyright (C) 1995-2022 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -23,7 +23,7 @@ subdir	:= libio
 include ../Makeconfig
 
 headers	:= stdio.h \
-	   bits/stdio.h bits/stdio2.h bits/stdio-ldbl.h \
+	   bits/stdio.h bits/stdio2.h bits/stdio2-decl.h bits/stdio-ldbl.h \
 	   bits/types/FILE.h bits/types/__FILE.h bits/types/struct_FILE.h \
 	   bits/types/__fpos_t.h bits/types/__fpos64_t.h \
 	   bits/types/cookie_io_functions_t.h

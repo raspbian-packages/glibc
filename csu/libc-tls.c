@@ -1,5 +1,5 @@
 /* Initialization code for TLS in statically linked application.
-   Copyright (C) 2002-2021 Free Software Foundation, Inc.
+   Copyright (C) 2002-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <sys/param.h>
 #include <array_length.h>
+#include <pthreadP.h>
 
 #ifdef SHARED
  #error makefile bug, this file is for static only
@@ -89,7 +90,7 @@ init_static_tls (size_t memsz, size_t align)
 {
   /* That is the size of the TLS memory for this object.  */
   GL(dl_tls_static_size) = roundup (memsz + GLRO(dl_tls_static_surplus),
-				    TLS_TCB_ALIGN);
+				    TCB_ALIGNMENT);
 #if TLS_TCB_AT_TP
   GL(dl_tls_static_size) += TLS_TCB_SIZE;
 #endif
@@ -219,5 +220,5 @@ __libc_setup_tls (void)
   memsz += tcb_offset;
 #endif
 
-  init_static_tls (memsz, MAX (TLS_TCB_ALIGN, max_align));
+  init_static_tls (memsz, MAX (TCB_ALIGNMENT, max_align));
 }

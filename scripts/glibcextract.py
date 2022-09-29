@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # Extract information from C headers.
-# Copyright (C) 2018-2021 Free Software Foundation, Inc.
+# Copyright (C) 2018-2022 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 #
 # The GNU C Library is free software; you can redistribute it and/or
@@ -45,7 +45,7 @@ def compute_c_consts(sym_data, cc):
             continue
         name = arg[0]
         value = arg[1]
-        out_lines.append('asm ("@@@name@@@%s@@@value@@@%%0@@@end@@@" '
+        out_lines.append('asm ("/* @@@name@@@%s@@@value@@@%%0@@@end@@@ */" '
                          ': : \"i\" ((long int) (%s)));'
                          % (name, value))
     out_lines.append('}')

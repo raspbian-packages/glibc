@@ -1,7 +1,7 @@
 /* The tunable framework.  See the README.tunables to know how to use the
    tunable in a glibc module.
 
-   Copyright (C) 2016-2021 Free Software Foundation, Inc.
+   Copyright (C) 2016-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <ldsodefs.h>
 #include <array_length.h>
+#include <dl-minimal-malloc.h>
 
 #define TUNABLES_INTERNAL 1
 #include "dl-tunables.h"
@@ -48,15 +49,13 @@ tunables_strdup (const char *in)
   size_t i = 0;
 
   while (in[i++] != '\0');
-  char *out = __sbrk (i);
+  char *out = __minimal_malloc (i + 1);
 
   /* For most of the tunables code, we ignore user errors.  However,
      this is a system error - and running out of memory at program
      startup should be reported, so we do.  */
-  if (out == (void *)-1)
-    _dl_fatal_printf ("sbrk() failure while processing tunables\n");
-
-  i--;
+  if (out == NULL)
+    _dl_fatal_printf ("failed to allocate memory to process tunables\n");
 
   while (i-- > 0)
     out[i] = in[i];

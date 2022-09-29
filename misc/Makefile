@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2021 Free Software Foundation, Inc.
+# Copyright (C) 1991-2022 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -73,7 +73,8 @@ routines := brk sbrk sstk ioctl \
 	    fgetxattr flistxattr fremovexattr fsetxattr getxattr \
 	    listxattr lgetxattr llistxattr lremovexattr lsetxattr \
 	    removexattr setxattr getauxval ifunc-impl-list makedev \
-	    allocate_once fd_to_filename single_threaded unwind-link
+	    allocate_once fd_to_filename single_threaded unwind-link \
+	    atomic_wide_counter
 
 generated += tst-error1.mtrace tst-error1-mem.out \
   tst-allocate_once.mtrace tst-allocate_once-mem.out
@@ -148,6 +149,10 @@ CFLAGS-sbrk.o = $(no-stack-protector)
 CFLAGS-sbrk.op = $(no-stack-protector)
 CFLAGS-brk.o = $(no-stack-protector)
 CFLAGS-brk.op = $(no-stack-protector)
+CFLAGS-mmap.o = $(no-stack-protector)
+CFLAGS-mmap.op = $(no-stack-protector)
+CFLAGS-mmap64.o = $(no-stack-protector)
+CFLAGS-mmap64.op = $(no-stack-protector)
 
 include ../Rules
 

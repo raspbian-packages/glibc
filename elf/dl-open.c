@@ -1,5 +1,5 @@
 /* Load a shared object at runtime, relocate it, and run its initializer.
-   Copyright (C) 1996-2021 Free Software Foundation, Inc.
+   Copyright (C) 1996-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -36,6 +36,7 @@
 #include <array_length.h>
 #include <libc-early-init.h>
 #include <gnu/lib-names.h>
+#include <dl-find_object.h>
 
 #include <dl-dst.h>
 #include <dl-prop.h>
@@ -577,7 +578,7 @@ dl_open_worker_begin (void *a)
       if ((mode & RTLD_GLOBAL) && new->l_global == 0)
 	add_to_global_update (new);
 
-      assert (_dl_debug_initialize (0, args->nsid)->r_state == RT_CONSISTENT);
+      assert (_dl_debug_update (args->nsid)->r_state == RT_CONSISTENT);
 
       return;
     }
@@ -615,7 +616,7 @@ dl_open_worker_begin (void *a)
 #endif
 
   /* Notify the debugger all new objects are now ready to go.  */
-  struct r_debug *r = _dl_debug_initialize (0, args->nsid);
+  struct r_debug *r = _dl_debug_update (args->nsid);
   r->r_state = RT_CONSISTENT;
   _dl_debug_state ();
   LIBC_PROBE (map_complete, 3, args->nsid, r, new);
@@ -731,6 +732,10 @@ dl_open_worker_begin (void *a)
      objects.  */
   update_scopes (new);
 
+  if (!_dl_find_object_update (new))
+    _dl_signal_error (ENOMEM, new->l_libname->name, NULL,
+		      N_ ("cannot allocate address lookup data"));
+
   /* FIXME: It is unclear whether the order here is correct.
      Shouldn't new objects be made available for binding (and thus
      execution) only after there TLS data has been set up fully?
@@ -839,13 +844,16 @@ _dl_open (const char *file, int mode, const void *caller_dlopen, Lmid_t nsid,
 	  _dl_signal_error (EINVAL, file, NULL, N_("\
 no more namespaces available for dlmopen()"));
 	}
-      else if (nsid == GL(dl_nns))
-	{
-	  __rtld_lock_initialize (GL(dl_ns)[nsid]._ns_unique_sym_table.lock);
-	  ++GL(dl_nns);
-	}
 
-      _dl_debug_initialize (0, nsid)->r_state = RT_CONSISTENT;
+      if (nsid == GL(dl_nns))
+	++GL(dl_nns);
+
+      /* Initialize the new namespace.  Most members are
+	 zero-initialized, only the lock needs special treatment.  */
+      memset (&GL(dl_ns)[nsid], 0, sizeof (GL(dl_ns)[nsid]));
+      __rtld_lock_initialize (GL(dl_ns)[nsid]._ns_unique_sym_table.lock);
+
+      _dl_debug_update (nsid)->r_state = RT_CONSISTENT;
     }
   /* Never allow loading a DSO in a namespace which is empty.  Such
      direct placements is only causing problems.  Also don't allow
@@ -921,7 +929,7 @@ no more namespaces available for dlmopen()"));
       _dl_signal_exception (errcode, &exception, NULL);
     }
 
-  assert (_dl_debug_initialize (0, args.nsid)->r_state == RT_CONSISTENT);
+  assert (_dl_debug_update (args.nsid)->r_state == RT_CONSISTENT);
 
   /* Release the lock.  */
   __rtld_lock_unlock_recursive (GL(dl_load_lock));

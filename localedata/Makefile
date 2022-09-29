@@ -1,4 +1,4 @@
-# Copyright (C) 1996-2021 Free Software Foundation, Inc.
+# Copyright (C) 1996-2022 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -47,6 +47,7 @@ test-input := \
 	bg_BG.UTF-8 \
 	br_FR.UTF-8 \
 	bs_BA.UTF-8 \
+	C.UTF-8 \
 	ckb_IQ.UTF-8 \
 	cmn_TW.UTF-8 \
 	crh_UA.UTF-8 \
@@ -154,11 +155,31 @@ locale_test_suite := tst_iswalnum tst_iswalpha tst_iswcntrl            \
 		     tst_wcsxfrm tst_wctob tst_wctomb tst_wctrans      \
 		     tst_wctype tst_wcwidth
 
-tests = $(locale_test_suite) tst-digits tst-setlocale bug-iconv-trans \
-	tst-leaks tst-mbswcs1 tst-mbswcs2 tst-mbswcs3 tst-mbswcs4 tst-mbswcs5 \
-	tst-mbswcs6 tst-xlocale1 tst-xlocale2 bug-usesetlocale \
-	tst-strfmon1 tst-sscanf bug-setlocale1 tst-setlocale2 tst-setlocale3 \
-	tst-wctype tst-iconv-math-trans
+tests = \
+  $(locale_test_suite) \
+  bug-iconv-trans \
+  bug-setlocale1 \
+  bug-usesetlocale \
+  tst-c-utf8-consistency \
+  tst-digits \
+  tst-iconv-math-trans \
+  tst-leaks \
+  tst-mbswcs1 \
+  tst-mbswcs2 \
+  tst-mbswcs3 \
+  tst-mbswcs4 \
+  tst-mbswcs5 \
+  tst-mbswcs6 \
+  tst-setlocale \
+  tst-setlocale2 \
+  tst-setlocale3 \
+  tst-sscanf \
+  tst-strfmon1 \
+  tst-wctype \
+  tst-xlocale1 \
+  tst-xlocale2 \
+  # tests
+
 tests-static = bug-setlocale1-static
 tests += $(tests-static)
 ifeq (yes,$(build-shared))
@@ -206,6 +227,7 @@ LOCALES := \
 	bg_BG.UTF-8 \
 	br_FR.UTF-8 \
 	bs_BA.UTF-8 \
+	C.UTF-8 \
 	ckb_IQ.UTF-8 \
 	cmn_TW.UTF-8 \
 	crh_UA.UTF-8 \
@@ -446,11 +468,11 @@ define build-one-locale
 endef
 
 $(INSTALL-SUPPORTED-LOCALE-ARCHIVE): install-locales-dir
-	@flags="-c"; \
+	@flags=""; \
 	$(build-one-locale)
 
 $(INSTALL-SUPPORTED-LOCALE-FILES): install-locales-dir
-	@flags="-c --no-archive --no-hard-links"; \
+	@flags="--no-archive --no-hard-links"; \
 	$(build-one-locale)
 
 tst-setlocale-ENV = LC_ALL=ja_JP.EUC-JP

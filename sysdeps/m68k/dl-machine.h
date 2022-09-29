@@ -1,5 +1,5 @@
 /* Machine-dependent ELF dynamic relocation inline functions.  m68k version.
-   Copyright (C) 1996-2021 Free Software Foundation, Inc.
+   Copyright (C) 1996-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -234,6 +234,11 @@ elf_machine_rela (struct link_map *map, struct r_scope_elem *scope[],
 
       switch (r_type)
 	{
+	case R_68K_GLOB_DAT:
+	case R_68K_JMP_SLOT:
+	  *reloc_addr = value;
+	  break;
+#ifndef RTLD_BOOTSTRAP
 	case R_68K_COPY:
 	  if (sym == NULL)
 	    /* This can happen in trace mode if an object could not be
@@ -251,10 +256,6 @@ elf_machine_rela (struct link_map *map, struct r_scope_elem *scope[],
 	    }
 	  memcpy (reloc_addr_arg, (void *) value,
 		  MIN (sym->st_size, refsym->st_size));
-	  break;
-	case R_68K_GLOB_DAT:
-	case R_68K_JMP_SLOT:
-	  *reloc_addr = value;
 	  break;
 	case R_68K_8:
 	  *(char *) reloc_addr = value + reloc->r_addend;
@@ -276,7 +277,6 @@ elf_machine_rela (struct link_map *map, struct r_scope_elem *scope[],
 	case R_68K_PC32:
 	  *reloc_addr = value + reloc->r_addend - (Elf32_Addr) reloc_addr;
 	  break;
-#ifndef RTLD_BOOTSTRAP
 	case R_68K_TLS_DTPMOD32:
 	  /* Get the information from the link map returned by the
 	     resolv function.  */
@@ -294,9 +294,9 @@ elf_machine_rela (struct link_map *map, struct r_scope_elem *scope[],
 	      *reloc_addr = TLS_TPREL_VALUE (sym_map, sym, reloc);
 	    }
 	  break;
-#endif /* !RTLD_BOOTSTRAP */
 	case R_68K_NONE:		/* Alright, Wilbur.  */
 	  break;
+#endif /* !RTLD_BOOTSTRAP */
 	default:
 	  _dl_reloc_bad_type (map, r_type, 0);
 	  break;

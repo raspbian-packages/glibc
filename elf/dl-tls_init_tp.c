@@ -1,5 +1,5 @@
 /* Completion of TCB initialization after TLS_INIT_TP.  Generic version.
-   Copyright (C) 2021 Free Software Foundation, Inc.
+   Copyright (C) 2021-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -36,7 +36,7 @@ rtld_lock_default_unlock_recursive (void *lock)
 void
 __tls_pre_init_tp (void)
 {
-#if !THREAD_GSCOPE_IN_TCB
+#if !PTHREAD_IN_LIBC
   GL(dl_init_static_tls) = &_dl_nothread_init_static_tls;
 #endif
 

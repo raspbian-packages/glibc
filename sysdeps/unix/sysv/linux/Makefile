@@ -55,8 +55,8 @@ endif
 
 ifeq ($(subdir),misc)
 sysdep_routines += adjtimex clone umount umount2 readahead sysctl \
-		   setfsuid setfsgid epoll_pwait signalfd \
-		   eventfd eventfd_read eventfd_write prlimit \
+		   setfsuid setfsgid epoll_pwait epoll_pwait2 signalfd \
+		   eventfd eventfd_read eventfd_write prlimit prlimit64 \
 		   personality epoll_wait tee vmsplice splice \
 		   open_by_handle_at mlock2 pkey_mprotect pkey_set pkey_get \
 		   timerfd_gettime timerfd_settime prctl \
@@ -66,7 +66,9 @@ sysdep_routines += adjtimex clone umount umount2 readahead sysctl \
 		   fxstatat fxstatat64 \
 		   xmknod xmknodat convert_scm_timestamps \
 		   closefrom_fallback \
-		   clone3 clone-internal
+		   clone3 clone-internal \
+		   fanotify_mark \
+		   mremap \
 
 CFLAGS-gethostid.c = -fexceptions
 CFLAGS-tee.c = -fexceptions -fasynchronous-unwind-tables
@@ -110,7 +112,8 @@ sysdep_headers += sys/mount.h sys/acct.h \
 		  bits/types/struct_semid64_ds_helper.h \
 		  bits/types/struct_shmid64_ds.h \
 		  bits/types/struct_shmid64_ds_helper.h \
-		  bits/pthread_stack_min.h bits/pthread_stack_min-dynamic.h
+		  bits/pthread_stack_min.h bits/pthread_stack_min-dynamic.h \
+		  sys/rseq.h bits/rseq.h
 
 tests += tst-clone tst-clone2 tst-clone3 tst-fanotify tst-personality \
 	 tst-quota tst-sync_file_range tst-sysconf-iov_max tst-ttyname \
@@ -120,9 +123,9 @@ tests += tst-clone tst-clone2 tst-clone3 tst-fanotify tst-personality \
 	 tst-timerfd tst-ppoll \
 	 tst-clock_adjtime tst-adjtimex tst-ntp_adjtime tst-ntp_gettime \
 	 tst-ntp_gettimex tst-sigtimedwait tst-misalign-clone \
-  tst-close_range \
   tst-prctl \
   tst-scm_rights \
+  tst-epoll \
   tst-getauxval \
   # tests
 
@@ -131,11 +134,21 @@ ifeq ($(have-GLIBC_2.27)$(build-shared),yesyes)
 tests += tst-ofdlocks-compat
 endif
 
-tests-internal += tst-sigcontext-get_pc
+tests-internal += \
+  tst-rseq \
+  tst-sigcontext-get_pc \
+  # tests-internal
+
+ifneq (no,$(have-tunables))
+tests-internal += \
+  tst-rseq-disable \
+  # tests-internal $(have-tunables)
+endif
 
 tests-time64 += \
   tst-adjtimex-time64 \
   tst-clock_adjtime-time64 \
+  tst-epoll-time64 \
   tst-ntp_adjtime-time64 \
   tst-ntp_gettime-time64 \
   tst-ntp_gettimex-time64 \
@@ -223,6 +236,8 @@ $(objpfx)tst-mman-consts.out: ../sysdeps/unix/sysv/linux/tst-mman-consts.py
 	    $(sysdeps-linux-python-cc) \
 	  < /dev/null > $@ 2>&1; $(evaluate-test)
 $(objpfx)tst-mman-consts.out: $(sysdeps-linux-python-deps)
+
+tst-rseq-disable-ENV = GLIBC_TUNABLES=glibc.pthread.rseq=0
 
 endif # $(subdir) == misc
 
@@ -371,4 +386,8 @@ endif
 
 ifeq ($(subdir),nptl)
 tests += tst-align-clone tst-getpid1
+
+# tst-rseq-nptl is an internal test because it requires a definition of
+# __NR_rseq from the internal system call list.
+tests-internal += tst-rseq-nptl
 endif

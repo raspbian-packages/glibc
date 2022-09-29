@@ -1,5 +1,5 @@
 # Makefile for csu code for GNU C library.
-# Copyright (C) 1995-2021 Free Software Foundation, Inc.
+# Copyright (C) 1995-2022 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -71,22 +71,29 @@ else
 extra-objs += gmon-start.o
 endif
 
+ifeq (yes,$(enable-static-pie))
+extra-objs += r$(start-installed-name) gr$(start-installed-name)
+install-lib += r$(start-installed-name) gr$(start-installed-name)
+endif
+
 ifneq ($(start-installed-name),$(static-start-installed-name))
-# FIXME: Only Hurd defines static-start-installed-name.  Hurd needs to
-# provide special rules to support static PIE.
 extra-objs += $(static-start-installed-name) g$(static-start-installed-name)
 omit-deps += $(patsubst %.o,%,$(static-start-installed-name) \
 			     g$(static-start-installed-name))
 install-lib += $(static-start-installed-name) g$(static-start-installed-name)
-else
 ifeq (yes,$(enable-static-pie))
-extra-objs += r$(start-installed-name) gr$(start-installed-name)
-install-lib += r$(start-installed-name) gr$(start-installed-name)
+extra-objs += r$(static-start-installed-name) gr$(static-start-installed-name)
+omit-deps += $(patsubst %.o,%,r$(static-start-installed-name) \
+			     gr$(static-start-installed-name))
+install-lib += r$(static-start-installed-name) gr$(static-start-installed-name)
 endif
 endif
 
 before-compile += $(objpfx)abi-tag.h
 generated += abi-tag.h
+
+# Put it here to generate it earlier.
+gen-as-const-headers += rtld-sizes.sym
 
 # These are the special initializer/finalizer files.  They are always the
 # first and last file in the link.  crti.o ... crtn.o define the global
@@ -146,6 +153,9 @@ $(objpfx)gr$(start-installed-name): \
 ifneq ($(start-installed-name),$(static-start-installed-name))
 $(objpfx)g$(static-start-installed-name): \
   $(objpfx)g%: $(objpfx)% $(objpfx)gmon-start.o
+	$(link-relocatable)
+$(objpfx)gr$(static-start-installed-name): \
+  $(objpfx)gr%: $(objpfx)r% $(objpfx)gmon-start.o
 	$(link-relocatable)
 endif
 else

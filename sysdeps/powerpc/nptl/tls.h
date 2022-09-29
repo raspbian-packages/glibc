@@ -1,5 +1,5 @@
 /* Definition for thread-local data handling.  NPTL/PowerPC version.
-   Copyright (C) 2003-2021 Free Software Foundation, Inc.
+   Copyright (C) 2003-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -26,6 +26,7 @@
 # include <stddef.h>
 # include <stdint.h>
 # include <dl-dtv.h>
+# include <thread_pointer.h>
 
 #else /* __ASSEMBLER__ */
 # include <tcb-offsets.h>
@@ -36,16 +37,10 @@
 #ifndef __powerpc64__
 /* Register r2 (tp) is reserved by the ABI as "thread pointer". */
 # define PT_THREAD_POINTER PT_R2
-# ifndef __ASSEMBLER__
-register void *__thread_register __asm__ ("r2");
-# endif
 
 #else /* __powerpc64__ */
 /* Register r13 (tp) is reserved by the ABI as "thread pointer". */
 # define PT_THREAD_POINTER PT_R13
-# ifndef __ASSEMBLER__
-register void *__thread_register __asm__ ("r13");
-# endif
 #endif /* __powerpc64__ */
 
 #ifndef __ASSEMBLER__
@@ -108,19 +103,14 @@ typedef struct
 /* This is the size of the initial TCB.  */
 # define TLS_INIT_TCB_SIZE	0
 
-/* Alignment requirements for the initial TCB.  */
-# define TLS_INIT_TCB_ALIGN	__alignof__ (struct pthread)
-
 /* This is the size of the TCB.  */
 # define TLS_TCB_SIZE		0
-
-/* Alignment requirements for the TCB.  */
-# define TLS_TCB_ALIGN		__alignof__ (struct pthread)
 
 /* This is the size we need before TCB.  */
 # define TLS_PRE_TCB_SIZE \
   (sizeof (struct pthread)						      \
-   + ((sizeof (tcbhead_t) + TLS_TCB_ALIGN - 1) & ~(TLS_TCB_ALIGN - 1)))
+   + ((sizeof (tcbhead_t) + __alignof (struct pthread) - 1)		      \
+      & ~(__alignof (struct pthread) - 1)))
 
 /* The following assumes that TP (R2 or R13) points to the end of the
    TCB + 0x7000 (per the ABI).  This implies that TCB address is
@@ -176,20 +166,7 @@ typedef struct
   REGISTER (64, 64, PT_THREAD_POINTER * 8,				      \
 	    - TLS_TCB_OFFSET - TLS_PRE_TCB_SIZE)
 
-/* Read member of the thread descriptor directly.  */
-# define THREAD_GETMEM(descr, member) ((void)(descr), (THREAD_SELF)->member)
-
-/* Same as THREAD_GETMEM, but the member offset can be non-constant.  */
-# define THREAD_GETMEM_NC(descr, member, idx) \
-    ((void)(descr), (THREAD_SELF)->member[idx])
-
-/* Set member of the thread descriptor directly.  */
-# define THREAD_SETMEM(descr, member, value) \
-    ((void)(descr), (THREAD_SELF)->member = (value))
-
-/* Same as THREAD_SETMEM, but the member offset can be non-constant.  */
-# define THREAD_SETMEM_NC(descr, member, idx, value) \
-    ((void)(descr), (THREAD_SELF)->member[idx] = (value))
+# include <tcb-access.h>
 
 /* Set the stack guard field in TCB head.  */
 # define THREAD_SET_STACK_GUARD(value) \
@@ -231,7 +208,6 @@ typedef struct
 # define NO_TLS_OFFSET		-1
 
 /* Get and set the global scope generation counter in struct pthread.  */
-#define THREAD_GSCOPE_IN_TCB      1
 #define THREAD_GSCOPE_FLAG_UNUSED 0
 #define THREAD_GSCOPE_FLAG_USED   1
 #define THREAD_GSCOPE_FLAG_WAIT   2

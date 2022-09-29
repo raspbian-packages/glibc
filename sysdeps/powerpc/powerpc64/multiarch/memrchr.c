@@ -1,5 +1,5 @@
 /* Multiple versions of memrchr.
-   Copyright (C) 2013-2021 Free Software Foundation, Inc.
+   Copyright (C) 2013-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -28,9 +28,10 @@ extern __typeof (__memrchr) __memrchr_power8 attribute_hidden;
 /* Avoid DWARF definition DIE on ifunc symbol so that GDB can handle
    ifunc symbol properly.  */
 libc_ifunc (__memrchr,
-	    (hwcap2 & PPC_FEATURE2_ARCH_2_07)
+	    (hwcap2 & PPC_FEATURE2_ARCH_2_07
+	     && hwcap & PPC_FEATURE_HAS_ALTIVEC)
 	    ? __memrchr_power8 :
-	      (hwcap & PPC_FEATURE_HAS_VSX)
+	      (hwcap & PPC_FEATURE_ARCH_2_06)
 	      ? __memrchr_power7
 	    : __memrchr_ppc);
 

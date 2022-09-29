@@ -1,5 +1,5 @@
 /* Support for relocating static PIE.
-   Copyright (C) 2017-2021 Free Software Foundation, Inc.
+   Copyright (C) 2017-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -24,6 +24,7 @@
 #include <ldsodefs.h>
 
 #include <dl-machine.h>
+#include <dl-debug.h>
 
 #define RESOLVE_MAP(map, scope, sym, version, flags) map
 #include "dynamic-link.h"
@@ -62,20 +63,12 @@ _dl_relocate_static_pie (void)
   ELF_DYNAMIC_RELOCATE (main_map, NULL, 0, 0, 0);
   main_map->l_relocated = 1;
 
-  /* Initialize _r_debug.  */
+  /* Initialize _r_debug_extended.  */
   struct r_debug *r = _dl_debug_initialize (0, LM_ID_BASE);
   r->r_state = RT_CONSISTENT;
 
   /* Set up debugging before the debugger is notified for the first
      time.  */
-# ifdef ELF_MACHINE_DEBUG_SETUP
-  /* Some machines (e.g. MIPS) don't use DT_DEBUG in this way.  */
-  ELF_MACHINE_DEBUG_SETUP (main_map, r);
-# else
-  if (main_map->l_info[DT_DEBUG] != NULL)
-    /* There is a DT_DEBUG entry in the dynamic section.  Fill it in
-       with the run-time address of the r_debug structure  */
-    main_map->l_info[DT_DEBUG]->d_un.d_ptr = (ElfW(Addr)) r;
-# endif
+  elf_setup_debug_entry (main_map, r);
 }
 #endif

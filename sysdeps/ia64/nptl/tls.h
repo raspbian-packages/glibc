@@ -1,5 +1,5 @@
 /* Definition for thread-local data handling.  nptl/IA-64 version.
-   Copyright (C) 2003-2021 Free Software Foundation, Inc.
+   Copyright (C) 2003-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -53,9 +53,6 @@ register struct pthread *__thread_self __asm__("r13");
 /* This is the size of the initial TCB.  */
 # define TLS_INIT_TCB_SIZE sizeof (tcbhead_t)
 
-/* Alignment requirements for the initial TCB.  */
-# define TLS_INIT_TCB_ALIGN __alignof__ (tcbhead_t)
-
 /* This is the size of the TCB.  */
 # define TLS_TCB_SIZE sizeof (tcbhead_t)
 
@@ -69,9 +66,6 @@ register struct pthread *__thread_self __asm__("r13");
       ? ((2 * sizeof (uintptr_t) + __alignof__ (struct pthread) - 1)	\
 	 & ~(__alignof__ (struct pthread) - 1))				\
       : 0))
-
-/* Alignment requirements for the TCB.  */
-# define TLS_TCB_ALIGN __alignof__ (struct pthread)
 
 /* The DTV is allocated at the TP; the TCB is placed elsewhere.  */
 # define TLS_DTV_AT_TP	1
@@ -128,15 +122,7 @@ register struct pthread *__thread_self __asm__("r13");
 /* Magic for libthread_db to know how to do THREAD_SELF.  */
 # define DB_THREAD_SELF REGISTER (64, 64, 13 * 8, -TLS_PRE_TCB_SIZE)
 
-/* Access to data in the thread descriptor is easy.  */
-#define THREAD_GETMEM(descr, member) \
-  descr->member
-#define THREAD_GETMEM_NC(descr, member, idx) \
-  descr->member[idx]
-#define THREAD_SETMEM(descr, member, value) \
-  descr->member = (value)
-#define THREAD_SETMEM_NC(descr, member, idx, value) \
-  descr->member[idx] = (value)
+# include <tcb-access.h>
 
 /* Set the stack guard field in TCB head.  */
 #define THREAD_SET_STACK_GUARD(value) \
@@ -155,7 +141,6 @@ register struct pthread *__thread_self __asm__("r13");
    = THREAD_GET_POINTER_GUARD ())
 
 /* Get and set the global scope generation counter in struct pthread.  */
-#define THREAD_GSCOPE_IN_TCB      1
 #define THREAD_GSCOPE_FLAG_UNUSED 0
 #define THREAD_GSCOPE_FLAG_USED   1
 #define THREAD_GSCOPE_FLAG_WAIT   2

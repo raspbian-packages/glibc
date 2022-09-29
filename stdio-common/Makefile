@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2021 Free Software Foundation, Inc.
+# Copyright (C) 1991-2022 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -70,7 +70,10 @@ tests := tstscanf test_rdwr test-popen tstgetln test-fseek \
 	 tst-vfprintf-width-prec-alloc \
 	 tst-printf-fp-free \
 	 tst-printf-fp-leak \
-	 test-strerr
+	 test-strerr \
+	 tst-printf-binary \
+	 tst-sprintf-errno \
+	 # tests
 
 
 test-srcs = tst-unbputc tst-printf tst-printfsz-islongdouble

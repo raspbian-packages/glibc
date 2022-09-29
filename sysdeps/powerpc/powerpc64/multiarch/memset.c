@@ -1,5 +1,5 @@
 /* Multiple versions of memset.
-   Copyright (C) 2013-2021 Free Software Foundation, Inc.
+   Copyright (C) 2013-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -43,16 +43,22 @@ libc_ifunc (__libc_memset,
 # ifdef __LITTLE_ENDIAN__
 	    (hwcap2 & PPC_FEATURE2_ARCH_3_1
 	     && hwcap2 & PPC_FEATURE2_HAS_ISEL
-	     && hwcap & PPC_FEATURE_HAS_VSX)
+	     && hwcap & PPC_FEATURE_HAS_VSX
+	     && GLRO(dl_cache_line_size) == 128)
 	    ? __memset_power10 :
 # endif
-            (hwcap2 & PPC_FEATURE2_ARCH_2_07)
+            (hwcap2 & PPC_FEATURE2_ARCH_2_07
+	     && hwcap & PPC_FEATURE_HAS_ALTIVEC
+	     && GLRO(dl_cache_line_size) == 128)
             ? __memset_power8 :
-	      (hwcap & PPC_FEATURE_HAS_VSX)
+	      (hwcap & PPC_FEATURE_ARCH_2_06
+	       && GLRO(dl_cache_line_size) == 128)
 	      ? __memset_power7 :
-		(hwcap & PPC_FEATURE_ARCH_2_05)
+		(hwcap & PPC_FEATURE_ARCH_2_05
+	         && GLRO(dl_cache_line_size) == 128)
 		? __memset_power6 :
-		  (hwcap & PPC_FEATURE_POWER4)
+		  (hwcap & PPC_FEATURE_POWER4
+	           && GLRO(dl_cache_line_size) == 128)
 		  ? __memset_power4
             : __memset_ppc);
 

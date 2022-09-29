@@ -1,5 +1,5 @@
 /* Completion of TCB initialization after TLS_INIT_TP.  NPTL version.
-   Copyright (C) 2020-2021 Free Software Foundation, Inc.
+   Copyright (C) 2020-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -21,6 +21,11 @@
 #include <list.h>
 #include <pthreadP.h>
 #include <tls.h>
+#include <rseq-internal.h>
+#include <thread_pointer.h>
+
+#define TUNABLE_NAMESPACE pthread
+#include <dl-tunables.h>
 
 #ifndef __ASSUME_SET_ROBUST_LIST
 bool __nptl_set_robust_list_avail;
@@ -38,6 +43,10 @@ rtld_mutex_dummy (pthread_mutex_t *lock)
   return 0;
 }
 #endif
+
+const unsigned int __rseq_flags;
+const unsigned int __rseq_size attribute_relro;
+const ptrdiff_t __rseq_offset attribute_relro;
 
 void
 __tls_pre_init_tp (void)
@@ -57,11 +66,12 @@ __tls_pre_init_tp (void)
 void
 __tls_init_tp (void)
 {
+  struct pthread *pd = THREAD_SELF;
+
   /* Set up thread stack list management.  */
-  list_add (&THREAD_SELF->list, &GL (dl_stack_user));
+  list_add (&pd->list, &GL (dl_stack_user));
 
    /* Early initialization of the TCB.   */
-   struct pthread *pd = THREAD_SELF;
    pd->tid = INTERNAL_SYSCALL_CALL (set_tid_address, &pd->tid);
    THREAD_SETMEM (pd, specific[0], &pd->specific_1stblock[0]);
    THREAD_SETMEM (pd, user_stack, true);
@@ -88,6 +98,30 @@ __tls_init_tp (void)
         __nptl_set_robust_list_avail = true;
 #endif
       }
+  }
+
+  {
+    bool do_rseq = true;
+#if HAVE_TUNABLES
+    do_rseq = TUNABLE_GET (rseq, int, NULL);
+#endif
+    if (rseq_register_current_thread (pd, do_rseq))
+      {
+        /* We need a writable view of the variables.  They are in
+           .data.relro and are not yet write-protected.  */
+        extern unsigned int size __asm__ ("__rseq_size");
+        size = sizeof (pd->rseq_area);
+      }
+
+#ifdef RSEQ_SIG
+    /* This should be a compile-time constant, but the current
+       infrastructure makes it difficult to determine its value.  Not
+       all targets support __thread_pointer, so set __rseq_offset only
+       if thre rseq registration may have happened because RSEQ_SIG is
+       defined.  */
+    extern ptrdiff_t offset __asm__ ("__rseq_offset");
+    offset = (char *) &pd->rseq_area - (char *) __thread_pointer ();
+#endif
   }
 
   /* Set initial thread's stack block from 0 up to __libc_stack_end.

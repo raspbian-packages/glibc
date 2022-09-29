@@ -1,5 +1,5 @@
 /* Main worker function for the test driver.
-   Copyright (C) 1998-2021 Free Software Foundation, Inc.
+   Copyright (C) 1998-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -228,6 +228,18 @@ run_test_function (int argc, char **argv, const struct test_config *config)
   while (wait_for_debugger)
     usleep (1000);
 
+  if (config->run_command_mode)
+    {
+      /* In run-command-mode, the child process executes the command line
+	 arguments as a new program.  */
+      char **argv_ = xmalloc (sizeof (char *) * argc);
+      memcpy (argv_, &argv[1], sizeof (char *) * (argc - 1));
+      argv_[argc - 1] = NULL;
+      execv (argv_[0], argv_);
+      printf ("error: should not return here\n");
+      exit (1);
+    }
+
   if (config->test_function != NULL)
     return config->test_function ();
   else if (config->test_function_argv != NULL)
@@ -274,7 +286,7 @@ support_test_main (int argc, char **argv, const struct test_config *config)
   int direct = 0;       /* Directly call the test function?  */
   int status;
   int opt;
-  unsigned int timeoutfactor = 1;
+  unsigned int timeoutfactor = TIMEOUTFACTOR;
   pid_t termpid;
 
   /* If we're debugging the test, we need to disable timeouts and use

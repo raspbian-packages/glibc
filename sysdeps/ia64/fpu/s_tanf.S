@@ -4,7 +4,6 @@
 // Copyright (c) 2000 - 2005, Intel Corporation
 // All rights reserved.
 //
-// Contributed 2000 by the Intel Numerics Group, Intel Corporation
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -225,7 +224,7 @@ LOCAL_OBJECT_END(coeff_B)
 LOCAL_LIBM_ENTRY(cotf)
 
 { .mlx
-      getf.exp  rExp        = f8                    // ***** Get 2ˆ17 * s + E
+      getf.exp  rExp        = f8                    // ***** Get 2^17 * s + E
       movl      rSigRcpPiby2= 0xA2F9836E4E44152A    // significand of 2/Pi
 }
 { .mlx
@@ -252,7 +251,7 @@ LOCAL_LIBM_END(cotf)
 GLOBAL_IEEE754_ENTRY(tanf)
 
 { .mlx
-      getf.exp  rExp        = f8                    // ***** Get 2ˆ17 * s + E
+      getf.exp  rExp        = f8                    // ***** Get 2^17 * s + E
       movl      rSigRcpPiby2= 0xA2F9836E4E44152A    // significand of 2/Pi
 }
 { .mlx

@@ -1,5 +1,5 @@
 /* Host and service name lookups using Name Service Switch modules.
-   Copyright (C) 1996-2021 Free Software Foundation, Inc.
+   Copyright (C) 1996-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -239,7 +239,7 @@ convert_hostent_to_gaih_addrtuple (const struct addrinfo *req,
   return true;
 }
 
-#define gethosts(_family, _type) \
+#define gethosts(_family) \
  {									      \
   struct hostent th;							      \
   char *localcanon = NULL;						      \
@@ -829,7 +829,7 @@ gaih_inet (const char *name, const struct gaih_service *service,
 		      if (req->ai_family == AF_INET6
 			  || req->ai_family == AF_UNSPEC)
 			{
-			  gethosts (AF_INET6, struct in6_addr);
+			  gethosts (AF_INET6);
 			  no_inet6_data = no_data;
 			  inet6_status = status;
 			}
@@ -841,7 +841,7 @@ gaih_inet (const char *name, const struct gaih_service *service,
 				 know we are not going to need them.  */
 			      && ((req->ai_flags & AI_ALL) || !got_ipv6)))
 			{
-			  gethosts (AF_INET, struct in_addr);
+			  gethosts (AF_INET);
 
 			  if (req->ai_family == AF_INET)
 			    {

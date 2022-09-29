@@ -1,7 +1,6 @@
 /* Definition for thread-local data handling.  NPTL/m68k version.
-   Copyright (C) 2010-2021 Free Software Foundation, Inc.
+   Copyright (C) 2010-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
-   Contributed by Maxim Kuvyrkov <maxim@codesourcery.com>, 2010.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -27,9 +26,6 @@
 # include <stddef.h>
 # include <stdint.h>
 # include <dl-dtv.h>
-
-#else /* __ASSEMBLER__ */
-# include <tcb-offsets.h>
 #endif /* __ASSEMBLER__ */
 
 #ifndef __ASSEMBLER__
@@ -54,20 +50,15 @@ typedef struct
    pointer, we don't need this.  */
 # define TLS_INIT_TCB_SIZE	0
 
-/* Alignment requirements for the initial TCB.  */
-# define TLS_INIT_TCB_ALIGN	__alignof__ (struct pthread)
-
 /* This is the size of the TCB.  Because our TCB is before the thread
    pointer, we don't need this.  */
 # define TLS_TCB_SIZE		0
 
-/* Alignment requirements for the TCB.  */
-# define TLS_TCB_ALIGN		__alignof__ (struct pthread)
-
 /* This is the size we need before TCB - actually, it includes the TCB.  */
 # define TLS_PRE_TCB_SIZE						\
   (sizeof (struct pthread)						\
-   + ((sizeof (tcbhead_t) + TLS_TCB_ALIGN - 1) & ~(TLS_TCB_ALIGN - 1)))
+   + ((sizeof (tcbhead_t) + __alignof (struct pthread) - 1)		\
+      & ~(__alignof (struct pthread) - 1)))
 
 /* The thread pointer (TP) points to the end of the
    TCB + 0x7000, as for PowerPC and MIPS.  This implies that TCB address is
@@ -118,22 +109,13 @@ extern void * __m68k_read_tp (void);
 # define DB_THREAD_SELF \
   CONST_THREAD_AREA (32, TLS_TCB_OFFSET + TLS_PRE_TCB_SIZE)
 
-/* Access to data in the thread descriptor is easy.  */
-# define THREAD_GETMEM(descr, member) \
-  descr->member
-# define THREAD_GETMEM_NC(descr, member, idx) \
-  descr->member[idx]
-# define THREAD_SETMEM(descr, member, value) \
-  descr->member = (value)
-# define THREAD_SETMEM_NC(descr, member, idx, value) \
-  descr->member[idx] = (value)
+# include <tcb-access.h>
 
 /* l_tls_offset == 0 is perfectly valid on M68K, so we have to use some
    different value to mean unset l_tls_offset.  */
 # define NO_TLS_OFFSET		-1
 
 /* Get and set the global scope generation counter in struct pthread.  */
-#define THREAD_GSCOPE_IN_TCB      1
 #define THREAD_GSCOPE_FLAG_UNUSED 0
 #define THREAD_GSCOPE_FLAG_USED   1
 #define THREAD_GSCOPE_FLAG_WAIT   2

@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2021 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Torbjorn Granlund (tege@sics.se).
 
@@ -359,3 +359,7 @@ libc_hidden_builtin_def(memcmp)
 # undef bcmp
 weak_alias (memcmp, bcmp)
 #endif
+
+#undef __memcmpeq
+strong_alias (memcmp, __memcmpeq)
+libc_hidden_def(__memcmpeq)

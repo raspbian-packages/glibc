@@ -16,6 +16,7 @@ Build-Depends: gettext, dpkg (>= 1.18.7), dpkg-dev (>= 1.17.14), xz-utils, file,
  libc-bin (>= @DEB_VERSION_UPSTREAM@) <cross>,
  libgd-dev <!stage1> <!stage2>,
 Build-Depends-Indep: perl, po-debconf (>= 1.0)
+Rules-Requires-Root: no
 Maintainer: GNU Libc Maintainers <debian-glibc@lists.debian.org>
 Uploaders: Clint Adams <clint@debian.org>, Aurelien Jarno <aurel32@debian.org>, Samuel Thibault <sthibault@debian.org>
 Standards-Version: 4.6.1
@@ -30,12 +31,12 @@ Priority: required
 Essential: yes
 Multi-Arch: foreign
 Depends: ${shlibs:Depends}, ${misc:Depends}
+Breaks: dh-lua (<< 27+nmu1~)
 Recommends: manpages
 Build-Profiles: <!stage1>
 Description: GNU C Library: Binaries
  This package contains utility programs related to the GNU C Library.
  .
-  * catchsegv: catch segmentation faults in programs
   * getconf: query system configuration variables
   * getent: get entries from administrative databases
   * iconv, iconvconfig: convert between character encodings

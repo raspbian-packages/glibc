@@ -1,5 +1,5 @@
 /* Thread-local storage handling in the ELF dynamic linker.  IA-64 version.
-   Copyright (C) 2003-2021 Free Software Foundation, Inc.
+   Copyright (C) 2003-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -17,6 +17,9 @@
    <https://www.gnu.org/licenses/>.  */
 
 #include <csu/libc-tls.c>
+
+_Static_assert (TLS_PRE_TCB_SIZE % __alignof (struct pthread) == 0,
+		"__thread_self and THREAD_SELF have same alignment");
 
 /* On IA-64, as it lacks linker optimizations, __tls_get_addr can be
    called even in statically linked binaries.

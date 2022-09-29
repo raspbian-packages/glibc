@@ -1,5 +1,5 @@
 /* Run time dynamic linker.
-   Copyright (C) 1995-2021 Free Software Foundation, Inc.
+   Copyright (C) 1995-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -50,6 +50,8 @@
 #include <gnu/lib-names.h>
 #include <dl-tunables.h>
 #include <get-dynamic-info.h>
+#include <dl-execve.h>
+#include <dl-find_object.h>
 #include <dl-audit-check.h>
 
 #include <assert.h>
@@ -61,6 +63,9 @@
 #define RTLD_BOOTSTRAP
 #define RESOLVE_MAP(map, scope, sym, version, flags) map
 #include "dynamic-link.h"
+
+/* Must include after <dl-machine.h> for DT_MIPS definition.  */
+#include <dl-debug.h>
 
 /* Only enables rtld profiling for architectures which provides non generic
    hp-timing support.  The generic support requires either syscall
@@ -379,6 +384,7 @@ struct rtld_global_ro _rtld_global_ro attribute_relro =
     ._dl_catch_error = _rtld_catch_error,
     ._dl_error_free = _dl_error_free,
     ._dl_tls_get_addr_soft = _dl_tls_get_addr_soft,
+    ._dl_libc_freeres = __rtld_libc_freeres,
 #ifdef HAVE_DL_DISCOVER_OSVERSION
     ._dl_discover_osversion = _dl_discover_osversion
 #endif
@@ -435,8 +441,8 @@ static ElfW(Addr) _dl_start_final (void *arg,
 				   struct dl_start_final_info *info);
 #endif
 
-/* These defined magically in the linker script.  */
-extern char _begin[] attribute_hidden;
+/* These are defined magically by the linker.  */
+extern const ElfW(Ehdr) __ehdr_start attribute_hidden;
 extern char _etext[] attribute_hidden;
 extern char _end[] attribute_hidden;
 
@@ -481,7 +487,7 @@ _dl_start_final (void *arg, struct dl_start_final_info *info)
 #endif
   _dl_setup_hash (&GL(dl_rtld_map));
   GL(dl_rtld_map).l_real = &GL(dl_rtld_map);
-  GL(dl_rtld_map).l_map_start = (ElfW(Addr)) _begin;
+  GL(dl_rtld_map).l_map_start = (ElfW(Addr)) &__ehdr_start;
   GL(dl_rtld_map).l_map_end = (ElfW(Addr)) _end;
   GL(dl_rtld_map).l_text_end = (ElfW(Addr)) _etext;
   /* Copy the TLS related data if necessary.  */
@@ -580,6 +586,10 @@ _dl_start (void *arg)
      before ELF_DYNAMIC_RELOCATE.  */
 
   __rtld_malloc_init_stubs ();
+
+  /* Do not use an initializer for these members because it would
+     intefere with __rtld_static_init.  */
+  GLRO (dl_find_object) = &_dl_find_object;
 
   {
 #ifdef DONT_USE_BOOTSTRAP_MAP
@@ -1081,6 +1091,227 @@ load_audit_modules (struct link_map *main_map, struct audit_list *audit_list)
     }
 }
 
+/* Check if the executable is not actualy dynamically linked, and
+   invoke it directly in that case.  */
+static void
+rtld_chain_load (struct link_map *main_map, char *argv0)
+{
+  /* The dynamic loader run against itself.  */
+  const char *rtld_soname
+    = ((const char *) D_PTR (&GL(dl_rtld_map), l_info[DT_STRTAB])
+       + GL(dl_rtld_map).l_info[DT_SONAME]->d_un.d_val);
+  if (main_map->l_info[DT_SONAME] != NULL
+      && strcmp (rtld_soname,
+		 ((const char *) D_PTR (main_map, l_info[DT_STRTAB])
+		  + main_map->l_info[DT_SONAME]->d_un.d_val)) == 0)
+    _dl_fatal_printf ("%s: loader cannot load itself\n", rtld_soname);
+
+  /* With DT_NEEDED dependencies, the executable is dynamically
+     linked.  */
+  if (__glibc_unlikely (main_map->l_info[DT_NEEDED] != NULL))
+    return;
+
+  /* If the executable has program interpreter, it is dynamically
+     linked.  */
+  for (size_t i = 0; i < main_map->l_phnum; ++i)
+    if (main_map->l_phdr[i].p_type == PT_INTERP)
+      return;
+
+  const char *pathname = _dl_argv[0];
+  if (argv0 != NULL)
+    _dl_argv[0] = argv0;
+  int errcode = __rtld_execve (pathname, _dl_argv, _environ);
+  const char *errname = strerrorname_np (errcode);
+  if (errname != NULL)
+    _dl_fatal_printf("%s: cannot execute %s: %s\n",
+		     rtld_soname, pathname, errname);
+  else
+    _dl_fatal_printf("%s: cannot execute %s: %d\n",
+		     rtld_soname, pathname, errcode);
+}
+
+/* Called to complete the initialization of the link map for the main
+   executable.  Returns true if there is a PT_INTERP segment.  */
+static bool
+rtld_setup_main_map (struct link_map *main_map)
+{
+  /* This have already been filled in right after _dl_new_object, or
+     as part of _dl_map_object.  */
+  const ElfW(Phdr) *phdr = main_map->l_phdr;
+  ElfW(Word) phnum = main_map->l_phnum;
+
+  bool has_interp = false;
+
+  main_map->l_map_end = 0;
+  main_map->l_text_end = 0;
+  /* Perhaps the executable has no PT_LOAD header entries at all.  */
+  main_map->l_map_start = ~0;
+  /* And it was opened directly.  */
+  ++main_map->l_direct_opencount;
+  main_map->l_contiguous = 1;
+
+  /* A PT_LOAD segment at an unexpected address will clear the
+     l_contiguous flag.  The ELF specification says that PT_LOAD
+     segments need to be sorted in in increasing order, but perhaps
+     not all executables follow this requirement.  Having l_contiguous
+     equal to 1 is just an optimization, so the code below does not
+     try to sort the segments in case they are unordered.
+
+     There is one corner case in which l_contiguous is not set to 1,
+     but where it could be set: If a PIE (ET_DYN) binary is loaded by
+     glibc itself (not the kernel), it is always contiguous due to the
+     way the glibc loader works.  However, the kernel loader may still
+     create holes in this case, and the code here still uses 0
+     conservatively for the glibc-loaded case, too.  */
+  ElfW(Addr) expected_load_address = 0;
+
+  /* Scan the program header table for the dynamic section.  */
+  for (const ElfW(Phdr) *ph = phdr; ph < &phdr[phnum]; ++ph)
+    switch (ph->p_type)
+      {
+      case PT_PHDR:
+	/* Find out the load address.  */
+	main_map->l_addr = (ElfW(Addr)) phdr - ph->p_vaddr;
+	break;
+      case PT_DYNAMIC:
+	/* This tells us where to find the dynamic section,
+	   which tells us everything we need to do.  */
+	main_map->l_ld = (void *) main_map->l_addr + ph->p_vaddr;
+	main_map->l_ld_readonly = (ph->p_flags & PF_W) == 0;
+	break;
+      case PT_INTERP:
+	/* This "interpreter segment" was used by the program loader to
+	   find the program interpreter, which is this program itself, the
+	   dynamic linker.  We note what name finds us, so that a future
+	   dlopen call or DT_NEEDED entry, for something that wants to link
+	   against the dynamic linker as a shared library, will know that
+	   the shared object is already loaded.  */
+	_dl_rtld_libname.name = ((const char *) main_map->l_addr
+				 + ph->p_vaddr);
+	/* _dl_rtld_libname.next = NULL;	Already zero.  */
+	GL(dl_rtld_map).l_libname = &_dl_rtld_libname;
+
+	/* Ordinarilly, we would get additional names for the loader from
+	   our DT_SONAME.  This can't happen if we were actually linked as
+	   a static executable (detect this case when we have no DYNAMIC).
+	   If so, assume the filename component of the interpreter path to
+	   be our SONAME, and add it to our name list.  */
+	if (GL(dl_rtld_map).l_ld == NULL)
+	  {
+	    const char *p = NULL;
+	    const char *cp = _dl_rtld_libname.name;
+
+	    /* Find the filename part of the path.  */
+	    while (*cp != '\0')
+	      if (*cp++ == '/')
+		p = cp;
+
+	    if (p != NULL)
+	      {
+		_dl_rtld_libname2.name = p;
+		/* _dl_rtld_libname2.next = NULL;  Already zero.  */
+		_dl_rtld_libname.next = &_dl_rtld_libname2;
+	      }
+	  }
+
+	has_interp = true;
+	break;
+      case PT_LOAD:
+	{
+	  ElfW(Addr) mapstart;
+	  ElfW(Addr) allocend;
+
+	  /* Remember where the main program starts in memory.  */
+	  mapstart = (main_map->l_addr
+		      + (ph->p_vaddr & ~(GLRO(dl_pagesize) - 1)));
+	  if (main_map->l_map_start > mapstart)
+	    main_map->l_map_start = mapstart;
+
+	  if (main_map->l_contiguous && expected_load_address != 0
+	      && expected_load_address != mapstart)
+	    main_map->l_contiguous = 0;
+
+	  /* Also where it ends.  */
+	  allocend = main_map->l_addr + ph->p_vaddr + ph->p_memsz;
+	  if (main_map->l_map_end < allocend)
+	    main_map->l_map_end = allocend;
+	  if ((ph->p_flags & PF_X) && allocend > main_map->l_text_end)
+	    main_map->l_text_end = allocend;
+
+	  /* The next expected address is the page following this load
+	     segment.  */
+	  expected_load_address = ((allocend + GLRO(dl_pagesize) - 1)
+				   & ~(GLRO(dl_pagesize) - 1));
+	}
+	break;
+
+      case PT_TLS:
+	if (ph->p_memsz > 0)
+	  {
+	    /* Note that in the case the dynamic linker we duplicate work
+	       here since we read the PT_TLS entry already in
+	       _dl_start_final.  But the result is repeatable so do not
+	       check for this special but unimportant case.  */
+	    main_map->l_tls_blocksize = ph->p_memsz;
+	    main_map->l_tls_align = ph->p_align;
+	    if (ph->p_align == 0)
+	      main_map->l_tls_firstbyte_offset = 0;
+	    else
+	      main_map->l_tls_firstbyte_offset = (ph->p_vaddr
+						  & (ph->p_align - 1));
+	    main_map->l_tls_initimage_size = ph->p_filesz;
+	    main_map->l_tls_initimage = (void *) ph->p_vaddr;
+
+	    /* This image gets the ID one.  */
+	    GL(dl_tls_max_dtv_idx) = main_map->l_tls_modid = 1;
+	  }
+	break;
+
+      case PT_GNU_STACK:
+	GL(dl_stack_flags) = ph->p_flags;
+	break;
+
+      case PT_GNU_RELRO:
+	main_map->l_relro_addr = ph->p_vaddr;
+	main_map->l_relro_size = ph->p_memsz;
+	break;
+      }
+  /* Process program headers again, but scan them backwards so
+     that PT_NOTE can be skipped if PT_GNU_PROPERTY exits.  */
+  for (const ElfW(Phdr) *ph = &phdr[phnum]; ph != phdr; --ph)
+    switch (ph[-1].p_type)
+      {
+      case PT_NOTE:
+	_dl_process_pt_note (main_map, -1, &ph[-1]);
+	break;
+      case PT_GNU_PROPERTY:
+	_dl_process_pt_gnu_property (main_map, -1, &ph[-1]);
+	break;
+      }
+
+  /* Adjust the address of the TLS initialization image in case
+     the executable is actually an ET_DYN object.  */
+  if (main_map->l_tls_initimage != NULL)
+    main_map->l_tls_initimage
+      = (char *) main_map->l_tls_initimage + main_map->l_addr;
+  if (! main_map->l_map_end)
+    main_map->l_map_end = ~0;
+  if (! main_map->l_text_end)
+    main_map->l_text_end = ~0;
+  if (! GL(dl_rtld_map).l_libname && GL(dl_rtld_map).l_name)
+    {
+      /* We were invoked directly, so the program might not have a
+	 PT_INTERP.  */
+      _dl_rtld_libname.name = GL(dl_rtld_map).l_name;
+      /* _dl_rtld_libname.next = NULL;	Already zero.  */
+      GL(dl_rtld_map).l_libname =  &_dl_rtld_libname;
+    }
+  else
+    assert (GL(dl_rtld_map).l_libname); /* How else did we get here?  */
+
+  return has_interp;
+}
+
 /* Adjusts the contents of the stack and related globals for the user
    entry point.  The ld.so processed skip_args arguments and bumped
    _dl_argv and _dl_argc accordingly.  Those arguments are removed from
@@ -1143,11 +1374,9 @@ dl_main (const ElfW(Phdr) *phdr,
 	 ElfW(Addr) *user_entry,
 	 ElfW(auxv_t) *auxv)
 {
-  const ElfW(Phdr) *ph;
   struct link_map *main_map;
   size_t file_size;
   char *file;
-  bool has_interp = false;
   unsigned int i;
   bool prelinked = false;
   bool rtld_is_main = false;
@@ -1349,7 +1578,7 @@ dl_main (const ElfW(Phdr) *phdr,
 	 load the program below unless it has a PT_GNU_STACK indicating
 	 nonexecutable stack is ok.  */
 
-      for (ph = phdr; ph < &phdr[phnum]; ++ph)
+      for (const ElfW(Phdr) *ph = phdr; ph < &phdr[phnum]; ++ph)
 	if (ph->p_type == PT_GNU_STACK)
 	  {
 	    GL(dl_stack_flags) = ph->p_flags;
@@ -1393,14 +1622,8 @@ dl_main (const ElfW(Phdr) *phdr,
       /* Now the map for the main executable is available.  */
       main_map = GL(dl_ns)[LM_ID_BASE]._ns_loaded;
 
-      if (__glibc_likely (state.mode == rtld_mode_normal)
-	  && GL(dl_rtld_map).l_info[DT_SONAME] != NULL
-	  && main_map->l_info[DT_SONAME] != NULL
-	  && strcmp ((const char *) D_PTR (&GL(dl_rtld_map), l_info[DT_STRTAB])
-		     + GL(dl_rtld_map).l_info[DT_SONAME]->d_un.d_val,
-		     (const char *) D_PTR (main_map, l_info[DT_STRTAB])
-		     + main_map->l_info[DT_SONAME]->d_un.d_val) == 0)
-	_dl_fatal_printf ("loader cannot load itself\n");
+      if (__glibc_likely (state.mode == rtld_mode_normal))
+	rtld_chain_load (main_map, argv0);
 
       phdr = main_map->l_phdr;
       phnum = main_map->l_phnum;
@@ -1410,6 +1633,9 @@ dl_main (const ElfW(Phdr) *phdr,
 	 makes sense to free the old string first.  */
       main_map->l_name = (char *) "";
       *user_entry = main_map->l_entry;
+
+      /* Set bit indicating this is the main program map.  */
+      main_map->l_main_map = 1;
 
 #ifdef HAVE_AUX_VECTOR
       /* Adjust the on-stack auxiliary vector so that it looks like the
@@ -1476,147 +1702,7 @@ dl_main (const ElfW(Phdr) *phdr,
 	 information for the program.  */
     }
 
-  main_map->l_map_end = 0;
-  main_map->l_text_end = 0;
-  /* Perhaps the executable has no PT_LOAD header entries at all.  */
-  main_map->l_map_start = ~0;
-  /* And it was opened directly.  */
-  ++main_map->l_direct_opencount;
-
-  /* Scan the program header table for the dynamic section.  */
-  for (ph = phdr; ph < &phdr[phnum]; ++ph)
-    switch (ph->p_type)
-      {
-      case PT_PHDR:
-	/* Find out the load address.  */
-	main_map->l_addr = (ElfW(Addr)) phdr - ph->p_vaddr;
-	break;
-      case PT_DYNAMIC:
-	/* This tells us where to find the dynamic section,
-	   which tells us everything we need to do.  */
-	main_map->l_ld = (void *) main_map->l_addr + ph->p_vaddr;
-	main_map->l_ld_readonly = (ph->p_flags & PF_W) == 0;
-	break;
-      case PT_INTERP:
-	/* This "interpreter segment" was used by the program loader to
-	   find the program interpreter, which is this program itself, the
-	   dynamic linker.  We note what name finds us, so that a future
-	   dlopen call or DT_NEEDED entry, for something that wants to link
-	   against the dynamic linker as a shared library, will know that
-	   the shared object is already loaded.  */
-	_dl_rtld_libname.name = ((const char *) main_map->l_addr
-				 + ph->p_vaddr);
-	/* _dl_rtld_libname.next = NULL;	Already zero.  */
-	GL(dl_rtld_map).l_libname = &_dl_rtld_libname;
-
-	/* Ordinarilly, we would get additional names for the loader from
-	   our DT_SONAME.  This can't happen if we were actually linked as
-	   a static executable (detect this case when we have no DYNAMIC).
-	   If so, assume the filename component of the interpreter path to
-	   be our SONAME, and add it to our name list.  */
-	if (GL(dl_rtld_map).l_ld == NULL)
-	  {
-	    const char *p = NULL;
-	    const char *cp = _dl_rtld_libname.name;
-
-	    /* Find the filename part of the path.  */
-	    while (*cp != '\0')
-	      if (*cp++ == '/')
-		p = cp;
-
-	    if (p != NULL)
-	      {
-		_dl_rtld_libname2.name = p;
-		/* _dl_rtld_libname2.next = NULL;  Already zero.  */
-		_dl_rtld_libname.next = &_dl_rtld_libname2;
-	      }
-	  }
-
-	has_interp = true;
-	break;
-      case PT_LOAD:
-	{
-	  ElfW(Addr) mapstart;
-	  ElfW(Addr) allocend;
-
-	  /* Remember where the main program starts in memory.  */
-	  mapstart = (main_map->l_addr
-		      + (ph->p_vaddr & ~(GLRO(dl_pagesize) - 1)));
-	  if (main_map->l_map_start > mapstart)
-	    main_map->l_map_start = mapstart;
-
-	  /* Also where it ends.  */
-	  allocend = main_map->l_addr + ph->p_vaddr + ph->p_memsz;
-	  if (main_map->l_map_end < allocend)
-	    main_map->l_map_end = allocend;
-	  if ((ph->p_flags & PF_X) && allocend > main_map->l_text_end)
-	    main_map->l_text_end = allocend;
-	}
-	break;
-
-      case PT_TLS:
-	if (ph->p_memsz > 0)
-	  {
-	    /* Note that in the case the dynamic linker we duplicate work
-	       here since we read the PT_TLS entry already in
-	       _dl_start_final.  But the result is repeatable so do not
-	       check for this special but unimportant case.  */
-	    main_map->l_tls_blocksize = ph->p_memsz;
-	    main_map->l_tls_align = ph->p_align;
-	    if (ph->p_align == 0)
-	      main_map->l_tls_firstbyte_offset = 0;
-	    else
-	      main_map->l_tls_firstbyte_offset = (ph->p_vaddr
-						  & (ph->p_align - 1));
-	    main_map->l_tls_initimage_size = ph->p_filesz;
-	    main_map->l_tls_initimage = (void *) ph->p_vaddr;
-
-	    /* This image gets the ID one.  */
-	    GL(dl_tls_max_dtv_idx) = main_map->l_tls_modid = 1;
-	  }
-	break;
-
-      case PT_GNU_STACK:
-	GL(dl_stack_flags) = ph->p_flags;
-	break;
-
-      case PT_GNU_RELRO:
-	main_map->l_relro_addr = ph->p_vaddr;
-	main_map->l_relro_size = ph->p_memsz;
-	break;
-      }
-  /* Process program headers again, but scan them backwards so
-     that PT_NOTE can be skipped if PT_GNU_PROPERTY exits.  */
-  for (ph = &phdr[phnum]; ph != phdr; --ph)
-    switch (ph[-1].p_type)
-      {
-      case PT_NOTE:
-	_dl_process_pt_note (main_map, -1, &ph[-1]);
-	break;
-      case PT_GNU_PROPERTY:
-	_dl_process_pt_gnu_property (main_map, -1, &ph[-1]);
-	break;
-      }
-
-  /* Adjust the address of the TLS initialization image in case
-     the executable is actually an ET_DYN object.  */
-  if (main_map->l_tls_initimage != NULL)
-    main_map->l_tls_initimage
-      = (char *) main_map->l_tls_initimage + main_map->l_addr;
-  if (! main_map->l_map_end)
-    main_map->l_map_end = ~0;
-  if (! main_map->l_text_end)
-    main_map->l_text_end = ~0;
-  if (! GL(dl_rtld_map).l_libname && GL(dl_rtld_map).l_name)
-    {
-      /* We were invoked directly, so the program might not have a
-	 PT_INTERP.  */
-      _dl_rtld_libname.name = GL(dl_rtld_map).l_name;
-      /* _dl_rtld_libname.next = NULL;	Already zero.  */
-      GL(dl_rtld_map).l_libname =  &_dl_rtld_libname;
-    }
-  else
-    assert (GL(dl_rtld_map).l_libname); /* How else did we get here?  */
+  bool has_interp = rtld_setup_main_map (main_map);
 
   /* If the current libname is different from the SONAME, add the
      latter as well.  */
@@ -1688,7 +1774,7 @@ dl_main (const ElfW(Phdr) *phdr,
      objects.  */
   call_init_paths (&state);
 
-  /* Initialize _r_debug.  */
+  /* Initialize _r_debug_extended.  */
   struct r_debug *r = _dl_debug_initialize (GL(dl_rtld_map).l_addr,
 					    LM_ID_BASE);
   r->r_state = RT_CONSISTENT;
@@ -1712,21 +1798,15 @@ dl_main (const ElfW(Phdr) *phdr,
   if (GLRO(dl_use_load_bias) == (ElfW(Addr)) -2)
     GLRO(dl_use_load_bias) = main_map->l_addr == 0 ? -1 : 0;
 
-  /* Set up the program header information for the dynamic linker
-     itself.  It is needed in the dl_iterate_phdr callbacks.  */
-  const ElfW(Ehdr) *rtld_ehdr;
-
   /* Starting from binutils-2.23, the linker will define the magic symbol
      __ehdr_start to point to our own ELF header if it is visible in a
      segment that also includes the phdrs.  If that's not available, we use
      the old method that assumes the beginning of the file is part of the
      lowest-addressed PT_LOAD segment.  */
-#ifdef HAVE_EHDR_START
-  extern const ElfW(Ehdr) __ehdr_start __attribute__ ((visibility ("hidden")));
-  rtld_ehdr = &__ehdr_start;
-#else
-  rtld_ehdr = (void *) GL(dl_rtld_map).l_map_start;
-#endif
+
+  /* Set up the program header information for the dynamic linker
+     itself.  It is needed in the dl_iterate_phdr callbacks.  */
+  const ElfW(Ehdr) *rtld_ehdr = &__ehdr_start;
   assert (rtld_ehdr->e_ehsize == sizeof *rtld_ehdr);
   assert (rtld_ehdr->e_phentsize == sizeof (ElfW(Phdr)));
 
@@ -1788,21 +1868,7 @@ dl_main (const ElfW(Phdr) *phdr,
   size_t count_modids = _dl_count_modids ();
 
   /* Set up debugging before the debugger is notified for the first time.  */
-#ifdef ELF_MACHINE_DEBUG_SETUP
-  /* Some machines (e.g. MIPS) don't use DT_DEBUG in this way.  */
-  ELF_MACHINE_DEBUG_SETUP (main_map, r);
-  ELF_MACHINE_DEBUG_SETUP (&GL(dl_rtld_map), r);
-#else
-  if (main_map->l_info[DT_DEBUG] != NULL)
-    /* There is a DT_DEBUG entry in the dynamic section.  Fill it in
-       with the run-time address of the r_debug structure  */
-    main_map->l_info[DT_DEBUG]->d_un.d_ptr = (ElfW(Addr)) r;
-
-  /* Fill in the pointer in the dynamic linker's own dynamic section, in
-     case you run gdb on the dynamic linker directly.  */
-  if (GL(dl_rtld_map).l_info[DT_DEBUG] != NULL)
-    GL(dl_rtld_map).l_info[DT_DEBUG]->d_un.d_ptr = (ElfW(Addr)) r;
-#endif
+  elf_setup_debug_entry (main_map, r);
 
   /* We start adding objects.  */
   r->r_state = RT_ADD;
@@ -2358,6 +2424,9 @@ dl_main (const ElfW(Phdr) *phdr,
 	  rtld_timer_stop (&relocate_time, start);
 	}
 
+      /* Set up the object lookup structures.  */
+      _dl_find_object_init ();
+
       /* The library defining malloc has already been relocated due to
 	 prelinking.  Resolve the malloc symbols for the dynamic
 	 loader.  */
@@ -2466,6 +2535,9 @@ dl_main (const ElfW(Phdr) *phdr,
 	 re-relocation, we might call a user-supplied function
 	 (e.g. calloc from _dl_relocate_object) that uses TLS data.  */
 
+      /* Set up the object lookup structures.  */
+      _dl_find_object_init ();
+
       /* The malloc implementation has been relocated, so resolving
 	 its symbols (and potentially calling IFUNC resolvers) is safe
 	 at this point.  */
@@ -2503,7 +2575,7 @@ dl_main (const ElfW(Phdr) *phdr,
 
   /* Notify the debugger all new objects are now ready to go.  We must re-get
      the address since by now the variable might be in another object.  */
-  r = _dl_debug_initialize (0, LM_ID_BASE);
+  r = _dl_debug_update (LM_ID_BASE);
   r->r_state = RT_CONSISTENT;
   _dl_debug_state ();
   LIBC_PROBE (init_complete, 2, LM_ID_BASE, r);

@@ -10,8 +10,6 @@ libc.so.0.3 #PACKAGE# #MINVER#
  sysconf@GLIBC_2.2.6 2.34
 libBrokenLocale.so.1 #PACKAGE# #MINVER#
 #include "symbols.wildcards"
-libSegFault.so #PACKAGE# #MINVER#
-#include "symbols.wildcards"
 libc_malloc_debug.so.0 #PACKAGE# #MINVER#
 #include "symbols.wildcards"
 libdl.so.2 #PACKAGE# #MINVER#

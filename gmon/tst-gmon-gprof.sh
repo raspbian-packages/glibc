@@ -1,6 +1,6 @@
 #!/bin/sh
 # Check the output of gprof against a carfully crafted binary.
-# Copyright (C) 2017-2021 Free Software Foundation, Inc.
+# Copyright (C) 2017-2022 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -39,12 +39,14 @@ trap cleanup 0
 cat > "$expected" <<EOF
 f1 2000
 f2 1000
+f3 1
 EOF
 
 # Special version for powerpc with function descriptors.
 cat > "$expected_dot" <<EOF
 .f1 2000
 .f2 1000
+.f3 1
 EOF
 
 "$GPROF" -C "$program" "$data" \

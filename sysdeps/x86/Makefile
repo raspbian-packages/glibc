@@ -7,6 +7,7 @@ sysdep_routines += get-cpuid-feature-leaf
 sysdep-dl-routines += dl-get-cpu-features
 sysdep_headers += sys/platform/x86.h bits/platform/x86.h
 
+CFLAGS-dl-get-cpu-features.os += $(rtld-early-cflags)
 CFLAGS-get-cpuid-feature-leaf.o += $(no-stack-protector)
 
 tests += tst-get-cpu-features tst-get-cpu-features-static \
@@ -22,12 +23,16 @@ tests += \
   tst-ifunc-isa-1-static
 tests-static += \
   tst-ifunc-isa-1-static
+test-xfail-tst-ifunc-isa-1 = $(with-lld)
+test-xfail-tst-ifunc-isa-1-static = $(with-lld)
 ifneq ($(have-tunables),no)
 tests += \
   tst-ifunc-isa-2 \
   tst-ifunc-isa-2-static
 tests-static += \
   tst-ifunc-isa-2-static
+test-xfail-tst-ifunc-isa-2 = $(with-lld)
+test-xfail-tst-ifunc-isa-2-static = $(with-lld)
 endif
 endif
 endif

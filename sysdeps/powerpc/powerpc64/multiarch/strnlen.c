@@ -1,5 +1,5 @@
 /* Multiple versions of strnlen.
-   Copyright (C) 2013-2021 Free Software Foundation, Inc.
+   Copyright (C) 2013-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -29,9 +29,10 @@ extern __typeof (__strnlen) __strnlen_power8 attribute_hidden;
 # undef strnlen
 # undef __strnlen
 libc_ifunc_redirected (__redirect___strnlen, __strnlen,
-		       (hwcap2 & PPC_FEATURE2_ARCH_2_07)
+		       (hwcap2 & PPC_FEATURE2_ARCH_2_07
+			&& hwcap & PPC_FEATURE_HAS_ALTIVEC)
 		       ? __strnlen_power8 :
-			 (hwcap & PPC_FEATURE_HAS_VSX)
+			 (hwcap & PPC_FEATURE_ARCH_2_06)
 			 ? __strnlen_power7
 			 : __strnlen_ppc);
 weak_alias (__strnlen, strnlen)

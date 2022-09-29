@@ -1,4 +1,4 @@
-# Copyright (C) 1996-2021 Free Software Foundation, Inc.
+# Copyright (C) 1996-2022 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -194,3 +194,12 @@ endif
 
 $(objpfx)tst-nss-files-alias-leak.out: $(objpfx)/libnss_files.so
 $(objpfx)tst-nss-files-alias-truncated.out: $(objpfx)/libnss_files.so
+
+# Disable DT_RUNPATH on NSS tests so that the glibc internal NSS
+# functions can load testing NSS modules via DT_RPATH.
+LDFLAGS-tst-nss-test1 = -Wl,--disable-new-dtags
+LDFLAGS-tst-nss-test2 = -Wl,--disable-new-dtags
+LDFLAGS-tst-nss-test3 = -Wl,--disable-new-dtags
+LDFLAGS-tst-nss-test4 = -Wl,--disable-new-dtags
+LDFLAGS-tst-nss-test5 = -Wl,--disable-new-dtags
+LDFLAGS-tst-nss-test_errno = -Wl,--disable-new-dtags

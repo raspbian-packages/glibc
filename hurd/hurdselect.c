@@ -1,5 +1,5 @@
 /* Guts of both `select' and `poll' for Hurd.
-   Copyright (C) 1991-2021 Free Software Foundation, Inc.
+   Copyright (C) 1991-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -67,7 +67,7 @@ _hurd_select (int nfds,
       int error;
     } d[nfds];
   sigset_t oset;
-  struct hurd_sigstate *ss;
+  struct hurd_sigstate *ss = NULL;
 
   union typeword		/* Use this to avoid unkosher casts.  */
     {

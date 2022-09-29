@@ -1,9 +1,140 @@
-glibc (2.34-7+rpi1) bookworm-staging; urgency=medium
+glibc (2.35-1+rpi1) bookworm-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
 
- -- Peter Michael Green <plugwash@raspbian.org>  Thu, 15 Sep 2022 03:05:05 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 29 Sep 2022 20:25:19 +0000
+
+glibc (2.35-1) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/git-strerror_X.diff: Fix tst-sprintf-errno test.
+  * debian/patches/hurd-i386/git-readlink-fifo.diff: Fix readlink() on fifos.
+  * debian/patches/hurd-i386/git-net-route.h.diff: Add ifrtreq structure and
+    fix SIOCADD/DELRT ioctls.
+  * debian/patches/hurd-i386/submitted-net.diff: Drop net/route.h part.
+
+  [ Aurelien Jarno ]
+  * debian/control.in/main: add a breaks against dh-lua (<< 27+nmu1~) to
+    libc-bin. See #1017832.
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+  * debian/rules.d/build.mk: fix the pt_chown permissions after installation
+    when running with Rules-Requires-Root=no (for non-Linux systems).
+  * debian/control.in/main: set Rules-Requires-Root: no.
+  * debian/debhelper.in/libc.preinst: only apply NSS workaround when upgrading
+    from glibc < 2.34.
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+
+  [ Luca Boccassi ]
+  * debian/debhelper.in/libc-alt.preinst: libc6-<arch>: create merged-usr
+    symlinks via preinst script.  Closes: #926699.
+
+  [ Gioele Barabucci ]
+  * debian/debhelper.in/libc.preinst: avoid using pidof.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Thu, 22 Sep 2022 22:02:00 +0200
+
+glibc (2.35-0experimental3) experimental; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/control.in/libc: add a breaks against valgrind (<< 1:3.19.0-1~).
+    See #1017791.
+  * debian/debhelper.in/libc-bin.install: install /usr/bin/ld.so.
+  * debian/rules.d/build.mk: egrep -> grep -E.
+
+  [ Samuel Thibault ]
+  * debian/testsuite-xfail-debian.mk: Update tests results for hurd-i386.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 11 Sep 2022 11:40:03 +0200
+
+glibc (2.35-0experimental2) experimental; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/control.in/libc: add a breaks against chrony (<< 4.2-3~). See
+    #1017790.
+
+  [ Samuel Thibault ]
+  * debian/testsuite-xfail-debian.mk: Update tests results for hurd-i386.
+  * debian/patches/hurd-i386/git-static-pie.diff: Fix starting static binaries
+    with stack protection enabled.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Thu, 25 Aug 2022 19:30:20 +0200
+
+glibc (2.35-0experimental1) experimental; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/rules.d/build.mk: use the new --with-timeoutfactor configure
+    option.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Mon, 15 Aug 2022 15:40:01 +0200
+
+glibc (2.35-0experimental0) experimental; urgency=medium
+
+  [ Aurelien Jarno ]
+  * New upstream release:
+    - Fixes performance issues in dynamic loader.  Closes: #896008.
+    - debian/symbols.wildcard: add 2.35.
+    - debian/patches/localedata/locale-C.diff: upstreamed.
+    - debian/patches/alpha/local-string-functions.diff: rebased.
+    - debian/patches/hurd-i386/git-drop-rmh.diff: upstreamed.
+    - debian/patches/hurd-i386/git-AT_NO_AUTOMOUNT.diff: upstreamed.
+    - debian/patches/hurd-i386/git-get_errlist.diff: upstreamed.
+    - debian/patches/hurd-i386/git-msync.diff: upstreamed.
+    - debian/patches/hurd-i386/git-htl-init_sigset.diff: upstreamed.
+    - debian/patches/hurd-i386/git-machrules-chk_fail.diff: upstreamed.
+    - debian/patches/hurd-i386/git-random-getrandom.diff: upstreamed.
+    - debian/patches/hurd-i386/git-lib-map.diff: upstreamed.
+    - debian/patches/hurd-i386/git-large-text.diff: upstreamed.
+    - debian/patches/hurd-i386/git-get_dtable.diff: upstreamed.
+    - debian/patches/hurd-i386/git-auth-leak.diff: upstreamed.
+    - debian/patches/hurd-i386/git-nuke_ports_on_exec.diff: upstreamed.
+    - debian/patches/hurd-i386/git-ttydefaults.diff: upstreamed.
+    - debian/patches/hurd-i386/git-const.diff: upstreamed.
+    - debian/patches/hurd-i386/git-pthread_kill_exited.diff: upstreamed.
+    - debian/patches/hurd-i386/git-reply_bogus.diff: upstreamed.
+    - debian/patches/hurd-i386/tg-EIEIO-fr.diff: upstreamed.
+    - debian/patches/hurd-i386/tg-EGREGIOUS-fr.diff: upstreamed.
+    - debian/patches/hurd-i386/local-tls-ie-align.diff: dropped, obsolete.
+    - debian/patches/hurd-i386/git-thrd_current.diff: dropped, obsolete.
+    - debian/patches/kfreebsd/submitted-auxv.diff: rebased.
+    - debian/patches/mips/submitted-rld_map.diff: rebased.
+    - debian/patches/all/submitted-po-fr-fixes.diff: upstreamed.
+    - debian/patches/any/local-ldconfig-ignore-ld.so.diff: rebased.
+    - debian/patches/any/git-localedef-check-magic.patch: upstreamed.
+    - debian/debhelper.in/libc-bin.{install,manpages}: stop installing
+      catchsegv, removed upstream.  Closes: #775716, #946606.
+  * debian/sysdeps/{amd64,arm64,i386,x32}.mk: stop passing --enable-static-pie
+    to configure as it is now the default.
+  * debian/debhelper.in/libc-bin.install: install /usr/bin/ld.so in libc-bin.
+  * debian/rules.d/build.mk: remove the C.utf8 locale from locales-all to
+    avoid conflicts with the one in libc-bin. Unfortunately we can't use the
+    one build in locales-all for libc-bin, as locales-all currently can't be
+    cross-compiled.
+  * debian/rules.d/debhelper.mk: do not offer C.UTF-8 in the list of locales
+    that can be generated through the debconf template, as it is already
+    provided by libc-bin.
+  * debian/testsuite-xfail-debian.mk: add new math tests that are also
+    affected by the Octeon 3 and XBurst tininess detection.
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/local-fix-nss.diff: Refresh.
+  * debian/patches/hurd-i386/submitted-net.diff: Refresh.
+  * debian/patches/hurd-i386/tg-bits_atomic.h_multiple_threads.diff: Refresh.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 07 Aug 2022 22:25:02 +0200
+
+glibc (2.34-8) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/git-strerror_X.diff: Fix strerror format.
+  * debian/patches/hurd-i386/git-xpg_strerror.diff: Fix xpg_error behavior.
+  * debian/patches/hurd-i386/git-thrd_current.diff: Fix calling thrd_current
+    without libpthread.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 11 Sep 2022 00:05:13 +0200
 
 glibc (2.34-7) unstable; urgency=medium
 

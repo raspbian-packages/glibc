@@ -1,5 +1,5 @@
 # Makefile for support library, used only at build and test time
-# Copyright (C) 2016-2021 Free Software Foundation, Inc.
+# Copyright (C) 2016-2022 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -63,6 +63,7 @@ libsupport-routines = \
   support_format_hostent \
   support_format_netent \
   support_isolate_in_subprocess \
+  support_mutex_pi_monotonic \
   support_path_support_time64 \
   support_process_state \
   support_ptrace \
@@ -70,6 +71,7 @@ libsupport-routines = \
   support_openpty \
   support_paths \
   support_quote_blob \
+  support_quote_blob_wide \
   support_quote_string \
   support_record_failure \
   support_run_diff \
@@ -84,6 +86,7 @@ libsupport-routines = \
   support_test_compare_blob \
   support_test_compare_failure \
   support_test_compare_string \
+  support_test_compare_string_wide \
   support_test_main \
   support_test_verify_impl \
   support_wait_for_thread_exit \
@@ -255,10 +258,16 @@ others-noinstall += shell-container echo-container true-container
 others += $(LINKS_DSO_PROGRAM)
 others-noinstall += $(LINKS_DSO_PROGRAM)
 
+others += test-run-command
+others-static += test-run-command
+others-noinstall += test-run-command
+LDLIBS-test-run-command = $(libsupport)
+
 $(objpfx)test-container : $(libsupport)
 $(objpfx)shell-container : $(libsupport)
 $(objpfx)echo-container : $(libsupport)
 $(objpfx)true-container : $(libsupport)
+$(objpfx)test-run-command : $(libsupport) $(common-objpfx)elf/static-stubs.o
 
 tests = \
   README-testing \
@@ -270,11 +279,13 @@ tests = \
   tst-support-open-dev-null-range \
   tst-support-process_state \
   tst-support_quote_blob \
+  tst-support_quote_blob_wide \
   tst-support_quote_string \
   tst-support_record_failure \
   tst-test_compare \
   tst-test_compare_blob \
   tst-test_compare_string \
+  tst-test_compare_string_wide \
   tst-timespec \
   tst-xreadlink \
   tst-xsigstack \

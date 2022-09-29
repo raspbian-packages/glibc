@@ -1,5 +1,5 @@
 /* Internal definitions for pthreads library.
-   Copyright (C) 2000-2021 Free Software Foundation, Inc.
+   Copyright (C) 2000-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -37,7 +37,7 @@ extern __thread struct __pthread *___pthread_self;
 	({                                                         \
 	  struct __pthread *thread;                                \
 	                                                           \
-	  assert (__pthread_threads);                              \
+	  assert (GL (dl_pthread_threads));                        \
 	  thread = ___pthread_self;                                \
 	                                                           \
 	  assert (thread);                                         \

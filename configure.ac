@@ -162,6 +162,19 @@ AC_ARG_WITH([nonshared-cflags],
 	    [extra_nonshared_cflags=$withval],
 	    [extra_nonshared_cflags=])
 AC_SUBST(extra_nonshared_cflags)
+AC_ARG_WITH([rtld-early-cflags],
+	    AS_HELP_STRING([--with-rtld-early-cflags=CFLAGS],
+			   [build early initialization with additional CFLAGS]),
+	    [rtld_early_cflags=$withval],
+	    [rtld_early_cflags=])
+AC_SUBST(rtld_early_cflags)
+
+AC_ARG_WITH([timeoutfactor],
+	    AS_HELP_STRING([--with-timeoutfactor=NUM],
+			   [specify an integer to scale the timeout]),
+	    [timeoutfactor=$withval],
+	    [timeoutfactor=1])
+AC_DEFINE_UNQUOTED(TIMEOUTFACTOR, $timeoutfactor)
 
 AC_ARG_ENABLE([sanity-checks],
 	      AS_HELP_STRING([--disable-sanity-checks],
@@ -179,11 +192,11 @@ AC_ARG_ENABLE([profile],
 			     [build profiled library @<:@default=no@:>@]),
 	      [profile=$enableval],
 	      [profile=no])
-AC_ARG_ENABLE([static-pie],
-	      AS_HELP_STRING([--enable-static-pie],
-			     [enable static PIE support and use it in the testsuite @<:@default=no@:>@]),
-	      [static_pie=$enableval],
-	      [static_pie=no])
+AC_ARG_ENABLE([default-pie],
+	      AS_HELP_STRING([--disable-default-pie],
+			     [Do not build glibc programs and the testsuite as PIE @<:@default=no@:>@]),
+	      [default_pie=$enableval],
+	      [default_pie=yes])
 AC_ARG_ENABLE([timezone-tools],
 	      AS_HELP_STRING([--disable-timezone-tools],
 			     [do not install timezone tools @<:@default=install@:>@]),
@@ -997,18 +1010,31 @@ AC_CHECK_PROG_VER(AS, $AS, --version,
 		  [2.1[0-9][0-9]*|2.2[5-9]*|2.[3-9][0-9]*|[3-9].*|[1-9][0-9]*],
 		  AS=: critic_missing="$critic_missing as")
 
-if test -n "`$LD --version | sed -n 's/^GNU \(gold\).*$/\1/p'`"; then
+libc_cv_with_lld=no
+case $($LD --version) in
+  "GNU gold"*)
   # Accept gold 1.14 or higher
-  AC_CHECK_PROG_VER(LD, $LD, --version,
+    AC_CHECK_PROG_VER(LD, $LD, --version,
 		    [GNU gold.* \([0-9][0-9]*\.[0-9.]*\)],
 		    [1.1[4-9]*|1.[2-9][0-9]*|1.1[0-9][0-9]*|[2-9].*|[1-9][0-9]*],
 		    LD=: critic_missing="$critic_missing GNU gold")
-else
-  AC_CHECK_PROG_VER(LD, $LD, --version,
+    ;;
+  "LLD"*)
+  # Accept LLD 13.0.0 or higher
+    AC_CHECK_PROG_VER(LD, $LD, --version,
+		    [LLD.* \([0-9][0-9]*\.[0-9.]*\)],
+		    [1[3-9].*|[2-9][0-9].*],
+		    LD=: critic_missing="$critic_missing LLD")
+    libc_cv_with_lld=yes
+    ;;
+  *)
+    AC_CHECK_PROG_VER(LD, $LD, --version,
 		    [GNU ld.* \([0-9][0-9]*\.[0-9.]*\)],
 		    [2.1[0-9][0-9]*|2.2[5-9]*|2.[3-9][0-9]*|[3-9].*|[1-9][0-9]*],
 		    LD=: critic_missing="$critic_missing GNU ld")
-fi
+    ;;
+esac
+LIBC_CONFIG_VAR([with-lld], [$libc_cv_with_lld])
 
 # These programs are version sensitive.
 AC_CHECK_PROG_VER(MAKE, gnumake gmake make, --version,
@@ -1206,7 +1232,7 @@ AC_SUBST(libc_cv_protected_data)
 AC_CACHE_CHECK(linker support for INSERT in linker script,
 	       libc_cv_insert,
 	       [cat > conftest.c <<EOF
-		const int __attribute__ ((section(".bar"))) bar = 0x12345678;
+		int __attribute__ ((section(".bar"))) bar = 0x12345678;
 		int test (void) { return bar; }
 EOF
 		cat > conftest.t <<EOF
@@ -1339,6 +1365,10 @@ LIBC_LINKER_FEATURE([-z start-stop-gc], [-Wl,-z,start-stop-gc],
 		    [libc_cv_z_start_stop_gc=yes], [libc_cv_z_start_stop_gc=no])
 LIBC_CONFIG_VAR([have-z-start-stop-gc], [$libc_cv_z_start_stop_gc])
 
+LIBC_LINKER_FEATURE([--depaudit], [-Wl,--depaudit,x],
+		    [libc_cv_depaudit=yes], [libc_cv_depaudit=no])
+LIBC_CONFIG_VAR([have-depaudit], [$libc_cv_depaudit])
+
 LIBC_LINKER_FEATURE([--no-dynamic-linker],
 		    [-Wl,--no-dynamic-linker],
 		    [libc_cv_no_dynamic_linker=yes],
@@ -1425,8 +1455,8 @@ void foo (void)
   i = 10;
 }
 EOF
-if AC_TRY_COMMAND([${CC-cc} $CFLAGS $CPPFLAGS -S -fPIC -mtls-dialect=gnu2
-		   conftest.c 1>&AS_MESSAGE_LOG_FD])
+if AC_TRY_COMMAND([${CC-cc} $CFLAGS $CPPFLAGS -fPIC -mtls-dialect=gnu2 -nostdlib -nostartfiles
+		   conftest.c -o conftest 1>&AS_MESSAGE_LOG_FD])
 then
   libc_cv_mtls_dialect_gnu2=yes
 else
@@ -1611,40 +1641,6 @@ if test $libc_cv_predef_fortify_source = yes; then
 fi
 AC_SUBST(CPPUNDEFS)
 
-# Some linkers on some architectures support __ehdr_start but with
-# bugs.  Make sure usage of it does not create relocations in the
-# output (as the linker should resolve them all for us).
-AC_CACHE_CHECK([whether the linker provides working __ehdr_start],
-	       libc_cv_ehdr_start, [
-old_CFLAGS="$CFLAGS"
-old_LDFLAGS="$LDFLAGS"
-old_LIBS="$LIBS"
-CFLAGS="$CFLAGS -fPIC"
-LDFLAGS="$LDFLAGS -nostdlib -nostartfiles -shared $no_ssp"
-LIBS=
-AC_LINK_IFELSE([AC_LANG_SOURCE([
-typedef struct {
-  char foo;
-  long val;
-} Ehdr;
-extern const Ehdr __ehdr_start __attribute__ ((visibility ("hidden")));
-long ehdr (void) { return __ehdr_start.val; }
-])],
-	       [if $READELF -r conftest | grep -F __ehdr_start >/dev/null; then
-		  libc_cv_ehdr_start=broken
-		else
-		  libc_cv_ehdr_start=yes
-		fi], [libc_cv_ehdr_start=no])
-CFLAGS="$old_CFLAGS"
-LDFLAGS="$old_LDFLAGS"
-LIBS="$old_LIBS"
-])
-if test "$libc_cv_ehdr_start" = yes; then
-  AC_DEFINE([HAVE_EHDR_START])
-elif test "$libc_cv_ehdr_start" = broken; then
-  AC_MSG_WARN([linker is broken -- you should upgrade])
-fi
-
 dnl Starting with binutils 2.35, GAS can attach multiple symbol versions
 dnl to one symbol (PR 23840).
 AC_CACHE_CHECK(whether the assembler requires one version per symbol,
@@ -1805,7 +1801,7 @@ if eval "${CC-cc} -S conftest.c 2>&AS_MESSAGE_LOG_FD 1>&AS_MESSAGE_LOG_FD"; then
   libc_cv_pic_default=no
 fi
 rm -f conftest.*])
-AC_SUBST(libc_cv_pic_default)
+LIBC_CONFIG_VAR([build-pic-default], [$libc_cv_pic_default])
 
 AC_CACHE_CHECK([whether -fPIE is default], libc_cv_cc_pie_default,
 [libc_cv_cc_pie_default=yes
@@ -1818,29 +1814,49 @@ if eval "${CC-cc} -S conftest.c 2>&AS_MESSAGE_LOG_FD 1>&AS_MESSAGE_LOG_FD"; then
   libc_cv_cc_pie_default=no
 fi
 rm -f conftest.*])
-libc_cv_pie_default=$libc_cv_cc_pie_default
-AC_SUBST(libc_cv_cc_pie_default)
-AC_SUBST(libc_cv_pie_default)
+LIBC_CONFIG_VAR([cc-pie-default], [$libc_cv_cc_pie_default])
+
+AC_MSG_CHECKING(if we can build programs as PIE)
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[#ifdef PIE_UNSUPPORTED
+# error PIE is not supported
+#endif]])], [libc_cv_pie_supported=yes], [libc_cv_pie_supported=no])
+AC_MSG_RESULT($libc_cv_pie_supported)
+# Disable build-pie-default if target does not support it or glibc is
+# configured with --disable-default-pie.
+if test "x$default_pie" = xno; then
+  build_pie_default=no
+else
+  build_pie_default=$libc_cv_pie_supported
+fi
+LIBC_CONFIG_VAR([build-pie-default], [$build_pie_default])
+
+AC_MSG_CHECKING(if we can build static PIE programs)
+libc_cv_static_pie_supported=$libc_cv_pie_supported
+if test "x$libc_cv_pie_supported" != xno \
+   -a "$libc_cv_no_dynamic_linker" = yes; then
+  AC_COMPILE_IFELSE([AC_LANG_SOURCE([[#ifndef SUPPORT_STATIC_PIE
+# error static PIE is not supported
+#endif]])], [libc_cv_static_pie_supported=yes],
+	    [libc_cv_static_pie_supported=no])
+fi
+AC_MSG_RESULT($libc_cv_static_pie_supported)
+
+# Enable static-pie only if it is available and glibc isn't configured
+# with --disable-default-pie.
+if test "x$default_pie" = xno; then
+  libc_cv_static_pie=no
+else
+  libc_cv_static_pie=$libc_cv_static_pie_supported
+fi
+if test "$libc_cv_static_pie" = "yes"; then
+  AC_DEFINE(ENABLE_STATIC_PIE)
+fi
+LIBC_CONFIG_VAR([enable-static-pie], [$libc_cv_static_pie])
 
 # Set the `multidir' variable by grabbing the variable from the compiler.
 # We do it once and save the result in a generated makefile.
 libc_cv_multidir=`${CC-cc} $CFLAGS $CPPFLAGS -print-multi-directory`
 AC_SUBST(libc_cv_multidir)
-
-if test "$static_pie" = yes; then
-  # Check target support for static PIE
-  AC_COMPILE_IFELSE([AC_LANG_SOURCE([[#ifndef SUPPORT_STATIC_PIE
-# error static PIE is not supported
-#endif]])], , AC_MSG_ERROR([the architecture does not support static PIE]))
-  # The linker must support --no-dynamic-linker.
-  if test "$libc_cv_no_dynamic_linker" != yes; then
-    AC_MSG_ERROR([linker support for --no-dynamic-linker needed])
-  fi
-  # Default to PIE.
-  libc_cv_pie_default=yes
-  AC_DEFINE(ENABLE_STATIC_PIE)
-fi
-LIBC_CONFIG_VAR([enable-static-pie], [$static_pie])
 
 AC_SUBST(profile)
 AC_SUBST(static_nss)

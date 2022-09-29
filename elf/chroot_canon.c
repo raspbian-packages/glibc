@@ -1,5 +1,5 @@
 /* Return the canonical absolute name of a given file inside chroot.
-   Copyright (C) 1996-2021 Free Software Foundation, Inc.
+   Copyright (C) 1996-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    This program is free software; you can redistribute it and/or modify
@@ -67,7 +67,7 @@ chroot_canon (const char *chroot, const char *name)
 
   for (start = end = name; *start; start = end)
     {
-      struct stat64 st;
+      struct stat st;
 
       /* Skip sequence of multiple path-separators.  */
       while (*start == '/')
@@ -114,7 +114,7 @@ chroot_canon (const char *chroot, const char *name)
 	  dest = mempcpy (dest, start, end - start);
 	  *dest = '\0';
 
-	  if (lstat64 (rpath, &st) < 0)
+	  if (lstat (rpath, &st) < 0)
 	    {
 	      if (*end == '\0')
 		goto done;

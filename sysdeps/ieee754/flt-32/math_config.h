@@ -1,5 +1,5 @@
 /* Configuration for math routines.
-   Copyright (C) 2017-2021 Free Software Foundation, Inc.
+   Copyright (C) 2017-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -99,6 +99,15 @@ asdouble (uint64_t i)
     double f;
   } u = {i};
   return u.f;
+}
+
+static inline int
+issignalingf_inline (float x)
+{
+  uint32_t ix = asuint (x);
+  if (HIGH_ORDER_BIT_IS_SET_FOR_SNAN)
+    return (ix & 0x7fc00000) == 0x7fc00000;
+  return 2 * (ix ^ 0x00400000) > 2 * 0x7fc00000UL;
 }
 
 #define NOINLINE __attribute__ ((noinline))

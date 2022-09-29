@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2021 Free Software Foundation, Inc.
+# Copyright (C) 2016-2022 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -92,6 +92,10 @@ glibc {
       minval: 0
       security_level: SXID_IGNORE
     }
+    hugetlb {
+      type: SIZE_T
+      minval: 0
+    }
   }
   cpu {
     hwcap_mask {
@@ -154,6 +158,15 @@ glibc {
       minval: 0
       maxval: 255
       security_level: SXID_IGNORE
+    }
+  }
+
+  rtld {
+    dynamic_sort {
+      type: INT_32
+      minval: 1
+      maxval: 2
+      default: 2
     }
   }
 }

@@ -62,12 +62,6 @@
 /* Define if _rtld_local structure should be forced into .sdata section.  */
 #undef	HAVE_SDATA_SECTION
 
-/* Define if compiler supports AVX512.  */
-#undef  HAVE_AVX512_SUPPORT
-
-/* Define if assembler supports AVX512DQ.  */
-#undef  HAVE_AVX512DQ_ASM_SUPPORT
-
 /* Define if assembler supports z10 zarch instructions as default on S390.  */
 #undef  HAVE_S390_MIN_Z10_ZARCH_ASM_SUPPORT
 
@@ -89,9 +83,6 @@
 
 /* Define if assembler supports arch13 instructions on S390.  */
 #undef  HAVE_S390_ARCH13_ASM_SUPPORT
-
-/* Define if assembler supports Intel MPX.  */
-#undef  HAVE_MPX_SUPPORT
 
 /* Define if the compiler\'s exception support is based on libunwind.  */
 #undef	HAVE_CC_WITH_LIBUNWIND
@@ -201,15 +192,15 @@
 /* Define if CC supports attribute retain.  */
 #undef HAVE_GNU_RETAIN
 
-/* Define if the linker defines __ehdr_start.  */
-#undef HAVE_EHDR_START
-
 /* Define to 1 if the assembler needs intermediate aliases to define
    multiple symbol versions for one symbol.  */
 #define SYMVER_NEEDS_ALIAS 0
 
 /* Define to 1 if libpthread actually resides in libc.  */
 #define PTHREAD_IN_LIBC 0
+
+/* An integer used to scale the timeout of test programs.  */
+#define TIMEOUTFACTOR 1
 
 /*
  */
@@ -279,6 +270,9 @@
 
 /* Build glibc with tunables support.  */
 #define HAVE_TUNABLES 0
+
+/* Define if PIE is unsupported.  */
+#undef PIE_UNSUPPORTED
 
 /* Define if static PIE is supported.  */
 #undef SUPPORT_STATIC_PIE

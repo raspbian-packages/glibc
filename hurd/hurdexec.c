@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2021 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -392,19 +392,21 @@ retry:
 	     exec call.  */
 
 	  for (i = 0; i < _hurd_nports; ++i)
-	    {
-	      *pdp++ = ports[i];
-	      for (j = 0; j < nportnames; j++)
-		if (portnames[j] == ports[i])
-		  portnames[j] = MACH_PORT_NULL;
-	    }
+	    if (ports[i] != MACH_PORT_NULL)
+	      {
+		*pdp++ = ports[i];
+		for (j = 0; j < nportnames; j++)
+		  if (portnames[j] == ports[i])
+		    portnames[j] = MACH_PORT_NULL;
+	      }
 	  for (i = 0; i < dtablesize; ++i)
-	    {
-	      *pdp++ = dtable[i];
-	      for (j = 0; j < nportnames; j++)
-		if (portnames[j] == dtable[i])
-		  portnames[j] = MACH_PORT_NULL;
-	    }
+	    if (dtable[i] != MACH_PORT_NULL)
+	      {
+		*pdp++ = dtable[i];
+		for (j = 0; j < nportnames; j++)
+		  if (portnames[j] == dtable[i])
+		    portnames[j] = MACH_PORT_NULL;
+	      }
 
 	  /* Pack ports to be destroyed together.  */
 	  for (i = 0, j = 0; i < nportnames; i++)
@@ -490,10 +492,10 @@ retry:
     /* Got a signal while inside an RPC of the critical section, retry again */
     goto retry;
 
- outargs:
-  free (args);
  outenv:
   free (env);
+ outargs:
+  free (args);
   return err;
 }
 libc_hidden_def (_hurd_exec_paths)

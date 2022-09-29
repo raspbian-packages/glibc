@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2021 Free Software Foundation, Inc.
+# Copyright (C) 2013-2022 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -21,12 +21,69 @@
 subdir := benchtests
 
 include ../Makeconfig
-bench-math := acos acosh asin asinh atan atanh cos cosh exp exp2 log log2   \
-	      modf pow rint sin sincos sinh sqrt tan tanh fmin fmax fminf   \
-	      fmaxf powf trunc truncf roundeven roundevenf expf exp2f logf  \
-	      log2f sincosf sinf cosf isnan isinf isfinite hypot logb logbf \
-	      exp10f ilogb ilogbf cbrt erf erfc exp10 expm1 j0 j1 lgamma    \
-	      log10 log1p tgamma y0 y1 atan2
+
+bench-math := \
+  acos \
+  acosh \
+  asin \
+  asinh \
+  atan \
+  atan2 \
+  atanh \
+  cbrt \
+  cos \
+  cosf \
+  cosh \
+  erf \
+  erfc \
+  exp \
+  exp10 \
+  exp10f \
+  exp2 \
+  exp2f \
+  expf \
+  expm1 \
+  fmax \
+  fmaxf \
+  fmin \
+  fminf \
+  hypot \
+  hypotf \
+  ilogb \
+  ilogbf \
+  isfinite \
+  isinf \
+  isnan \
+  j0 \
+  j1 \
+  lgamma \
+  log \
+  log10 \
+  log1p \
+  log2 \
+  log2f \
+  logb \
+  logbf \
+  logf \
+  modf \
+  pow \
+  powf \
+  rint \
+  roundeven \
+  roundevenf \
+  sin \
+  sincos \
+  sincosf \
+  sinf \
+  sinh \
+  sqrt \
+  tan \
+  tanh \
+  tgamma \
+  trunc \
+  truncf \
+  y0 \
+  y1 \
 
 ifneq (,$(filter yes,$(float96-fcts)))
 bench-math += cbrtl
@@ -47,7 +104,7 @@ bench := $(foreach B,$(filter bench-%,${BENCHSET}), ${${B}})
 endif
 
 # String function benchmarks.
-string-benchset := memccpy memchr memcmp memcpy memmem memmove \
+string-benchset := memccpy memchr memcmp memcmpeq memcpy memmem memmove \
 		   mempcpy memset rawmemchr stpcpy stpncpy strcasecmp strcasestr \
 		   strcat strchr strchrnul strcmp strcpy strcspn strlen \
 		   strncasecmp strncat strncmp strncpy strnlen strpbrk strrchr \
@@ -110,11 +167,23 @@ else
 bench-malloc := $(filter malloc-%,${BENCHSET})
 endif
 
-$(addprefix $(objpfx)bench-,$(bench-math)): $(libm)
-$(addprefix $(objpfx)bench-,$(math-benchset)): $(libm)
-$(addprefix $(objpfx)bench-,$(bench-pthread)): $(shared-thread-library)
-$(addprefix $(objpfx)bench-,$(bench-malloc)): $(shared-thread-library)
-$(addprefix $(objpfx)bench-,pthread-locks): $(libm)
+ifeq (${STATIC-BENCHTESTS},yes)
++link-benchtests = $(+link-static-tests)
+link-libc-benchtests = $(link-libc-static)
+libm-benchtests = $(common-objpfx)math/libm.a
+thread-library-benchtests = $(static-thread-library)
+else
+link-libc-benchtests = $(link-libc)
++link-benchtests = $(+link-tests)
+thread-library-benchtests = $(shared-thread-library)
+libm-benchtests = $(libm)
+endif
+
+$(addprefix $(objpfx)bench-,$(bench-math)): $(libm-benchtests)
+$(addprefix $(objpfx)bench-,$(math-benchset)): $(libm-benchtests)
+$(addprefix $(objpfx)bench-,$(bench-pthread)): $(thread-library-benchtests)
+$(addprefix $(objpfx)bench-,$(bench-malloc)): $(thread-library-benchtests)
+$(addprefix $(objpfx)bench-,pthread-locks): $(libm-benchtests)
 
 
 
@@ -270,9 +339,9 @@ bench-link-targets = $(timing-type) $(binaries-bench) $(binaries-benchset) \
 
 $(bench-link-targets): %: %.o $(objpfx)json-lib.o \
 	$(link-extra-libs-tests) \
-  $(sort $(filter $(common-objpfx)lib%,$(link-libc))) \
+  $(sort $(filter $(common-objpfx)lib%,$(link-libc-benchtests))) \
   $(addprefix $(csu-objpfx),start.o) $(+preinit) $(+postinit)
-	$(+link-tests)
+	$(+link-benchtests)
 
 $(bench-link-targets): LDFLAGS += $(link-bench-bind-now)
 

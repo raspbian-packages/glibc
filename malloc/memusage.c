@@ -1,7 +1,6 @@
 /* Profile heap and stack memory usage of running program.
-   Copyright (C) 1998-2021 Free Software Foundation, Inc.
+   Copyright (C) 1998-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
-   Contributed by Ulrich Drepper <drepper@cygnus.com>, 1998.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -34,7 +33,9 @@
 #include <sys/mman.h>
 #include <sys/time.h>
 
-#include <memusage.h>
+#include <hp-timing.h>
+#include <machine-sp.h>
+#include <stackinfo.h>  /* For _STACK_GROWS_UP  */
 
 /* Pointer to the real functions.  These are determined used `dlsym'
    when really needed.  */
@@ -72,20 +73,20 @@ struct header
 #define MAGIC 0xfeedbeaf
 
 
-static memusage_cntr_t calls[idx_last];
-static memusage_cntr_t failed[idx_last];
-static memusage_size_t total[idx_last];
-static memusage_size_t grand_total;
-static memusage_cntr_t histogram[65536 / 16];
-static memusage_cntr_t large;
-static memusage_cntr_t calls_total;
-static memusage_cntr_t inplace;
-static memusage_cntr_t decreasing;
-static memusage_cntr_t realloc_free;
-static memusage_cntr_t inplace_mremap;
-static memusage_cntr_t decreasing_mremap;
-static memusage_size_t current_heap;
-static memusage_size_t peak_use[3];
+static unsigned long int calls[idx_last];
+static unsigned long int failed[idx_last];
+static size_t total[idx_last];
+static size_t grand_total;
+static unsigned long int histogram[65536 / 16];
+static unsigned long int large;
+static unsigned long int calls_total;
+static unsigned long int inplace;
+static unsigned long int decreasing;
+static unsigned long int realloc_free;
+static unsigned long int inplace_mremap;
+static unsigned long int decreasing_mremap;
+static size_t current_heap;
+static size_t peak_use[3];
 static __thread uintptr_t start_sp;
 
 /* A few macros to make the source more readable.  */
@@ -112,9 +113,26 @@ struct entry
 };
 
 static struct entry buffer[2 * DEFAULT_BUFFER_SIZE];
-static uatomic32_t buffer_cnt;
+static uint32_t buffer_cnt;
 static struct entry first;
 
+static void
+gettime (struct entry *e)
+{
+#if HP_TIMING_INLINE
+  hp_timing_t now;
+  HP_TIMING_NOW (now);
+  e->time_low = now & 0xffffffff;
+  e->time_high = now >> 32;
+#else
+  struct __timespec64 now;
+  uint64_t usecs;
+  __clock_gettime64 (CLOCK_REALTIME, &now);
+  usecs = (uint64_t)now.tv_nsec / 1000 + (uint64_t)now.tv_sec * 1000000;
+  e->time_low = usecs & 0xffffffff;
+  e->time_high = usecs >> 32;
+#endif
+}
 
 /* Update the global data after a successful function call.  */
 static void
@@ -129,7 +147,7 @@ update_data (struct header *result, size_t len, size_t old_len)
     }
 
   /* Compute current heap usage and compare it with the maximum value.  */
-  memusage_size_t heap
+  size_t heap
     = catomic_exchange_and_add (&current_heap, len - old_len) + len - old_len;
   catomic_max (&peak_heap, heap);
 
@@ -138,10 +156,10 @@ update_data (struct header *result, size_t len, size_t old_len)
      the main thread and it is the first call to any of these
      functions.  */
   if (__glibc_unlikely (!start_sp))
-    start_sp = GETSP ();
+    start_sp = __thread_stack_pointer ();
 
-  uintptr_t sp = GETSP ();
-#ifdef STACK_GROWS_UPWARD
+  uintptr_t sp = __thread_stack_pointer ();
+#ifdef _STACK_GROWS_UP
   /* This can happen in threads where we didn't catch the thread's
      stack early enough.  */
   if (__glibc_unlikely (sp < start_sp))
@@ -162,14 +180,14 @@ update_data (struct header *result, size_t len, size_t old_len)
   /* Store the value only if we are writing to a file.  */
   if (fd != -1)
     {
-      uatomic32_t idx = catomic_exchange_and_add (&buffer_cnt, 1);
+      uint32_t idx = catomic_exchange_and_add (&buffer_cnt, 1);
       if (idx + 1 >= 2 * buffer_size)
         {
           /* We try to reset the counter to the correct range.  If
              this fails because of another thread increasing the
              counter it does not matter since that thread will take
              care of the correction.  */
-          uatomic32_t reset = (idx + 1) % (2 * buffer_size);
+          uint32_t reset = (idx + 1) % (2 * buffer_size);
           catomic_compare_and_exchange_val_acq (&buffer_cnt, reset, idx + 1);
           if (idx >= 2 * buffer_size)
             idx = reset - 1;
@@ -178,7 +196,7 @@ update_data (struct header *result, size_t len, size_t old_len)
 
       buffer[idx].heap = current_heap;
       buffer[idx].stack = current_stack;
-      GETTIME (buffer[idx].time_low, buffer[idx].time_high);
+      gettime (&buffer[idx]);
 
       /* Write out buffer if it is full.  */
       if (idx + 1 == buffer_size)
@@ -251,7 +269,7 @@ me (void)
       const char *outname;
 
       if (!start_sp)
-        start_sp = GETSP ();
+        start_sp = __thread_stack_pointer ();
 
       outname = getenv ("MEMUSAGE_OUTPUT");
       if (outname != NULL && outname[0] != '\0'
@@ -268,7 +286,7 @@ me (void)
               /* Write the first entry.  */
               first.heap = 0;
               first.stack = 0;
-              GETTIME (first.time_low, first.time_high);
+              gettime (&first);
               /* Write it two times since we need the starting and end time. */
               write (fd, &first, sizeof (first));
               write (fd, &first, sizeof (first));
@@ -317,7 +335,7 @@ static void
 __attribute__ ((constructor))
 init (void)
 {
-  start_sp = GETSP ();
+  start_sp = __thread_stack_pointer ();
   if (!initialized)
     me ();
 }
@@ -819,7 +837,7 @@ dest (void)
          stack.  */
       first.heap = peak_heap;
       first.stack = peak_stack;
-      GETTIME (first.time_low, first.time_high);
+      gettime (&first);
       write (fd, &first, sizeof (struct entry));
 
       /* Close the file.  */

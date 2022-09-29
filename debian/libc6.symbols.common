@@ -1,7 +1,5 @@
 libBrokenLocale.so.1 #PACKAGE# #MINVER#
 #include "symbols.wildcards"
-libSegFault.so #PACKAGE# #MINVER#
-#include "symbols.wildcards"
 libc_malloc_debug.so.0 #PACKAGE# #MINVER#
 #include "symbols.wildcards"
 libdl.so.2 #PACKAGE# #MINVER#

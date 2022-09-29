@@ -1,5 +1,5 @@
 /* spawn a new process running an executable.  Hurd version.
-   Copyright (C) 2001-2021 Free Software Foundation, Inc.
+   Copyright (C) 2001-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -630,6 +630,19 @@ retry:
 	  case spawn_do_closefrom:
 	    err = do_closefrom (action->action.closefrom_action.from);
 	    break;
+
+	  case spawn_do_tcsetpgrp:
+	    {
+	      pid_t pgrp;
+	      /* Check if it is possible to avoid an extra syscall.  */
+	      if ((attrp->__flags & POSIX_SPAWN_SETPGROUP)
+		  != 0 && attrp->__pgrp != 0)
+		pgrp = attrp->__pgrp;
+	      else
+		err = __proc_getpgrp (proc, new_pid, &pgrp);
+	      if (!err)
+		err = __tcsetpgrp (action->action.setpgrp_action.fd, pgrp);
+	    }
 	  }
 
 	if (err)

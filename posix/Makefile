@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2021 Free Software Foundation, Inc.
+# Copyright (C) 1991-2022 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -58,6 +58,7 @@ routines :=								      \
 	spawn_faction_addopen spawn_faction_adddup2 spawn_valid_fd	      \
 	spawn_faction_addchdir spawn_faction_addfchdir			      \
 	spawn_faction_addclosefrom					      \
+	spawn_faction_addtcsetpgrp_np					      \
 	spawnattr_init spawnattr_destroy				      \
 	spawnattr_getdefault spawnattr_setdefault			      \
 	spawnattr_getflags spawnattr_setflags				      \
@@ -101,14 +102,14 @@ tests		:= test-errno tstgetopt testfnm runtests runptests \
 		   bug-getopt5 tst-getopt_long1 bug-regex34 bug-regex35 \
 		   tst-pathconf tst-rxspencer-no-utf8 \
 		   tst-fnmatch3 bug-regex36 \
-		   tst-fnmatch4 tst-fnmatch5 tst-fnmatch6 \
+		   tst-fnmatch4 tst-fnmatch5 tst-fnmatch6 tst-fnmatch7 \
 		   tst-posix_spawn-fd tst-posix_spawn-setsid \
 		   tst-posix_fadvise tst-posix_fadvise64 \
 		   tst-sysconf-empty-chroot tst-glob_symlinks tst-fexecve \
 		   tst-glob-tilde test-ssize-max tst-spawn4 bug-regex37 \
 		   bug-regex38 tst-regcomp-truncated tst-spawn-chdir \
 		   tst-wordexp-nocmd tst-execveat tst-spawn5 \
-		   tst-sched_getaffinity
+		   tst-sched_getaffinity tst-spawn6
 
 # Test for the glob symbol version that was replaced in glibc 2.27.
 ifeq ($(have-GLIBC_2.26)$(build-shared),yesyes)
@@ -191,9 +192,19 @@ $(objpfx)wordexp-tst.out: wordexp-tst.sh $(objpfx)wordexp-test
 	$(evaluate-test)
 endif
 
-LOCALES := cs_CZ.UTF-8 da_DK.ISO-8859-1 de_DE.ISO-8859-1 de_DE.UTF-8 \
-	   en_US.UTF-8 es_US.ISO-8859-1 es_US.UTF-8 ja_JP.EUC-JP tr_TR.UTF-8 \
-	   cs_CZ.ISO-8859-2
+LOCALES := \
+	cs_CZ.ISO-8859-2 \
+	cs_CZ.UTF-8 \
+	C.UTF-8 \
+	da_DK.ISO-8859-1 \
+	de_DE.ISO-8859-1 \
+	de_DE.UTF-8 \
+	en_US.UTF-8 \
+	es_US.ISO-8859-1 \
+	es_US.UTF-8 \
+	ja_JP.EUC-JP \
+	tr_TR.UTF-8 \
+	# LOCALES
 include ../gen-locales.mk
 
 $(objpfx)bug-regex1.out: $(gen-locales)
@@ -279,6 +290,7 @@ tst-execvpe5-ARGS = -- $(host-test-program-cmd)
 tst-spawn-ARGS = -- $(host-test-program-cmd)
 tst-spawn-static-ARGS = $(tst-spawn-ARGS)
 tst-spawn5-ARGS = -- $(host-test-program-cmd)
+tst-spawn6-ARGS = -- $(host-test-program-cmd)
 tst-dir-ARGS = `pwd` `cd $(common-objdir)/$(subdir); pwd` `cd $(common-objdir); pwd` $(objpfx)tst-dir
 tst-chmod-ARGS = $(objdir)
 tst-vfork3-ARGS = --test-dir=$(objpfx)

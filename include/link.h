@@ -1,6 +1,6 @@
 /* Data structure for communication from the run-time dynamic linker for
    loaded ELF shared objects.
-   Copyright (C) 1995-2021 Free Software Foundation, Inc.
+   Copyright (C) 1995-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -181,6 +181,11 @@ struct link_map
     unsigned int l_init_called:1; /* Nonzero if DT_INIT function called.  */
     unsigned int l_global:1;	/* Nonzero if object in _dl_global_scope.  */
     unsigned int l_reserved:2;	/* Reserved for internal use.  */
+    unsigned int l_main_map:1;  /* Nonzero for the map of the main program.  */
+    unsigned int l_visited:1;   /* Used internally for map dependency
+				   graph traversal.  */
+    unsigned int l_map_used:1;  /* These two bits are used during traversal */
+    unsigned int l_map_done:1;  /* of maps in _dl_close_worker. */
     unsigned int l_phdr_allocated:1; /* Nonzero if the data structure pointed
 					to by `l_phdr' is allocated.  */
     unsigned int l_soname_added:1; /* Nonzero if the SONAME is for sure in
@@ -206,6 +211,9 @@ struct link_map
 				       freed, ie. not allocated with
 				       the dummy malloc in ld.so.  */
     unsigned int l_ld_readonly:1; /* Nonzero if dynamic section is readonly.  */
+    unsigned int l_find_object_processed:1; /* Zero if _dl_find_object_update
+					       needs to process this
+					       lt_library map.  */
 
     /* NODELETE status of the map.  Only valid for maps of type
        lt_loaded.  Lazy binding sets l_nodelete_active directly,
@@ -355,6 +363,10 @@ struct auditstate
   unsigned int bindflags;
 };
 
+
+/* This is the hidden instance of struct r_debug_extended used by the
+   dynamic linker.  */
+extern struct r_debug_extended _r_debug_extended attribute_hidden;
 
 #if __ELF_NATIVE_CLASS == 32
 # define symbind symbind32

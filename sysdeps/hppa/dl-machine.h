@@ -1,6 +1,5 @@
 /* Machine-dependent ELF dynamic relocation inline functions.  PA-RISC version.
-   Copyright (C) 1995-2021 Free Software Foundation, Inc.
-   Contributed by David Huggins-Daines <dhd@debian.org>
+   Copyright (C) 1995-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -27,7 +26,6 @@
 #include <string.h>
 #include <link.h>
 #include <errno.h>
-#include <ldsodefs.h>
 #include <dl-fptr.h>
 #include <abort-instr.h>
 #include <tls.h>
@@ -162,24 +160,6 @@ elf_machine_plt_value (struct link_map *map, const Elf32_Rela *reloc,
   return (struct fdesc) { value.ip + reloc->r_addend, value.gp };
 }
 
-static inline struct link_map *
-elf_machine_main_map (void)
-{
-  struct link_map *main_map;
-
-#if defined SHARED && IS_IN (rtld)
-  asm (
-"	bl	1f,%0\n"
-"	addil	L'_rtld_local - ($PIC_pcrel$0 - 1),%0\n"
-"1:	ldw	R'_rtld_local - ($PIC_pcrel$0 - 5)(%%r1),%0\n"
-   : "=r" (main_map) : : "r1");
-#else
-  main_map = NULL;
-#endif
-
-  return main_map;
-}
-
 /* Set up the loaded object described by L so its unrelocated PLT
    entries will jump to the on-demand fixup code in dl-runtime.c.  */
 
@@ -197,7 +177,7 @@ elf_machine_runtime_setup (struct link_map *l, struct r_scope_elem *scope[],
   } sig = {{0x00,0xc0,0xff,0xee, 0xde,0xad,0xbe,0xef}};
 
   /* Initialize dp register for main executable.  */
-  if (l == elf_machine_main_map ())
+  if (l->l_main_map)
     {
       register Elf32_Addr dp asm ("%r27");
 

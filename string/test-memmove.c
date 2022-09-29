@@ -1,7 +1,6 @@
 /* Test and measure memmove functions.
-   Copyright (C) 1999-2021 Free Software Foundation, Inc.
+   Copyright (C) 1999-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
-   Written by Jakub Jelinek <jakub@redhat.com>, 1999.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -101,11 +100,11 @@ do_test (size_t align1, size_t align2, size_t len)
   size_t i, j;
   char *s1, *s2;
 
-  align1 &= 63;
+  align1 &= (getpagesize() - 1);
   if (align1 + len >= page_size)
     return;
 
-  align2 &= 63;
+  align2 &= (getpagesize() - 1);
   if (align2 + len >= page_size)
     return;
 
@@ -298,7 +297,7 @@ do_test2 (size_t offset)
 		{
 		  error (0, 0,
 			 "Wrong result in function %s dst \"%p\" src \"%p\" offset \"%zd\"",
-			 impl->name, dst, large_buf, i);
+			 impl->name, dst, src, i);
 		  ret = 1;
 		  munmap ((void *) large_buf, size);
 		  return;
@@ -311,6 +310,95 @@ do_test2 (size_t offset)
 
   munmap ((void *) large_buf, size);
 }
+
+static void
+do_test3 (size_t bytes_move, size_t offset)
+{
+  size_t size = bytes_move * 3;
+  uint32_t *buf;
+
+  buf = mmap (NULL, size, PROT_READ | PROT_WRITE,
+	      MAP_PRIVATE | MAP_ANON, -1, 0);
+
+  if (buf == MAP_FAILED)
+    error (EXIT_UNSUPPORTED, errno, "mmap failed");
+
+  size_t arr_size = bytes_move / sizeof (uint32_t);
+  size_t i;
+
+  FOR_EACH_IMPL (impl, 0)
+    {
+      for (i = 0; i < arr_size; i++)
+        buf[i] = (uint32_t) i;
+
+      uint32_t *dst = &buf[arr_size + offset];
+
+#ifdef TEST_BCOPY
+      CALL (impl, (char *) buf, (char *) dst, bytes_move);
+#else
+      CALL (impl, (char *) dst, (char *) buf, bytes_move);
+#endif
+
+      for (i = 0; i < arr_size; i++)
+	{
+	  if (dst[i] != (uint32_t) i)
+	    {
+	      error (0, 0,
+		     "Wrong result in function %s dst \"%p\" src \"%p\" offset \"%zd\"",
+		     impl->name, dst, buf, i);
+	      ret = 1;
+	      break;
+	    }
+	}
+    }
+
+  munmap ((void *) buf, size);
+}
+
+static void
+do_test4 (size_t bytes_move, size_t offset1, size_t offset2)
+{
+  size_t size, repeats, i;
+  uint8_t *buf, *dst, *src;
+
+  size = bytes_move + MAX(offset1, offset2);
+  buf  = mmap(NULL, size, PROT_READ | PROT_WRITE,
+             MAP_PRIVATE | MAP_ANON, -1, 0);
+
+  if (buf == MAP_FAILED)
+    error (EXIT_UNSUPPORTED, errno, "mmap failed");
+
+  dst = &buf[offset1];
+  src = &buf[offset2];
+  for (repeats = 0; repeats < 2; ++repeats)
+    {
+      FOR_EACH_IMPL (impl, 0)
+        {
+          for (i = 0; i < bytes_move; i++)
+              src[i] = (uint8_t) i;
+#ifdef TEST_BCOPY
+          CALL (impl, (char *) src, (char *) dst, bytes_move);
+#else
+          CALL (impl, (char *) dst, (char *) src, bytes_move);
+#endif
+          for (i = 0; i < bytes_move; i++)
+            {
+              if (dst[i] != (uint8_t) i)
+                {
+                  error (0, 0,
+                         "Wrong result in function %s dst \"%p\" src \"%p\" offset \"%zd\"",
+                         impl->name, dst, buf, i);
+                  ret = 1;
+                  break;
+                }
+            }
+        }
+      dst = &buf[offset2];
+      src = &buf[offset1];
+    }
+  munmap ((void *) buf, size);
+}
+
 
 int
 test_main (void)
@@ -352,10 +440,40 @@ test_main (void)
 
   do_random_tests ();
 
+  do_test2 (0);
   do_test2 (33);
+  do_test2 (0x200000 - 1);
   do_test2 (0x200000);
+  do_test2 (0x200000 + 1);
+  do_test2 (0x1000000 - 1);
+  do_test2 (0x1000000);
+  do_test2 (0x1000000 + 1);
   do_test2 (0x4000000 - 1);
   do_test2 (0x4000000);
+  do_test2 (0x4000000 + 1);
+
+  /* Copy 16KB data.  */
+  do_test3 (16384, 3);
+  for (i = 4096; i <= 16384; i <<= 1)
+    {
+      do_test4 (i, 0, i);
+      do_test4 (i, 0, i - 1);
+      do_test4 (i, 0, i + 1);
+      do_test4 (i, 63, i + 63);
+      do_test4 (i, 63, i + 64);
+      do_test4 (i, 63, i);
+
+      do_test4 (i, 0, 1);
+      do_test4 (i, 0, 15);
+      do_test4 (i, 0, 31);
+      do_test4 (i, 0, 63);
+      do_test4 (i, 0, 64);
+      do_test4 (i, 0, 65);
+      do_test4 (i, 0, 127);
+      do_test4 (i, 0, 129);
+    }
+
+
   return ret;
 }
 

@@ -1,4 +1,4 @@
-# Copyright (C) 1992-2021 Free Software Foundation, Inc.
+# Copyright (C) 1992-2022 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -57,7 +57,7 @@ routines :=								\
 	utimensat futimens file_change_detection			\
 	fts64-time64							\
 	ftw64-time64							\
-	closefrom
+	closefrom close_range
 
 others		:= pwd
 test-srcs	:= ftwtest ftwtest-time64
@@ -79,6 +79,8 @@ tests		:= test-utime test-stat test-stat2 test-lfs tst-getcwd \
 		   tst-futimens \
 		   tst-utimensat \
 		   tst-closefrom \
+		   tst-close_range \
+		   tst-ftw-bz28126
 
 tests-time64 := \
   tst-fcntl-time64 \

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # Check header contents against the given standard.
-# Copyright (C) 2018-2021 Free Software Foundation, Inc.
+# Copyright (C) 2018-2022 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 #
 # The GNU C Library is free software; you can redistribute it and/or
@@ -630,6 +630,14 @@ class HeaderTests(object):
                 if not line:
                     continue
                 if re.match(r'# [1-9]', line):
+                    continue
+                if line.startswith('#pragma GCC '):
+                    # No GCC pragma uses macro expansion, so no
+                    # namespace issues arise from such pragmas.  (Some
+                    # pragmas not in the GCC namespace do macro-expand
+                    # their arguments and so could be affected by
+                    # macros defined by user code including the
+                    # header.)
                     continue
                 match = re.match(r'#define (.*)', line)
                 if match:

@@ -1,5 +1,5 @@
 /* Enumerate available IFUNC implementations of a function.  i686 version.
-   Copyright (C) 2012-2021 Free Software Foundation, Inc.
+   Copyright (C) 2012-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -84,7 +84,6 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 			      __memmove_chk_sse2_unaligned)
 	      IFUNC_IMPL_ADD (array, i, __memmove_chk, 1,
 			      __memmove_chk_ia32))
-#endif
 
   /* Support sysdeps/i386/i686/multiarch/memmove.S.  */
   IFUNC_IMPL (i, name, memmove,
@@ -95,6 +94,7 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 	      IFUNC_IMPL_ADD (array, i, memmove, CPU_FEATURE_USABLE (SSE2),
 			      __memmove_sse2_unaligned)
 	      IFUNC_IMPL_ADD (array, i, memmove, 1, __memmove_ia32))
+#endif
 
   /* Support sysdeps/i386/i686/multiarch/memrchr.S.  */
   IFUNC_IMPL (i, name, memrchr,

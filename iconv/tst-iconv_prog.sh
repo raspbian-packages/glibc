@@ -1,7 +1,7 @@
 #!/bin/bash
 # Test for some known iconv(1) hangs from bug 19519, and miscellaneous
 # iconv(1) program error conditions.
-# Copyright (C) 2020-2021 Free Software Foundation, Inc.
+# Copyright (C) 2020-2022 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -31,6 +31,8 @@ $codir/elf/ld.so --library-path $LIBPATH --inhibit-rpath ${from}.so
 $codir/iconv/iconv_prog
 '
 ICONV="$test_wrapper_env $run_program_env $ICONV"
+
+TIMEOUTFACTOR=${TIMEOUTFACTOR:-1}
 
 # List of known hangs;
 # Gathered by running an exhaustive 2 byte input search against glibc-2.28
@@ -222,7 +224,8 @@ execute_test ()
 {
   eval PROG=\"$ICONV\"
   echo -en "$twobyte" \
-    | timeout -k 4 3 $PROG $c -f $from -t "$to" &>/dev/null
+    | timeout -k 4 $((3*$TIMEOUTFACTOR)) \
+      $PROG $c -f $from -t "$to" &>/dev/null
   ret=$?
 }
 

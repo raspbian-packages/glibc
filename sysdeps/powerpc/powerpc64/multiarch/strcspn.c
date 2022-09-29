@@ -1,5 +1,5 @@
 /* Multiple versions of strcspn. PowerPC64 version.
-   Copyright (C) 2016-2021 Free Software Foundation, Inc.
+   Copyright (C) 2016-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -27,7 +27,8 @@ extern __typeof (strcspn) __strcspn_ppc attribute_hidden;
 extern __typeof (strcspn) __strcspn_power8 attribute_hidden;
 
 libc_ifunc (__libc_strcspn,
-	    (hwcap2 & PPC_FEATURE2_ARCH_2_07)
+	    (hwcap2 & PPC_FEATURE2_ARCH_2_07
+	     && hwcap & PPC_FEATURE_HAS_VSX)
 	    ? __strcspn_power8
 	    : __strcspn_ppc);
 

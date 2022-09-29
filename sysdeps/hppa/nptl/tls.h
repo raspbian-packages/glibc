@@ -1,5 +1,5 @@
 /* Definition for thread-local data handling.  NPTL/hppa version.
-   Copyright (C) 2005-2021 Free Software Foundation, Inc.
+   Copyright (C) 2005-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -26,9 +26,6 @@
 # include <stddef.h>
 # include <stdint.h>
 # include <dl-dtv.h>
-
-#else /* __ASSEMBLER__ */
-# include <tcb-offsets.h>
 #endif /* __ASSEMBLER__ */
 
 #ifndef __ASSEMBLER__
@@ -52,14 +49,8 @@ typedef struct
 /* This is the size of the initial TCB.  */
 # define TLS_INIT_TCB_SIZE	sizeof (tcbhead_t)
 
-/* Alignment requirements for the initial TCB.  */
-# define TLS_INIT_TCB_ALIGN	__alignof__ (tcbhead_t)
-
 /* This is the size of the TCB.  */
 # define TLS_TCB_SIZE		sizeof (tcbhead_t)
-
-/* Alignment requirements for the TCB.  */
-# define TLS_TCB_ALIGN		__alignof__ (struct pthread)
 
 /* This is the size we need before TCB */
 # define TLS_PRE_TCB_SIZE	sizeof (struct pthread)
@@ -107,15 +98,7 @@ typedef struct
 # define DB_THREAD_SELF \
   REGISTER (32, 32, 53 * 4, -sizeof (struct pthread))
 
-/* Access to data in the thread descriptor is easy.  */
-# define THREAD_GETMEM(descr, member) \
-  descr->member
-# define THREAD_GETMEM_NC(descr, member, idx) \
-  descr->member[idx]
-# define THREAD_SETMEM(descr, member, value) \
-  descr->member = (value)
-# define THREAD_SETMEM_NC(descr, member, idx, value) \
-  descr->member[idx] = (value)
+# include <tcb-access.h>
 
 static inline struct pthread *__get_cr27(void)
 {
@@ -134,7 +117,6 @@ static inline void __set_cr27(struct pthread *cr27)
 }
 
 /* Get and set the global scope generation counter in struct pthread.  */
-#define THREAD_GSCOPE_IN_TCB      1
 #define THREAD_GSCOPE_FLAG_UNUSED 0
 #define THREAD_GSCOPE_FLAG_USED   1
 #define THREAD_GSCOPE_FLAG_WAIT   2

@@ -1,5 +1,5 @@
 /* System dependent pthreads code.  Hurd version.
-   Copyright (C) 2000-2021 Free Software Foundation, Inc.
+   Copyright (C) 2000-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -45,7 +45,7 @@ _init_routine (void *stack)
   int err;
   pthread_attr_t attr, *attrp = 0;
 
-  if (__pthread_threads != NULL)
+  if (GL (dl_pthread_threads) != NULL)
     /* Already initialized */
     return;
 

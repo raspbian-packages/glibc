@@ -1,5 +1,5 @@
 /* Syscall definitions, Linux PowerPC generic version.
-   Copyright (C) 2019-2021 Free Software Foundation, Inc.
+   Copyright (C) 2019-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -254,12 +254,5 @@
 #define HAVE_TIME_VSYSCALL		"__kernel_time"
 #define HAVE_GETTIMEOFDAY_VSYSCALL      "__kernel_gettimeofday"
 #define HAVE_GET_TBFREQ                 "__kernel_get_tbfreq"
-
-#if defined(__PPC64__) || defined(__powerpc64__)
-# define HAVE_SIGTRAMP_RT64		"__kernel_sigtramp_rt64"
-#else
-# define HAVE_SIGTRAMP_32		"__kernel_sigtramp32"
-# define HAVE_SIGTRAMP_RT32		"__kernel_sigtramp_rt32"
-#endif
 
 #endif /* _LINUX_POWERPC_SYSDEP_H  */

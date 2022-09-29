@@ -1,5 +1,5 @@
 /* POSIX spawn interface.  Linux version.
-   Copyright (C) 2016-2021 Free Software Foundation, Inc.
+   Copyright (C) 2016-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -268,6 +268,16 @@ __spawni_child (void *arguments)
 		if (r != 0 && !__closefrom_fallback (lowfd, false))
 		  goto fail;
 	      } break;
+
+	    case spawn_do_tcsetpgrp:
+	      {
+		/* Check if it is possible to avoid an extra syscall.  */
+		pid_t pgrp = (attr->__flags & POSIX_SPAWN_SETPGROUP) != 0
+			       && attr->__pgrp != 0
+			     ? attr->__pgrp : __getpgid (0);
+		if (__tcsetpgrp (action->action.setpgrp_action.fd, pgrp) != 0)
+		  goto fail;
+	      }
 	    }
 	}
     }
@@ -399,7 +409,7 @@ __spawnix (pid_t * pid, const char *file,
 	__waitpid (new_pid, NULL, 0);
     }
   else
-    ec = -new_pid;
+    ec = errno;
 
   __munmap (stack, stack_size);
 

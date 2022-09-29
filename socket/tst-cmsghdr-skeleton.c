@@ -22,7 +22,6 @@
    arithmetic across subsequent CMSG_{FIRST,NXT}HDR expansions.  */
 
 #include <stdint.h>
-#include <stddef.h>
 
 #define RUN_TEST_CONCAT(suffix) run_test_##suffix
 #define RUN_TEST_FUNCNAME(suffix) RUN_TEST_CONCAT (suffix)

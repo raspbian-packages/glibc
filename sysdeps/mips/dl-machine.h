@@ -1,7 +1,6 @@
 /* Machine-dependent ELF dynamic relocation inline functions.  MIPS version.
-   Copyright (C) 1996-2021 Free Software Foundation, Inc.
+   Copyright (C) 1996-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
-   Contributed by Kazumoto Kojima <kkojima@info.kanagawa-u.ac.jp>.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -61,26 +60,6 @@
 #define elf_machine_type_class(type) \
   ((((type) == ELF_MACHINE_JMP_SLOT) * ELF_RTYPE_CLASS_PLT)	\
    | (((type) == R_MIPS_COPY) * ELF_RTYPE_CLASS_COPY))
-
-/* Translate a processor specific dynamic tag to the index
-   in l_info array.  */
-#define DT_MIPS(x) (DT_MIPS_##x - DT_LOPROC + DT_NUM)
-
-/* If there is a DT_MIPS_RLD_MAP_REL or DT_MIPS_RLD_MAP entry in the dynamic
-   section, fill in the debug map pointer with the run-time address of the
-   r_debug structure.  */
-#define ELF_MACHINE_DEBUG_SETUP(l,r) \
-do { if ((l)->l_info[DT_MIPS (RLD_MAP_REL)]) \
-       { \
-	 char *ptr = (char *)(l)->l_info[DT_MIPS (RLD_MAP_REL)]; \
-	 ptr += (l)->l_info[DT_MIPS (RLD_MAP_REL)]->d_un.d_val; \
-	 *(ElfW(Addr) *)ptr = (ElfW(Addr)) (r); \
-       } \
-     else if ((l)->l_info[DT_MIPS (RLD_MAP)] && \
-	 (l)->l_info[DT_MIPS (RLD_MAP)]->d_un.d_ptr) \
-       *(ElfW(Addr) *)((l)->l_info[DT_MIPS (RLD_MAP)]->d_un.d_ptr) = \
-       (ElfW(Addr)) (r); \
-   } while (0)
 
 #if ((defined __mips_nan2008 && !defined HAVE_MIPS_NAN2008) \
      || (!defined __mips_nan2008 && defined HAVE_MIPS_NAN2008))

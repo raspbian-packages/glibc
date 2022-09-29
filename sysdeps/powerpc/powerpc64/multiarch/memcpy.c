@@ -1,5 +1,5 @@
 /* Multiple versions of memcpy. PowerPC64 version.
-   Copyright (C) 2013-2021 Free Software Foundation, Inc.
+   Copyright (C) 2013-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -45,9 +45,12 @@ libc_ifunc (__libc_memcpy,
 	    (hwcap2 & PPC_FEATURE2_ARCH_3_1 && hwcap & PPC_FEATURE_HAS_VSX)
 	    ? __memcpy_power10 :
 # endif
-	    ((hwcap2 & PPC_FEATURE2_ARCH_2_07) && use_cached_memopt)
+	    (hwcap2 & PPC_FEATURE2_ARCH_2_07
+	     && hwcap & PPC_FEATURE_HAS_ALTIVEC
+	     && use_cached_memopt)
 	    ? __memcpy_power8_cached :
-	      (hwcap & PPC_FEATURE_HAS_VSX)
+	      (hwcap & PPC_FEATURE_ARCH_2_06
+	       && hwcap & PPC_FEATURE_HAS_ALTIVEC)
 	      ? __memcpy_power7 :
 		(hwcap & PPC_FEATURE_ARCH_2_06)
 		? __memcpy_a2 :

@@ -1,5 +1,5 @@
 /* Thread-local storage handling in the ELF dynamic linker.  Generic version.
-   Copyright (C) 2002-2021 Free Software Foundation, Inc.
+   Copyright (C) 2002-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -29,7 +29,7 @@
 #include <dl-tls.h>
 #include <ldsodefs.h>
 
-#if THREAD_GSCOPE_IN_TCB
+#if PTHREAD_IN_LIBC
 # include <list.h>
 #endif
 
@@ -219,7 +219,7 @@ _dl_count_modids (void)
 void
 _dl_determine_tlsoffset (void)
 {
-  size_t max_align = TLS_TCB_ALIGN;
+  size_t max_align = TCB_ALIGNMENT;
   size_t freetop = 0;
   size_t freebottom = 0;
 
@@ -350,7 +350,7 @@ _dl_determine_tlsoffset (void)
 
   GL(dl_tls_static_used) = offset;
   GLRO (dl_tls_static_size) = roundup (offset + GLRO(dl_tls_static_surplus),
-				       TLS_TCB_ALIGN);
+				       TCB_ALIGNMENT);
 #else
 # error "Either TLS_TCB_AT_TP or TLS_DTV_AT_TP must be defined"
 #endif
@@ -1069,7 +1069,7 @@ cannot create TLS data structures"));
     }
 }
 
-#if THREAD_GSCOPE_IN_TCB
+#if PTHREAD_IN_LIBC
 static inline void __attribute__((always_inline))
 init_one_static_tls (struct pthread *curp, struct link_map *map)
 {
@@ -1102,4 +1102,4 @@ _dl_init_static_tls (struct link_map *map)
 
   lll_unlock (GL (dl_stack_cache_lock), LLL_PRIVATE);
 }
-#endif /* THREAD_GSCOPE_IN_TCB */
+#endif /* PTHREAD_IN_LIBC */

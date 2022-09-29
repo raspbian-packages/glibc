@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2021 Free Software Foundation, Inc.
+# Copyright (C) 1991-2022 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -78,6 +78,29 @@ tests-exclude-malloc-check = tst-malloc-check tst-malloc-usable \
 tests-malloc-check = $(filter-out $(tests-exclude-malloc-check) \
 				  $(tests-static),$(tests))
 
+# Run all tests with GLIBC_TUNABLES=glibc.malloc.hugetlb={1,2} which check
+# the Transparent Huge Pages support (1) or automatic huge page support (2).
+# We need exclude some tests that define the ENV vars.
+tests-exclude-hugetlb1 = \
+	tst-compathooks-off \
+	tst-compathooks-on \
+	tst-interpose-nothread \
+	tst-interpose-thread \
+	tst-interpose-static-nothread \
+	tst-interpose-static-thread \
+	tst-malloc-usable \
+	tst-malloc-usable-tunables \
+	tst-mallocstate
+# The tst-free-errno relies on the used malloc page size to mmap an
+# overlapping region.
+tests-exclude-hugetlb2 = \
+	$(tests-exclude-hugetlb1) \
+	tst-free-errno
+tests-malloc-hugetlb1 = \
+	$(filter-out $(tests-exclude-hugetlb1), $(tests))
+tests-malloc-hugetlb2 = \
+	$(filter-out $(tests-exclude-hugetlb2), $(tests))
+
 # -lmcheck needs __malloc_initialize_hook, which was deprecated in 2.24.
 ifeq ($(have-GLIBC_2.23)$(build-shared),yesyes)
 # Tests that don't play well with mcheck.  They are either bugs in mcheck or
@@ -93,7 +116,8 @@ tests-exclude-mcheck = tst-mallocstate \
 	tst-malloc-thread-fail \
 	tst-malloc-usable-tunables \
 	tst-malloc_info \
-	tst-compathooks-off tst-compathooks-on
+	tst-compathooks-off tst-compathooks-on \
+	tst-mxfast
 
 tests-mcheck = $(filter-out $(tests-exclude-mcheck) $(tests-static), $(tests))
 endif
@@ -153,6 +177,18 @@ $(objpfx)tst-malloc-thread-exit-malloc-check: $(shared-thread-library)
 $(objpfx)tst-malloc-thread-fail-malloc-check: $(shared-thread-library)
 $(objpfx)tst-malloc-fork-deadlock-malloc-check: $(shared-thread-library)
 $(objpfx)tst-malloc-stats-cancellation-malloc-check: $(shared-thread-library)
+$(objpfx)tst-malloc-thread-exit-malloc-hugetlb1: $(shared-thread-library)
+$(objpfx)tst-malloc-thread-fail-malloc-hugetlb1: $(shared-thread-library)
+$(objpfx)tst-mallocfork2-malloc-hugetlb1: $(shared-thread-library)
+$(objpfx)tst-mallocfork3-malloc-hugetlb1: $(shared-thread-library)
+$(objpfx)tst-malloc-fork-deadlock-malloc-hugetlb1: $(shared-thread-library)
+$(objpfx)tst-malloc-stats-cancellation-malloc-hugetlb1: $(shared-thread-library)
+$(objpfx)tst-malloc-thread-exit-malloc-hugetlb2: $(shared-thread-library)
+$(objpfx)tst-malloc-thread-fail-malloc-hugetlb2: $(shared-thread-library)
+$(objpfx)tst-mallocfork2-malloc-hugetlb2: $(shared-thread-library)
+$(objpfx)tst-mallocfork3-malloc-hugetlb2: $(shared-thread-library)
+$(objpfx)tst-malloc-fork-deadlock-malloc-hugetlb2: $(shared-thread-library)
+$(objpfx)tst-malloc-stats-cancellation-malloc-hugetlb2: $(shared-thread-library)
 
 # These should be removed by `make clean'.
 extra-objs = mcheck-init.o libmcheck.a
@@ -310,6 +346,10 @@ $(objpfx)tst-mallocfork2-mcheck: $(shared-thread-library)
 $(objpfx)tst-malloc-tcache-leak-malloc-check: $(shared-thread-library)
 $(objpfx)tst-malloc_info-malloc-check: $(shared-thread-library)
 $(objpfx)tst-mallocfork2-malloc-check: $(shared-thread-library)
+$(objpfx)tst-malloc-tcache-leak-malloc-hugetlb1: $(shared-thread-library)
+$(objpfx)tst-malloc-tcache-leak-malloc-hugetlb2: $(shared-thread-library)
+$(objpfx)tst-malloc_info-malloc-hugetlb1: $(shared-thread-library)
+$(objpfx)tst-malloc_info-malloc-hugetlb2: $(shared-thread-library)
 
 tst-compathooks-on-ENV = LD_PRELOAD=$(objpfx)libc_malloc_debug.so
 tst-compathooks-on-mcheck-ENV = LD_PRELOAD=$(objpfx)libc_malloc_debug.so

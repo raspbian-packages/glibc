@@ -1,5 +1,5 @@
 /* Multiple versions of strcasestr.
-   Copyright (C) 2016-2021 Free Software Foundation, Inc.
+   Copyright (C) 2016-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -27,7 +27,8 @@ extern __typeof (__strcasestr) __strcasestr_power8 attribute_hidden;
 /* Avoid DWARF definition DIE on ifunc symbol so that GDB can handle
    ifunc symbol properly.  */
 libc_ifunc (__strcasestr,
-		(hwcap2 & PPC_FEATURE2_ARCH_2_07)
+		(hwcap2 & PPC_FEATURE2_ARCH_2_07
+		 && hwcap & PPC_FEATURE_HAS_ALTIVEC)
 		? __strcasestr_power8
 		: __strcasestr_ppc);
 

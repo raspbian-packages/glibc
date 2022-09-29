@@ -112,6 +112,7 @@ endif
 		--enable-stack-protector=strong \
 		--with-pkgversion="Debian GLIBC $(DEB_VERSION)" \
 		--with-bugurl="http://www.debian.org/Bugs/" \
+		--with-timeoutfactor="$(TIMEOUTFACTOR)" \
 		$(if $(filter $(pt_chown),yes),--enable-pt_chown) \
 		$(if $(filter $(threads),no),--disable-nscd) \
 		$(if $(filter $(call xx,mvec),no),--disable-mathvec) \
@@ -149,7 +150,7 @@ $(stamp)check_%: $(stamp)build_%
 	  echo "Testsuite disabled for $(curpass), skipping tests."; \
 	else \
 	  find $(DEB_BUILDDIR) -name '*.out' -delete ; \
-	  LD_PRELOAD="" LANG="" LANGUAGE="" TIMEOUTFACTOR="$(TIMEOUTFACTOR)" $(MAKE) -C $(DEB_BUILDDIR) $(NJOBS) check || true ; \
+	  LD_PRELOAD="" LANG="" LANGUAGE="" $(MAKE) -C $(DEB_BUILDDIR) $(NJOBS) check || true ; \
 	  if ! test -f $(DEB_BUILDDIR)/tests.sum ; then \
 	    echo "+---------------------------------------------------------------------+" ; \
 	    echo "|                     Testsuite failed to build.                      |" ; \
@@ -173,7 +174,7 @@ $(stamp)check_%: $(stamp)build_%
 	    echo "|     Encountered regressions that don't match expected failures.     |" ; \
 	    echo "+---------------------------------------------------------------------+" ; \
 	    grep -E '^FAIL:' $(DEB_BUILDDIR)/tests.sum | sort ; \
-	    if ! echo $(DEB_VERSION) | egrep -q '^Version:.*\+deb[0-9]+u[0-9]+' ; then \
+	    if ! echo $(DEB_VERSION) | grep -q -E '^Version:.*\+deb[0-9]+u[0-9]+' ; then \
 	        touch $@_failed ; \
 	    fi ; \
 	  else \
@@ -316,6 +317,16 @@ ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
 
 	$(call xx,extra_install)
 endif
+
+	# With Rules-Requires-Root=no, the upstream makefile fails to set the
+	# correct chmod for pt_chown as it tries to set the owner at the same
+	# time. Fix the permissions, dpkg-deb will "fix" the owner.
+ifeq ($(pt_chown),yes)
+	if [ $$(stat -c "%u" $(CURDIR)/$(debian-tmp)/usr/lib/pt_chown) != 0 ]; then \
+	  chmod 4755 $(CURDIR)/$(debian-tmp)/usr/lib/pt_chown ; \
+	fi
+endif
+
 	touch $@
 
 #
@@ -347,6 +358,8 @@ $(stamp)build_locales-all: $(stamp)/build_libc
 		objdir=$(DEB_BUILDDIRLIBC) \
 		install_root=$(CURDIR)/build-tree/locales-all \
 		localedata/install-locale-files LOCALEDEF="$(LOCALEDEF)"
+	# Remove the C.utf8 locale to avoid conflicts with the one in libc-bin
+	rm -fr $(CURDIR)/build-tree/locales-all/usr/lib/locale/C.utf8
 	rdfind -outputname /dev/null -makesymlinks true -removeidentinode false \
 		$(CURDIR)/build-tree/locales-all/usr/lib/locale
 	symlinks -r -s -c $(CURDIR)/build-tree/locales-all/usr/lib/locale

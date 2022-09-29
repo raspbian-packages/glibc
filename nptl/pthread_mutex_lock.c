@@ -1,6 +1,5 @@
-/* Copyright (C) 2002-2021 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
-   Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -63,6 +62,11 @@ lll_mutex_lock_optimized (pthread_mutex_t *mutex)
 		   PTHREAD_MUTEX_PSHARED (mutex))
 # define PTHREAD_MUTEX_LOCK ___pthread_mutex_lock
 # define PTHREAD_MUTEX_VERSIONS 1
+#endif
+
+#ifndef LLL_MUTEX_READ_LOCK
+# define LLL_MUTEX_READ_LOCK(mutex) \
+  atomic_load_relaxed (&(mutex)->__data.__lock)
 #endif
 
 static int __pthread_mutex_lock_full (pthread_mutex_t *mutex)
@@ -143,7 +147,8 @@ PTHREAD_MUTEX_LOCK (pthread_mutex_t *mutex)
 		}
 	      atomic_spin_nop ();
 	    }
-	  while (LLL_MUTEX_TRYLOCK (mutex) != 0);
+	  while (LLL_MUTEX_READ_LOCK (mutex) != 0
+		 || LLL_MUTEX_TRYLOCK (mutex) != 0);
 
 	  mutex->__data.__spins += (cnt - mutex->__data.__spins) / 8;
 	}
@@ -298,12 +303,11 @@ __pthread_mutex_lock_full (pthread_mutex_t *mutex)
 	     meantime.  */
 	  if ((oldval & FUTEX_WAITERS) == 0)
 	    {
-	      if (atomic_compare_and_exchange_bool_acq (&mutex->__data.__lock,
-							oldval | FUTEX_WAITERS,
-							oldval)
-		  != 0)
+	      int val = atomic_compare_and_exchange_val_acq
+		(&mutex->__data.__lock, oldval | FUTEX_WAITERS, oldval);
+	      if (val != oldval)
 		{
-		  oldval = mutex->__data.__lock;
+		  oldval = val;
 		  continue;
 		}
 	      oldval |= FUTEX_WAITERS;
@@ -422,7 +426,8 @@ __pthread_mutex_lock_full (pthread_mutex_t *mutex)
 	    int private = (robust
 			   ? PTHREAD_ROBUST_MUTEX_PSHARED (mutex)
 			   : PTHREAD_MUTEX_PSHARED (mutex));
-	    int e = futex_lock_pi64 (&mutex->__data.__lock, NULL, private);
+	    int e = __futex_lock_pi64 (&mutex->__data.__lock, 0 /* ununsed  */,
+				       NULL, private);
 	    if (e == ESRCH || e == EDEADLK)
 	      {
 		assert (e != EDEADLK

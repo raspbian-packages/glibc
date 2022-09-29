@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2021 Free Software Foundation, Inc.
+# Copyright (C) 1991-2022 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -465,15 +465,6 @@ compile-stdin.c = $(COMPILE.c) -o $@ -x c - $(compile-mkdep-flags)
 # get the wrong predefines.
 S-CPPFLAGS = -DASSEMBLER $(asm-CPPFLAGS)
 
-define +make-deps
-$(make-target-directory)
-$(+mkdep) $< $(if $(filter %.c,$<),$(CFLAGS)) \
-	     $(CPPFLAGS) $($(patsubst .%,%,$(suffix $(<F)))-CPPFLAGS) | sed -e\
-'s,$(subst .,\.,$(@F:.d=.o)),$(foreach o,$(all-object-suffixes),$(@:.d=$o)) $@,' \
-$(sed-remove-objpfx) $(sed-remove-dotdot) > $(@:.d=.T)
-mv -f $(@:.d=.T) $@ $(generate-md5)
-endef
-
 ifneq (,$(objpfx))
 # Continuation lines here are dangerous because they introduce spaces!
 define sed-remove-objpfx
@@ -645,6 +636,7 @@ $(LINK.o) -shared -static-libgcc $(sysdep-LDFLAGS) $(rtld-LDFLAGS) \
 	  $(if $($(@F)-no-z-defs)$(no-z-defs),,-Wl,-z,defs) \
 	  -B$(csu-objpfx) $(load-map-file) \
 	  $(LDFLAGS.so) $(LDFLAGS-$(@F:%.so=%).so) \
+	  $(link-test-modules-rpath-link) \
 	  -L$(subst :, -L,$(rpath-link)) -Wl,-rpath-link=$(rpath-link)
 endef
 
@@ -1308,14 +1300,22 @@ lib := testsuite
 include $(patsubst %,$(..)libof-iterator.mk,$(cpp-srcs-left))
 endif
 
-all-nonlib := $(strip $(tests-internal) $(test-internal-extras) \
-		      $(others) $(others-extras))
+all-nonlib := $(strip $(others) $(others-extras))
 ifneq (,$(all-nonlib))
 cpp-srcs-left = $(all-nonlib)
 lib := nonlib
 include $(patsubst %,$(..)libof-iterator.mk,$(cpp-srcs-left))
 endif
 
+# All internal tests use testsuite-internal module since for 64 bit time
+# support is set as default for MODULE_NAME=nonlib (which include some
+# installed programs).
+all-testsuite-internal := $(strip $(tests-internal) $(test-internal-extras))
+ifneq (,$(all-testsuite-internal))
+cpp-srcs-left = $(all-testsuite-internal)
+lib := testsuite-internal
+include $(patsubst %,$(..)libof-iterator.mk,$(cpp-srcs-left))
+endif
 
 ifeq ($(build-shared),yes)
 # Generate normalized lists of symbols, versions, and data sizes.

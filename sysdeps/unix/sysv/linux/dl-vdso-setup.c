@@ -1,5 +1,5 @@
 /* Data for vDSO support.  Linux version.
-   Copyright (C) 2020-2021 Free Software Foundation, Inc.
+   Copyright (C) 2020-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -70,17 +70,6 @@ PROCINFO_CLASS int (*_dl_vdso_clock_getres_time64) (clockid_t,
 /* PowerPC specific ones.  */
 # ifdef HAVE_GET_TBFREQ
 PROCINFO_CLASS uint64_t (*_dl_vdso_get_tbfreq)(void) RELRO;
-# endif
-/* The sigtramp are used on powerpc backtrace without using
-   INLINE_VSYSCALL, so there is no need to set their type.  */
-# ifdef HAVE_SIGTRAMP_RT64
-PROCINFO_CLASS void *_dl_vdso_sigtramp_rt64 RELRO;
-# endif
-# ifdef HAVE_SIGTRAMP_RT32
-PROCINFO_CLASS void *_dl_vdso_sigtramp_rt32 RELRO;
-# endif
-# ifdef HAVE_SIGTRAMP_32
-PROCINFO_CLASS void *_dl_vdso_sigtramp_32 RELRO;
 # endif
 #endif
 

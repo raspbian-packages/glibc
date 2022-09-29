@@ -1,5 +1,4 @@
-/* Copyright (C) 1999-2021 Free Software Foundation, Inc.
-   Contributed by David Mosberger-Tang <davidm@hpl.hp.com>.
+/* Copyright (C) 1999-2022 Free Software Foundation, Inc.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public

@@ -238,6 +238,7 @@ tests-unsupported += tst-audit14
 tests-unsupported += tst-audit14a
 tests-unsupported += tst-audit15
 tests-unsupported += tst-audit16
+tests-unsupported += tst-audit17
 
 # We don't provide /proc/cpuinfo yet
 test-xfail-test-multiarch = yes
@@ -273,7 +274,6 @@ test-xfail-tst-audit15 = yes
 test-xfail-tst-audit15-cmp = yes
 test-xfail-tst-audit16 = yes
 test-xfail-tst-audit16-cmp = yes
-test-xfail-tst-audit17 = yes
 test-xfail-tst-audit18 = yes
 test-xfail-tst-audit20 = yes
 test-xfail-tst-audit23 = yes
@@ -363,6 +363,7 @@ test-xfail-tst-adjtime = yes
 test-xfail-tst-join15 = yes
 test-xfail-tst-reload1 = yes
 test-xfail-tst-reload2 = yes
+test-xfail-tst-canon-bz26341 = yes
 
 # fixed in 2.33
 test-xfail-tst-spawn4-compat = yes
@@ -384,22 +385,6 @@ test-xfail-tst-malloc-tcache-leak-malloc-hugetlb1 = yes
 test-xfail-tst-malloc-tcache-leak-malloc-hugetlb2 = yes
 test-xfail-tst-p_align3 = yes
 tests-unsupported += tst-spawn6
-
-# fixed in 2.35
-test-xfail-tst-safe-linking = yes
-test-xfail-tst-gmon-static = yes
-test-xfail-tst-gmon-static-gprof = yes
-test-xfail-tst-audit11 = yes
-test-xfail-tst-audit12 = yes
-test-xfail-tst-auditmany = yes
-test-xfail-tst-timespec_getres = yes
-test-xfail-tst-canon-bz26341 = yes
-# upstreamed in 2.35
-test-xfail-tst-mallocfork2 = yes
-test-xfail-tst-mallocfork2-mcheck = yes
-test-xfail-tst-mallocfork2-malloc-check = yes
-test-xfail-tst-vfork3 = yes
-test-xfail-tst-mqueue10 = yes
 
 # actually never succeded
 test-xfail-tst-create_format1 = yes
@@ -800,18 +785,30 @@ test-xfail-check-execstack = yes
 # Theses failures are due to a bug in the cvt.s.d instruction on some FPU
 # (at least Octeon 3 and XBurst). The tininess detection is done on a
 # before-rounding basis instead of an after-rounding basis.
-test-xfail-test-float-fma = yes
-test-xfail-test-float-finite-fma = yes
-test-xfail-test-float32-fma = yes
-test-xfail-test-float32-finite-fma = yes
 test-xfail-test-float-double-add = yes
+test-xfail-test-float-double-div = yes
+test-xfail-test-float-double-fma = yes
+test-xfail-test-float-double-mul = yes
 test-xfail-test-float-double-sub = yes
+test-xfail-test-float-finite-fma = yes
+test-xfail-test-float-fma = yes
 test-xfail-test-float-ldouble-add = yes
+test-xfail-test-float-ldouble-div = yes
+test-xfail-test-float-ldouble-fma = yes
+test-xfail-test-float-ldouble-mul = yes
 test-xfail-test-float-ldouble-sub = yes
+test-xfail-test-float32-finite-fma = yes
 test-xfail-test-float32-float32x-add = yes
+test-xfail-test-float32-float32x-div = yes
+test-xfail-test-float32-float32x-fma = yes
+test-xfail-test-float32-float32x-mul = yes
 test-xfail-test-float32-float32x-sub = yes
 test-xfail-test-float32-float64-add = yes
+test-xfail-test-float32-float64-div = yes
+test-xfail-test-float32-float64-fma = yes
+test-xfail-test-float32-float64-mul = yes
 test-xfail-test-float32-float64-sub = yes
+test-xfail-test-float32-fma = yes
 
 # Theses failures are due to a bug in the cvt.d.s instruction on some FPU
 # (at least Octeon 3 and XBurst). The qNaN payload is not preserved in

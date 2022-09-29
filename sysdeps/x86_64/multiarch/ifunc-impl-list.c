@@ -1,5 +1,5 @@
 /* Enumerate available IFUNC implementations of a function.  x86-64 version.
-   Copyright (C) 2012-2021 Free Software Foundation, Inc.
+   Copyright (C) 2012-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -37,6 +37,24 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
   assert (max >= MAX_IFUNC);
 
   size_t i = 0;
+
+  /* Support sysdeps/x86_64/multiarch/memcmpeq.c.  */
+  IFUNC_IMPL (i, name, __memcmpeq,
+	      IFUNC_IMPL_ADD (array, i, __memcmpeq,
+			      (CPU_FEATURE_USABLE (AVX2)
+			       && CPU_FEATURE_USABLE (BMI2)),
+			      __memcmpeq_avx2)
+	      IFUNC_IMPL_ADD (array, i, __memcmpeq,
+			      (CPU_FEATURE_USABLE (AVX2)
+			       && CPU_FEATURE_USABLE (BMI2)
+			       && CPU_FEATURE_USABLE (RTM)),
+			      __memcmpeq_avx2_rtm)
+	      IFUNC_IMPL_ADD (array, i, __memcmpeq,
+			      (CPU_FEATURE_USABLE (AVX512VL)
+			       && CPU_FEATURE_USABLE (AVX512BW)
+			       && CPU_FEATURE_USABLE (BMI2)),
+			      __memcmpeq_evex)
+	      IFUNC_IMPL_ADD (array, i, __memcmpeq, 1, __memcmpeq_sse2))
 
   /* Support sysdeps/x86_64/multiarch/memchr.c.  */
   IFUNC_IMPL (i, name, memchr,

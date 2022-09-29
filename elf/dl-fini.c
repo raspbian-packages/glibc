@@ -1,5 +1,5 @@
 /* Call the termination functions of loaded shared objects.
-   Copyright (C) 1995-2021 Free Software Foundation, Inc.
+   Copyright (C) 1995-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -96,8 +96,7 @@ _dl_fini (void)
 	  /* Now we have to do the sorting.  We can skip looking for the
 	     binary itself which is at the front of the search list for
 	     the main namespace.  */
-	  _dl_sort_maps (maps + (ns == LM_ID_BASE), nmaps - (ns == LM_ID_BASE),
-			 NULL, true);
+	  _dl_sort_maps (maps, nmaps, (ns == LM_ID_BASE), true);
 
 	  /* We do not rely on the linked list of loaded object anymore
 	     from this point on.  We have our own list here (maps).  The

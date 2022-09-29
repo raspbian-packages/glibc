@@ -1,4 +1,4 @@
-# Copyright (C) 1994-2021 Free Software Foundation, Inc.
+# Copyright (C) 1994-2022 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -40,12 +40,16 @@ routines := \
   inet_pton \
   ns_makecanon \
   ns_name_compress \
+  ns_name_length_uncompressed \
   ns_name_ntop \
   ns_name_pack \
   ns_name_pton \
   ns_name_skip \
   ns_name_uncompress \
   ns_name_unpack \
+  ns_rr_cursor_init \
+  ns_rr_cursor_next \
+  ns_samebinaryname \
   ns_samename \
   nsap_addr \
   nss_dns_functions \
@@ -78,7 +82,6 @@ generate := mtrace-tst-leaks.out tst-leaks.mtrace tst-leaks2.mtrace
 
 extra-libs := libresolv libnss_dns
 ifeq ($(have-thread-library),yes)
-extra-libs += libanl
 routines += gai_sigqueue
 
 tests += \
@@ -89,9 +92,12 @@ tests += \
   tst-ns_name_pton \
   tst-res_hconf_reorder \
   tst-res_hnok \
+  tst-resolv-aliases \
   tst-resolv-basic \
   tst-resolv-binary \
+  tst-resolv-byaddr \
   tst-resolv-edns \
+  tst-resolv-invalid-cname \
   tst-resolv-network \
   tst-resolv-nondecimal \
   tst-resolv-res_init-multi \
@@ -102,6 +108,18 @@ tests += \
 # from libresolv.
 tests-internal += tst-resolv-txnid-collision
 tests-static += tst-resolv-txnid-collision
+
+# Likewise for __ns_samebinaryname.
+tests-internal += tst-ns_samebinaryname
+tests-static += tst-ns_samebinaryname
+
+# Likewise for __ns_name_length_uncompressed.
+tests-internal += tst-ns_name_length_uncompressed
+tests-static += tst-ns_name_length_uncompressed
+
+# Likewise for struct ns_rr_cursor and its functions.
+tests-internal += tst-ns_rr_cursor
+tests-static += tst-ns_rr_cursor
 
 # These tests need libdl.
 ifeq (yes,$(build-shared))
@@ -140,7 +158,8 @@ xtests += tst-resolv-qtypes
 
 # This test has dropped packet tests and runs for a long time.
 xtests += tst-resolv-rotate
-endif
+endif # $(have-thread-library)
+
 extra-libs-others = $(extra-libs)
 libresolv-routines := \
   base64 \
@@ -164,6 +183,13 @@ libresolv-routines := \
   resolv-deprecated \
   # libresolv-routines
 
+ifeq ($(have-GLIBC_2.34)$(have-thread-library),yesyes)
+# Empty compatibility library for old binaries.
+extra-libs += libanl
+libanl-routines += libanl-compat
+libanl-shared-only-routines += libanl-compat
+endif
+
 $(libanl-routines-var) += \
   gai_cancel \
   gai_error \
@@ -173,8 +199,10 @@ $(libanl-routines-var) += \
   getaddrinfo_a \
   # $(libanl-routines-var)
 
-libanl-routines += libanl-compat
-libanl-shared-only-routines += libanl-compat
+# Pretend that libanl.so is a linker script, so that the symbolic link
+# is not installed.
+install-lib-ldscripts = libanl.so
+$(inst_libdir)/libanl.so:
 
 subdir-dirs = nss_dns
 vpath %.c nss_dns
@@ -247,14 +275,18 @@ $(objpfx)tst-resolv-ai_idn.out: $(gen-locales)
 $(objpfx)tst-resolv-ai_idn-latin1.out: $(gen-locales)
 $(objpfx)tst-resolv-ai_idn-nolibidn2.out: \
   $(gen-locales) $(objpfx)tst-no-libidn2.so
+$(objpfx)tst-resolv-aliases: $(objpfx)libresolv.so $(shared-thread-library)
 $(objpfx)tst-resolv-basic: $(objpfx)libresolv.so $(shared-thread-library)
 $(objpfx)tst-resolv-binary: $(objpfx)libresolv.so $(shared-thread-library)
+$(objpfx)tst-resolv-byaddr: $(objpfx)libresolv.so $(shared-thread-library)
 $(objpfx)tst-resolv-edns: $(objpfx)libresolv.so $(shared-thread-library)
 $(objpfx)tst-resolv-network: $(objpfx)libresolv.so $(shared-thread-library)
 $(objpfx)tst-resolv-res_init: $(objpfx)libresolv.so
 $(objpfx)tst-resolv-res_init-multi: $(objpfx)libresolv.so \
   $(shared-thread-library)
 $(objpfx)tst-resolv-res_init-thread: $(objpfx)libresolv.so \
+  $(shared-thread-library)
+$(objpfx)tst-resolv-invalid-cname: $(objpfx)libresolv.so \
   $(shared-thread-library)
 $(objpfx)tst-resolv-nondecimal: $(objpfx)libresolv.so $(shared-thread-library)
 $(objpfx)tst-resolv-qtypes: $(objpfx)libresolv.so $(shared-thread-library)

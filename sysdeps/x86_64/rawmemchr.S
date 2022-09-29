@@ -1,7 +1,6 @@
 /* fast SSE2 memchr with 64 byte loop and pmaxub instruction using
 
-   Copyright (C) 2011-2021 Free Software Foundation, Inc.
-   Contributed by Intel Corporation.
+   Copyright (C) 2011-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or

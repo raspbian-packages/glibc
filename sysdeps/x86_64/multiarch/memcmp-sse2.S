@@ -1,5 +1,5 @@
 /* memcmp with SSE2.
-   Copyright (C) 2017-2021 Free Software Foundation, Inc.
+   Copyright (C) 2017-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -17,15 +17,23 @@
    <https://www.gnu.org/licenses/>.  */
 
 #if IS_IN (libc)
-# define memcmp __memcmp_sse2
+# ifndef MEMCMP
+#  define MEMCMP __memcmp_sse2
+# endif
 
 # ifdef SHARED
 #  undef libc_hidden_builtin_def
 #  define libc_hidden_builtin_def(name)
+
+#  undef libc_hidden_def
+#  define libc_hidden_def(ignored)
 # endif
 
 # undef weak_alias
 # define weak_alias(ignored1, ignored2)
+
+# undef strong_alias
+# define strong_alias(ignored1, ignored2)
 #endif
 
 #include <sysdeps/x86_64/memcmp.S>

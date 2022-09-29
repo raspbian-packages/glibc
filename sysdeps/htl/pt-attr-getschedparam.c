@@ -1,5 +1,5 @@
 /* pthread_attr_getschedparam.  Generic version.
-   Copyright (C) 2002-2021 Free Software Foundation, Inc.
+   Copyright (C) 2002-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -26,7 +26,7 @@ int
 __pthread_attr_getschedparam (const pthread_attr_t *attr,
 			      struct sched_param *param)
 {
-  memcpy (param, &attr->__schedparam, sizeof *param);
+  param->sched_priority = attr->__schedparam.__sched_priority;
   return 0;
 }
 

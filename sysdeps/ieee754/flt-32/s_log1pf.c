@@ -1,5 +1,4 @@
 /* s_log1pf.c -- float version of s_log1p.c.
- * Conversion to float by Ian Lance Taylor, Cygnus Support, ian@cygnus.com.
  */
 
 /*
@@ -93,7 +92,7 @@ __log1pf(float x)
 		if(k==0) return zero;
 		else {c += k*ln2_lo; return k*ln2_hi+c;}
 	    }
-	    R = hfsq*((float)1.0-(float)0.66666666666666666*f);
+	    R = hfsq*(1.0f-0.66666666666666666f*f);
 	    if(k==0) return f-R; else
 		     return k*ln2_hi-((R-(k*ln2_lo+c))-f);
 	}

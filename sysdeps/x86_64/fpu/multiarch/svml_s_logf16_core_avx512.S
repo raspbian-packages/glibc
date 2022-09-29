@@ -1,5 +1,5 @@
 /* Function logf vectorized with AVX-512. KNL and SKX versions.
-   Copyright (C) 2014-2021 Free Software Foundation, Inc.
+   Copyright (C) 2014-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -22,9 +22,6 @@
 
 	.text
 ENTRY (_ZGVeN16v_logf_knl)
-#ifndef HAVE_AVX512DQ_ASM_SUPPORT
-WRAPPER_IMPL_AVX512 _ZGVdN8v_logf
-#else
 /*
    ALGORITHM DESCRIPTION:
 
@@ -207,13 +204,9 @@ WRAPPER_IMPL_AVX512 _ZGVdN8v_logf
         call      JUMPTARGET(logf)
         vmovss    %xmm0, 1216(%rsp,%r15,8)
         jmp       .LBL_1_7
-#endif
 END (_ZGVeN16v_logf_knl)
 
 ENTRY (_ZGVeN16v_logf_skx)
-#ifndef HAVE_AVX512DQ_ASM_SUPPORT
-WRAPPER_IMPL_AVX512 _ZGVdN8v_logf
-#else
 /*
    ALGORITHM DESCRIPTION:
 
@@ -407,5 +400,4 @@ WRAPPER_IMPL_AVX512 _ZGVdN8v_logf
         vmovss    %xmm0, 1216(%rsp,%r15,8)
         jmp       .LBL_2_7
 
-#endif
 END (_ZGVeN16v_logf_skx)

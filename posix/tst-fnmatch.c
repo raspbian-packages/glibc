@@ -1,5 +1,5 @@
 /* Tests for fnmatch function.
-   Copyright (C) 2000-2021 Free Software Foundation, Inc.
+   Copyright (C) 2000-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -193,6 +193,19 @@ next_input (char **line, int first, int last)
 	      *wp++ = '\t';
 	    else if (*cp == 'n')
 	      *wp++ = '\n';
+	    else if (*cp >= '0' && *cp <= '7')
+	      {
+		int ndigits = 0;
+		int cval = 0;
+		while (ndigits < 3 && *cp >= '0' && *cp <= '7')
+		  {
+		    cval *= 8;
+		    cval += (*cp++) - '0';
+		    ndigits ++;
+		  }
+		*wp++ = cval;
+		--cp;
+	      }
 	    else
 	      *wp++ = *cp;
 

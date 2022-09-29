@@ -1,5 +1,5 @@
 /* Support for dynamic linking code in static libc.
-   Copyright (C) 1996-2021 Free Software Foundation, Inc.
+   Copyright (C) 1996-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -43,6 +43,7 @@
 #include <dl-vdso.h>
 #include <dl-vdso-setup.h>
 #include <dl-auxv.h>
+#include <dl-find_object.h>
 #include <array_length.h>
 
 extern char *__progname;
@@ -167,6 +168,8 @@ size_t _dl_phnum;
 uint64_t _dl_hwcap;
 uint64_t _dl_hwcap2;
 
+enum dso_sort_algorithm _dl_dso_sort_algo;
+
 /* The value of the FPU control word the kernel will preset in hardware.  */
 fpu_control_t _dl_fpu_control = _FPU_DEFAULT;
 
@@ -184,7 +187,7 @@ uint64_t _dl_hwcap_mask;
  * executable but this isn't true for all platforms.  */
 ElfW(Word) _dl_stack_flags = DEFAULT_STACK_PERMS;
 
-#if THREAD_GSCOPE_IN_TCB
+#if PTHREAD_IN_LIBC
 list_t _dl_stack_used;
 list_t _dl_stack_user;
 list_t _dl_stack_cache;
@@ -196,7 +199,6 @@ int _dl_stack_cache_lock;
    when it was not, we do it by calling this function.
    It returns an errno code or zero on success.  */
 int (*_dl_make_stack_executable_hook) (void **) = _dl_make_stack_executable;
-int _dl_thread_gscope_count;
 void (*_dl_init_static_tls) (struct link_map *) = &_dl_nothread_init_static_tls;
 #endif
 struct dl_scope_free_list *_dl_scope_free_list;
@@ -348,6 +350,8 @@ _dl_non_dynamic_init (void)
 	  _dl_main_map.l_relro_size = ph->p_memsz;
 	  break;
 	}
+
+  call_function_static_weak (_dl_find_object_init);
 
   /* Setup relro on the binary itself.  */
   if (_dl_main_map.l_relro_size != 0)

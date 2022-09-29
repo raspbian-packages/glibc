@@ -1,5 +1,5 @@
 /* Definition for thread-local data handling.  NPTL/Nios II version.
-   Copyright (C) 2012-2021 Free Software Foundation, Inc.
+   Copyright (C) 2012-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -59,20 +59,15 @@ register struct pthread *__thread_self __asm__("r23");
    pointer, we don't need this.  */
 # define TLS_INIT_TCB_SIZE	0
 
-/* Alignment requirements for the initial TCB.  */
-# define TLS_INIT_TCB_ALIGN	__alignof__ (struct pthread)
-
 /* This is the size of the TCB.  Because our TCB is before the thread
    pointer, we don't need this.  */
 # define TLS_TCB_SIZE		0
 
-/* Alignment requirements for the TCB.  */
-# define TLS_TCB_ALIGN		__alignof__ (struct pthread)
-
 /* This is the size we need before TCB - actually, it includes the TCB.  */
 # define TLS_PRE_TCB_SIZE \
   (sizeof (struct pthread)						      \
-   + ((sizeof (tcbhead_t) + TLS_TCB_ALIGN - 1) & ~(TLS_TCB_ALIGN - 1)))
+   + ((sizeof (tcbhead_t) + __alignof (struct pthread) - 1)		      \
+      & ~(__alignof (struct pthread) - 1)))
 
 /* The thread pointer (in hardware register r23) points to the end of
    the TCB + 0x7000, as for PowerPC and MIPS.  */
@@ -112,15 +107,7 @@ register struct pthread *__thread_self __asm__("r23");
 # define DB_THREAD_SELF \
   REGISTER (32, 32, 23 * 4, -TLS_PRE_TCB_SIZE - TLS_TCB_OFFSET)
 
-/* Access to data in the thread descriptor is easy.  */
-# define THREAD_GETMEM(descr, member) \
-  descr->member
-# define THREAD_GETMEM_NC(descr, member, idx) \
-  descr->member[idx]
-# define THREAD_SETMEM(descr, member, value) \
-  descr->member = (value)
-# define THREAD_SETMEM_NC(descr, member, idx, value) \
-  descr->member[idx] = (value)
+# include <tcb-access.h>
 
 # define THREAD_GET_POINTER_GUARD()				\
   (((tcbhead_t *) (READ_THREAD_POINTER ()			\
@@ -137,7 +124,6 @@ register struct pthread *__thread_self __asm__("r23");
 # define NO_TLS_OFFSET		-1
 
 /* Get and set the global scope generation counter in struct pthread.  */
-#define THREAD_GSCOPE_IN_TCB      1
 #define THREAD_GSCOPE_FLAG_UNUSED 0
 #define THREAD_GSCOPE_FLAG_USED   1
 #define THREAD_GSCOPE_FLAG_WAIT   2

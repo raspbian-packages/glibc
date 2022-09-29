@@ -1,5 +1,5 @@
 /* Multiple versions of memmove. PowerPC64 version.
-   Copyright (C) 2014-2021 Free Software Foundation, Inc.
+   Copyright (C) 2014-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -41,7 +41,8 @@ libc_ifunc (__libc_memmove,
 	     && hwcap & PPC_FEATURE_HAS_VSX)
 	    ? __memmove_power10 :
 #endif
-		     (hwcap & PPC_FEATURE_HAS_VSX)
+		     (hwcap & PPC_FEATURE_ARCH_2_06
+		      && hwcap & PPC_FEATURE_HAS_ALTIVEC)
 		     ? __memmove_power7
 		     : __memmove_ppc);
 

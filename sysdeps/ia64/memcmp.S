@@ -1,7 +1,6 @@
 /* Optimized version of the standard memcmp() function.
    This file is part of the GNU C Library.
-   Copyright (C) 2000-2021 Free Software Foundation, Inc.
-   Contributed by Dan Pop <Dan.Pop@cern.ch>.
+   Copyright (C) 2000-2022 Free Software Foundation, Inc.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -161,4 +160,6 @@ ENTRY(memcmp)
 END(memcmp)
 
 weak_alias (memcmp, bcmp)
+strong_alias (memcmp, __memcmpeq)
 libc_hidden_builtin_def (memcmp)
+libc_hidden_def (__memcmpeq)

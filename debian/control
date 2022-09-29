@@ -13,9 +13,10 @@ Build-Depends: gettext, dpkg (>= 1.18.7), dpkg-dev (>= 1.17.14), xz-utils, file,
  g++-11-x86-64-kfreebsd-gnu [kfreebsd-amd64] <cross>, g++-11-i686-kfreebsd-gnu [kfreebsd-i386] <cross>, g++-11-x86-64-kfreebsd-gnu [kfreebsd-amd64] <cross>, g++-11-i686-kfreebsd-gnu [kfreebsd-i386] <cross>, g++-11-x86-64-linux-gnu [amd64] <cross>, g++-11-aarch64-linux-gnu [arm64] <cross>, g++-11-arm-linux-gnueabi [armel] <cross>, g++-11-arm-linux-gnueabihf [armhf] <cross>, g++-11-hppa-linux-gnu [hppa] <cross>, g++-11-i686-linux-gnu [i386] <cross>, g++-11-m68k-linux-gnu [m68k] <cross>, g++-11-mips-linux-gnu [mips] <cross>, g++-11-mipsel-linux-gnu [mipsel] <cross>, g++-11-mips64-linux-gnuabin32 [mipsn32] <cross>, g++-11-mips64el-linux-gnuabin32 [mipsn32el] <cross>, g++-11-mips64-linux-gnuabi64 [mips64] <cross>, g++-11-mips64el-linux-gnuabi64 [mips64el] <cross>, g++-11-mipsisa32r6-linux-gnu [mipsr6] <cross>, g++-11-mipsisa32r6el-linux-gnu [mipsr6el] <cross>, g++-11-mipsisa64r6-linux-gnuabin32 [mipsn32r6] <cross>, g++-11-mipsisa64r6el-linux-gnuabin32 [mipsn32r6el] <cross>, g++-11-mipsisa64r6-linux-gnuabi64 [mips64r6] <cross>, g++-11-mipsisa64r6el-linux-gnuabi64 [mips64r6el] <cross>, g++-11-nios2-linux-gnu [nios2] <cross>, g++-11-powerpc-linux-gnu [powerpc] <cross>, g++-11-powerpc64-linux-gnu [ppc64] <cross>, g++-11-powerpc64le-linux-gnu [ppc64el] <cross>, g++-11-riscv64-linux-gnu [riscv64] <cross>, g++-11-sparc-linux-gnu [sparc] <cross>, g++-11-sparc64-linux-gnu [sparc64] <cross>, g++-11-s390x-linux-gnu [s390x] <cross>, g++-11-sh3-linux-gnu [sh3] <cross>, g++-11-sh4-linux-gnu [sh4] <cross>, g++-11-x86-64-linux-gnux32 [x32] <cross>, g++-11-alpha-linux-gnu [alpha] <cross>, g++-11-ia64-linux-gnu [ia64] <cross>,
  python3:native,
  libidn2-0 (>= 2.0.5~) <!nocheck>,
- libc-bin (>= 2.34) <cross>,
+ libc-bin (>= 2.35) <cross>,
  libgd-dev <!stage1> <!stage2>,
 Build-Depends-Indep: perl, po-debconf (>= 1.0)
+Rules-Requires-Root: no
 Maintainer: GNU Libc Maintainers <debian-glibc@lists.debian.org>
 Uploaders: Clint Adams <clint@debian.org>, Aurelien Jarno <aurel32@debian.org>, Samuel Thibault <sthibault@debian.org>
 Standards-Version: 4.6.1
@@ -30,12 +31,12 @@ Priority: required
 Essential: yes
 Multi-Arch: foreign
 Depends: ${shlibs:Depends}, ${misc:Depends}
+Breaks: dh-lua (<< 27+nmu1~)
 Recommends: manpages
 Build-Profiles: <!stage1>
 Description: GNU C Library: Binaries
  This package contains utility programs related to the GNU C Library.
  .
-  * catchsegv: catch segmentation faults in programs
   * getconf: query system configuration variables
   * getent: get entries from administrative databases
   * iconv, iconvconfig: convert between character encodings
@@ -49,7 +50,7 @@ Section: libdevel
 Priority: optional
 Multi-Arch: foreign
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Recommends: manpages, manpages-dev, libc-devtools (>> 2.34)
+Recommends: manpages, manpages-dev, libc-devtools (>> 2.35)
 Build-Profiles: <!stage1>
 Description: GNU C Library: Development binaries
  This package contains utility programs related to the GNU C Library
@@ -117,7 +118,7 @@ Package: locales
 Architecture: all
 Section: localization
 Priority: standard
-Depends: libc-bin (>> 2.34), libc-l10n (>> 2.34), ${misc:Depends}, debconf | debconf-2.0
+Depends: libc-bin (>> 2.35), libc-l10n (>> 2.35), ${misc:Depends}, debconf | debconf-2.0
 Build-Profiles: <!stage1>
 Description: GNU C Library: National Language (locale) data [support]
  Machine-readable data files, shared objects and programs used by the
@@ -134,7 +135,7 @@ Architecture: any
 Section: localization
 Priority: optional
 Multi-Arch: foreign
-Depends: libc-l10n (>> 2.34), ${misc:Depends}
+Depends: libc-l10n (>> 2.35), ${misc:Depends}
 Build-Profiles: <!stage1>
 Description: GNU C Library: Precompiled locale data
  This package contains the precompiled locale data for all supported locales.
@@ -166,7 +167,7 @@ Recommends: libidn2-0 (>= 2.0.5~)
 Suggests: glibc-doc, debconf | debconf-2.0, libc-l10n, locales [!hurd-i386], libnss-nis, libnss-nisplus
 Provides: libc6-sparcv9b [sparc sparc64], libc0.1-i686 [kfreebsd-i386], libc0.3-i686 [hurd-i386], libc6-i686 [i386]
 Conflicts: libc0.1-i686 [kfreebsd-i386], libc6-i686 [i386]
-Breaks: nscd (<< 2.34), locales (<< 2.34), locales-all (<< 2.34), hurd (<< 1:0.9.git20220301-2), libtirpc1 (<< 0.2.3), r-cran-later (<< 0.7.5+dfsg-2), nocache (<< 1.1-1~), iraf-fitsutil (<< 2018.07.06-4), wcc (<< 0.0.2+dfsg-3), openssh-server (<< 1:8.1p1-5), macs (<< 2.2.7.1-3~), openarena (<< 0.8.8+dfsg-4~), ioquake3 (<< 1.36+u20200211.f2c61c1~dfsg-2~), libgegl-0.4-0 (<< 0.4.18), busybox (<< 1.30.1-6), aide (<< 0.17.3-4+b3), python3-iptables (<< 1.0.0-2), fakechroot (<< 2.19-3.5), tinydns (<< 1:1.05-14)
+Breaks: nscd (<< 2.35), locales (<< 2.35), locales-all (<< 2.35), hurd (<< 1:0.9.git20220301-2), libtirpc1 (<< 0.2.3), r-cran-later (<< 0.7.5+dfsg-2), nocache (<< 1.1-1~), iraf-fitsutil (<< 2018.07.06-4), wcc (<< 0.0.2+dfsg-3), openssh-server (<< 1:8.1p1-5), macs (<< 2.2.7.1-3~), openarena (<< 0.8.8+dfsg-4~), ioquake3 (<< 1.36+u20200211.f2c61c1~dfsg-2~), busybox (<< 1.30.1-6), libgegl-0.4-0 (<< 0.4.18), aide (<< 0.17.3-4+b3), python3-iptables (<< 1.0.0-2), fakechroot (<< 2.19-3.5), tinydns (<< 1:1.05-14), chrony (<< 4.2-3~), valgrind (<< 1:3.19.0-1~)
 Replaces: libc6-amd64 [amd64],
           libc6-i386 [i386],
           libc0.1-i686 [kfreebsd-i386],
@@ -240,7 +241,7 @@ Recommends: libidn2-0 (>= 2.0.5~)
 Suggests: glibc-doc, debconf | debconf-2.0, libc-l10n, locales [!hurd-i386], libnss-nis, libnss-nisplus
 Provides: libc6-sparcv9b [sparc sparc64], libc0.1-i686 [kfreebsd-i386], libc0.3-i686 [hurd-i386], libc6-i686 [i386]
 Conflicts: libc0.1-i686 [kfreebsd-i386], libc6-i686 [i386]
-Breaks: nscd (<< 2.34), locales (<< 2.34), locales-all (<< 2.34), hurd (<< 1:0.9.git20220301-2), libtirpc1 (<< 0.2.3), r-cran-later (<< 0.7.5+dfsg-2), nocache (<< 1.1-1~), iraf-fitsutil (<< 2018.07.06-4), wcc (<< 0.0.2+dfsg-3), openssh-server (<< 1:8.1p1-5), macs (<< 2.2.7.1-3~), openarena (<< 0.8.8+dfsg-4~), ioquake3 (<< 1.36+u20200211.f2c61c1~dfsg-2~), libgegl-0.4-0 (<< 0.4.18), busybox (<< 1.30.1-6), aide (<< 0.17.3-4+b3), python3-iptables (<< 1.0.0-2), fakechroot (<< 2.19-3.5), tinydns (<< 1:1.05-14)
+Breaks: nscd (<< 2.35), locales (<< 2.35), locales-all (<< 2.35), hurd (<< 1:0.9.git20220301-2), libtirpc1 (<< 0.2.3), r-cran-later (<< 0.7.5+dfsg-2), nocache (<< 1.1-1~), iraf-fitsutil (<< 2018.07.06-4), wcc (<< 0.0.2+dfsg-3), openssh-server (<< 1:8.1p1-5), macs (<< 2.2.7.1-3~), openarena (<< 0.8.8+dfsg-4~), ioquake3 (<< 1.36+u20200211.f2c61c1~dfsg-2~), busybox (<< 1.30.1-6), libgegl-0.4-0 (<< 0.4.18), aide (<< 0.17.3-4+b3), python3-iptables (<< 1.0.0-2), fakechroot (<< 2.19-3.5), tinydns (<< 1:1.05-14), chrony (<< 4.2-3~), valgrind (<< 1:3.19.0-1~)
 Replaces: libc6-amd64 [amd64],
           libc6-i386 [i386],
           libc0.1-i686 [kfreebsd-i386],
@@ -314,7 +315,7 @@ Recommends: libidn2-0 (>= 2.0.5~)
 Suggests: glibc-doc, debconf | debconf-2.0, libc-l10n, locales [!hurd-i386], libnss-nis, libnss-nisplus
 Provides: libc6-sparcv9b [sparc sparc64], libc0.1-i686 [kfreebsd-i386], libc0.3-i686 [hurd-i386], libc6-i686 [i386]
 Conflicts: libc0.1-i686 [kfreebsd-i386], libc6-i686 [i386]
-Breaks: nscd (<< 2.34), locales (<< 2.34), locales-all (<< 2.34), hurd (<< 1:0.9.git20220301-2), libtirpc1 (<< 0.2.3), r-cran-later (<< 0.7.5+dfsg-2), nocache (<< 1.1-1~), iraf-fitsutil (<< 2018.07.06-4), wcc (<< 0.0.2+dfsg-3), openssh-server (<< 1:8.1p1-5), macs (<< 2.2.7.1-3~), openarena (<< 0.8.8+dfsg-4~), ioquake3 (<< 1.36+u20200211.f2c61c1~dfsg-2~), libgegl-0.4-0 (<< 0.4.18), busybox (<< 1.30.1-6), aide (<< 0.17.3-4+b3), python3-iptables (<< 1.0.0-2), fakechroot (<< 2.19-3.5), tinydns (<< 1:1.05-14)
+Breaks: nscd (<< 2.35), locales (<< 2.35), locales-all (<< 2.35), hurd (<< 1:0.9.git20220301-2), libtirpc1 (<< 0.2.3), r-cran-later (<< 0.7.5+dfsg-2), nocache (<< 1.1-1~), iraf-fitsutil (<< 2018.07.06-4), wcc (<< 0.0.2+dfsg-3), openssh-server (<< 1:8.1p1-5), macs (<< 2.2.7.1-3~), openarena (<< 0.8.8+dfsg-4~), ioquake3 (<< 1.36+u20200211.f2c61c1~dfsg-2~), busybox (<< 1.30.1-6), libgegl-0.4-0 (<< 0.4.18), aide (<< 0.17.3-4+b3), python3-iptables (<< 1.0.0-2), fakechroot (<< 2.19-3.5), tinydns (<< 1:1.05-14), chrony (<< 4.2-3~), valgrind (<< 1:3.19.0-1~)
 Replaces: libc6-amd64 [amd64],
           libc6-i386 [i386],
           libc0.1-i686 [kfreebsd-i386],
@@ -388,7 +389,7 @@ Recommends: libidn2-0 (>= 2.0.5~)
 Suggests: glibc-doc, debconf | debconf-2.0, libc-l10n, locales [!hurd-i386], libnss-nis, libnss-nisplus
 Provides: libc6-sparcv9b [sparc sparc64], libc0.1-i686 [kfreebsd-i386], libc0.3-i686 [hurd-i386], libc6-i686 [i386]
 Conflicts: libc0.1-i686 [kfreebsd-i386], libc6-i686 [i386]
-Breaks: nscd (<< 2.34), locales (<< 2.34), locales-all (<< 2.34), hurd (<< 1:0.9.git20220301-2), libtirpc1 (<< 0.2.3), r-cran-later (<< 0.7.5+dfsg-2), nocache (<< 1.1-1~), iraf-fitsutil (<< 2018.07.06-4), wcc (<< 0.0.2+dfsg-3), openssh-server (<< 1:8.1p1-5), macs (<< 2.2.7.1-3~), openarena (<< 0.8.8+dfsg-4~), ioquake3 (<< 1.36+u20200211.f2c61c1~dfsg-2~), libgegl-0.4-0 (<< 0.4.18), busybox (<< 1.30.1-6), aide (<< 0.17.3-4+b3), python3-iptables (<< 1.0.0-2), fakechroot (<< 2.19-3.5), tinydns (<< 1:1.05-14)
+Breaks: nscd (<< 2.35), locales (<< 2.35), locales-all (<< 2.35), hurd (<< 1:0.9.git20220301-2), libtirpc1 (<< 0.2.3), r-cran-later (<< 0.7.5+dfsg-2), nocache (<< 1.1-1~), iraf-fitsutil (<< 2018.07.06-4), wcc (<< 0.0.2+dfsg-3), openssh-server (<< 1:8.1p1-5), macs (<< 2.2.7.1-3~), openarena (<< 0.8.8+dfsg-4~), ioquake3 (<< 1.36+u20200211.f2c61c1~dfsg-2~), busybox (<< 1.30.1-6), libgegl-0.4-0 (<< 0.4.18), aide (<< 0.17.3-4+b3), python3-iptables (<< 1.0.0-2), fakechroot (<< 2.19-3.5), tinydns (<< 1:1.05-14), chrony (<< 4.2-3~), valgrind (<< 1:3.19.0-1~)
 Replaces: libc6-amd64 [amd64],
           libc6-i386 [i386],
           libc0.1-i686 [kfreebsd-i386],

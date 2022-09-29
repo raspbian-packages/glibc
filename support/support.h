@@ -1,5 +1,6 @@
 /* Common extra functions.
-   Copyright (C) 2016-2021 Free Software Foundation, Inc.
+   Copyright (C) 2016-2022 Free Software Foundation, Inc.
+   Copyright The GNU Toolchain Authors.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -73,6 +74,12 @@ void support_write_file_string (const char *path, const char *contents);
    the result).  */
 char *support_quote_blob (const void *blob, size_t length);
 
+/* Quote the contents of the wide character array starting at BLOB, of
+   LENGTH wide characters, in such a way that the result string can be
+   included in a C wide string literal (in single/double quotes,
+   without putting the quotes into the result).  */
+char *support_quote_blob_wide (const void *blob, size_t length);
+
 /* Quote the contents of the string, in such a way that the result
    string can be included in a C literal (in single/double quotes,
    without putting the quotes into the result).  */
@@ -98,8 +105,8 @@ extern void *xrealloc (void *o, size_t n)
 extern char *xstrdup (const char *) __attribute_malloc__ __attr_dealloc_free
   __returns_nonnull;
 void *xposix_memalign (size_t alignment, size_t n)
-  __attribute_malloc__ __attribute_alloc_size__ ((2)) __attr_dealloc_free
-  __returns_nonnull;
+  __attribute_malloc__ __attribute_alloc_align__ ((1))
+  __attribute_alloc_size__ ((2)) __attr_dealloc_free __returns_nonnull;
 char *xasprintf (const char *format, ...)
   __attribute__ ((format (printf, 1, 2), malloc)) __attr_dealloc_free
   __returns_nonnull;
@@ -150,6 +157,18 @@ static __inline bool support_path_support_time64 (const char *path)
   /* 1s and 2s after y2038 limit.  */
   return support_path_support_time64_value (path, 0x80000001ULL,
 					    0x80000002ULL);
+}
+
+/* Return true if the setitimer and getitimer syscalls support 64-bit time_t
+   values without resulting in overflow.  This is not true on some linux systems
+   which have 64-bit time_t due to legacy kernel API's.  */
+static __inline bool support_itimer_support_time64 (void)
+{
+#ifdef __KERNEL_OLD_TIMEVAL_MATCHES_TIMEVAL64
+  return __KERNEL_OLD_TIMEVAL_MATCHES_TIMEVAL64;
+#else
+  return sizeof (__time_t) == 8;
+#endif
 }
 
 /* Return true if stat supports nanoseconds resolution.  PATH is used

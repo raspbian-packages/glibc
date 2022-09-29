@@ -1,6 +1,6 @@
 /* Check if realpath does not consume extra stack space based on symlink
    existance in the path (BZ #26341)
-   Copyright (C) 2021 Free Software Foundation, Inc.
+   Copyright (C) 2021-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -44,6 +44,12 @@ create_link (void)
   int fd = create_temp_file ("tst-canon-bz26341", &filename);
   TEST_VERIFY_EXIT (fd != -1);
   xclose (fd);
+
+  /* Make filename a canonical path.  */
+  char *saved_filename = filename;
+  filename = realpath (filename, NULL);
+  free (saved_filename);
+  TEST_VERIFY (filename != NULL);
 
   /* Create MAXLINKS symbolic links to the temporary filename.
      On exit, linkname has the last link created.  */

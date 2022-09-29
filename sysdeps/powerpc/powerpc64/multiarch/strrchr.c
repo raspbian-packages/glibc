@@ -1,5 +1,5 @@
 /* Multiple versions of strrchr. PowerPC64 version.
-   Copyright (C) 2014-2021 Free Software Foundation, Inc.
+   Copyright (C) 2014-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -31,9 +31,10 @@ extern __typeof (strrchr) __strrchr_power8 attribute_hidden;
 /* Avoid DWARF definition DIE on ifunc symbol so that GDB can handle
    ifunc symbol properly.  */
 libc_ifunc_redirected (__redirect_strrchr, strrchr,
-		       (hwcap2 & PPC_FEATURE2_ARCH_2_07)
+		       (hwcap2 & PPC_FEATURE2_ARCH_2_07
+			&& hwcap & PPC_FEATURE_HAS_ALTIVEC)
 		       ? __strrchr_power8 :
-		       (hwcap & PPC_FEATURE_HAS_VSX)
+		       (hwcap & PPC_FEATURE_ARCH_2_06)
 		       ? __strrchr_power7
 		       : __strrchr_ppc);
 weak_alias (strrchr, rindex)

@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2021 Free Software Foundation, Inc.
+# Copyright (C) 1995-2022 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -22,8 +22,9 @@ subdir	:= wcsmbs
 
 include ../Makeconfig
 
-headers	:= wchar.h bits/wchar.h bits/wchar2.h bits/wchar-ldbl.h uchar.h \
-	   bits/types/__mbstate_t.h bits/types/mbstate_t.h bits/types/wint_t.h
+headers	:= wchar.h bits/wchar.h bits/wchar2.h bits/wchar2-decl.h \
+	   bits/wchar-ldbl.h uchar.h bits/types/__mbstate_t.h \
+	   bits/types/mbstate_t.h bits/types/wint_t.h
 
 routines := wcscat wcschr wcscmp wcscpy wcscspn wcsdup wcslen wcsncat \
 	    wcsncmp wcsncpy wcspbrk wcsrchr wcsspn wcstok wcsstr wmemchr \
@@ -52,7 +53,8 @@ tests := tst-wcstof wcsmbs-tst1 tst-wcsnlen tst-btowc tst-mbrtowc \
 	 tst-c16c32-1 wcsatcliff tst-wcstol-locale tst-wcstod-nan-locale \
 	 tst-wcstod-round test-char-types tst-fgetwc-after-eof \
 	 tst-wcstod-nan-sign tst-c16-surrogate tst-c32-state \
-	 $(addprefix test-,$(strop-tests)) tst-mbstowcs
+	 $(addprefix test-,$(strop-tests)) tst-mbstowcs \
+	 tst-wprintf-binary
 
 include ../Rules
 

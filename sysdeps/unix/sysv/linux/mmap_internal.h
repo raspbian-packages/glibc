@@ -1,5 +1,5 @@
 /* Common mmap definition for Linux implementation.
-   Copyright (C) 2017-2021 Free Software Foundation, Inc.
+   Copyright (C) 2017-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -18,6 +18,8 @@
 
 #ifndef MMAP_INTERNAL_LINUX_H
 #define MMAP_INTERNAL_LINUX_H 1
+
+#include <stdint.h>
 
 /* This is the minimum mmap2 unit size accept by the kernel.  An architecture
    with multiple minimum page sizes (such as m68k) might define it as -1 and
