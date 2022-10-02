@@ -1,0 +1,61 @@
+From: Peter Michael Green <plugwash@raspbian.org>
+Subject: Automatically generated patch (2.34-7+rpi1)
+
+Last (up to) 3 git changes, FYI:
+
+commit de346af12a6cb5181ed2ab174fb35c88f3b64f4b
+Merge: d5d615e58 bf75deb1e
+Author: Peter Michael Green <plugwash@raspbian.org>
+Date:   Thu Sep 15 03:05:49 2022 +0000
+
+    Manual merge of version 2.33-8+rpi1 and 2.34-7 to produce 2.34-7+rpi1
+
+commit bf75deb1e0a596e20f3cd137443bccd254274826
+Merge: bfcf69abc 10648b8c1
+Author: Aurelien Jarno <aurel32@debian.org>
+Date:   Sat Aug 27 12:38:11 2022 +0100
+
+    Merge glibc (2.34-7) import into refs/heads/workingbranch
+
+commit bfcf69abc86c46543cd675a7d6e4328d6857ca5e
+Author: GNU Libc Maintainers <debian-glibc@lists.debian.org>
+Date:   Sat Aug 27 12:38:11 2022 +0100
+
+    git-localedef-check-magic
+    
+    commit 56ea4bed7369f32e3c7c935f9e33ee38e9f78143
+    Author: Aurelien Jarno <aurelien@aurel32.net>
+    Date:   Sun Dec 5 11:51:17 2021 +0100
+    
+        localedef: check magic value on archive load [BZ #28650]
+    
+        localedef currently blindly trust the archive header. When passed an
+        archive file with the wrong endianess, this leads to a segmentation
+        fault:
+    
+          $ localedef --big-endian --list-archive /usr/lib/locale/locale-archive
+          Segmentation fault (core dumped)
+    
+        When passed non-archive files, asserts are reported on the best case,
+        but sometimes it can lead to a segmentation fault:
+    
+          $ localedef --list-archive /bin/true
+          localedef: programs/locarchive.c:1643: show_archive_content: Assertion `used < GET (head->namehash_used)' failed.
+          Aborted (core dumped)
+    
+          $ localedef --list-archive /usr/lib/locale/C.utf8/LC_COLLATE
+          Segmentation fault (core dumped)
+    
+        This patch improves the user experience by looking at the magic value,
+        which is always written, but never checked. It should still be possible
+        to trigger a segmentation fault with crafted files, but this already
+        catch many cases.
+    
+    
+    Gbp-Pq: Topic any
+    Gbp-Pq: Name git-localedef-check-magic.patch
+---
+
+diff --git a/sysdeps/x86_64/configure b/sysdeps/x86_64/configure
+old mode 100755
+new mode 100644
