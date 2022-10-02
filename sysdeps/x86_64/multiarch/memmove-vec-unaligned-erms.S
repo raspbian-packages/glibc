@@ -118,7 +118,13 @@
 # define LARGE_LOAD_SIZE (VEC_SIZE * 4)
 #endif
 
-/* Amount to shift rdx by to compare for memcpy_large_4x.  */
+/* Amount to shift __x86_shared_non_temporal_threshold by for
+   bound for memcpy_large_4x. This is essentially use to to
+   indicate that the copy is far beyond the scope of L3
+   (assuming no user config x86_non_temporal_threshold) and to
+   use a more aggressively unrolled loop.  NB: before
+   increasing the value also update initialization of
+   x86_non_temporal_threshold.  */
 #ifndef LOG_4X_MEMCPY_THRESH
 # define LOG_4X_MEMCPY_THRESH 4
 #endif
@@ -233,56 +239,6 @@ L(start):
 #endif
 #if defined USE_MULTIARCH && IS_IN (libc)
 END (MEMMOVE_SYMBOL (__memmove, unaligned))
-# if VEC_SIZE == 16
-ENTRY (__mempcpy_chk_erms)
-	cmp	%RDX_LP, %RCX_LP
-	jb	HIDDEN_JUMPTARGET (__chk_fail)
-END (__mempcpy_chk_erms)
-
-/* Only used to measure performance of REP MOVSB.  */
-ENTRY (__mempcpy_erms)
-	mov	%RDI_LP, %RAX_LP
-	/* Skip zero length.  */
-	test	%RDX_LP, %RDX_LP
-	jz	2f
-	add	%RDX_LP, %RAX_LP
-	jmp	L(start_movsb)
-END (__mempcpy_erms)
-
-ENTRY (__memmove_chk_erms)
-	cmp	%RDX_LP, %RCX_LP
-	jb	HIDDEN_JUMPTARGET (__chk_fail)
-END (__memmove_chk_erms)
-
-ENTRY (__memmove_erms)
-	movq	%rdi, %rax
-	/* Skip zero length.  */
-	test	%RDX_LP, %RDX_LP
-	jz	2f
-L(start_movsb):
-	mov	%RDX_LP, %RCX_LP
-	cmp	%RSI_LP, %RDI_LP
-	jb	1f
-	/* Source == destination is less common.  */
-	je	2f
-	lea	(%rsi,%rcx), %RDX_LP
-	cmp	%RDX_LP, %RDI_LP
-	jb	L(movsb_backward)
-1:
-	rep movsb
-2:
-	ret
-L(movsb_backward):
-	leaq	-1(%rdi,%rcx), %rdi
-	leaq	-1(%rsi,%rcx), %rsi
-	std
-	rep movsb
-	cld
-	ret
-END (__memmove_erms)
-strong_alias (__memmove_erms, __memcpy_erms)
-strong_alias (__memmove_chk_erms, __memcpy_chk_erms)
-# endif
 
 # ifdef SHARED
 ENTRY (MEMMOVE_CHK_SYMBOL (__mempcpy_chk, unaligned_erms))
@@ -724,9 +680,14 @@ L(skip_short_movsb_check):
 	.p2align 4,, 10
 #if (defined USE_MULTIARCH || VEC_SIZE == 16) && IS_IN (libc)
 L(large_memcpy_2x_check):
-	cmp	__x86_rep_movsb_threshold(%rip), %RDX_LP
-	jb	L(more_8x_vec_check)
+	/* Entry from L(large_memcpy_2x) has a redundant load of
+	   __x86_shared_non_temporal_threshold(%rip). L(large_memcpy_2x)
+	   is only use for the non-erms memmove which is generally less
+	   common.  */
 L(large_memcpy_2x):
+	mov	__x86_shared_non_temporal_threshold(%rip), %R11_LP
+	cmp	%R11_LP, %RDX_LP
+	jb	L(more_8x_vec_check)
 	/* To reach this point it is impossible for dst > src and
 	   overlap. Remaining to check is src > dst and overlap. rcx
 	   already contains dst - src. Negate rcx to get src - dst. If
@@ -774,18 +735,21 @@ L(large_memcpy_2x):
 	/* ecx contains -(dst - src). not ecx will return dst - src - 1
 	   which works for testing aliasing.  */
 	notl	%ecx
+	movq	%rdx, %r10
 	testl	$(PAGE_SIZE - VEC_SIZE * 8), %ecx
 	jz	L(large_memcpy_4x)
 
-	movq	%rdx, %r10
-	shrq	$LOG_4X_MEMCPY_THRESH, %r10
-	cmp	__x86_shared_non_temporal_threshold(%rip), %r10
+	/* r11 has __x86_shared_non_temporal_threshold.  Shift it left
+	   by LOG_4X_MEMCPY_THRESH to get L(large_memcpy_4x) threshold.
+	 */
+	shlq	$LOG_4X_MEMCPY_THRESH, %r11
+	cmp	%r11, %rdx
 	jae	L(large_memcpy_4x)
 
 	/* edx will store remainder size for copying tail.  */
 	andl	$(PAGE_SIZE * 2 - 1), %edx
 	/* r10 stores outer loop counter.  */
-	shrq	$((LOG_PAGE_SIZE + 1) - LOG_4X_MEMCPY_THRESH), %r10
+	shrq	$(LOG_PAGE_SIZE + 1), %r10
 	/* Copy 4x VEC at a time from 2 pages.  */
 	.p2align 4
 L(loop_large_memcpy_2x_outer):
@@ -850,7 +814,6 @@ L(large_memcpy_2x_end):
 
 	.p2align 4
 L(large_memcpy_4x):
-	movq	%rdx, %r10
 	/* edx will store remainder size for copying tail.  */
 	andl	$(PAGE_SIZE * 4 - 1), %edx
 	/* r10 stores outer loop counter.  */

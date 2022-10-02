@@ -1121,9 +1121,11 @@ extern void _dl_init (struct link_map *main_map, int argc, char **argv,
    initializer functions have completed.  */
 extern void _dl_fini (void) attribute_hidden;
 
-/* Sort array MAPS according to dependencies of the contained objects.  */
+/* Sort array MAPS according to dependencies of the contained objects.
+   If FORCE_FIRST, MAPS[0] keeps its place even if the dependencies
+   say otherwise.  */
 extern void _dl_sort_maps (struct link_map **maps, unsigned int nmaps,
-			   unsigned int skip, bool for_fini) attribute_hidden;
+			   bool force_first, bool for_fini) attribute_hidden;
 
 /* The dynamic linker calls this function before and having changing
    any shared object mappings.  The `r_state' member of `struct r_debug'
@@ -1253,6 +1255,11 @@ extern struct link_map * _dl_get_dl_main_map (void)
 #  define _dl_relocate_static_pie()
 # endif
 #endif
+
+/* Perform early memory allocation, avoding a TCB dependency.
+   Terminate the process if allocation fails.  May attempt to use
+   brk.  */
+void *_dl_early_allocate (size_t size) attribute_hidden;
 
 /* Initialize the DSO sort algorithm to use.  */
 #if !HAVE_TUNABLES

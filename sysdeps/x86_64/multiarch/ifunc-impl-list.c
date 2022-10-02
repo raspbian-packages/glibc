@@ -96,8 +96,6 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 			       && CPU_FEATURE_USABLE (BMI2)
 			       && CPU_FEATURE_USABLE (MOVBE)),
 			      __memcmp_evex_movbe)
-	      IFUNC_IMPL_ADD (array, i, memcmp, CPU_FEATURE_USABLE (SSE4_1),
-			      __memcmp_sse4_1)
 	      IFUNC_IMPL_ADD (array, i, memcmp, CPU_FEATURE_USABLE (SSSE3),
 			      __memcmp_ssse3)
 	      IFUNC_IMPL_ADD (array, i, memcmp, 1, __memcmp_sse2))
@@ -337,6 +335,11 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 			       && CPU_FEATURE_USABLE (AVX512BW)
 			       && CPU_FEATURE_USABLE (BMI2)),
 			      __strlen_evex)
+	      IFUNC_IMPL_ADD (array, i, strlen,
+			      (CPU_FEATURE_USABLE (AVX512VL)
+			       && CPU_FEATURE_USABLE (AVX512BW)
+			       && CPU_FEATURE_USABLE (BMI2)),
+			      __strlen_evex512)
 	      IFUNC_IMPL_ADD (array, i, strlen, 1, __strlen_sse2))
 
   /* Support sysdeps/x86_64/multiarch/strnlen.c.  */
@@ -355,6 +358,11 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 			       && CPU_FEATURE_USABLE (AVX512BW)
 			       && CPU_FEATURE_USABLE (BMI2)),
 			      __strnlen_evex)
+	      IFUNC_IMPL_ADD (array, i, strnlen,
+			      (CPU_FEATURE_USABLE (AVX512VL)
+			       && CPU_FEATURE_USABLE (AVX512BW)
+			       && CPU_FEATURE_USABLE (BMI2)),
+			      __strnlen_evex512)
 	      IFUNC_IMPL_ADD (array, i, strnlen, 1, __strnlen_sse2))
 
   /* Support sysdeps/x86_64/multiarch/stpncpy.c.  */
@@ -395,8 +403,16 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
   /* Support sysdeps/x86_64/multiarch/strcasecmp_l.c.  */
   IFUNC_IMPL (i, name, strcasecmp,
 	      IFUNC_IMPL_ADD (array, i, strcasecmp,
-			      CPU_FEATURE_USABLE (AVX),
-			      __strcasecmp_avx)
+			      (CPU_FEATURE_USABLE (AVX512VL)
+			       && CPU_FEATURE_USABLE (AVX512BW)),
+			      __strcasecmp_evex)
+	      IFUNC_IMPL_ADD (array, i, strcasecmp,
+			      CPU_FEATURE_USABLE (AVX2),
+			      __strcasecmp_avx2)
+	      IFUNC_IMPL_ADD (array, i, strcasecmp,
+			      (CPU_FEATURE_USABLE (AVX2)
+			       && CPU_FEATURE_USABLE (RTM)),
+			      __strcasecmp_avx2_rtm)
 	      IFUNC_IMPL_ADD (array, i, strcasecmp,
 			      CPU_FEATURE_USABLE (SSE4_2),
 			      __strcasecmp_sse42)
@@ -407,9 +423,17 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 
   /* Support sysdeps/x86_64/multiarch/strcasecmp_l.c.  */
   IFUNC_IMPL (i, name, strcasecmp_l,
-	      IFUNC_IMPL_ADD (array, i, strcasecmp_l,
-			      CPU_FEATURE_USABLE (AVX),
-			      __strcasecmp_l_avx)
+	      IFUNC_IMPL_ADD (array, i, strcasecmp,
+			      (CPU_FEATURE_USABLE (AVX512VL)
+			       && CPU_FEATURE_USABLE (AVX512BW)),
+			      __strcasecmp_l_evex)
+	      IFUNC_IMPL_ADD (array, i, strcasecmp,
+			      CPU_FEATURE_USABLE (AVX2),
+			      __strcasecmp_l_avx2)
+	      IFUNC_IMPL_ADD (array, i, strcasecmp,
+			      (CPU_FEATURE_USABLE (AVX2)
+			       && CPU_FEATURE_USABLE (RTM)),
+			      __strcasecmp_l_avx2_rtm)
 	      IFUNC_IMPL_ADD (array, i, strcasecmp_l,
 			      CPU_FEATURE_USABLE (SSE4_2),
 			      __strcasecmp_l_sse42)
@@ -535,8 +559,16 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
   /* Support sysdeps/x86_64/multiarch/strncase_l.c.  */
   IFUNC_IMPL (i, name, strncasecmp,
 	      IFUNC_IMPL_ADD (array, i, strncasecmp,
-			      CPU_FEATURE_USABLE (AVX),
-			      __strncasecmp_avx)
+			      (CPU_FEATURE_USABLE (AVX512VL)
+			       && CPU_FEATURE_USABLE (AVX512BW)),
+			      __strncasecmp_evex)
+	      IFUNC_IMPL_ADD (array, i, strncasecmp,
+			      CPU_FEATURE_USABLE (AVX2),
+			      __strncasecmp_avx2)
+	      IFUNC_IMPL_ADD (array, i, strncasecmp,
+			      (CPU_FEATURE_USABLE (AVX2)
+			       && CPU_FEATURE_USABLE (RTM)),
+			      __strncasecmp_avx2_rtm)
 	      IFUNC_IMPL_ADD (array, i, strncasecmp,
 			      CPU_FEATURE_USABLE (SSE4_2),
 			      __strncasecmp_sse42)
@@ -548,9 +580,17 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 
   /* Support sysdeps/x86_64/multiarch/strncase_l.c.  */
   IFUNC_IMPL (i, name, strncasecmp_l,
-	      IFUNC_IMPL_ADD (array, i, strncasecmp_l,
-			      CPU_FEATURE_USABLE (AVX),
-			      __strncasecmp_l_avx)
+	      IFUNC_IMPL_ADD (array, i, strncasecmp,
+			      (CPU_FEATURE_USABLE (AVX512VL)
+			       && CPU_FEATURE_USABLE (AVX512BW)),
+			      __strncasecmp_l_evex)
+	      IFUNC_IMPL_ADD (array, i, strncasecmp,
+			      CPU_FEATURE_USABLE (AVX2),
+			      __strncasecmp_l_avx2)
+	      IFUNC_IMPL_ADD (array, i, strncasecmp,
+			      (CPU_FEATURE_USABLE (AVX2)
+			       && CPU_FEATURE_USABLE (RTM)),
+			      __strncasecmp_l_avx2_rtm)
 	      IFUNC_IMPL_ADD (array, i, strncasecmp_l,
 			      CPU_FEATURE_USABLE (SSE4_2),
 			      __strncasecmp_l_sse42)
@@ -611,6 +651,12 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 
   /* Support sysdeps/x86_64/multiarch/strstr.c.  */
   IFUNC_IMPL (i, name, strstr,
+              IFUNC_IMPL_ADD (array, i, strstr,
+                              (CPU_FEATURE_USABLE (AVX512VL)
+                               && CPU_FEATURE_USABLE (AVX512BW)
+                               && CPU_FEATURE_USABLE (AVX512DQ)
+                               && CPU_FEATURE_USABLE (BMI2)),
+                              __strstr_avx512)
 	      IFUNC_IMPL_ADD (array, i, strstr, 1, __strstr_sse2_unaligned)
 	      IFUNC_IMPL_ADD (array, i, strstr, 1, __strstr_sse2))
 
@@ -703,6 +749,11 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 			       && CPU_FEATURE_USABLE (BMI2)),
 			      __wcslen_evex)
 	      IFUNC_IMPL_ADD (array, i, wcslen,
+			      (CPU_FEATURE_USABLE (AVX512VL)
+			       && CPU_FEATURE_USABLE (AVX512BW)
+			       && CPU_FEATURE_USABLE (BMI2)),
+			      __wcslen_evex512)
+	      IFUNC_IMPL_ADD (array, i, wcslen,
 			      CPU_FEATURE_USABLE (SSE4_1),
 			      __wcslen_sse4_1)
 	      IFUNC_IMPL_ADD (array, i, wcslen, 1, __wcslen_sse2))
@@ -723,6 +774,11 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 			       && CPU_FEATURE_USABLE (AVX512BW)
 			       && CPU_FEATURE_USABLE (BMI2)),
 			      __wcsnlen_evex)
+	      IFUNC_IMPL_ADD (array, i, wcsnlen,
+			      (CPU_FEATURE_USABLE (AVX512VL)
+			       && CPU_FEATURE_USABLE (AVX512BW)
+			       && CPU_FEATURE_USABLE (BMI2)),
+			      __wcsnlen_evex512)
 	      IFUNC_IMPL_ADD (array, i, wcsnlen,
 			      CPU_FEATURE_USABLE (SSE4_1),
 			      __wcsnlen_sse4_1)
@@ -768,8 +824,6 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 			       && CPU_FEATURE_USABLE (BMI2)
 			       && CPU_FEATURE_USABLE (MOVBE)),
 			      __wmemcmp_evex_movbe)
-	      IFUNC_IMPL_ADD (array, i, wmemcmp, CPU_FEATURE_USABLE (SSE4_1),
-			      __wmemcmp_sse4_1)
 	      IFUNC_IMPL_ADD (array, i, wmemcmp, CPU_FEATURE_USABLE (SSSE3),
 			      __wmemcmp_ssse3)
 	      IFUNC_IMPL_ADD (array, i, wmemcmp, 1, __wmemcmp_sse2))
@@ -996,6 +1050,10 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 	      IFUNC_IMPL_ADD (array, i, __wmemset_chk,
 			      CPU_FEATURE_USABLE (AVX2),
 			      __wmemset_chk_avx2_unaligned)
+	      IFUNC_IMPL_ADD (array, i, __wmemset_chk,
+			      (CPU_FEATURE_USABLE (AVX2)
+			       && CPU_FEATURE_USABLE (RTM)),
+			      __wmemset_chk_avx2_unaligned_rtm)
 	      IFUNC_IMPL_ADD (array, i, __wmemset_chk,
 			      (CPU_FEATURE_USABLE (AVX512VL)
 			       && CPU_FEATURE_USABLE (AVX512BW)
