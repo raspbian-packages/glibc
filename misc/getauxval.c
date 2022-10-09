@@ -27,16 +27,21 @@ __getauxval2 (unsigned long int type, unsigned long int *result)
   ElfW(auxv_t) *p;
 #endif
 
+#ifdef AT_HWCAP
   if (type == AT_HWCAP)
     {
       *result = GLRO(dl_hwcap);
       return true;
     }
-  else if (type == AT_HWCAP2)
+#endif
+
+#ifdef AT_HWCAP2
+  if (type == AT_HWCAP2)
     {
       *result = GLRO(dl_hwcap2);
       return true;
     }
+#endif
 
 #ifdef HAVE_AUX_VECTOR
   for (p = GLRO(dl_auxv); p->a_type != AT_NULL; p++)
