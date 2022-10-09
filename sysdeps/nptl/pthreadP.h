@@ -33,6 +33,7 @@
 #include <kernel-features.h>
 #include <errno.h>
 #include <internal-signals.h>
+#include <pthread_mutex_backoff.h>
 #include "pthread_mutex_conf.h"
 
 
@@ -275,7 +276,7 @@ __do_cancel (void)
   struct pthread *self = THREAD_SELF;
 
   /* Make sure we get no more cancellations.  */
-  THREAD_ATOMIC_BIT_SET (self, cancelhandling, EXITING_BIT);
+  atomic_bit_set (&self->cancelhandling, EXITING_BIT);
 
   __pthread_unwind ((__pthread_unwind_buf_t *)
 		    THREAD_GETMEM (self, cleanup_jmp_buf));
