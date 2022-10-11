@@ -36,6 +36,7 @@ hurd-i386/git-strerror_X.diff
 hurd-i386/git-xpg_strerror.diff
 hurd-i386/git-readlink-fifo.diff
 hurd-i386/git-net-route.h.diff
+hurd-i386/git-SOMAXCONN.diff
 hurd-i386/local-enable-ldconfig.diff
 hurd-i386/tg-sysvshm.diff
 hurd-i386/tg-thread-cancel.diff

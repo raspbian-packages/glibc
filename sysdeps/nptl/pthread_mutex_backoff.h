@@ -1,6 +1,5 @@
-/* Set flags signalling availability of kernel features based on given
-   kernel version number.
-   Copyright (C) 2006-2022 Free Software Foundation, Inc.
+/* Pthread mutex backoff configuration.
+   Copyright (C) 2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,22 +13,23 @@
    Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public
-   License along with the GNU C Library.  If not, see
+   License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
+#ifndef _PTHREAD_MUTEX_BACKOFF_H
+#define _PTHREAD_MUTEX_BACKOFF_H 1
 
+static inline unsigned int
+get_jitter (void)
+{
+  /* Arch dependent random jitter, return 0 disables random.  */
+  return 0;
+}
 
-#include_next <kernel-features.h>
+static inline int
+get_next_backoff (int backoff)
+{
+  /* Next backoff, return 1 disables mutex backoff.  */
+  return 1;
+}
 
-#define __ASSUME_RECV_SYSCALL   1
-#define __ASSUME_SEND_SYSCALL	1
-
-/* Support for the execveat syscall was added in 4.0.  */
-#if __LINUX_KERNEL_VERSION < 0x040000
-# undef __ASSUME_EXECVEAT
 #endif
-
-#undef __ASSUME_CLONE_DEFAULT
-#define __ASSUME_CLONE_BACKWARDS 1
-
-/* QEMU does not support set_robust_list.  */
-#undef __ASSUME_SET_ROBUST_LIST

@@ -1,4 +1,4 @@
-lib*/ld*.so.*
+lib*/ld*.so*
 lib/*/ld*.so*
 lib/*/libm.so.*
 lib/*/libmvec.so.*

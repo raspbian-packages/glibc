@@ -4592,6 +4592,39 @@ index a8e884f341..ca3245b0af 100644
      /* This is a deadlock situation.  The threads are waiting for each
         other to finish.  Note that this is a "may" error.  To be 100%
         sure we catch this error we would have to lock the data
+diff --git a/nptl/pthread_mutex_lock.c b/nptl/pthread_mutex_lock.c
+index d2e652d151..6e767a8724 100644
+--- a/nptl/pthread_mutex_lock.c
++++ b/nptl/pthread_mutex_lock.c
+@@ -138,14 +138,26 @@ PTHREAD_MUTEX_LOCK (pthread_mutex_t *mutex)
+ 	  int cnt = 0;
+ 	  int max_cnt = MIN (max_adaptive_count (),
+ 			     mutex->__data.__spins * 2 + 10);
++	  int spin_count, exp_backoff = 1;
++	  unsigned int jitter = get_jitter ();
+ 	  do
+ 	    {
+-	      if (cnt++ >= max_cnt)
++	      /* In each loop, spin count is exponential backoff plus
++		 random jitter, random range is [0, exp_backoff-1].  */
++	      spin_count = exp_backoff + (jitter & (exp_backoff - 1));
++	      cnt += spin_count;
++	      if (cnt >= max_cnt)
+ 		{
++		  /* If cnt exceeds max spin count, just go to wait
++		     queue.  */
+ 		  LLL_MUTEX_LOCK (mutex);
+ 		  break;
+ 		}
+-	      atomic_spin_nop ();
++	      do
++		atomic_spin_nop ();
++	      while (--spin_count > 0);
++	      /* Prepare for next loop.  */
++	      exp_backoff = get_next_backoff (exp_backoff);
+ 	    }
+ 	  while (LLL_MUTEX_READ_LOCK (mutex) != 0
+ 		 || LLL_MUTEX_TRYLOCK (mutex) != 0);
 diff --git a/nptl/pthread_setcancelstate.c b/nptl/pthread_setcancelstate.c
 index 9905b12e4f..f8edf18fbe 100644
 --- a/nptl/pthread_setcancelstate.c
@@ -10783,6 +10816,54 @@ index e7d5edea39..358f40eb5f 100644
  
    printf ("%23s", "");
    FOR_EACH_IMPL (impl, 0)
+diff --git a/sysdeps/generic/fast-jitter.h b/sysdeps/generic/fast-jitter.h
+new file mode 100644
+index 0000000000..4dd53e3475
+--- /dev/null
++++ b/sysdeps/generic/fast-jitter.h
+@@ -0,0 +1,42 @@
++/* Fallback for fast jitter just return 0.
++   Copyright (C) 2019-2022 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <https://www.gnu.org/licenses/>.  */
++
++#ifndef _FAST_JITTER_H
++# define _FAST_JITTER_H
++
++# include <stdint.h>
++# include <hp-timing.h>
++
++/* Baseline just return 0.  We could create jitter using a clock or
++   'random_bits' but that may imply a syscall and the goal of
++   'get_fast_jitter' is minimal overhead "randomness" when such
++   randomness helps performance.  Adding high overhead the function
++   defeats the purpose.  */
++static inline uint32_t
++get_fast_jitter (void)
++{
++# if HP_TIMING_INLINE
++  hp_timing_t jitter;
++  HP_TIMING_NOW (jitter);
++  return (uint32_t) jitter;
++# else
++  return 0;
++# endif
++}
++
++#endif
 diff --git a/sysdeps/generic/ldsodefs.h b/sysdeps/generic/ldsodefs.h
 index 2ebe7901c0..4a5e7b63d1 100644
 --- a/sysdeps/generic/ldsodefs.h
@@ -10962,7 +11043,7 @@ index 8da2412fea..de0a3b78e8 100644
 +#define DL_FIXUP_BINDNOW_RELOC(value, new_value, st_value)	\
 +  *(value) = *(DL_FIXUP_VALUE_TYPE *) ((uintptr_t) (new_value) & ~2)
 diff --git a/sysdeps/hppa/dl-machine.h b/sysdeps/hppa/dl-machine.h
-index da4d57d2e4..7b647abfd7 100644
+index da4d57d2e4..1ba0aa372a 100644
 --- a/sysdeps/hppa/dl-machine.h
 +++ b/sysdeps/hppa/dl-machine.h
 @@ -176,6 +176,15 @@ elf_machine_runtime_setup (struct link_map *l, struct r_scope_elem *scope[],
@@ -10981,24 +11062,7 @@ index da4d57d2e4..7b647abfd7 100644
    /* If we don't have a PLT we can just skip all this... */
    if (__builtin_expect (l->l_info[DT_JMPREL] == NULL,0))
      return lazy;
-@@ -338,16 +347,6 @@ elf_machine_runtime_setup (struct link_map *l, struct r_scope_elem *scope[],
-    its return value is the user program's entry point.  */
- 
- #define RTLD_START \
--/* Set up dp for any non-PIC lib constructors that may be called.  */	\
--static struct link_map * __attribute__((used))				\
--set_dp (struct link_map *map)						\
--{									\
--  register Elf32_Addr dp asm ("%r27");					\
--  dp = D_PTR (map, l_info[DT_PLTGOT]);					\
--  asm volatile ("" : : "r" (dp));					\
--  return map;								\
--}									\
--									\
- asm (									\
- "	.text\n"							\
- "	.globl _start\n"						\
-@@ -355,10 +354,6 @@ asm (									\
+@@ -355,10 +364,6 @@ asm (									\
  "_start:\n"								\
  	/* The kernel does not give us an initial stack frame. */	\
  "	ldo	64(%sp),%sp\n"						\
@@ -11009,7 +11073,7 @@ index da4d57d2e4..7b647abfd7 100644
  									\
  	/* We need the LTP, and we need it now.				\
  	   $PIC_pcrel$0 points 8 bytes past the current instruction,	\
-@@ -416,12 +411,7 @@ asm (									\
+@@ -416,12 +421,7 @@ asm (									\
  	  So, obviously, we can't just pass %sp to _dl_start.  That's	\
  	  okay, argv-4 will do just fine.				\
  									\
@@ -11023,7 +11087,7 @@ index da4d57d2e4..7b647abfd7 100644
  "	bl	_dl_start,%rp\n"					\
  "	ldo	-4(%r24),%r26\n"					\
  									\
-@@ -431,30 +421,28 @@ asm (									\
+@@ -431,32 +431,34 @@ asm (									\
  	/* Save the entry point in %r3. */				\
  "	copy	%ret0,%r3\n"						\
  									\
@@ -11042,32 +11106,39 @@ index da4d57d2e4..7b647abfd7 100644
 +	   reloaded from from _dl_argc and _dl_argv.  */		\
  									\
 -"	sub	%r25,%r20,%r25\n"					\
+-"	stw	%r25,-40(%sp)\n"					\
+-"	sh2add	%r20,%r24,%r24\n"					\
+-"	stw	%r24,-44(%sp)\n"					\
+-									\
+-".Lnofix:\n"								\
++	/* Load main_map from _rtld_local and setup dp. */		\
+ "	addil	LT'_rtld_local,%r19\n"					\
+ "	ldw	RT'_rtld_local(%r1),%r26\n"				\
+ "	bl	set_dp, %r2\n"						\
+ "	ldw	0(%r26),%r26\n"						\
++"	copy	%ret0,%r26\n"						\
++									\
 +	/* Load argc from _dl_argc.  */					\
 +"	addil	LT'_dl_argc,%r19\n"					\
 +"	ldw	RT'_dl_argc(%r1),%r20\n"				\
 +"	ldw	0(%r20),%r25\n"						\
- "	stw	%r25,-40(%sp)\n"					\
--"	sh2add	%r20,%r24,%r24\n"					\
-+									\
++"	stw	%r25,-40(%sp)\n"					\
+ 									\
+-	/* Call _dl_init(_dl_loaded, argc, argv, envp). */		\
+-"	copy	%r28,%r26\n"						\
 +	/* Same for argv with _dl_argv.  */				\
 +"	addil	LT'_dl_argv,%r19\n"					\
 +"	ldw	RT'_dl_argv(%r1),%r20\n"				\
 +"	ldw	0(%r20),%r24\n"						\
- "	stw	%r24,-44(%sp)\n"					\
++"	stw	%r24,-44(%sp)\n"					\
  									\
--".Lnofix:\n"								\
-+	/* Call _dl_init(main_map, argc, argv, envp). */		\
- "	addil	LT'_rtld_local,%r19\n"					\
- "	ldw	RT'_rtld_local(%r1),%r26\n"				\
--"	bl	set_dp, %r2\n"						\
- "	ldw	0(%r26),%r26\n"						\
- 									\
--	/* Call _dl_init(_dl_loaded, argc, argv, envp). */		\
--"	copy	%r28,%r26\n"						\
--									\
  	/* envp = argv + argc + 1 */					\
  "	sh2add	%r25,%r24,%r23\n"					\
++									\
++	/* Call _dl_init(main_map, argc, argv, envp). */		\
  "	bl	_dl_init,%r2\n"						\
+ "	ldo	4(%r23),%r23\n"	/* delay slot */			\
+ 									\
 diff --git a/sysdeps/hppa/dl-runtime.c b/sysdeps/hppa/dl-runtime.c
 index 8b2ee58e37..192a6bee03 100644
 --- a/sysdeps/hppa/dl-runtime.c
@@ -11472,10 +11543,18 @@ index d3a6837fd2..425f514c5c 100644
  typedef pthread_rwlock_t __libc_rwlock_t;
  
 diff --git a/sysdeps/nptl/pthreadP.h b/sysdeps/nptl/pthreadP.h
-index 708bd92469..601db4ff2b 100644
+index 708bd92469..39af275c25 100644
 --- a/sysdeps/nptl/pthreadP.h
 +++ b/sysdeps/nptl/pthreadP.h
-@@ -275,7 +275,7 @@ __do_cancel (void)
+@@ -33,6 +33,7 @@
+ #include <kernel-features.h>
+ #include <errno.h>
+ #include <internal-signals.h>
++#include <pthread_mutex_backoff.h>
+ #include "pthread_mutex_conf.h"
+ 
+ 
+@@ -275,7 +276,7 @@ __do_cancel (void)
    struct pthread *self = THREAD_SELF;
  
    /* Make sure we get no more cancellations.  */
@@ -11484,6 +11563,47 @@ index 708bd92469..601db4ff2b 100644
  
    __pthread_unwind ((__pthread_unwind_buf_t *)
  		    THREAD_GETMEM (self, cleanup_jmp_buf));
+diff --git a/sysdeps/nptl/pthread_mutex_backoff.h b/sysdeps/nptl/pthread_mutex_backoff.h
+new file mode 100644
+index 0000000000..5b26c22ac7
+--- /dev/null
++++ b/sysdeps/nptl/pthread_mutex_backoff.h
+@@ -0,0 +1,35 @@
++/* Pthread mutex backoff configuration.
++   Copyright (C) 2022 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <https://www.gnu.org/licenses/>.  */
++#ifndef _PTHREAD_MUTEX_BACKOFF_H
++#define _PTHREAD_MUTEX_BACKOFF_H 1
++
++static inline unsigned int
++get_jitter (void)
++{
++  /* Arch dependent random jitter, return 0 disables random.  */
++  return 0;
++}
++
++static inline int
++get_next_backoff (int backoff)
++{
++  /* Next backoff, return 1 disables mutex backoff.  */
++  return 1;
++}
++
++#endif
 diff --git a/sysdeps/posix/fpathconf.c b/sysdeps/posix/fpathconf.c
 index 216f2a9c8d..4b215e0600 100644
 --- a/sysdeps/posix/fpathconf.c
@@ -13905,6 +14025,17 @@ index 1e73587f13..dcdf986f2d 100644
  	bv	%r0(%r2)
  	ldwm	-64(%sp), %r4
  END(__getcontext)
+diff --git a/sysdeps/unix/sysv/linux/hppa/kernel-features.h b/sysdeps/unix/sysv/linux/hppa/kernel-features.h
+index 0cd21ef0fa..079612e4aa 100644
+--- a/sysdeps/unix/sysv/linux/hppa/kernel-features.h
++++ b/sysdeps/unix/sysv/linux/hppa/kernel-features.h
+@@ -30,3 +30,6 @@
+ 
+ #undef __ASSUME_CLONE_DEFAULT
+ #define __ASSUME_CLONE_BACKWARDS 1
++
++/* QEMU does not support set_robust_list.  */
++#undef __ASSUME_SET_ROBUST_LIST
 diff --git a/sysdeps/unix/sysv/linux/hppa/setcontext.S b/sysdeps/unix/sysv/linux/hppa/setcontext.S
 index bc4872c8e2..dfa794ad5c 100644
 --- a/sysdeps/unix/sysv/linux/hppa/setcontext.S
@@ -15407,6 +15538,19 @@ index f64a2fb0ba..e9f3382108 100644
    cpu_features->data_cache_size = data;
    cpu_features->shared_cache_size = shared;
    cpu_features->non_temporal_threshold = non_temporal_threshold;
+diff --git a/sysdeps/x86/get-isa-level.h b/sysdeps/x86/get-isa-level.h
+index 1ade78ab73..5b4dd5f062 100644
+--- a/sysdeps/x86/get-isa-level.h
++++ b/sysdeps/x86/get-isa-level.h
+@@ -47,6 +47,8 @@ get_isa_level (const struct cpu_features *cpu_features)
+ 	  isa_level |= GNU_PROPERTY_X86_ISA_1_V2;
+ 	  if (CPU_FEATURE_USABLE_P (cpu_features, AVX)
+ 	      && CPU_FEATURE_USABLE_P (cpu_features, AVX2)
++	      && CPU_FEATURE_USABLE_P (cpu_features, BMI1)
++	      && CPU_FEATURE_USABLE_P (cpu_features, BMI2)
+ 	      && CPU_FEATURE_USABLE_P (cpu_features, F16C)
+ 	      && CPU_FEATURE_USABLE_P (cpu_features, FMA)
+ 	      && CPU_FEATURE_USABLE_P (cpu_features, LZCNT)
 diff --git a/sysdeps/x86/isa-level.c b/sysdeps/x86/isa-level.c
 index a6cb32b1b1..09cd72ab20 100644
 --- a/sysdeps/x86/isa-level.c
@@ -17765,11 +17909,39 @@ index 0000000000..d1784d5368
 +#define VEC					VEC_zmm
 +
 +#endif
+diff --git a/sysdeps/x86_64/multiarch/ifunc-avx2.h b/sysdeps/x86_64/multiarch/ifunc-avx2.h
+index 4289df29ec..0456fa6efe 100644
+--- a/sysdeps/x86_64/multiarch/ifunc-avx2.h
++++ b/sysdeps/x86_64/multiarch/ifunc-avx2.h
+@@ -30,7 +30,9 @@ IFUNC_SELECTOR (void)
+   const struct cpu_features* cpu_features = __get_cpu_features ();
+ 
+   if (CPU_FEATURE_USABLE_P (cpu_features, AVX2)
++      && CPU_FEATURE_USABLE_P (cpu_features, BMI1)
+       && CPU_FEATURE_USABLE_P (cpu_features, BMI2)
++      && CPU_FEATURE_USABLE_P (cpu_features, LZCNT)
+       && CPU_FEATURES_ARCH_P (cpu_features, AVX_Fast_Unaligned_Load))
+     {
+       if (CPU_FEATURE_USABLE_P (cpu_features, AVX512VL)
 diff --git a/sysdeps/x86_64/multiarch/ifunc-impl-list.c b/sysdeps/x86_64/multiarch/ifunc-impl-list.c
-index 68a56797d4..e97218f624 100644
+index 68a56797d4..b224e6a644 100644
 --- a/sysdeps/x86_64/multiarch/ifunc-impl-list.c
 +++ b/sysdeps/x86_64/multiarch/ifunc-impl-list.c
-@@ -96,8 +96,6 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+@@ -59,10 +59,12 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+   /* Support sysdeps/x86_64/multiarch/memchr.c.  */
+   IFUNC_IMPL (i, name, memchr,
+ 	      IFUNC_IMPL_ADD (array, i, memchr,
+-			      CPU_FEATURE_USABLE (AVX2),
++			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)),
+ 			      __memchr_avx2)
+ 	      IFUNC_IMPL_ADD (array, i, memchr,
+ 			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)
+ 			       && CPU_FEATURE_USABLE (RTM)),
+ 			      __memchr_avx2_rtm)
+ 	      IFUNC_IMPL_ADD (array, i, memchr,
+@@ -96,8 +98,6 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
  			       && CPU_FEATURE_USABLE (BMI2)
  			       && CPU_FEATURE_USABLE (MOVBE)),
  			      __memcmp_evex_movbe)
@@ -17778,7 +17950,45 @@ index 68a56797d4..e97218f624 100644
  	      IFUNC_IMPL_ADD (array, i, memcmp, CPU_FEATURE_USABLE (SSSE3),
  			      __memcmp_ssse3)
  	      IFUNC_IMPL_ADD (array, i, memcmp, 1, __memcmp_sse2))
-@@ -337,6 +335,11 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+@@ -192,15 +192,21 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+   /* Support sysdeps/x86_64/multiarch/memrchr.c.  */
+   IFUNC_IMPL (i, name, memrchr,
+ 	      IFUNC_IMPL_ADD (array, i, memrchr,
+-			      CPU_FEATURE_USABLE (AVX2),
++			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)
++			       && CPU_FEATURE_USABLE (LZCNT)),
+ 			      __memrchr_avx2)
+ 	      IFUNC_IMPL_ADD (array, i, memrchr,
+ 			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)
++			       && CPU_FEATURE_USABLE (LZCNT)
+ 			       && CPU_FEATURE_USABLE (RTM)),
+ 			      __memrchr_avx2_rtm)
+ 	      IFUNC_IMPL_ADD (array, i, memrchr,
+ 			      (CPU_FEATURE_USABLE (AVX512VL)
+-			       && CPU_FEATURE_USABLE (AVX512BW)),
++			       && CPU_FEATURE_USABLE (AVX512BW)
++			       && CPU_FEATURE_USABLE (BMI2)
++			       && CPU_FEATURE_USABLE (LZCNT)),
+ 			      __memrchr_evex)
+ 
+ 	      IFUNC_IMPL_ADD (array, i, memrchr, 1, __memrchr_sse2))
+@@ -303,10 +309,12 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+   /* Support sysdeps/x86_64/multiarch/rawmemchr.c.  */
+   IFUNC_IMPL (i, name, rawmemchr,
+ 	      IFUNC_IMPL_ADD (array, i, rawmemchr,
+-			      CPU_FEATURE_USABLE (AVX2),
++			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)),
+ 			      __rawmemchr_avx2)
+ 	      IFUNC_IMPL_ADD (array, i, rawmemchr,
+ 			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)
+ 			       && CPU_FEATURE_USABLE (RTM)),
+ 			      __rawmemchr_avx2_rtm)
+ 	      IFUNC_IMPL_ADD (array, i, rawmemchr,
+@@ -337,6 +345,11 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
  			       && CPU_FEATURE_USABLE (AVX512BW)
  			       && CPU_FEATURE_USABLE (BMI2)),
  			      __strlen_evex)
@@ -17790,7 +18000,7 @@ index 68a56797d4..e97218f624 100644
  	      IFUNC_IMPL_ADD (array, i, strlen, 1, __strlen_sse2))
  
    /* Support sysdeps/x86_64/multiarch/strnlen.c.  */
-@@ -355,6 +358,11 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+@@ -355,6 +368,11 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
  			       && CPU_FEATURE_USABLE (AVX512BW)
  			       && CPU_FEATURE_USABLE (BMI2)),
  			      __strnlen_evex)
@@ -17802,26 +18012,29 @@ index 68a56797d4..e97218f624 100644
  	      IFUNC_IMPL_ADD (array, i, strnlen, 1, __strnlen_sse2))
  
    /* Support sysdeps/x86_64/multiarch/stpncpy.c.  */
-@@ -395,8 +403,16 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+@@ -395,8 +413,19 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
    /* Support sysdeps/x86_64/multiarch/strcasecmp_l.c.  */
    IFUNC_IMPL (i, name, strcasecmp,
  	      IFUNC_IMPL_ADD (array, i, strcasecmp,
 -			      CPU_FEATURE_USABLE (AVX),
 -			      __strcasecmp_avx)
 +			      (CPU_FEATURE_USABLE (AVX512VL)
-+			       && CPU_FEATURE_USABLE (AVX512BW)),
++			       && CPU_FEATURE_USABLE (AVX512BW)
++			       && CPU_FEATURE_USABLE (BMI2)),
 +			      __strcasecmp_evex)
 +	      IFUNC_IMPL_ADD (array, i, strcasecmp,
-+			      CPU_FEATURE_USABLE (AVX2),
++			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)),
 +			      __strcasecmp_avx2)
 +	      IFUNC_IMPL_ADD (array, i, strcasecmp,
 +			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)
 +			       && CPU_FEATURE_USABLE (RTM)),
 +			      __strcasecmp_avx2_rtm)
  	      IFUNC_IMPL_ADD (array, i, strcasecmp,
  			      CPU_FEATURE_USABLE (SSE4_2),
  			      __strcasecmp_sse42)
-@@ -407,9 +423,17 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+@@ -407,9 +436,20 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
  
    /* Support sysdeps/x86_64/multiarch/strcasecmp_l.c.  */
    IFUNC_IMPL (i, name, strcasecmp_l,
@@ -17830,38 +18043,81 @@ index 68a56797d4..e97218f624 100644
 -			      __strcasecmp_l_avx)
 +	      IFUNC_IMPL_ADD (array, i, strcasecmp,
 +			      (CPU_FEATURE_USABLE (AVX512VL)
-+			       && CPU_FEATURE_USABLE (AVX512BW)),
++			       && CPU_FEATURE_USABLE (AVX512BW)
++			       && CPU_FEATURE_USABLE (BMI2)),
 +			      __strcasecmp_l_evex)
 +	      IFUNC_IMPL_ADD (array, i, strcasecmp,
-+			      CPU_FEATURE_USABLE (AVX2),
++			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)),
 +			      __strcasecmp_l_avx2)
 +	      IFUNC_IMPL_ADD (array, i, strcasecmp,
 +			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)
 +			       && CPU_FEATURE_USABLE (RTM)),
 +			      __strcasecmp_l_avx2_rtm)
  	      IFUNC_IMPL_ADD (array, i, strcasecmp_l,
  			      CPU_FEATURE_USABLE (SSE4_2),
  			      __strcasecmp_l_sse42)
-@@ -535,8 +559,16 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+@@ -476,25 +516,33 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+   /* Support sysdeps/x86_64/multiarch/strrchr.c.  */
+   IFUNC_IMPL (i, name, strrchr,
+ 	      IFUNC_IMPL_ADD (array, i, strrchr,
+-			      CPU_FEATURE_USABLE (AVX2),
++			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI1)
++			       && CPU_FEATURE_USABLE (BMI2)),
+ 			      __strrchr_avx2)
+ 	      IFUNC_IMPL_ADD (array, i, strrchr,
+ 			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI1)
++			       && CPU_FEATURE_USABLE (BMI2)
+ 			       && CPU_FEATURE_USABLE (RTM)),
+ 			      __strrchr_avx2_rtm)
+ 	      IFUNC_IMPL_ADD (array, i, strrchr,
+ 			      (CPU_FEATURE_USABLE (AVX512VL)
+-			       && CPU_FEATURE_USABLE (AVX512BW)),
++			       && CPU_FEATURE_USABLE (AVX512BW)
++			       && CPU_FEATURE_USABLE (BMI1)
++			       && CPU_FEATURE_USABLE (BMI2)),
+ 			      __strrchr_evex)
+ 	      IFUNC_IMPL_ADD (array, i, strrchr, 1, __strrchr_sse2))
+ 
+   /* Support sysdeps/x86_64/multiarch/strcmp.c.  */
+   IFUNC_IMPL (i, name, strcmp,
+ 	      IFUNC_IMPL_ADD (array, i, strcmp,
+-			      CPU_FEATURE_USABLE (AVX2),
++			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)),
+ 			      __strcmp_avx2)
+ 	      IFUNC_IMPL_ADD (array, i, strcmp,
+ 			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)
+ 			       && CPU_FEATURE_USABLE (RTM)),
+ 			      __strcmp_avx2_rtm)
+ 	      IFUNC_IMPL_ADD (array, i, strcmp,
+@@ -535,8 +583,19 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
    /* Support sysdeps/x86_64/multiarch/strncase_l.c.  */
    IFUNC_IMPL (i, name, strncasecmp,
  	      IFUNC_IMPL_ADD (array, i, strncasecmp,
 -			      CPU_FEATURE_USABLE (AVX),
 -			      __strncasecmp_avx)
 +			      (CPU_FEATURE_USABLE (AVX512VL)
-+			       && CPU_FEATURE_USABLE (AVX512BW)),
++			       && CPU_FEATURE_USABLE (AVX512BW)
++			       && CPU_FEATURE_USABLE (BMI2)),
 +			      __strncasecmp_evex)
 +	      IFUNC_IMPL_ADD (array, i, strncasecmp,
-+			      CPU_FEATURE_USABLE (AVX2),
++			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)),
 +			      __strncasecmp_avx2)
 +	      IFUNC_IMPL_ADD (array, i, strncasecmp,
 +			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)
 +			       && CPU_FEATURE_USABLE (RTM)),
 +			      __strncasecmp_avx2_rtm)
  	      IFUNC_IMPL_ADD (array, i, strncasecmp,
  			      CPU_FEATURE_USABLE (SSE4_2),
  			      __strncasecmp_sse42)
-@@ -548,9 +580,17 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+@@ -548,9 +607,20 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
  
    /* Support sysdeps/x86_64/multiarch/strncase_l.c.  */
    IFUNC_IMPL (i, name, strncasecmp_l,
@@ -17870,19 +18126,22 @@ index 68a56797d4..e97218f624 100644
 -			      __strncasecmp_l_avx)
 +	      IFUNC_IMPL_ADD (array, i, strncasecmp,
 +			      (CPU_FEATURE_USABLE (AVX512VL)
-+			       && CPU_FEATURE_USABLE (AVX512BW)),
++			       & CPU_FEATURE_USABLE (AVX512BW)
++			       && CPU_FEATURE_USABLE (BMI2)),
 +			      __strncasecmp_l_evex)
 +	      IFUNC_IMPL_ADD (array, i, strncasecmp,
-+			      CPU_FEATURE_USABLE (AVX2),
++			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)),
 +			      __strncasecmp_l_avx2)
 +	      IFUNC_IMPL_ADD (array, i, strncasecmp,
 +			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)
 +			       && CPU_FEATURE_USABLE (RTM)),
 +			      __strncasecmp_l_avx2_rtm)
  	      IFUNC_IMPL_ADD (array, i, strncasecmp_l,
  			      CPU_FEATURE_USABLE (SSE4_2),
  			      __strncasecmp_l_sse42)
-@@ -611,6 +651,12 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+@@ -611,6 +681,12 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
  
    /* Support sysdeps/x86_64/multiarch/strstr.c.  */
    IFUNC_IMPL (i, name, strstr,
@@ -17895,7 +18154,57 @@ index 68a56797d4..e97218f624 100644
  	      IFUNC_IMPL_ADD (array, i, strstr, 1, __strstr_sse2_unaligned)
  	      IFUNC_IMPL_ADD (array, i, strstr, 1, __strstr_sse2))
  
-@@ -702,6 +748,11 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+@@ -635,15 +711,20 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+   /* Support sysdeps/x86_64/multiarch/wcsrchr.c.  */
+   IFUNC_IMPL (i, name, wcsrchr,
+ 	      IFUNC_IMPL_ADD (array, i, wcsrchr,
+-			      CPU_FEATURE_USABLE (AVX2),
++			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI1)
++			       && CPU_FEATURE_USABLE (BMI2)),
+ 			      __wcsrchr_avx2)
+ 	      IFUNC_IMPL_ADD (array, i, wcsrchr,
+ 			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI1)
++			       && CPU_FEATURE_USABLE (BMI2)
+ 			       && CPU_FEATURE_USABLE (RTM)),
+ 			      __wcsrchr_avx2_rtm)
+ 	      IFUNC_IMPL_ADD (array, i, wcsrchr,
+ 			      (CPU_FEATURE_USABLE (AVX512VL)
+ 			       && CPU_FEATURE_USABLE (AVX512BW)
++			       && CPU_FEATURE_USABLE (BMI1)
+ 			       && CPU_FEATURE_USABLE (BMI2)),
+ 			      __wcsrchr_evex)
+ 	      IFUNC_IMPL_ADD (array, i, wcsrchr, 1, __wcsrchr_sse2))
+@@ -651,10 +732,12 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+   /* Support sysdeps/x86_64/multiarch/wcscmp.c.  */
+   IFUNC_IMPL (i, name, wcscmp,
+ 	      IFUNC_IMPL_ADD (array, i, wcscmp,
+-			      CPU_FEATURE_USABLE (AVX2),
++			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)),
+ 			      __wcscmp_avx2)
+ 	      IFUNC_IMPL_ADD (array, i, wcscmp,
+ 			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)
+ 			       && CPU_FEATURE_USABLE (RTM)),
+ 			      __wcscmp_avx2_rtm)
+ 	      IFUNC_IMPL_ADD (array, i, wcscmp,
+@@ -667,10 +750,12 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+   /* Support sysdeps/x86_64/multiarch/wcsncmp.c.  */
+   IFUNC_IMPL (i, name, wcsncmp,
+ 	      IFUNC_IMPL_ADD (array, i, wcsncmp,
+-			      CPU_FEATURE_USABLE (AVX2),
++			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)),
+ 			      __wcsncmp_avx2)
+ 	      IFUNC_IMPL_ADD (array, i, wcsncmp,
+ 			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)
+ 			       && CPU_FEATURE_USABLE (RTM)),
+ 			      __wcsncmp_avx2_rtm)
+ 	      IFUNC_IMPL_ADD (array, i, wcsncmp,
+@@ -702,6 +787,11 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
  			       && CPU_FEATURE_USABLE (AVX512BW)
  			       && CPU_FEATURE_USABLE (BMI2)),
  			      __wcslen_evex)
@@ -17907,7 +18216,7 @@ index 68a56797d4..e97218f624 100644
  	      IFUNC_IMPL_ADD (array, i, wcslen,
  			      CPU_FEATURE_USABLE (SSE4_1),
  			      __wcslen_sse4_1)
-@@ -723,6 +774,11 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+@@ -723,6 +813,11 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
  			       && CPU_FEATURE_USABLE (AVX512BW)
  			       && CPU_FEATURE_USABLE (BMI2)),
  			      __wcsnlen_evex)
@@ -17919,7 +18228,21 @@ index 68a56797d4..e97218f624 100644
  	      IFUNC_IMPL_ADD (array, i, wcsnlen,
  			      CPU_FEATURE_USABLE (SSE4_1),
  			      __wcsnlen_sse4_1)
-@@ -768,8 +824,6 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+@@ -731,10 +826,12 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+   /* Support sysdeps/x86_64/multiarch/wmemchr.c.  */
+   IFUNC_IMPL (i, name, wmemchr,
+ 	      IFUNC_IMPL_ADD (array, i, wmemchr,
+-			      CPU_FEATURE_USABLE (AVX2),
++			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)),
+ 			      __wmemchr_avx2)
+ 	      IFUNC_IMPL_ADD (array, i, wmemchr,
+ 			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)
+ 			       && CPU_FEATURE_USABLE (RTM)),
+ 			      __wmemchr_avx2_rtm)
+ 	      IFUNC_IMPL_ADD (array, i, wmemchr,
+@@ -768,8 +865,6 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
  			       && CPU_FEATURE_USABLE (BMI2)
  			       && CPU_FEATURE_USABLE (MOVBE)),
  			      __wmemcmp_evex_movbe)
@@ -17928,7 +18251,28 @@ index 68a56797d4..e97218f624 100644
  	      IFUNC_IMPL_ADD (array, i, wmemcmp, CPU_FEATURE_USABLE (SSSE3),
  			      __wmemcmp_ssse3)
  	      IFUNC_IMPL_ADD (array, i, wmemcmp, 1, __wmemcmp_sse2))
-@@ -996,6 +1050,10 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+@@ -972,15 +1067,18 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+   /* Support sysdeps/x86_64/multiarch/strncmp.c.  */
+   IFUNC_IMPL (i, name, strncmp,
+ 	      IFUNC_IMPL_ADD (array, i, strncmp,
+-			      CPU_FEATURE_USABLE (AVX2),
++			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)),
+ 			      __strncmp_avx2)
+ 	      IFUNC_IMPL_ADD (array, i, strncmp,
+ 			      (CPU_FEATURE_USABLE (AVX2)
++			       && CPU_FEATURE_USABLE (BMI2)
+ 			       && CPU_FEATURE_USABLE (RTM)),
+ 			      __strncmp_avx2_rtm)
+ 	      IFUNC_IMPL_ADD (array, i, strncmp,
+ 			      (CPU_FEATURE_USABLE (AVX512VL)
+-			       && CPU_FEATURE_USABLE (AVX512BW)),
++			       && CPU_FEATURE_USABLE (AVX512BW)
++			       && CPU_FEATURE_USABLE (BMI2)),
+ 			      __strncmp_evex)
+ 	      IFUNC_IMPL_ADD (array, i, strncmp, CPU_FEATURE_USABLE (SSE4_2),
+ 			      __strncmp_sse42)
+@@ -996,6 +1094,10 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
  	      IFUNC_IMPL_ADD (array, i, __wmemset_chk,
  			      CPU_FEATURE_USABLE (AVX2),
  			      __wmemset_chk_avx2_unaligned)
@@ -17962,10 +18306,10 @@ index cd12613699..4518b0f98c 100644
      return OPTIMIZE (ssse3);
  
 diff --git a/sysdeps/x86_64/multiarch/ifunc-strcasecmp.h b/sysdeps/x86_64/multiarch/ifunc-strcasecmp.h
-index 9e3cc61ac0..766539c241 100644
+index 9e3cc61ac0..e201f6e4d8 100644
 --- a/sysdeps/x86_64/multiarch/ifunc-strcasecmp.h
 +++ b/sysdeps/x86_64/multiarch/ifunc-strcasecmp.h
-@@ -22,15 +22,28 @@
+@@ -22,15 +22,29 @@
  extern __typeof (REDIRECT_NAME) OPTIMIZE (sse2) attribute_hidden;
  extern __typeof (REDIRECT_NAME) OPTIMIZE (ssse3) attribute_hidden;
  extern __typeof (REDIRECT_NAME) OPTIMIZE (sse42) attribute_hidden;
@@ -17982,6 +18326,7 @@ index 9e3cc61ac0..766539c241 100644
 -  if (CPU_FEATURE_USABLE_P (cpu_features, AVX))
 -    return OPTIMIZE (avx);
 +  if (CPU_FEATURE_USABLE_P (cpu_features, AVX2)
++      && CPU_FEATURE_USABLE_P (cpu_features, BMI2)
 +      && CPU_FEATURES_ARCH_P (cpu_features, AVX_Fast_Unaligned_Load))
 +    {
 +      if (CPU_FEATURE_USABLE_P (cpu_features, AVX512VL)
@@ -26993,7 +27338,7 @@ index 580feb90e9..a9178ad25c 100644
  #if defined USE_AS_STRNCMP || defined USE_AS_STRNCASECMP_L
  	cmp	%r11, %rcx
 diff --git a/sysdeps/x86_64/multiarch/strcmp.c b/sysdeps/x86_64/multiarch/strcmp.c
-index 68cb73baad..08638e2632 100644
+index 68cb73baad..b2bc619585 100644
 --- a/sysdeps/x86_64/multiarch/strcmp.c
 +++ b/sysdeps/x86_64/multiarch/strcmp.c
 @@ -29,6 +29,7 @@
@@ -27004,6 +27349,20 @@ index 68cb73baad..08638e2632 100644
  extern __typeof (REDIRECT_NAME) OPTIMIZE (avx2) attribute_hidden;
  extern __typeof (REDIRECT_NAME) OPTIMIZE (avx2_rtm) attribute_hidden;
  extern __typeof (REDIRECT_NAME) OPTIMIZE (evex) attribute_hidden;
+@@ -39,11 +40,11 @@ IFUNC_SELECTOR (void)
+   const struct cpu_features* cpu_features = __get_cpu_features ();
+ 
+   if (CPU_FEATURE_USABLE_P (cpu_features, AVX2)
++      && CPU_FEATURE_USABLE_P (cpu_features, BMI2)
+       && CPU_FEATURES_ARCH_P (cpu_features, AVX_Fast_Unaligned_Load))
+     {
+       if (CPU_FEATURE_USABLE_P (cpu_features, AVX512VL)
+-	  && CPU_FEATURE_USABLE_P (cpu_features, AVX512BW)
+-	  && CPU_FEATURE_USABLE_P (cpu_features, BMI2))
++	  && CPU_FEATURE_USABLE_P (cpu_features, AVX512BW))
+ 	return OPTIMIZE (evex);
+ 
+       if (CPU_FEATURE_USABLE_P (cpu_features, RTM))
 @@ -53,6 +54,10 @@ IFUNC_SELECTOR (void)
  	return OPTIMIZE (avx2);
      }
@@ -27701,6 +28060,24 @@ index 9773e5fc09..310a6dbe77 100644
 +# define USE_AS_STRNCMP
 +# include "strcmp-sse42.S"
 +#endif
+diff --git a/sysdeps/x86_64/multiarch/strncmp.c b/sysdeps/x86_64/multiarch/strncmp.c
+index fca74199d8..4241da5bdf 100644
+--- a/sysdeps/x86_64/multiarch/strncmp.c
++++ b/sysdeps/x86_64/multiarch/strncmp.c
+@@ -39,11 +39,11 @@ IFUNC_SELECTOR (void)
+   const struct cpu_features* cpu_features = __get_cpu_features ();
+ 
+   if (CPU_FEATURE_USABLE_P (cpu_features, AVX2)
++      && CPU_FEATURE_USABLE_P (cpu_features, BMI2)
+       && CPU_FEATURES_ARCH_P (cpu_features, AVX_Fast_Unaligned_Load))
+     {
+       if (CPU_FEATURE_USABLE_P (cpu_features, AVX512VL)
+-	  && CPU_FEATURE_USABLE_P (cpu_features, AVX512BW)
+-	  && CPU_FEATURE_USABLE_P (cpu_features, BMI2))
++	  && CPU_FEATURE_USABLE_P (cpu_features, AVX512BW))
+ 	return OPTIMIZE (evex);
+ 
+       if (CPU_FEATURE_USABLE_P (cpu_features, RTM))
 diff --git a/sysdeps/x86_64/multiarch/strnlen-evex512.S b/sysdeps/x86_64/multiarch/strnlen-evex512.S
 new file mode 100644
 index 0000000000..0b7f220214
@@ -29514,6 +29891,51 @@ index 0000000000..f09192ed77
 +#define USE_AS_WMEMCMP	1
 +#define MEMCMP	__wmemcmp_sse2
 +#include "../memcmp.S"
+diff --git a/sysdeps/x86_64/nptl/pthread_mutex_backoff.h b/sysdeps/x86_64/nptl/pthread_mutex_backoff.h
+new file mode 100644
+index 0000000000..ec74c3d9db
+--- /dev/null
++++ b/sysdeps/x86_64/nptl/pthread_mutex_backoff.h
+@@ -0,0 +1,39 @@
++/* Pthread mutex backoff configuration.
++   Copyright (C) 2022 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <https://www.gnu.org/licenses/>.  */
++#ifndef _PTHREAD_MUTEX_BACKOFF_H
++#define _PTHREAD_MUTEX_BACKOFF_H 1
++
++#include <fast-jitter.h>
++
++static inline unsigned int
++get_jitter (void)
++{
++  return get_fast_jitter ();
++}
++
++#define MAX_BACKOFF 16
++
++static inline int
++get_next_backoff (int backoff)
++{
++  /* Binary expontial backoff. Limiting max backoff
++     can reduce latency in large critical section.  */
++  return (backoff < MAX_BACKOFF) ? backoff << 1 : backoff;
++}
++
++#endif
 diff --git a/sysdeps/x86_64/strcmp.S b/sysdeps/x86_64/strcmp.S
 index e2ab59c555..99d8b36f1d 100644
 --- a/sysdeps/x86_64/strcmp.S

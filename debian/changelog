@@ -1,15 +1,34 @@
-glibc (2.35-1+rpi2) bookworm-staging; urgency=medium
-
-  * Remove valgrind breaks.
-
- -- Peter Michael Green <plugwash@raspbian.org>  Sun, 02 Oct 2022 17:46:25 +0000
-
-glibc (2.35-1+rpi1) bookworm-staging; urgency=medium
+glibc (2.35-2+rpi1) bookworm-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Thu, 29 Sep 2022 20:25:19 +0000
+  [changes brought forward from 2.35-1+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Sun, 02 Oct 2022 17:46:25 +0000]
+  * Remove valgrind breaks.
+
+ -- Peter Michael Green <plugwash@raspbian.org>  Tue, 11 Oct 2022 17:24:59 +0000
+
+glibc (2.35-2) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/git-SOMAXCONN.diff: Bump SOMAXCONN to 4096.
+  * debian/debhelper.in/libc-udeb.install.hurd-i386: Allow installing
+    /lib/ld.so, it's required on hurd-i386.
+
+  [ Aurelien Jarno ]
+  * debian/control.in/libc: add a Breaks against firefox (<< 91~) and
+    firefox-esr (<< 91~) to ensure a seccomp filter compatible with glibc
+    2.34.  Closes: #1020894.
+  * debian/sysdeps/sparc64.mk: pass --disable-default-pie to configure.
+    Closes: #1020974.
+  * debian/rules.d/control.mk: add the arc architecture to the control file.
+    Closes: #1021167.
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix initialization of dp register.  Closes: #1020857.
+    - Fix SIGILL on Haswell CPUs without BMI1/BMI2 instructions. Closes:
+      #1019855.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Tue, 04 Oct 2022 07:07:58 +0200
 
 glibc (2.35-1) unstable; urgency=medium
 
