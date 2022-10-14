@@ -1,4 +1,4 @@
-/* Wait on a semaphore.  Generic version.
+/* Lock a semaphore if it does not require blocking.  Generic version.
    Copyright (C) 2005-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -17,16 +17,39 @@
    <https://www.gnu.org/licenses/>.  */
 
 #include <semaphore.h>
+#include <errno.h>
+
 #include <pt-internal.h>
 
-extern int __sem_timedwait_internal (sem_t *restrict sem,
-				     clockid_t clock_id,
-				     const struct timespec *restrict timeout);
-
 int
-__sem_wait (sem_t *sem)
+__sem_waitfast (struct new_sem *isem, int definitive_result)
 {
-  return __sem_timedwait_internal (sem, CLOCK_REALTIME, 0);
-}
+#if __HAVE_64B_ATOMICS
+  uint64_t d = atomic_load_relaxed (&isem->data);
 
-strong_alias (__sem_wait, sem_wait);
+  do
+    {
+      if ((d & SEM_VALUE_MASK) == 0)
+	break;
+      if (atomic_compare_exchange_weak_acquire (&isem->data, &d, d - 1))
+	/* Successful down.  */
+	return 0;
+    }
+  while (definitive_result);
+  return -1;
+#else
+  unsigned v = atomic_load_relaxed (&isem->value);
+
+  do
+    {
+      if ((v >> SEM_VALUE_SHIFT) == 0)
+	break;
+      if (atomic_compare_exchange_weak_acquire (&isem->value,
+	    &v, v - (1 << SEM_VALUE_SHIFT)))
+	/* Successful down.  */
+	return 0;
+    }
+  while (definitive_result);
+  return -1;
+#endif
+}
