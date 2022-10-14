@@ -67,7 +67,6 @@ int __pthread_attr_setstacksize (pthread_attr_t *__attr, size_t __stacksize);
 int __pthread_attr_setstack (pthread_attr_t *__attr, void *__stackaddr,
 			     size_t __stacksize);
 int __pthread_attr_getstack (const pthread_attr_t *, void **, size_t *);
-struct __pthread_cancelation_handler **___pthread_get_cleanup_stack (void) attribute_hidden;
 
 #if IS_IN (libpthread)
 hidden_proto (__pthread_create)
@@ -76,6 +75,7 @@ hidden_proto (__pthread_key_create)
 hidden_proto (__pthread_getspecific)
 hidden_proto (__pthread_setspecific)
 hidden_proto (_pthread_mutex_init)
+hidden_proto (__pthread_get_cleanup_stack)
 #endif
 
 #define ASSERT_TYPE_SIZE(type, size) 					\
