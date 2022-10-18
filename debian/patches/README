@@ -1,9 +1,9 @@
 For the patch directory we follow this naming scheme:
 
-  {ARCH|all|any}/{local|branch|cvs|submitted|unsubmitted}-"Description"
+  {ARCH|all|any}/{local|branch|git|submitted|unsubmitted}-"Description"
   
 Branch means commited in the upstream branch.
-CVS means committed in the upstream trunk.
+git means committed in the upstream trunk.
 Submitted means we're hopeful that it will go in.
 Unsubmitted means we have not submitted upstream yet because patch is not ready
 for upstream yet, but we want to eventually

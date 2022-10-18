@@ -1,9 +1,29 @@
-glibc (2.28-10+rpi1+deb10u1) buster-staging; urgency=medium
+glibc (2.28-10+rpi1+deb10u2) buster-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Sun, 27 Mar 2022 02:48:06 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Tue, 18 Oct 2022 23:38:57 +0000
+
+glibc (2.28-10+deb10u2) buster-security; urgency=medium
+
+  * Non-maintainer upload by LTS team.
+  * CVE-2016-10228 iconv option parsing Closes: #856503
+  * CVE-2019-19126 setuid environment filtering Closes: #945250
+  * CVE-2019-25013 oob read in iconv Closes: #979273
+  * CVE-2020-1752 use after free in glob Closes: #953788
+  * CVE-2020-6096 [arm] memcpy underflow Closes: #961452
+  * CVE-2020-10029 sinl buffer overflow Closes: #953108
+  * CVE-2020-27618 iconv infinite loop Closes: #973914
+  * CVE-2021-3326 iconv abort Closes: #981198
+  * CVE-2021-3999 oob write for getcwd size 1
+  * CVE-2021-27645 nscd double free Closes: #983479
+  * CVE-2021-33574 mq_notify use after free Closes: #989147
+  * CVE-2021-35942 wordexp input validation Closes: #990542
+  * CVE-2022-23218 svcunix_create buffer overflow
+  * CVE-2022-23219 clnt_create buffer overflow
+
+ -- Helmut Grohne <helmut@subdivi.de>  Sat, 08 Oct 2022 17:53:16 +0200
 
 glibc (2.28-10+deb10u1) buster; urgency=medium
 
