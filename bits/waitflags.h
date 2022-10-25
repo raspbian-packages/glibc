@@ -32,3 +32,16 @@
 # define WNOWAIT	8		/* Don't reap, just poll status.  */
 # define WEXITED	16		/* Report dead child.  */
 #endif
+
+/* The following values are used by the `waitid' function.  */
+#if defined __USE_XOPEN_EXTENDED || defined __USE_XOPEN2K8
+# ifndef __ENUM_IDTYPE_T
+# define __ENUM_IDTYPE_T 1
+typedef enum
+{
+  P_ALL,		/* Wait for any child.  */
+  P_PID,		/* Wait for specified process.  */
+  P_PGID		/* Wait for members of process group.  */
+} idtype_t;
+# endif
+#endif
