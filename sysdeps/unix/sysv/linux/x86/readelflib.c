@@ -61,8 +61,11 @@ process_elf_file (const char *file_name, const char *lib, int *flag,
 #ifndef __x86_64__
 failed:
 #endif
-      error (0, 0, _("%s is for unknown machine %d.\n"),
-	     file_name, elf_header->e_machine);
+      if (opt_verbose)
+	{
+	  error (0, 0, _("%s is for unknown machine %d.\n"),
+		file_name, elf_header->e_machine);
+	}
       return 1;
     }
 
