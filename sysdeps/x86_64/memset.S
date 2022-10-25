@@ -1,4 +1,4 @@
-/* memset/bzero -- set memory area to CH/0
+/* memset -- set memory area to CH/0
    Optimized version for x86-64.
    Copyright (C) 2002-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
@@ -28,17 +28,23 @@
 #define VMOVU     movups
 #define VMOVA     movaps
 
-#define MEMSET_VDUP_TO_VEC0_AND_SET_RETURN(d, r) \
+# define MEMSET_SET_VEC0_AND_SET_RETURN(d, r) \
   movd d, %xmm0; \
   movq r, %rax; \
   punpcklbw %xmm0, %xmm0; \
   punpcklwd %xmm0, %xmm0; \
   pshufd $0, %xmm0, %xmm0
 
-#define WMEMSET_VDUP_TO_VEC0_AND_SET_RETURN(d, r) \
+# define WMEMSET_SET_VEC0_AND_SET_RETURN(d, r) \
   movd d, %xmm0; \
-  movq r, %rax; \
-  pshufd $0, %xmm0, %xmm0
+  pshufd $0, %xmm0, %xmm0; \
+  movq r, %rax
+
+# define MEMSET_VDUP_TO_VEC0_HIGH()
+# define MEMSET_VDUP_TO_VEC0_LOW()
+
+# define WMEMSET_VDUP_TO_VEC0_HIGH()
+# define WMEMSET_VDUP_TO_VEC0_LOW()
 
 #define SECTION(p)		p
 

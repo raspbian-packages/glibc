@@ -898,18 +898,6 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
   if (CPU_FEATURE_USABLE_P (cpu_features, FSRM))
     rep_movsb_threshold = 2112;
 
-  unsigned long int rep_movsb_stop_threshold;
-  /* ERMS feature is implemented from AMD Zen3 architecture and it is
-     performing poorly for data above L2 cache size. Henceforth, adding
-     an upper bound threshold parameter to limit the usage of Enhanced
-     REP MOVSB operations and setting its value to L2 cache size.  */
-  if (cpu_features->basic.kind == arch_kind_amd)
-    rep_movsb_stop_threshold = core;
-  /* Setting the upper bound of ERMS to the computed value of
-     non-temporal threshold for architectures other than AMD.  */
-  else
-    rep_movsb_stop_threshold = non_temporal_threshold;
-
   /* The default threshold to use Enhanced REP STOSB.  */
   unsigned long int rep_stosb_threshold = 2048;
 
@@ -943,13 +931,31 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
 
   TUNABLE_SET_WITH_BOUNDS (x86_data_cache_size, data, 0, SIZE_MAX);
   TUNABLE_SET_WITH_BOUNDS (x86_shared_cache_size, shared, 0, SIZE_MAX);
+  /* SIZE_MAX >> 4 because memmove-vec-unaligned-erms right-shifts the value of
+     'x86_non_temporal_threshold' by `LOG_4X_MEMCPY_THRESH` (4) and it is best
+     if that operation cannot overflow. Minimum of 0x4040 (16448) because the
+     L(large_memset_4x) loops need 64-byte to cache align and enough space for
+     at least 1 iteration of 4x PAGE_SIZE unrolled loop.  Both values are
+     reflected in the manual.  */
   TUNABLE_SET_WITH_BOUNDS (x86_non_temporal_threshold, non_temporal_threshold,
-			   0, SIZE_MAX);
+			   0x4040, SIZE_MAX >> 4);
   TUNABLE_SET_WITH_BOUNDS (x86_rep_movsb_threshold, rep_movsb_threshold,
 			   minimum_rep_movsb_threshold, SIZE_MAX);
   TUNABLE_SET_WITH_BOUNDS (x86_rep_stosb_threshold, rep_stosb_threshold, 1,
 			   SIZE_MAX);
 #endif
+
+  unsigned long int rep_movsb_stop_threshold;
+  /* ERMS feature is implemented from AMD Zen3 architecture and it is
+     performing poorly for data above L2 cache size. Henceforth, adding
+     an upper bound threshold parameter to limit the usage of Enhanced
+     REP MOVSB operations and setting its value to L2 cache size.  */
+  if (cpu_features->basic.kind == arch_kind_amd)
+    rep_movsb_stop_threshold = core;
+  /* Setting the upper bound of ERMS to the computed value of
+     non-temporal threshold for architectures other than AMD.  */
+  else
+    rep_movsb_stop_threshold = non_temporal_threshold;
 
   cpu_features->data_cache_size = data;
   cpu_features->shared_cache_size = shared;
