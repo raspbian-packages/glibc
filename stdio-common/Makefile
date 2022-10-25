@@ -95,7 +95,7 @@ generated += tst-printf-bz18872.c tst-printf-bz18872.mtrace \
 	     tst-printf-fp-leak.mtrace tst-printf-fp-leak-mem.out
 endif
 
-tests-special += $(objpfx)tst-errno-manual.out
+# tests-special += $(objpfx)tst-errno-manual.out
 
 include ../Rules
 
