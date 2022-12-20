@@ -66,9 +66,6 @@
 #include <ifunc-wmemset.h>
 #include <ifunc-wmemcmp.h>
 
-/* Maximum number of IFUNC implementations.  */
-#define MAX_IFUNC	3
-
 /* Fill ARRAY of MAX elements with IFUNC implementations for function
    NAME supported on target machine and return the number of valid
    entries.  */
@@ -76,9 +73,7 @@ size_t
 __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 			size_t max)
 {
-  assert (max >= MAX_IFUNC);
-
-  size_t i = 0;
+  size_t i = max;
 
   /* Get hardware information.  */
   unsigned long int dl_hwcap = GLRO (dl_hwcap);
@@ -102,21 +97,6 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 # endif
 # if HAVE_MEMSET_Z900_G5
 	      IFUNC_IMPL_ADD (array, i, memset, 1, MEMSET_Z900_G5)
-# endif
-	      )
-
-  /* Note: bzero is implemented in memset.  */
-  IFUNC_IMPL (i, name, bzero,
-# if HAVE_MEMSET_Z196
-	      IFUNC_IMPL_ADD (array, i, bzero,
-			      S390_IS_Z196 (stfle_bits), BZERO_Z196)
-# endif
-# if HAVE_MEMSET_Z10
-	      IFUNC_IMPL_ADD (array, i, bzero,
-			      S390_IS_Z10 (stfle_bits), BZERO_Z10)
-# endif
-# if HAVE_MEMSET_Z900_G5
-	      IFUNC_IMPL_ADD (array, i, bzero, 1, BZERO_Z900_G5)
 # endif
 	      )
 #endif /* HAVE_MEMSET_IFUNC */
@@ -685,5 +665,5 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 		)
 #endif /* HAVE_WMEMCMP_IFUNC  */
 
-  return i;
+  return 0;
 }

@@ -16,13 +16,11 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#if IS_IN (libc)
-# define __strnlen __strnlen_sse2
-
-# undef weak_alias
-# define weak_alias(__strnlen, strnlen)
-# undef libc_hidden_builtin_def
-# define libc_hidden_builtin_def(strnlen)
+#ifndef STRNLEN
+# define STRNLEN	__strnlen_sse2
 #endif
 
-#include "../strnlen.S"
+#define AS_STRNLEN	1
+#define STRLEN	STRNLEN
+
+#include "strlen-sse2.S"

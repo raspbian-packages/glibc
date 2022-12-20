@@ -29,7 +29,7 @@
 #define INLINE_SETXID_SYSCALL(name, nr, args...) \
   ({									\
     int __result;							\
-    if (!__libc_single_threaded)					\
+    if (!SINGLE_THREAD_P)						\
       {									\
 	struct xid_command __cmd;					\
 	__cmd.syscall_no = __NR_##name;					\

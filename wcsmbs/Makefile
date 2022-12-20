@@ -43,7 +43,7 @@ routines := wcscat wcschr wcscmp wcscpy wcscspn wcsdup wcslen wcsncat \
 	    wcsmbsload mbsrtowcs_l \
 	    isoc99_wscanf isoc99_vwscanf isoc99_fwscanf isoc99_vfwscanf \
 	    isoc99_swscanf isoc99_vswscanf \
-	    mbrtoc16 c16rtomb mbrtoc32 c32rtomb
+	    mbrtoc8 c8rtomb mbrtoc16 c16rtomb mbrtoc32 c32rtomb
 
 strop-tests :=  wcscmp wcsncmp wmemcmp wcslen wcschr wcsrchr wcscpy wcsnlen \
 		wcpcpy wcsncpy wcpncpy wcscat wcsncat wcschrnul wcsspn wcspbrk \
@@ -53,6 +53,7 @@ tests := tst-wcstof wcsmbs-tst1 tst-wcsnlen tst-btowc tst-mbrtowc \
 	 tst-c16c32-1 wcsatcliff tst-wcstol-locale tst-wcstod-nan-locale \
 	 tst-wcstod-round test-char-types tst-fgetwc-after-eof \
 	 tst-wcstod-nan-sign tst-c16-surrogate tst-c32-state \
+	 test-mbrtoc8 test-c8rtomb \
 	 $(addprefix test-,$(strop-tests)) tst-mbstowcs \
 	 tst-wprintf-binary
 
@@ -60,7 +61,7 @@ include ../Rules
 
 ifeq ($(run-built-tests),yes)
 LOCALES := de_DE.ISO-8859-1 de_DE.UTF-8 en_US.ANSI_X3.4-1968 hr_HR.ISO-8859-2 \
-	   ja_JP.EUC-JP zh_TW.EUC-TW tr_TR.UTF-8 tr_TR.ISO-8859-9
+	   ja_JP.EUC-JP zh_TW.EUC-TW tr_TR.UTF-8 tr_TR.ISO-8859-9 zh_HK.BIG5-HKSCS
 include ../gen-locales.mk
 
 $(objpfx)tst-btowc.out: $(gen-locales)
@@ -73,6 +74,8 @@ $(objpfx)tst-wcstol-locale.out: $(gen-locales)
 $(objpfx)tst-wcstod-nan-locale.out: $(gen-locales)
 $(objpfx)tst-c16-surrogate.out: $(gen-locales)
 $(objpfx)tst-c32-state.out: $(gen-locales)
+$(objpfx)test-c8rtomb.out: $(gen-locales)
+$(objpfx)test-mbrtoc8.out: $(gen-locales)
 endif
 
 $(objpfx)tst-wcstod-round: $(libm)

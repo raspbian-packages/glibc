@@ -1328,15 +1328,15 @@ nextchunk-> +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    MINSIZE :                                                      \
    ((req) + SIZE_SZ + MALLOC_ALIGN_MASK) & ~MALLOC_ALIGN_MASK)
 
-/* Check if REQ overflows when padded and aligned and if the resulting value
-   is less than PTRDIFF_T.  Returns TRUE and the requested size or MINSIZE in
-   case the value is less than MINSIZE on SZ or false if any of the previous
-   check fail.  */
-static inline bool
-checked_request2size (size_t req, size_t *sz) __nonnull (1)
+/* Check if REQ overflows when padded and aligned and if the resulting
+   value is less than PTRDIFF_T.  Returns the requested size or
+   MINSIZE in case the value is less than MINSIZE, or 0 if any of the
+   previous checks fail.  */
+static inline size_t
+checked_request2size (size_t req) __nonnull (1)
 {
   if (__glibc_unlikely (req > PTRDIFF_MAX))
-    return false;
+    return 0;
 
   /* When using tagged memory, we cannot share the end of the user
      block with the header for the next chunk, so ensure that we
@@ -1354,8 +1354,7 @@ checked_request2size (size_t req, size_t *sz) __nonnull (1)
 	    ~(size_t)(__MTAG_GRANULE_SIZE - 1);
     }
 
-  *sz = request2size (req);
-  return true;
+  return request2size (req);
 }
 
 /*
@@ -3290,8 +3289,8 @@ __libc_malloc (size_t bytes)
     ptmalloc_init ();
 #if USE_TCACHE
   /* int_free also calls request2size, be careful to not pad twice.  */
-  size_t tbytes;
-  if (!checked_request2size (bytes, &tbytes))
+  size_t tbytes = checked_request2size (bytes);
+  if (tbytes == 0)
     {
       __set_errno (ENOMEM);
       return NULL;
@@ -3438,7 +3437,8 @@ __libc_realloc (void *oldmem, size_t bytes)
        || __builtin_expect (misaligned_chunk (oldp), 0)))
       malloc_printerr ("realloc(): invalid pointer");
 
-  if (!checked_request2size (bytes, &nb))
+  nb = checked_request2size (bytes);
+  if (nb == 0)
     {
       __set_errno (ENOMEM);
       return NULL;
@@ -3795,7 +3795,8 @@ _int_malloc (mstate av, size_t bytes)
      aligned.
    */
 
-  if (!checked_request2size (bytes, &nb))
+  nb = checked_request2size (bytes);
+  if (nb == 0)
     {
       __set_errno (ENOMEM);
       return NULL;
@@ -4947,7 +4948,8 @@ _int_memalign (mstate av, size_t alignment, size_t bytes)
 
 
 
-  if (!checked_request2size (bytes, &nb))
+  nb = checked_request2size (bytes);
+  if (nb == 0)
     {
       __set_errno (ENOMEM);
       return NULL;
@@ -5407,8 +5409,7 @@ do_set_tcache_unsorted_limit (size_t value)
 }
 #endif
 
-static inline int
-__always_inline
+static __always_inline int
 do_set_mxfast (size_t value)
 {
   if (value <= MAX_FAST_SIZE)

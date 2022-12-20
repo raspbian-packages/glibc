@@ -211,6 +211,9 @@ test-xfail-tst-readdir64-compat = yes
 
 # https://www.spinics.net/lists/linux-parisc/msg15397.html
 test-xfail-tst-minsigstksz-5 = yes
+
+# See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=106458
+test-xfail-tst-scratch_buffer = yes
 endif
 
 
@@ -376,7 +379,6 @@ test-xfail-tst-nss-compat1 = yes
 test-xfail-test-fesetexcept-traps = yes
 test-xfail-tst-dlinfo-phdr = yes
 test-xfail-tst-tls-allocation-failure-static-patched = yes
-test-xfail-tst-cancel29 = yes
 
 # new in 2.35
 test-xfail-tst-compathooks-on = yes
@@ -385,6 +387,14 @@ test-xfail-tst-malloc-tcache-leak-malloc-hugetlb1 = yes
 test-xfail-tst-malloc-tcache-leak-malloc-hugetlb2 = yes
 test-xfail-tst-p_align3 = yes
 tests-unsupported += tst-spawn6
+
+# new in 2.36
+test-xfail-tst-arc4random-fork = yes
+test-xfail-tst-arc4random-thread = yes
+test-xfail-tst-nss-gai-actions = yes
+
+# new in 2.37
+test-xfail-tst-arc4random-stats = yes
 
 # actually never succeded
 test-xfail-tst-create_format1 = yes

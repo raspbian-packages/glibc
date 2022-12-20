@@ -305,9 +305,6 @@ search_cache (const char *string_table, uint32_t string_table_size,
 
 		      if ((libnew->hwcap & hwcap_exclude) && !named_hwcap)
 			continue;
-		      if (GLRO (dl_osversion)
-			  && libnew->osversion > GLRO (dl_osversion))
-			continue;
 		      if (disable_hwcap && libnew->hwcap != 0)
 			continue;
 		      if (_DL_PLATFORMS_COUNT
@@ -522,8 +519,9 @@ _dl_load_cache_lookup (const char *name)
      we are accessing. Therefore we must make the copy of the
      mapping data without using malloc.  */
   char *temp;
-  temp = alloca (strlen (best) + 1);
-  strcpy (temp, best);
+  size_t best_len = strlen (best) + 1;
+  temp = alloca (best_len);
+  memcpy (temp, best, best_len);
   return __strdup (temp);
 }
 

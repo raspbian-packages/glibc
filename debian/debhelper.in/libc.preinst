@@ -279,6 +279,25 @@ then
     touch "$DPKG_ROOT/etc/ld.so.nohwcap"
 fi
 
+# We create the top-level lib symlink on merged-usr systems, so that we can
+# cover cases where for example libc6:amd64 on i386 is installed and then removed
+# (which deletes the symlink too). Note that we only suppor the simplest case,
+# no conversion (moving files) is done here, as that's the job of the usrmerge
+# package. See: https://bugs.debian.org/926699
+# Once all packages install only under /usr, this can be removed, as removing
+# this package will no longer result in the symlink being deleted.
+if [ "$1" = "install" ] || [ "$1" = "upgrade" ]; then
+    if [ -L "$DPKG_ROOT/lib" ]; then
+        # Has the link already been created?
+        # If it has not, is a directory already there? Half-merged systems are
+        # the problem of usrmerge, simply ignore them here.
+        if [ ! -L "${DPKG_ROOT}RTLDDIR" ] && [ ! -d "${DPKG_ROOT}RTLDDIR" ]; then
+            mkdir -p "$DPKG_ROOT/usrRTLDDIR"
+            ln -s usrRTLDDIR "${DPKG_ROOT}RTLDDIR"
+        fi
+    fi
+fi
+
 #DEBHELPER#
 
 if [ -n "$preversion" ]; then

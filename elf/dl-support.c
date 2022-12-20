@@ -35,7 +35,6 @@
 #include <dl-machine.h>
 #include <libc-lock.h>
 #include <dl-cache.h>
-#include <dl-librecon.h>
 #include <dl-procinfo.h>
 #include <unsecvars.h>
 #include <hp-timing.h>
@@ -55,7 +54,6 @@ size_t _dl_platformlen;
 
 int _dl_debug_mask;
 int _dl_lazy;
-ElfW(Addr) _dl_use_load_bias = -2;
 int _dl_dynamic_weak;
 
 /* If nonzero print warnings about problematic situations.  */
@@ -146,8 +144,6 @@ size_t _dl_minsigstacksize = CONSTANT_MINSIGSTKSZ;
 
 int _dl_inhibit_cache;
 
-unsigned int _dl_osversion;
-
 /* All known directories in sorted order.  */
 struct r_search_path_elem *_dl_all_dirs;
 
@@ -159,8 +155,6 @@ struct link_map *_dl_initfirst;
 
 /* Descriptor to write debug messages to.  */
 int _dl_debug_fd = STDERR_FILENO;
-
-int _dl_correct_cache_id = _DL_CACHE_DEFAULT_ID;
 
 ElfW(auxv_t) *_dl_auxv;
 const ElfW(Phdr) *_dl_phdr;
@@ -306,9 +300,6 @@ _dl_non_dynamic_init (void)
     {
       static const char unsecure_envvars[] =
 	UNSECURE_ENVVARS
-#ifdef EXTRA_UNSECURE_ENVVARS
-	EXTRA_UNSECURE_ENVVARS
-#endif
 	;
       const char *cp = unsecure_envvars;
 
@@ -326,10 +317,6 @@ _dl_non_dynamic_init (void)
 
 #ifdef DL_PLATFORM_INIT
   DL_PLATFORM_INIT;
-#endif
-
-#ifdef DL_OSVERSION_INIT
-  DL_OSVERSION_INIT;
 #endif
 
   /* Now determine the length of the platform string.  */

@@ -96,7 +96,7 @@ libc_so=$(shell awk 'BEGIN {FS="="} /^libc\.so-version/ {print "libc.so"$$2}' $(
 BASE_CC = gcc
 BASE_CXX = g++
 BASE_MIG = mig
-DEB_GCC_VERSION ?= -11
+DEB_GCC_VERSION ?= -12
 
 RUN_TESTSUITE = no
 TIMEOUTFACTOR = 25

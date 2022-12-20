@@ -24,6 +24,7 @@
 # undef __wcsnlen
 
 # define SYMBOL_NAME wcsnlen
+# define GENERIC generic
 # include "ifunc-wcslen.h"
 
 libc_ifunc_redirected (__redirect_wcsnlen, __wcsnlen, IFUNC_SELECTOR ());

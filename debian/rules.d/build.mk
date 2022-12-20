@@ -256,6 +256,10 @@ ifeq ($(DEB_HOST_ARCH_OS),linux)
 	# source software.
 	ar crv $(CURDIR)/$(debian-tmp)/$(call xx,libdir)/libpthread_nonshared.a
 endif
+
+	# Newly added upstream architectures do not get an empty libanl.a
+	# installed, ensure there is always one to avoid porting issues.
+	ar crv $(CURDIR)/$(debian-tmp)/$(call xx,libdir)/libanl.a
 endif
 
 	# Create the multiarch directories, and the configuration file in /etc/ld.so.conf.d
@@ -326,6 +330,9 @@ ifeq ($(pt_chown),yes)
 	  chmod 4755 $(CURDIR)/$(debian-tmp)/usr/lib/pt_chown ; \
 	fi
 endif
+
+	# Create /var/cache/ldconfig
+	install -m 700 -d $(CURDIR)/$(debian-tmp)/var/cache/ldconfig
 
 	touch $@
 

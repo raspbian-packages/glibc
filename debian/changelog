@@ -1,4 +1,4 @@
-glibc (2.35-2+rpi1) bookworm-staging; urgency=medium
+glibc (2.36-6+rpi1) bookworm-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -6,7 +6,139 @@ glibc (2.35-2+rpi1) bookworm-staging; urgency=medium
   [changes brought forward from 2.35-1+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Sun, 02 Oct 2022 17:46:25 +0000]
   * Remove valgrind breaks.
 
- -- Peter Michael Green <plugwash@raspbian.org>  Tue, 11 Oct 2022 17:24:59 +0000
+ -- Peter Michael Green <plugwash@raspbian.org>  Tue, 20 Dec 2022 13:06:19 +0000
+
+glibc (2.36-6) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/debhelper.in/libc-udeb.install: stop installing (now empty)
+    libutil.so.1, it is not used by any of the udeb in testing/sid.
+  * debian/rules.d/build.mk: ensure that an empty libanl.a is shipped even on
+    newly added upstream architectures.
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+  
+  [ Dandan Zhang ]
+  * debian/sysdeps/loong64.mk: add support for loong64 architecture.  Closes:
+    #1024130.
+
+  [ Helmut Grohne ]
+  * Declare packages skipped by noudeb build profile.  Closes: #1024940.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Mon, 28 Nov 2022 22:26:50 +0100
+
+glibc (2.36-5) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/git-sigtimedwait.diff: Add support for
+    sigtimedwait and sigwaitinfo.
+  * debian/testsuite-xfail-debian.mk: Update accordingly.
+
+  [ Aurelien Jarno ]
+  * debian/sysdeps/sh{3,4}.mk: build with --disable-default-pie.  Closes:
+    #1023554.
+  * debian/control.in/main: bump binutils build-depends to 2.38.
+  * debian/control.in/libc: add a Breaks against binutils (<< 2.38).  Closes:
+    #1023661.
+  * debian/control.in/libc: add a Breaks against check (<< 0.15.2-2+b1) on
+    s390x.  Addresses: #1023531.
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sat, 12 Nov 2022 14:23:05 +0100
+
+glibc (2.36-4) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix y2038 support in fstatat on mips64el.  Closes: #1022991.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Wed, 02 Nov 2022 19:43:41 +0100
+
+glibc (2.36-3) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * Upload to unstable.
+  * debian/testsuite-xfail-debian.mk: XFAIL malloc/tst-scratch_buffer on hppa.
+    Closes: #1022771.
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Tue, 01 Nov 2022 12:41:15 +0100
+
+glibc (2.36-2) experimental; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+  * debian/control.in/main, debian/rules.d/control.mk, debian/rules: build
+    with GCC 12.
+  * debian/sysdeps/{amd64,i386,x32}.mk: explicitly pass -Wl,--hash-style=both
+    to the compiler to workaround the debian toolchain that deviates from the
+    Generic System V Application Binary and breaks the Easy Anti-Cheat system.
+    Addresses: #1019535.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Tue, 25 Oct 2022 07:27:10 +0200
+
+glibc (2.36-1) experimental; urgency=medium
+
+  [ Aurelien Jarno ]
+  * New upstream release:
+    - Support for DT_RELR relative relocation format has been added.  Closes:
+      #996598.
+    - The Linux kernel version check has been removed.  Closes: #781715, #1004577.
+    - debian/symbols.wildcard: add 2.36 and GLIBC_ABI_DT_RELR.
+    - debian/patches/localedata/sort-UTF8-first.diff: rebased.
+    - debian/patches/localedata/supported.diff: rebased.
+    - debian/patches/arm/unsubmitted-ldso-multilib.diff: rebased.
+    - debian/patches/hurd-i386/git-spawni-reauth.diff: upstreamed.
+    - debian/patches/hurd-i386/pthread_key.diff: upstreamed.
+    - debian/patches/kfreebsd/submitted-waitid.diff: dropped. kfreebsd
+      specific changes moved to debian/patches/kfreebsd/local-sysdeps.diff.
+    - debian/patches/kfreebsd/local-config_h_in.patch: rebased.
+    - debian/patches/kfreebsd/local-getaddrinfo-freebsd-kernel.diff: rebased.
+    - debian/patches/all/local-remove-manual.diff: rebased.
+    - debian/patches/any/local-ldso-disable-hwcap.diff: rebased.
+    - debian/patches/any/unsubmitted-ldso-machine-mismatch.diff: rebased.
+    - debian/patches/any/submitted-resolv-unaligned.diff: upstreamed.
+    - debian/patches/hurd-i386/local-fix-nss.diff: rebased.
+    - debian/patches/hurd-i386/local-no-bootstrap-fs-access.2.diff: rebased.
+
+  [ Samuel Thibault ]
+  * debian/testsuite-xfail-debian.mk: Update tests results for hurd-i386.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Thu, 22 Sep 2022 22:23:11 +0200
+
+glibc (2.35-4) unstable; urgency=medium
+
+  [ Luca Boccassi ]
+  * debian/debhelper.in/libc.preinst: libc6: create merged-usr symlinks via
+    preinst script.
+
+  [ Aurelien Jarno ]
+  * debhelper.in/libc-bin.install, debhelper.in/libc-bin.lintian-overrides,
+    rules.d/build.mk, rules.d/debhelper.mk: install a /var/cache/ldconfig into
+    the libc-bin package.  Closes: #1021577.
+  * debian/debhelper.in/libc-bin.lintian-overrides: add an override for the
+    ld.so manpage, provided by the manpages package.
+
+  [ Samuel Thibault ]
+  * debian/control.in/libc: Break gnumach versions which don't have the FPU
+    context switch fix, to try to improve upgrading from 2021.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Tue, 25 Oct 2022 07:23:17 +0200
+
+glibc (2.35-3) unstable; urgency=medium
+
+  * debian/patches/arm/git-atomic-compiler-builtins.diff: backport an
+    upstream patch switching the arm32 atomics to GCC atomic builtins.
+    This fixes the flaky nptl/tst-rwlock9.  Partially addresses:
+    #1020500.
+  * debian/control.in/libc: add back the Breaks: on heimdal-multidev
+    (<= 7.7.0+dfsg-4) to libc6-dev, now that the glibc 2.34 transition
+    is finished and that the package has transitioned to testing. It has
+    been temporarily removed in version 2.34-2.
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - nscd: do not use stale values when a request needs to be resent.
+      Closes: #1020943, #1021455.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 09 Oct 2022 10:54:21 +0200
 
 glibc (2.35-2) unstable; urgency=medium
 

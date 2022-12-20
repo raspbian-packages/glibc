@@ -16,11 +16,10 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#if IS_IN (libc)
-# define __strchrnul __strchrnul_sse2
-
-# undef weak_alias
-# define weak_alias(__strchrnul, strchrnul)
+#ifndef STRCHRNUL
+# define STRCHRNUL	__strchrnul_sse2
 #endif
+#define AS_STRCHRNUL
+#define STRCHR	STRCHRNUL
 
-#include "../strchrnul.S"
+#include "strchr-sse2.S"

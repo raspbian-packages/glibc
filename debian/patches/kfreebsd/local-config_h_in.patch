@@ -8,9 +8,9 @@
 
 --- a/config.h.in
 +++ b/config.h.in
-@@ -159,6 +159,9 @@
- /* Linux specific: minimum supported kernel version.  */
- #undef	__LINUX_KERNEL_VERSION
+@@ -144,6 +144,9 @@
+ /* Linux specific: __LINUX_KERNEL_VERSION as a string.  */
+ #undef  __LINUX_KERNEL_VERSION_STR
  
 +/* kFreeBSD specific: minimum supported kernel version.  */
 +#undef	__KFREEBSD_KERNEL_VERSION

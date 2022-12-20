@@ -52,7 +52,8 @@ endif
 
 	dh_compress -p$(curpass)
 	# Keep the setuid on pt_chown (non-Linux only).
-	dh_fixperms -p$(curpass) -Xpt_chown
+	# Keep the 0700 permissions of /var/cache/ldconfig
+	dh_fixperms -p$(curpass) -Xpt_chown -Xvar/cache/ldconfig
 	# libc.so prints useful version information when executed.
 	find debian/$(curpass) -type f -regex '.*/libc\.so\.[0-9.]+' -exec chmod a+x '{}' ';'
 	# Use this instead of -X to dh_fixperms so that we can use

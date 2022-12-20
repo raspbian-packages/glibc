@@ -767,7 +767,7 @@ if test x"$libc_cv_gcc_indirect_function" != xyes; then
   # GCC 8+ emits a warning for alias with incompatible types and it might
   # fail to build ifunc resolvers aliases to either weak or internal
   # symbols.  Disables multiarch build in this case.
-  if test x"$libc_cv_gcc_incompatible_alias" == xyes; then
+  if test x"$libc_cv_gcc_incompatible_alias" = xyes; then
     AC_MSG_WARN([gcc emits a warning for alias between functions of incompatible types])
     if test x"$multi_arch" = xyes; then
       AC_MSG_ERROR([--enable-multi-arch support requires a gcc with gnu-indirect-function support])
@@ -1326,37 +1326,6 @@ if test $libc_cv_as_noexecstack = yes; then
 fi
 AC_SUBST(ASFLAGS_config)
 
-AC_CACHE_CHECK(for -z combreloc,
-	       libc_cv_z_combreloc, [dnl
-cat > conftest.c <<EOF
-extern int bar (int);
-extern int mumble;
-int foo (void) { return bar (mumble); }
-EOF
-if AC_TRY_COMMAND([${CC-cc} $CFLAGS $CPPFLAGS $LDFLAGS
-			-fPIC -shared $no_ssp -o conftest.so conftest.c
-			-nostdlib -nostartfiles
-			-Wl,-z,combreloc 1>&AS_MESSAGE_LOG_FD])
-then
-dnl The following test is a bit weak.  We must use a tool which can test
-dnl cross-platform since the gcc used can be a cross compiler.  Without
-dnl introducing new options this is not easily doable.  Instead use a tool
-dnl which always is cross-platform: readelf.  To detect whether -z combreloc
-dnl look for a section named .rel.dyn or .rela.dyn.
-  if $READELF -S conftest.so | grep -E '.rela?.dyn' > /dev/null; then
-    libc_cv_z_combreloc=yes
-  else
-    libc_cv_z_combreloc=no
-  fi
-else
-  libc_cv_z_combreloc=no
-fi
-rm -f conftest*])
-if test "$libc_cv_z_combreloc" = yes; then
-  AC_DEFINE(HAVE_Z_COMBRELOC)
-fi
-AC_SUBST(libc_cv_z_combreloc)
-
 LIBC_LINKER_FEATURE([-z execstack], [-Wl,-z,execstack],
 		    [libc_cv_z_execstack=yes], [libc_cv_z_execstack=no])
 AC_SUBST(libc_cv_z_execstack)
@@ -1368,6 +1337,11 @@ LIBC_CONFIG_VAR([have-z-start-stop-gc], [$libc_cv_z_start_stop_gc])
 LIBC_LINKER_FEATURE([--depaudit], [-Wl,--depaudit,x],
 		    [libc_cv_depaudit=yes], [libc_cv_depaudit=no])
 LIBC_CONFIG_VAR([have-depaudit], [$libc_cv_depaudit])
+
+LIBC_LINKER_FEATURE([-z pack-relative-relocs],
+		    [-Wl,-z,pack-relative-relocs],
+		    [libc_cv_dt_relr=yes], [libc_cv_dt_relr=no])
+LIBC_CONFIG_VAR([have-dt-relr], [$libc_cv_dt_relr])
 
 LIBC_LINKER_FEATURE([--no-dynamic-linker],
 		    [-Wl,--no-dynamic-linker],
@@ -1387,22 +1361,6 @@ LIBC_TRY_CC_OPTION([-fpie], [libc_cv_fpie=yes], [libc_cv_fpie=no])
 ])
 
 AC_SUBST(libc_cv_fpie)
-
-AC_CACHE_CHECK(for --hash-style option,
-	       libc_cv_hashstyle, [dnl
-cat > conftest.c <<EOF
-int _start (void) { return 42; }
-EOF
-if AC_TRY_COMMAND([${CC-cc} $CFLAGS $CPPFLAGS $LDFLAGS $no_ssp
-			    -fPIC -shared -o conftest.so conftest.c
-			    -Wl,--hash-style=both -nostdlib 1>&AS_MESSAGE_LOG_FD])
-then
-  libc_cv_hashstyle=yes
-else
-  libc_cv_hashstyle=no
-fi
-rm -f conftest*])
-AC_SUBST(libc_cv_hashstyle)
 
 AC_CACHE_CHECK(for GLOB_DAT reloc,
 	       libc_cv_has_glob_dat, [dnl
@@ -1426,25 +1384,6 @@ else
 fi
 rm -f conftest*])
 AC_SUBST(libc_cv_has_glob_dat)
-
-AC_CACHE_CHECK(for -fno-toplevel-reorder -fno-section-anchors, libc_cv_fno_toplevel_reorder, [dnl
-cat > conftest.c <<EOF
-int foo;
-EOF
-if AC_TRY_COMMAND([${CC-cc} $CFLAGS $CPPFLAGS -S -fno-toplevel-reorder -fno-section-anchors
-			    conftest.c 1>&AS_MESSAGE_LOG_FD])
-then
-  libc_cv_fno_toplevel_reorder=yes
-else
-  libc_cv_fno_toplevel_reorder=no
-fi
-rm -f conftest*])
-if test $libc_cv_fno_toplevel_reorder = yes; then
-  fno_unit_at_a_time="-fno-toplevel-reorder -fno-section-anchors"
-else
-  fno_unit_at_a_time=-fno-unit-at-a-time
-fi
-AC_SUBST(fno_unit_at_a_time)
 
 AC_CACHE_CHECK([for -mtls-dialect=gnu2], libc_cv_mtls_dialect_gnu2,
 [dnl

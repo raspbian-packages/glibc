@@ -73,9 +73,9 @@
  
    while (left <= right)
      {
-@@ -300,6 +308,8 @@
- 		      if (GLRO (dl_osversion)
- 			  && libnew->osversion > GLRO (dl_osversion))
+@@ -297,6 +305,8 @@
+ 
+ 		      if ((libnew->hwcap & hwcap_exclude) && !named_hwcap)
  			continue;
 +		      if (disable_hwcap && libnew->hwcap != 0)
 +			continue;

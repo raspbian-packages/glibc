@@ -10,13 +10,10 @@ sysdep_routines += \
   memcmp-avx2-movbe-rtm \
   memcmp-evex-movbe \
   memcmp-sse2 \
-  memcmp-ssse3 \
   memcmpeq-avx2 \
   memcmpeq-avx2-rtm \
   memcmpeq-evex \
   memcmpeq-sse2 \
-  memcpy-ssse3 \
-  memcpy-ssse3-back \
   memmove-avx-unaligned-erms \
   memmove-avx-unaligned-erms-rtm \
   memmove-avx512-no-vzeroupper \
@@ -25,7 +22,6 @@ sysdep_routines += \
   memmove-evex-unaligned-erms \
   memmove-sse2-unaligned-erms \
   memmove-ssse3 \
-  memmove-ssse3-back \
   memrchr-avx2 \
   memrchr-avx2-rtm \
   memrchr-evex \
@@ -47,25 +43,20 @@ sysdep_routines += \
   stpcpy-evex \
   stpcpy-sse2 \
   stpcpy-sse2-unaligned \
-  stpcpy-ssse3 \
   stpncpy-avx2 \
   stpncpy-avx2-rtm \
-  stpncpy-c \
   stpncpy-evex \
   stpncpy-sse2-unaligned \
-  stpncpy-ssse3 \
   strcasecmp_l-avx2 \
   strcasecmp_l-avx2-rtm \
   strcasecmp_l-evex \
   strcasecmp_l-sse2 \
   strcasecmp_l-sse4_2 \
-  strcasecmp_l-ssse3 \
   strcat-avx2 \
   strcat-avx2-rtm \
   strcat-evex \
   strcat-sse2 \
   strcat-sse2-unaligned \
-  strcat-ssse3 \
   strchr-avx2 \
   strchr-avx2-rtm \
   strchr-evex \
@@ -81,15 +72,12 @@ sysdep_routines += \
   strcmp-sse2 \
   strcmp-sse2-unaligned \
   strcmp-sse4_2 \
-  strcmp-ssse3 \
   strcpy-avx2 \
   strcpy-avx2-rtm \
   strcpy-evex \
   strcpy-sse2 \
   strcpy-sse2-unaligned \
-  strcpy-ssse3 \
-  strcspn-c \
-  strcspn-sse2 \
+  strcspn-sse4 \
   strlen-avx2 \
   strlen-avx2-rtm \
   strlen-evex \
@@ -100,46 +88,39 @@ sysdep_routines += \
   strncase_l-evex \
   strncase_l-sse2 \
   strncase_l-sse4_2 \
-  strncase_l-ssse3 \
   strncat-avx2 \
   strncat-avx2-rtm \
-  strncat-c \
   strncat-evex \
   strncat-sse2-unaligned \
-  strncat-ssse3 \
   strncmp-avx2 \
   strncmp-avx2-rtm \
   strncmp-evex \
   strncmp-sse2 \
   strncmp-sse4_2 \
-  strncmp-ssse3 \
   strncpy-avx2 \
   strncpy-avx2-rtm \
-  strncpy-c \
   strncpy-evex \
   strncpy-sse2-unaligned \
-  strncpy-ssse3 \
   strnlen-avx2 \
   strnlen-avx2-rtm \
   strnlen-evex \
   strnlen-evex512 \
   strnlen-sse2 \
-  strpbrk-c \
-  strpbrk-sse2 \
+  strpbrk-sse4 \
   strrchr-avx2 \
   strrchr-avx2-rtm \
   strrchr-evex \
   strrchr-sse2 \
-  strspn-c \
-  strspn-sse2 \
+  strspn-sse4 \
   strstr-avx512 \
   strstr-sse2-unaligned \
   varshift \
 # sysdep_routines
-CFLAGS-varshift.c += -msse4
-CFLAGS-strcspn-c.c += -msse4
-CFLAGS-strpbrk-c.c += -msse4
-CFLAGS-strspn-c.c += -msse4
+
+CFLAGS-strcspn-sse4.c += -msse4
+CFLAGS-strpbrk-sse4.c += -msse4
+CFLAGS-strspn-sse4.c += -msse4
+
 CFLAGS-strstr-avx512.c += -mavx512f -mavx512vl -mavx512dq -mavx512bw -mbmi -mbmi2 -O3
 endif
 
@@ -153,7 +134,6 @@ sysdep_routines += \
   wcscmp-avx2-rtm \
   wcscmp-evex \
   wcscmp-sse2 \
-  wcscpy-c \
   wcscpy-ssse3 \
   wcslen-avx2 \
   wcslen-avx2-rtm \
@@ -164,10 +144,8 @@ sysdep_routines += \
   wcsncmp-avx2 \
   wcsncmp-avx2-rtm \
   wcsncmp-evex \
-  wcsncmp-sse2 \
   wcsnlen-avx2 \
   wcsnlen-avx2-rtm \
-  wcsnlen-c \
   wcsnlen-evex \
   wcsnlen-evex512 \
   wcsnlen-sse4_1 \
@@ -184,7 +162,6 @@ sysdep_routines += \
   wmemcmp-avx2-movbe-rtm \
   wmemcmp-evex-movbe \
   wmemcmp-sse2 \
-  wmemcmp-ssse3 \
 # sysdep_routines
 endif
 

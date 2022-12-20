@@ -126,6 +126,13 @@ static enum nss_status gaih_getanswer (unsigned char *packet1,
 				       struct gaih_addrtuple **pat,
 				       int *errnop, int *h_errnop,
 				       int32_t *ttlp);
+static enum nss_status gaih_getanswer_noaaaa (unsigned char *packet,
+					      size_t packetlen,
+					      struct alloc_buffer *abuf,
+					      struct gaih_addrtuple **pat,
+					      int *errnop, int *h_errnop,
+					      int32_t *ttlp);
+
 
 static enum nss_status gethostbyname3_context (struct resolv_context *ctx,
 					       const char *name, int af,
@@ -402,17 +409,30 @@ _nss_dns_gethostbyname4_r (const char *name, struct gaih_addrtuple **pat,
   int ans2p_malloced = 0;
   struct alloc_buffer abuf = alloc_buffer_create (buffer, buflen);
 
+
   int olderr = errno;
-  int n = __res_context_search (ctx, name, C_IN, T_QUERY_A_AND_AAAA,
+  int n;
+
+  if ((ctx->resp->options & RES_NOAAAA) == 0)
+    {
+      n = __res_context_search (ctx, name, C_IN, T_QUERY_A_AND_AAAA,
 				dns_packet_buffer, sizeof (dns_packet_buffer),
 				&alt_dns_packet_buffer, &ans2p, &nans2p,
 				&resplen2, &ans2p_malloced);
-  if (n >= 0)
-    {
-      status = gaih_getanswer (alt_dns_packet_buffer, n, ans2p, resplen2,
-			       &abuf, pat, errnop, herrnop, ttlp);
+      if (n >= 0)
+	status = gaih_getanswer (alt_dns_packet_buffer, n, ans2p, resplen2,
+				 &abuf, pat, errnop, herrnop, ttlp);
     }
   else
+    {
+      n = __res_context_search (ctx, name, C_IN, T_A,
+				dns_packet_buffer, sizeof (dns_packet_buffer),
+				NULL, NULL, NULL, NULL, NULL);
+      if (n >= 0)
+	status = gaih_getanswer_noaaaa (alt_dns_packet_buffer, n,
+					&abuf, pat, errnop, herrnop, ttlp);
+    }
+  if (n < 0)
     {
       switch (errno)
 	{
@@ -1134,5 +1154,18 @@ gaih_getanswer (unsigned char *packet1, size_t packet1len,
 	status = status2;
     }
 
+  return status;
+}
+
+/* Variant of gaih_getanswer without a second (AAAA) response.  */
+static enum nss_status
+gaih_getanswer_noaaaa (unsigned char *packet, size_t packetlen,
+		       struct alloc_buffer *abuf, struct gaih_addrtuple **pat,
+		       int *errnop, int *h_errnop, int32_t *ttlp)
+{
+  enum nss_status status = NSS_STATUS_NOTFOUND;
+  if (packetlen > 0)
+    status = gaih_getanswer_slice (packet, packetlen,
+				   abuf, &pat, errnop, h_errnop, ttlp, true);
   return status;
 }

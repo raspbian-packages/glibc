@@ -4813,6 +4813,48 @@
 +
 +#endif	/* bits/time.h */
 --- /dev/null
++++ b/sysdeps/unix/bsd/bsd4.4/kfreebsd/bits/types/idtype_t.h
+@@ -0,0 +1,39 @@
++#ifndef __idtype_t_defined
++#define __idtype_t_defined
++
++/* The following values are used by the `waitid' function.  */
++typedef enum
++{
++        /*
++         * These names were mostly lifted from Solaris source code and
++         * still use Solaris style naming to avoid breaking any
++         * OpenSolaris code which has been ported to FreeBSD.  There
++         * is no clear FreeBSD counterpart for all of the names, but
++         * some have a clear correspondence to FreeBSD entities.
++         *
++         * The numerical values are kept synchronized with the Solaris
++         * values.
++         */
++        P_PID,                  /* A process identifier. */
++        P_PPID,                 /* A parent process identifier. */
++        P_PGID,                 /* A process group identifier. */
++        P_SID,                  /* A session identifier. */
++        P_CID,                  /* A scheduling class identifier. */
++        P_UID,                  /* A user identifier. */
++        P_GID,                  /* A group identifier. */
++        P_ALL,                  /* All processes. */
++        P_LWPID,                /* An LWP identifier. */
++        P_TASKID,               /* A task identifier. */
++        P_PROJID,               /* A project identifier. */
++        P_POOLID,               /* A pool identifier. */
++        P_JAILID,               /* A zone identifier. */
++        P_CTID,                 /* A (process) contract identifier. */
++        P_CPUID,                /* CPU identifier. */
++        P_PSETID                /* Processor set identifier. */
++} idtype_t;                     /* The type of id_t we are using. */
++
++# if defined __USE_MISC
++#  define P_ZONEID        P_JAILID
++# endif
++
++#endif
+--- /dev/null
 +++ b/sysdeps/unix/bsd/bsd4.4/kfreebsd/bits/typesizes.h
 @@ -0,0 +1,91 @@
 +/* bits/typesizes.h -- underlying types for *_t.  kFreeBSD version.
@@ -5000,7 +5042,7 @@
 +#define _UTSNAME_DOMAIN_LENGTH  0
 --- /dev/null
 +++ b/sysdeps/unix/bsd/bsd4.4/kfreebsd/bits/waitflags.h
-@@ -0,0 +1,82 @@
+@@ -0,0 +1,40 @@
 +/* Definitions of flag bits for `waitpid' et al.
 +   Copyright (C) 1992, 1996-1997, 2000, 2002 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
@@ -5040,48 +5082,6 @@
 +#define __WCLONE	0x80000000	/* Wait for cloned process.  */
 +#ifdef __USE_MISC
 +# define WLINUXCLONE	__WCLONE	/* FreeBSD name for __WCLONE.  */
-+#endif
-+
-+
-+/* The following values are used by the `waitid' function.  */
-+#if defined __USE_MISC || defined __USE_XOPEN || defined __USE_XOPEN2K8
-+# ifndef __ENUM_IDTYPE_T
-+# define __ENUM_IDTYPE_T 1
-+
-+typedef enum
-+{
-+        /*
-+         * These names were mostly lifted from Solaris source code and
-+         * still use Solaris style naming to avoid breaking any
-+         * OpenSolaris code which has been ported to FreeBSD.  There
-+         * is no clear FreeBSD counterpart for all of the names, but
-+         * some have a clear correspondence to FreeBSD entities.
-+         *
-+         * The numerical values are kept synchronized with the Solaris
-+         * values.
-+         */
-+        P_PID,                  /* A process identifier. */
-+        P_PPID,                 /* A parent process identifier. */
-+        P_PGID,                 /* A process group identifier. */
-+        P_SID,                  /* A session identifier. */
-+        P_CID,                  /* A scheduling class identifier. */
-+        P_UID,                  /* A user identifier. */
-+        P_GID,                  /* A group identifier. */
-+        P_ALL,                  /* All processes. */
-+        P_LWPID,                /* An LWP identifier. */
-+        P_TASKID,               /* A task identifier. */
-+        P_PROJID,               /* A project identifier. */
-+        P_POOLID,               /* A pool identifier. */
-+        P_JAILID,               /* A zone identifier. */
-+        P_CTID,                 /* A (process) contract identifier. */
-+        P_CPUID,                /* CPU identifier. */
-+        P_PSETID                /* Processor set identifier. */
-+} idtype_t;                     /* The type of id_t we are using. */
-+
-+#  if defined __USE_MISC
-+#  define P_ZONEID        P_JAILID
-+#  endif
-+# endif
 +#endif
 --- /dev/null
 +++ b/sysdeps/unix/bsd/bsd4.4/kfreebsd/bits/waitstatus.h

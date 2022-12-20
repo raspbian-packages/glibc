@@ -22,11 +22,10 @@
 void
 _nl_cleanup_time (struct __locale_data *locale)
 {
-  struct lc_time_data *const data = locale->private.time;
+  struct lc_time_data *const data = locale->private;
   if (data != NULL)
     {
-      locale->private.time = NULL;
-      locale->private.cleanup = NULL;
+      locale->private = NULL;
 
       free (data->eras);
       free (data->alt_digits);

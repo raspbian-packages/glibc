@@ -97,6 +97,7 @@ test-input := \
 	os_RU.UTF-8 \
 	pl_PL.UTF-8 \
 	ps_AF.UTF-8 \
+	rif_MA.UTF-8 \
 	ro_RO.UTF-8 \
 	ru_RU.UTF-8 \
 	sah_RU.UTF-8 \
@@ -107,6 +108,7 @@ test-input := \
 	sr_RS.UTF-8 \
 	sv_SE.ISO-8859-1 \
 	sv_SE.UTF-8 \
+	syr.UTF-8 \
 	szl_PL.UTF-8 \
 	tg_TJ.UTF-8 \
 	tk_TM.UTF-8 \
@@ -287,6 +289,7 @@ LOCALES := \
 	os_RU.UTF-8 \
 	pl_PL.UTF-8 \
 	ps_AF.UTF-8 \
+	rif_MA.UTF-8 \
 	ro_RO.UTF-8 \
 	ru_RU.UTF-8 \
 	sah_RU.UTF-8 \
@@ -297,6 +300,7 @@ LOCALES := \
 	sr_RS.UTF-8 \
 	sv_SE.ISO-8859-1 \
 	sv_SE.UTF-8 \
+	syr.UTF-8 \
 	szl_PL.UTF-8 \
 	tg_TJ.UTF-8 \
 	tk_TM.UTF-8 \

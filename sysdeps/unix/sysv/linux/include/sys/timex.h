@@ -23,7 +23,7 @@
 
 # ifndef _ISOMAC
 
-extern int __adjtimex (struct timex *__ntx);
+extern int __adjtimex (struct timex *__ntx) __nonnull ((1));
 libc_hidden_proto (__adjtimex)
 
 #  include <time.h>
@@ -77,9 +77,9 @@ struct __timex64
   int  :32;
   int  :32;
 };
-extern int __clock_adjtime64 (const clockid_t clock_id, struct __timex64 *tx64);
+extern int __clock_adjtime64 (const clockid_t clock_id, struct __timex64 *tx64) __nonnull((2));
 libc_hidden_proto (__clock_adjtime64);
-extern int ___adjtimex64 (struct __timex64 *tx64);
+extern int ___adjtimex64 (struct __timex64 *tx64) __nonnull ((1));
 libc_hidden_proto (___adjtimex64)
 
 struct __ntptimeval64
@@ -94,9 +94,9 @@ struct __ntptimeval64
   long int __glibc_reserved3;
   long int __glibc_reserved4;
 };
-extern int __ntp_gettime64 (struct __ntptimeval64 *ntv);
+extern int __ntp_gettime64 (struct __ntptimeval64 *ntv) __nonnull ((1));
 libc_hidden_proto (__ntp_gettime64)
-extern int __ntp_gettimex64 (struct __ntptimeval64 *ntv);
+extern int __ntp_gettimex64 (struct __ntptimeval64 *ntv) __nonnull ((1));
 libc_hidden_proto (__ntp_gettimex64)
 
 #  endif

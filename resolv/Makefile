@@ -55,6 +55,7 @@ routines := \
   nss_dns_functions \
   res-close \
   res-name-checking \
+  res-noaaaa \
   res-state \
   res_context_hostalias \
   res_enable_icmp \
@@ -99,6 +100,7 @@ tests += \
   tst-resolv-edns \
   tst-resolv-invalid-cname \
   tst-resolv-network \
+  tst-resolv-noaaaa \
   tst-resolv-nondecimal \
   tst-resolv-res_init-multi \
   tst-resolv-search \
@@ -288,6 +290,7 @@ $(objpfx)tst-resolv-res_init-thread: $(objpfx)libresolv.so \
   $(shared-thread-library)
 $(objpfx)tst-resolv-invalid-cname: $(objpfx)libresolv.so \
   $(shared-thread-library)
+$(objpfx)tst-resolv-noaaaa: $(objpfx)libresolv.so $(shared-thread-library)
 $(objpfx)tst-resolv-nondecimal: $(objpfx)libresolv.so $(shared-thread-library)
 $(objpfx)tst-resolv-qtypes: $(objpfx)libresolv.so $(shared-thread-library)
 $(objpfx)tst-resolv-rotate: $(objpfx)libresolv.so $(shared-thread-library)

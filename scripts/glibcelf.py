@@ -252,7 +252,8 @@ class Machine(_OpenIntEnum):
     EM_RISCV = 243
     EM_BPF = 247
     EM_CSKY = 252
-    EM_NUM = 253
+    EM_LOONGARCH = 258
+    EM_NUM = 259
     EM_ALPHA = 0x9026
 
 class Et(_OpenIntEnum):
@@ -304,6 +305,7 @@ class Sht(_OpenIntEnum):
     SHT_PREINIT_ARRAY = 16
     SHT_GROUP = 17
     SHT_SYMTAB_SHNDX = 18
+    SHT_RELR = 19
     SHT_GNU_ATTRIBUTES = 0x6ffffff5
     SHT_GNU_HASH = 0x6ffffff6
     SHT_GNU_LIBLIST = 0x6ffffff7
@@ -383,6 +385,10 @@ class ShtPARISC(enum.Enum):
     SHT_PARISC_EXT = 0x70000000
     SHT_PARISC_UNWIND = 0x70000001
     SHT_PARISC_DOC = 0x70000002
+
+class ShtRISCV(enum.Enum):
+    """Supplemental SHT_* constants for EM_RISCV."""
+    SHT_RISCV_ATTRIBUTES = 0x70000003
 
 class Pf(enum.IntFlag):
     """Program header flags.  Type of Phdr.p_flags values."""
@@ -518,6 +524,10 @@ class Pt(_OpenIntEnum):
     PT_SUNWBSS = 0x6ffffffa
     PT_SUNWSTACK = 0x6ffffffb
 
+class PtAARCH64(enum.Enum):
+    """Supplemental PT_* constants for EM_AARCH64."""
+    PT_AARCH64_MEMTAG_MTE = 0x70000002
+
 class PtARM(enum.Enum):
     """Supplemental PT_* constants for EM_ARM."""
     PT_ARM_EXIDX = 0x70000001
@@ -557,6 +567,10 @@ class PtPARISC(enum.Enum):
     PT_PARISC_ARCHEXT = 0x70000000
     PT_PARISC_UNWIND = 0x70000001
 
+class PtRISCV(enum.Enum):
+    """Supplemental PT_* constants for EM_RISCV."""
+    PT_RISCV_ATTRIBUTES = 0x70000003
+
 class Dt(_OpenIntEnum):
     """ELF dynamic segment tags.  Type of Dyn.d_val."""
     DT_NULL = 0
@@ -593,6 +607,9 @@ class Dt(_OpenIntEnum):
     DT_PREINIT_ARRAY = 32
     DT_PREINIT_ARRAYSZ = 33
     DT_SYMTAB_SHNDX = 34
+    DT_RELRSZ = 35
+    DT_RELR = 36
+    DT_RELRENT = 37
     DT_GNU_PRELINKED = 0x6ffffdf5
     DT_GNU_CONFLICTSZ = 0x6ffffdf6
     DT_GNU_LIBLISTSZ = 0x6ffffdf7
@@ -705,6 +722,10 @@ class DtPPC64(enum.Enum):
     DT_PPC64_OPD = 0x70000001
     DT_PPC64_OPDSZ = 0x70000002
     DT_PPC64_OPT = 0x70000003
+
+class DtRISCV(enum.Enum):
+    """Supplemental DT_* constants for EM_RISCV."""
+    DT_RISCV_VARIANT_CC = 0x70000001
 
 class DtSPARC(enum.Enum):
     """Supplemental DT_* constants for EM_SPARC."""

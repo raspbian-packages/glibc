@@ -35,6 +35,7 @@
 #include <kernel-features.h>
 #include <tls-internal-struct.h>
 #include <sys/rseq.h>
+#include <internal-sigset.h>
 
 #ifndef TCB_ALIGNMENT
 # define TCB_ALIGNMENT 32
@@ -171,9 +172,6 @@ struct pthread
   /* Thread ID - which is also a 'is this thread descriptor (and
      therefore stack) used' flag.  */
   pid_t tid;
-
-  /* Ununsed.  */
-  pid_t pid_ununsed;
 
   /* List of robust mutexes the thread is holding.  */
 #if __PTHREAD_MUTEX_HAVE_PREV
@@ -342,10 +340,6 @@ struct pthread
   /* Lock for synchronizing setxid calls.  */
   unsigned int setxid_futex;
 
-#if HP_TIMING_INLINE
-  hp_timing_t cpuclock_offset_ununsed;
-#endif
-
   /* If the thread waits to join another one the ID of the latter is
      stored here.
 
@@ -394,7 +388,7 @@ struct pthread
   /* Signal mask for the new thread.  Used during thread startup to
      restore the signal mask.  (Threads are launched with all signals
      masked.)  */
-  sigset_t sigmask;
+  internal_sigset_t sigmask;
 
   /* Indicates whether is a C11 thread created by thrd_creat.  */
   bool c11;

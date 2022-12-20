@@ -1,4 +1,4 @@
-/* wcsrchr optimized with SSE2.
+/* wcsrchr dispatch for RTLD and non-multiarch build
    Copyright (C) 2011-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -16,12 +16,10 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
+#define WCSRCHR	wcsrchr
 
-#define USE_AS_WCSRCHR	1
-#define NO_PMINU	1
+#define DEFAULT_IMPL_V1	"multiarch/wcsrchr-sse2.S"
+#define DEFAULT_IMPL_V3	"multiarch/wcsrchr-avx2.S"
+#define DEFAULT_IMPL_V4	"multiarch/wcsrchr-evex.S"
 
-#ifndef STRRCHR
-# define STRRCHR	wcsrchr
-#endif
-
-#include "../strrchr.S"
+#include "isa-default-impl.h"

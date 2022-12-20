@@ -16,7 +16,9 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#if IS_IN (libc)
+#include <isa-level.h>
+
+#if ISA_SHOULD_BUILD (3)
 
 # include <sysdep.h>
 
@@ -49,7 +51,7 @@
 
 	.section SECTION(.text), "ax", @progbits
 ENTRY(STRRCHR)
-	movd	%esi, %xmm7
+	vmovd	%esi, %xmm7
 	movl	%edi, %eax
 	/* Broadcast CHAR to YMM4.  */
 	VPBROADCAST %xmm7, %ymm7

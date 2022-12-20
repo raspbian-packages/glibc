@@ -24,16 +24,11 @@
 #include <init-arch.h>
 #include <stdio.h>
 
-/* Maximum number of IFUNC implementations.  */
-#define MAX_IFUNC	7
-
 size_t
 __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 			size_t max)
 {
-  assert (max >= MAX_IFUNC);
-
-  size_t i = 0;
+  size_t i = max;
 
   INIT_ARCH ();
 
@@ -45,6 +40,7 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 	      IFUNC_IMPL_ADD (array, i, memcpy, 1, __memcpy_simd)
 #if HAVE_AARCH64_SVE_ASM
 	      IFUNC_IMPL_ADD (array, i, memcpy, sve, __memcpy_a64fx)
+	      IFUNC_IMPL_ADD (array, i, memcpy, sve, __memcpy_sve)
 #endif
 	      IFUNC_IMPL_ADD (array, i, memcpy, 1, __memcpy_generic))
   IFUNC_IMPL (i, name, memmove,
@@ -54,6 +50,7 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 	      IFUNC_IMPL_ADD (array, i, memmove, 1, __memmove_simd)
 #if HAVE_AARCH64_SVE_ASM
 	      IFUNC_IMPL_ADD (array, i, memmove, sve, __memmove_a64fx)
+	      IFUNC_IMPL_ADD (array, i, memmove, sve, __memmove_sve)
 #endif
 	      IFUNC_IMPL_ADD (array, i, memmove, 1, __memmove_generic))
   IFUNC_IMPL (i, name, memset,
@@ -74,5 +71,5 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 	      IFUNC_IMPL_ADD (array, i, strlen, !mte, __strlen_asimd)
 	      IFUNC_IMPL_ADD (array, i, strlen, 1, __strlen_mte))
 
-  return i;
+  return 0;
 }

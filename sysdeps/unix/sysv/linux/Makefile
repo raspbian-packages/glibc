@@ -113,7 +113,8 @@ sysdep_headers += sys/mount.h sys/acct.h \
 		  bits/types/struct_shmid64_ds.h \
 		  bits/types/struct_shmid64_ds_helper.h \
 		  bits/pthread_stack_min.h bits/pthread_stack_min-dynamic.h \
-		  sys/rseq.h bits/rseq.h
+		  sys/rseq.h bits/rseq.h \
+		  sys/pidfd.h
 
 tests += tst-clone tst-clone2 tst-clone3 tst-fanotify tst-personality \
 	 tst-quota tst-sync_file_range tst-sysconf-iov_max tst-ttyname \
@@ -127,7 +128,18 @@ tests += tst-clone tst-clone2 tst-clone3 tst-fanotify tst-personality \
   tst-scm_rights \
   tst-epoll \
   tst-getauxval \
+  tst-pidfd \
+  tst-process_mrelease \
+  tst-mount \
   # tests
+
+# process_madvise requires CAP_SYS_ADMIN.
+xtests += \
+  tst-process_madvise \
+  # xtests
+
+# For +depfiles in Makerules.
+extra-test-objs += tst-sysconf-iov_max-uapi.o
 
 # Test for the symbol version of fcntl that was replaced in glibc 2.28.
 ifeq ($(have-GLIBC_2.27)$(build-shared),yesyes)
@@ -237,6 +249,30 @@ $(objpfx)tst-mman-consts.out: ../sysdeps/unix/sysv/linux/tst-mman-consts.py
 	  < /dev/null > $@ 2>&1; $(evaluate-test)
 $(objpfx)tst-mman-consts.out: $(sysdeps-linux-python-deps)
 
+tests-special += $(objpfx)tst-pidfd-consts.out
+$(objpfx)tst-pidfd-consts.out: ../sysdeps/unix/sysv/linux/tst-pidfd-consts.py
+	$(sysdeps-linux-python) \
+	  ../sysdeps/unix/sysv/linux/tst-pidfd-consts.py \
+	    $(sysdeps-linux-python-cc) \
+	  < /dev/null > $@ 2>&1; $(evaluate-test)
+$(objpfx)tst-pidfd-consts.out: $(sysdeps-linux-python-deps)
+
+tests-special += $(objpfx)tst-mount-consts.out
+$(objpfx)tst-mount-consts.out: ../sysdeps/unix/sysv/linux/tst-mount-consts.py
+	$(sysdeps-linux-python) \
+	  ../sysdeps/unix/sysv/linux/tst-mount-consts.py \
+	    $(sysdeps-linux-python-cc) \
+	  < /dev/null > $@ 2>&1; $(evaluate-test)
+$(objpfx)tst-mount-consts.out: $(sysdeps-linux-python-deps)
+
+tests-special += $(objpfx)tst-mount-compile.out
+$(objpfx)tst-mount-compile.out: ../sysdeps/unix/sysv/linux/tst-mount-compile.py
+	$(sysdeps-linux-python) \
+	  ../sysdeps/unix/sysv/linux/tst-mount-compile.py \
+	    $(sysdeps-linux-python-cc) \
+	  < /dev/null > $@ 2>&1; $(evaluate-test)
+$(objpfx)tst-mount-compile.out: $(sysdeps-linux-python-deps)
+
 tst-rseq-disable-ENV = GLIBC_TUNABLES=glibc.pthread.rseq=0
 
 endif # $(subdir) == misc
@@ -333,12 +369,10 @@ inhibit-glue = yes
 
 ifeq ($(subdir),dirent)
 sysdep_routines += getdirentries getdirentries64
-tests += tst-getdents64
-
-# The tested readdir64 symbol was replaced in glibc 2.2.
-ifeq ($(have-GLIBC_2.1.3)$(build-shared),yesyes)
-tests += tst-readdir64-compat
-endif
+tests += \
+  tst-getdents64 \
+  tst-readdir64-compat \
+  # tests
 endif # $(subdir) == dirent
 
 ifeq ($(subdir),nis)

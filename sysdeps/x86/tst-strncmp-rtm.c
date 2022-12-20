@@ -27,8 +27,10 @@
 #else /* !WIDE */
 # define CHAR char
 # define MEMSET memset
-# define STRNCMP strncmp
-# define TEST_NAME "strncmp"
+# ifndef STRNCMP
+#  define STRNCMP strncmp
+#  define TEST_NAME "strncmp"
+# endif
 #endif /* !WIDE */
 
 
