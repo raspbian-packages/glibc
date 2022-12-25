@@ -56,6 +56,7 @@ routines = hurdstartup hurdinit \
 	   ports-get ports-set hurdports hurdmsg \
 	   errno-loc \
 	   hurdlock \
+	   sysvshm \
 	   $(sig) $(dtable) $(inlines) \
 	   fd-cleanup port-cleanup report-wait xattr
 sig	= hurdsig hurdfault siginfo hurd-raise preempt-sig \
