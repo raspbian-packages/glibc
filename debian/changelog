@@ -1,4 +1,4 @@
-glibc (2.36-6+rpi1) bookworm-staging; urgency=medium
+glibc (2.36-7+rpi1) bookworm-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -6,7 +6,40 @@ glibc (2.36-6+rpi1) bookworm-staging; urgency=medium
   [changes brought forward from 2.35-1+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Sun, 02 Oct 2022 17:46:25 +0000]
   * Remove valgrind breaks.
 
- -- Peter Michael Green <plugwash@raspbian.org>  Tue, 20 Dec 2022 13:06:19 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Mon, 02 Jan 2023 07:42:05 +0000
+
+glibc (2.36-7) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/debhelper.in/libc.templates (glibc/kernel-too-old),
+    debian/debhelper.in/libc.preinst: Note that upgrading a kernel also means
+    rebooting it. Also, the libc package is usually in an odd state at that
+    point and apt -f install needs to be used.
+  * debian/patches/hurd-i386/git-getrandom-chroot.diff: Fix calling getrandom
+    inside a minimal chroot. Fixes openssh-server >= 1:9.1.
+  * debian/patches/hurd-i386/local-static_pthread_setcancelstate.diff: Fix
+    ldconfig crashing on libxeddsa2.
+  * debian/testsuite-xfail-debian.mk: Update hurd results.
+
+  [ Flavio Cruz ]
+  * debian/patches/hurd-i386/git-mach-headers-freestanding.diff: Force use of
+    -ffreestanding when checking for gnumach headers.
+
+  [ Aurelien Jarno ]
+  * debian/glibc-source.filelist: update following recent changes.
+  * debian/patches/any/git-floatn-gcc-13-support.diff: backport FloatN support
+    for GCC 13 from upstream.  Closes: #1022166.
+  * Update Spanish debconf translation, by Camaleón.  Closes: #1026786.
+  * debian/debhelper.in/locales-all.NEWS: drop to make lintian happy, as it
+    only contains a very old entry.
+  * debian/local/manpages/locale.gen.5, debian/local/manpages/update-locale.8:
+    fix issues reported by the manpage-l10n project.  Closes: #1026321.
+
+  [ Helmut Grohne ]
+  * Use conjunction for libgd-dev profiles.
+  * Annotate B-D libcap-dev with stage2 profile.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 25 Dec 2022 19:42:32 +0100
 
 glibc (2.36-6) unstable; urgency=medium
 

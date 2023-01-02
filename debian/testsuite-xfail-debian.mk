@@ -393,9 +393,6 @@ test-xfail-tst-arc4random-fork = yes
 test-xfail-tst-arc4random-thread = yes
 test-xfail-tst-nss-gai-actions = yes
 
-# new in 2.37
-test-xfail-tst-arc4random-stats = yes
-
 # actually never succeded
 test-xfail-tst-create_format1 = yes
 test-xfail-tst-getcwd-abspath = yes

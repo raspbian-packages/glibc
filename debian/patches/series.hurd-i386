@@ -8,3 +8,4 @@ hurd-i386/local-no-bootstrap-fs-access.2.diff
 hurd-i386/unsubmitted-prof-eintr.diff
 hurd-i386/unsubmitted-getaux_at_secure.diff
 hurd-i386/local-fix-nss.diff
+hurd-i386/local-static_pthread_setcancelstate.diff
