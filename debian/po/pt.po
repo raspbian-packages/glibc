@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: glibc 2.24-17\n"
 "Report-Msgid-Bugs-To: glibc@packages.debian.org\n"
-"POT-Creation-Date: 2017-06-13 22:11+0200\n"
+"POT-Creation-Date: 2023-01-03 21:34+0100\n"
 "PO-Revision-Date: 2017-09-07 10:25+0100\n"
 "Last-Translator: Pedro Ribeiro <p.m42.ribeiro@gmail.com>\n"
 "Language-Team: Portuguese <traduz@debianpt.org>\n"
@@ -49,8 +49,8 @@ msgid ""
 msgstr ""
 "Por favor escolha quais os locales a gerar. Os locales UTF-8 devem ser "
 "seleccionados, especialmente em instalações de raiz. Outros conjuntos de "
-"caracteres podem ser úteis para compatibilidade com software e sistemas "
-"mais antigos."
+"caracteres podem ser úteis para compatibilidade com software e sistemas mais "
+"antigos."
 
 #. Type: select
 #. Choices
@@ -248,9 +248,14 @@ msgstr "O kernel necessita de ser actualizado"
 #. Type: error
 #. Description
 #: ../debhelper.in/libc.templates:6001
+#, fuzzy
+#| msgid ""
+#| "This version of the GNU libc requires kernel version ${kernel_ver} or "
+#| "later.  Please upgrade your kernel before installing glibc."
 msgid ""
 "This version of the GNU libc requires kernel version ${kernel_ver} or "
-"later.  Please upgrade your kernel before installing glibc."
+"later.  Please upgrade your kernel and reboot before installing glibc. You "
+"may need to use \"apt -f install\" after reboot to solve dependencies."
 msgstr ""
 "Esta versão da GNU libc necessita da versão ${kernel_ver} ou mais recente. "
 "Por favor, actualize o kernel antes de instalar a glibc."

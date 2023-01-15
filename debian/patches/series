@@ -38,6 +38,7 @@ hurd-i386/git-SOMAXCONN.diff
 hurd-i386/git-sigtimedwait.diff
 hurd-i386/git-getrandom-chroot.diff
 hurd-i386/git-mach-headers-freestanding.diff
+hurd-i386/git-sem_wait_race.diff
 hurd-i386/local-enable-ldconfig.diff
 hurd-i386/tg-sysvshm.diff
 hurd-i386/tg-thread-cancel.diff

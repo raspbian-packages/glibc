@@ -1,4 +1,4 @@
-glibc (2.36-7+rpi1) bookworm-staging; urgency=medium
+glibc (2.36-8+rpi1) bookworm-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -6,7 +6,27 @@ glibc (2.36-7+rpi1) bookworm-staging; urgency=medium
   [changes brought forward from 2.35-1+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Sun, 02 Oct 2022 17:46:25 +0000]
   * Remove valgrind breaks.
 
- -- Raspbian forward porter <root@raspbian.org>  Mon, 02 Jan 2023 07:42:05 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Sun, 15 Jan 2023 19:14:43 +0000
+
+glibc (2.36-8) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/git-sem_wait_race.diff: Fix sem_wait race.
+
+  [ Aurelien Jarno ]
+  * debian/po/de.po: update German debconf templates translation, by Helge
+    Kreutzmann. Closes: #1027782.
+  * debian/local/manpages/po/*: update with debconf-updatepo.
+  * debian/po/ko.po: update Korean debconf templates translation, by Changwoo
+    Ryu.  Closes: #1027986.
+  * debian/po/es.po: update Spanish debconf templates translation, by
+    Camaleón.
+  * debian/po/sk.po: update Slovak debconf templates translation, by Marek
+    Sýkora.
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+  * debian/control.in/main: bump Standards-Version to 4.6.2 (no changes).
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sat, 07 Jan 2023 12:29:49 +0100
 
 glibc (2.36-7) unstable; urgency=medium
 
