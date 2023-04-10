@@ -22,8 +22,9 @@ subdir	:= wcsmbs
 
 include ../Makeconfig
 
-headers	:= wchar.h bits/wchar.h bits/wchar2.h bits/wchar-ldbl.h uchar.h \
-	   bits/types/__mbstate_t.h bits/types/mbstate_t.h bits/types/wint_t.h
+headers	:= wchar.h bits/wchar.h bits/wchar2.h bits/wchar2-decl.h \
+	   bits/wchar-ldbl.h uchar.h bits/types/__mbstate_t.h \
+	   bits/types/mbstate_t.h bits/types/wint_t.h
 
 routines := wcscat wcschr wcscmp wcscpy wcscspn wcsdup wcslen wcsncat \
 	    wcsncmp wcsncpy wcspbrk wcsrchr wcsspn wcstok wcsstr wmemchr \
@@ -73,6 +74,8 @@ $(objpfx)tst-wcstol-locale.out: $(gen-locales)
 $(objpfx)tst-wcstod-nan-locale.out: $(gen-locales)
 $(objpfx)tst-c16-surrogate.out: $(gen-locales)
 $(objpfx)tst-c32-state.out: $(gen-locales)
+$(objpfx)test-c8rtomb.out: $(gen-locales)
+$(objpfx)test-mbrtoc8.out: $(gen-locales)
 endif
 
 $(objpfx)tst-wcstod-round: $(libm)
