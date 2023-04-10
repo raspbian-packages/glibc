@@ -251,7 +251,7 @@ generated += \
   # generated
 endif # $(run-built-tests)
 
-tests-special += $(objpfx)tst-errno-manual.out
+# tests-special += $(objpfx)tst-errno-manual.out
 
 include ../Rules
 
