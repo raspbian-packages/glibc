@@ -1,0 +1,20 @@
+2009-05-23  Aurelien Jarno <aurelien@aurel32.net>
+
+	* config.h.in (__KFREEBSD_KERNEL_VERSION): Add.
+
+---
+ config.h.in |    3 +++
+ 1 file changed, 3 insertions(+)
+
+--- a/config.h.in
++++ b/config.h.in
+@@ -144,6 +144,9 @@
+ /* Linux specific: __LINUX_KERNEL_VERSION as a string.  */
+ #undef  __LINUX_KERNEL_VERSION_STR
+ 
++/* kFreeBSD specific: minimum supported kernel version.  */
++#undef	__KFREEBSD_KERNEL_VERSION
++
+ /* Override abi-tags ABI version if necessary.  */
+ #undef  __ABI_TAG_VERSION
+ 
