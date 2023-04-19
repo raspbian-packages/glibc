@@ -439,6 +439,9 @@ struct rtld_global
   EXTERN size_t _dl_tls_static_used;
   /* Alignment requirement of the static TLS block.  */
   EXTERN size_t _dl_tls_static_align;
+  /* Remaining amount of static TLS that may be used for optimizing
+     dynamic TLS access (e.g. with TLSDESC).  */
+  EXTERN size_t _dl_tls_static_optional;
 
 /* Number of additional entries in the slotinfo array of each slotinfo
    list element.  A large number makes it almost certain take we never
@@ -579,6 +582,11 @@ struct rtld_global_ro
      0 if not, -2 use the default (honor biases for normal
      binaries, don't honor for PIEs).  */
   EXTERN ElfW(Addr) _dl_use_load_bias;
+
+  /* Size of surplus space in the static TLS area for dynamically
+     loaded modules with IE-model TLS or for TLSDESC optimization.
+     See comments in elf/dl-tls.c where it is initialized.  */
+  EXTERN size_t _dl_tls_static_surplus;
 
   /* Name of the shared object to be profiled (if any).  */
   EXTERN const char *_dl_profile;
@@ -1085,6 +1093,10 @@ extern size_t _dl_count_modids (void) attribute_hidden;
 
 /* Calculate offset of the TLS blocks in the static TLS block.  */
 extern void _dl_determine_tlsoffset (void) attribute_hidden;
+
+/* Calculate the size of the static TLS surplus, when the given
+   number of audit modules are loaded.  */
+void _dl_tls_static_surplus_init (size_t naudit) attribute_hidden;
 
 #ifndef SHARED
 /* Set up the TCB for statically linked applications.  This is called
