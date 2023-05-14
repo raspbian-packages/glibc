@@ -1,4 +1,4 @@
-glibc (2.36-8+rpi1) bookworm-staging; urgency=medium
+glibc (2.36-9+rpi1) bookworm-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -6,7 +6,45 @@ glibc (2.36-8+rpi1) bookworm-staging; urgency=medium
   [changes brought forward from 2.35-1+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Sun, 02 Oct 2022 17:46:25 +0000]
   * Remove valgrind breaks.
 
- -- Raspbian forward porter <root@raspbian.org>  Sun, 15 Jan 2023 19:14:43 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Sun, 14 May 2023 17:05:21 +0000
+
+glibc (2.36-9) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/po/it.po: Update Italian debconf translation, by Luca Monducci.
+    Closes: #1028133.
+  * debian/po/tr.po: Update Turkish debconf translation, by Atila KOÇ.
+    Closes: #1028306.
+  * debian/po/cs.po: Update Czech debconf translation, by Miroslav Kure.
+    Closes: #1028326.
+  * debian/po/zh_CN.po: Update Chinese debconf translation, by Tianyu Chen.
+  * debian/po/pt.po: Update Portugues debconf translation, by Pedro Ribeiro.
+    Closes: #1028353.
+  * debian/po/sk.po: Fix invalid control sequence in Slovak translation.
+  * debian/po/pt_BR.po: Update Brazilian Portuguese debconf translation, by
+    Adriano Rafael Gomes. Closes: #1029005.
+  * debian/po/nl.po: Update Dutch debconf translation, by Frans Spiesschaert.
+    Closes: #1029018, #1033905.
+  * debian/po/ro.po: Update Romanian debconf translation, by Remus-Gabriel
+    Chelu. Closes: #1031163.
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Prevent SIGSEGV in the SSE2 version of memcmp when data is concurrently
+      modified. Closes: #1033931.
+    - Fix a corner case in daylight computation affecting the Africa/Tripoli
+      zone since tzdata 2022g.
+    - Fix elf/tst-tlsopt-powerpc failure when compiled with -mcpu=power10.
+  * patches/any/local-disable-tst-bz29951.diff: disable new test included in
+    the latest update from upstream stable branch, as git-updates.diff can't
+    include the corresponding binary test file.
+
+  [ Samuel Thibault ]
+  * debian/sysdeps/hurd.mk: Add -fno-omit-frame-pointer to extra_cflags.
+  * debian/testsuite-xfail-debian.mk: Update hurd results.
+  * debian/patches/hurd-i386/git-intr-msg-cfa.diff: Fix stack unwinding over
+    _hurd_intr_rpc_mach_msg, for go runtime.
+  * debian/libc0.3.symbols.hurd-i386: Update symbols with new RPCs.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Mon, 10 Apr 2023 10:35:16 +0200
 
 glibc (2.36-8) unstable; urgency=medium
 

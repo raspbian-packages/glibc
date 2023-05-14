@@ -256,7 +256,7 @@ msgid ""
 msgstr ""
 "Táto verzia GNU libc vyžduje verziu kernelu ${kernel_ver} alebo "
 "neskoršiu. Aktualizujte prosím Váš kernel a reštartujte systém pred inštaláciou glibc. V prípade "
-"chíbajúcich závisostí po reštarte, použite príkaz \"apt -f install\. "
+"chíbajúcich závisostí po reštarte, použite príkaz \"apt -f install\"."
 
 #. Type: note
 #. Description

@@ -258,6 +258,7 @@ libhurduser.so.0.3 #PACKAGE# #MINVER#
  __pci_get_dev_regions@Base 2.27-8+hurd.1
  __pci_get_dev_rom@Base 2.27-8+hurd.1
  __pci_get_ndevs@Base 2.27-8+hurd.1
+ __pfinet_getroutes@Base 2.35-2
  __pfinet_siocgifconf@Base 2.11
  __proc_child@Base 2.11
  __proc_child_request@Base 2.11
@@ -640,6 +641,7 @@ libhurduser.so.0.3 #PACKAGE# #MINVER#
  pci_get_dev_regions@Base 2.27-8+hurd.1
  pci_get_dev_rom@Base 2.27-8+hurd.1
  pci_get_ndevs@Base 2.27-8+hurd.1
+ pfinet_getroutes@Base 2.35-2
  pfinet_siocgifconf@Base 2.11
  proc_child@Base 2.11
  proc_child_request@Base 2.11
@@ -941,6 +943,7 @@ libmachuser.so.1 #PACKAGE# #MINVER#
  __task_resume@Base 2.11
  __task_set_emulation@Base 2.11
  __task_set_emulation_vector@Base 2.11
+ __task_set_essential@Base 2.36-7
  __task_set_name@Base 2.18-5
  __task_set_special_port_rpc@Base 2.11
  __task_suspend_rpc@Base 2.11
@@ -1104,6 +1107,7 @@ libmachuser.so.1 #PACKAGE# #MINVER#
  task_resume@Base 2.11
  task_set_emulation@Base 2.11
  task_set_emulation_vector@Base 2.11
+ task_set_essential@Base 2.36-7
  task_set_name@Base 2.18-5
  task_set_special_port_rpc@Base 2.11
  task_suspend_rpc@Base 2.11

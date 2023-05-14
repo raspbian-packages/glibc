@@ -39,6 +39,8 @@ hurd-i386/git-sigtimedwait.diff
 hurd-i386/git-getrandom-chroot.diff
 hurd-i386/git-mach-headers-freestanding.diff
 hurd-i386/git-sem_wait_race.diff
+# 2.38
+hurd-i386/git-intr-msg-cfa.diff
 hurd-i386/local-enable-ldconfig.diff
 hurd-i386/tg-sysvshm.diff
 hurd-i386/tg-thread-cancel.diff
@@ -102,4 +104,5 @@ any/local-cudacc-float128.diff
 any/local-test-install.diff
 any/local-cross.patch
 any/git-floatn-gcc-13-support.diff
+any/local-disable-tst-bz29951.diff
 auto-2.34-7+rpi1-de346af12a6cb5181ed2ab174fb35c88f3b64f4b-1663212931
