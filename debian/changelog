@@ -1,4 +1,4 @@
-glibc (2.31-13+rpi1+deb11u3) bullseye-staging; urgency=medium
+glibc (2.31-13+rpi1+deb11u6) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -13,7 +13,53 @@ glibc (2.31-13+rpi1+deb11u3) bullseye-staging; urgency=medium
   * Change mode on sysdeps/x86_64/configure to 644, same dgit issue
     as above.
  
- -- Peter Michael Green <plugwash@raspbian.org>  Tue, 29 Mar 2022 22:11:31 +0000
+ -- Peter Michael Green <plugwash@raspbian.org>  Sat, 20 May 2023 09:21:02 +0000
+
+glibc (2.31-13+deb11u6) bullseye; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Drop debian/patches/amd64/local-require-bmi-in-avx2-ifunc.diff
+      (obsolete).
+    - Fix memory leak in printf-family functions with long multibyte strings.
+    - Fix a crash in printf-family due to width/precision-dependent
+      allocations.
+    - Fix a segfault in printf handling thousands separator.
+    - Fix an overflow in the AVX2 implementation of wcsnlen when crossing
+      pages.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Wed, 19 Apr 2023 23:17:51 +0200
+
+glibc (2.31-13+deb11u5) bullseye; urgency=medium
+
+  * debian/patches/local-require-bmi-in-avx2-ifunc.diff: new patch extracted
+    from an upstream commit, to change the AVX2 ifunc selector to require the
+    BMI2 feature. It happened that the wmemchr and wcslen changes backported
+    in 2.31-13+deb11u4 relied on that commit which got forgotten.
+    Closes: #1019855.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Fri, 14 Oct 2022 21:35:00 +0200
+
+glibc (2.31-13+deb11u4) bullseye; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/debhelper.in/libc-dev.NEWS: New file to explain how to update
+    programs to use the TI-RPC library instead of the Sun RPC one.  Closes:
+    #1014735.
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix an off-by-one buffer overflow/underflow in getcwd() (CVE-2021-3999).
+    - Fix an overflow bug in the SSE2 and AVX2 implementations of wmemchr.
+    - Fix an overflow bug in the SSE4.1 and AVX2 implementations of wcslen and
+      wcsncat.
+    - Fix an overflow bug in the AVX2 and EVEX implementation of wcsncmp.
+    - Add a few EVEX optimized string functions to fix a performance issue (up
+      to 40%) with Skylake-X processors.
+    - Make grantpt usable after multi-threaded fork.  Closes: #1015740.
+    - debian/patches/hurd-i386/git-posix_openpt.diff: rebase.
+  * debian/rules.d/build.mk: pass --with-default-link=no to configure to
+    ensure that libio vtable protection is enabled.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Fri, 26 Aug 2022 23:32:46 +0200
 
 glibc (2.31-13+deb11u3) bullseye; urgency=medium
 

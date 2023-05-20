@@ -20,6 +20,36 @@ endif
 endif
 endif
 
+ifeq ($(subdir),string)
+sysdep_routines += cacheinfo
+
+tests += \
+  tst-memchr-rtm \
+  tst-memcmp-rtm \
+  tst-memmove-rtm \
+  tst-memrchr-rtm \
+  tst-memset-rtm \
+  tst-strchr-rtm \
+  tst-strcpy-rtm \
+  tst-strlen-rtm \
+  tst-strncmp-rtm \
+  tst-strrchr-rtm \
+  tst-wcsncmp-rtm \
+# tests
+
+CFLAGS-tst-memchr-rtm.c += -mrtm
+CFLAGS-tst-memcmp-rtm.c += -mrtm
+CFLAGS-tst-memmove-rtm.c += -mrtm
+CFLAGS-tst-memrchr-rtm.c += -mrtm
+CFLAGS-tst-memset-rtm.c += -mrtm
+CFLAGS-tst-strchr-rtm.c += -mrtm
+CFLAGS-tst-strcpy-rtm.c += -mrtm
+CFLAGS-tst-strlen-rtm.c += -mrtm
+CFLAGS-tst-strncmp-rtm.c += -mrtm -Wno-error
+CFLAGS-tst-strrchr-rtm.c += -mrtm
+CFLAGS-tst-wcsncmp-rtm.c += -mrtm -Wno-error
+endif
+
 ifeq ($(enable-cet),yes)
 ifeq ($(subdir),elf)
 sysdep-dl-routines += dl-cet
