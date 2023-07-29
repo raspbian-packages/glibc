@@ -1,4 +1,4 @@
-glibc (2.36-9+rpi1) bookworm-staging; urgency=medium
+glibc (2.36-9+rpi1+deb12u1) bookworm-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -6,7 +6,39 @@ glibc (2.36-9+rpi1) bookworm-staging; urgency=medium
   [changes brought forward from 2.35-1+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Sun, 02 Oct 2022 17:46:25 +0000]
   * Remove valgrind breaks.
 
- -- Raspbian forward porter <root@raspbian.org>  Sun, 14 May 2023 17:05:21 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Sat, 29 Jul 2023 06:12:27 +0000
+
+glibc (2.36-9+deb12u1) bookworm; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Affecting bookworm release architectures:
+      - Improve mcount overflow handling in gmon.
+      - Fix a buffer overflow in gmon (CVE-2023-0687).
+      - Fix a memory corruption when incorrectly calling gmon functions
+        repeatedly on in wrong order.
+      - Fix a deadlock in getaddrinfo (__check_pf) with deferred cancellation.
+      - Fix y2038 support in strftime on 32-bit architectures.
+      - Fix corner case parsing of /etc/gshadow which can return bad pointers
+        causing segfaults in applications.
+      - Fix a deadlock in system() when called concurrently from multiple
+        threads.
+      - cdefs: limit definition of fortification macros to __FORTIFY_LEVEL > 0
+        to support old C90 compilers.
+    - Not affecting bookworm release architectures:
+      - Fix LFS POSIX lock constants for powerpc64.
+      - Fix GL(dl_phdr) and GL(dl_phnum) for static builds.  Closes: #1028200.
+    - Not affecting debian architectures:
+      - Fix LFS POSIX lock constants on 32 bit arch with 64 bit default
+        time_t.
+    - No change in the generated code:
+      - Fix asm constraints in amd64 version of feraiseexcept (bug not visible
+        with GCC 12).
+
+  [ Andrej Shadura ]
+  * debian/po/sk.po: Fix typos in the Slovak translation.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Thu, 13 Jul 2023 20:07:47 +0200
 
 glibc (2.36-9) unstable; urgency=medium
 
