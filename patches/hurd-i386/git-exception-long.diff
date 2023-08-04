@@ -1,0 +1,54 @@
+commit d8ee5d614bc485f6d1752dfa0d60524b20945a56
+Author: Sergey Bugaev <bugaevc@gmail.com>
+Date:   Sun Mar 19 18:09:47 2023 +0300
+
+    hurd: Make exception subcode a long
+    
+    On EXC_BAD_ACCESS, exception subcode is used to pass the faulting memory
+    address, so it needs to be (at least) pointer-sized. Thus, make it into
+    a long. This matches the corresponding change in GNU Mach.
+    Message-Id: <20230319151017.531737-5-bugaevc@gmail.com>
+
+diff --git a/hurd/catch-exc.c b/hurd/catch-exc.c
+index e8a9c7981f..5ee2233aa9 100644
+--- a/hurd/catch-exc.c
++++ b/hurd/catch-exc.c
+@@ -31,7 +31,7 @@ _S_catch_exception_raise (mach_port_t port,
+ 			  mach_msg_type_number_t codeCnt
+ #else				/* Vanilla Mach 3.0 interface.  */
+ 			  integer_t exception,
+-			  integer_t code, integer_t subcode
++			  integer_t code, long_integer_t subcode
+ #endif
+ 			  )
+ {
+diff --git a/hurd/hurd/signal.h b/hurd/hurd/signal.h
+index 4e9f79b19d..c33f974b1b 100644
+--- a/hurd/hurd/signal.h
++++ b/hurd/hurd/signal.h
+@@ -51,9 +51,10 @@ struct hurd_signal_preemptor;	/* <hurd/sigpreempt.h> */
+ struct hurd_signal_detail
+   {
+     /* Codes from origination Mach exception_raise message.  */
+-    integer_t exc, exc_code, exc_subcode;
++    integer_t exc, exc_code;
++    long_integer_t exc_subcode;
+     /* Sigcode as passed or computed from exception codes.  */
+-    integer_t code;
++    long_integer_t code;
+     /* Error code as passed or extracted from exception codes.  */
+     error_t error;
+   };
+diff --git a/hurd/hurdfault.c b/hurd/hurdfault.c
+index 069c1c262c..a81e72803f 100644
+--- a/hurd/hurdfault.c
++++ b/hurd/hurdfault.c
+@@ -45,7 +45,7 @@ _hurdsig_fault_catch_exception_raise (mach_port_t port,
+ 				      mach_msg_type_number_t codeCnt
+ #else				/* Vanilla Mach 3.0 interface.  */
+ 				      integer_t exception,
+-				      integer_t code, integer_t subcode
++				      integer_t code, long_integer_t subcode
+ #endif
+ 				      )
+ {
