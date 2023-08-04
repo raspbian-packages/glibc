@@ -1,4 +1,7 @@
-# Copyright (C) 2009-2023 Free Software Foundation, Inc.
+#!/bin/sh
+# Test expected messages generated when mcount overflows
+# Copyright (C) 2017-2023 Free Software Foundation, Inc.
+# Copyright The GNU Toolchain Authors.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -15,25 +18,28 @@
 # License along with the GNU C Library; if not, see
 # <https://www.gnu.org/licenses/>.
 
-#
-#	Makefile for gshadow.
-#
-subdir	:= gshadow
+LC_ALL=C
+export LC_ALL
+set -e
+exec 2>&1
 
-include ../Makeconfig
+program="$1"
 
-headers		= gshadow.h
-routines	= getsgent getsgnam sgetsgent fgetsgent putsgent \
-		  getsgent_r getsgnam_r sgetsgent_r fgetsgent_r
+check_msg() {
+    if ! grep -q "$1" "$program.out"; then
+       echo "FAIL: expected message not in output: $1"
+       exit 1
+    fi
+}
 
-tests = tst-gshadow tst-putsgent tst-fgetsgent_r tst-sgetsgent
+check_msg 'monstartup: maxarcs < minarcs, setting maxarcs = minarcs'
+check_msg 'mcount: call graph buffer size limit exceeded, gmon.out will not be generated'
 
-CFLAGS-getsgent_r.c += -fexceptions
-CFLAGS-getsgent.c += -fexceptions
-CFLAGS-fgetsgent.c += -fexceptions
-CFLAGS-fgetsgent_r.c += -fexceptions $(libio-mtsafe)
-CFLAGS-putsgent.c += -fexceptions $(libio-mtsafe)
-CFLAGS-getsgnam.c += -fexceptions
-CFLAGS-getsgnam_r.c += -fexceptions
+for data_file in $1.data.*; do
+  if [ -f "$data_file" ]; then
+    echo "FAIL: expected no data files, but found $data_file"
+    exit 1
+  fi
+done
 
-include ../Rules
+echo PASS

@@ -1,5 +1,5 @@
-/* Configuration of lookup functions.
-   Copyright (C) 2002-2023 Free Software Foundation, Inc.
+/* Test program for repeated invocation of _mcleanup
+   Copyright The GNU Toolchain Authors.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,16 +16,16 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-/* The type of the return value of fixup/profile_fixup.  */
-#define DL_FIXUP_VALUE_TYPE ElfW(Addr)
-/* Construct a value of type DL_FIXUP_VALUE_TYPE from a code address
-   and a link map.  */
-#define DL_FIXUP_MAKE_VALUE(map, addr) (addr)
-/* Extract the code address from a value of type DL_FIXUP_MAKE_VALUE.
- */
-#define DL_FIXUP_VALUE_CODE_ADDR(value) (value)
-#define DL_FIXUP_VALUE_ADDR(value) (value)
-#define DL_FIXUP_ADDR_VALUE(addr) (addr)
-#define DL_FIXUP_BINDNOW_ADDR_VALUE(addr) (addr)
-#define DL_FIXUP_BINDNOW_RELOC(l, reloc, value, new_value, st_value, lazy) \
-  (*value) = st_value;
+/* Intentionally calls _mcleanup() twice: once manually, it will be
+   called again as an atexit handler. This is incorrect use of the API,
+   but the point of the test is to make sure we don't crash when the
+   API is misused in this way. */
+
+#include <sys/gmon.h>
+
+int
+main (void)
+{
+  _mcleanup();
+  return 0;
+}
