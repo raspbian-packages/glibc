@@ -23,7 +23,7 @@ subdir	:= timezone
 include ../Makeconfig
 
 others	:= zdump zic
-tests	:= test-tz tst-timezone tst-tzset tst-bz28707 tst-bz29951
+tests	:= test-tz tst-timezone tst-tzset tst-bz28707
 
 generated-dirs += testdata
 
