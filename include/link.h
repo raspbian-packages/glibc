@@ -253,8 +253,10 @@ struct link_map
     /* Start and finish of memory map for this object.  l_map_start
        need not be the same as l_addr.  */
     ElfW(Addr) l_map_start, l_map_end;
-    /* End of the executable part of the mapping.  */
-    ElfW(Addr) l_text_end;
+
+    /* Linked list of objects in reverse ELF constructor execution
+       order.  Head of list is stored in _dl_init_called_list.  */
+    struct link_map *l_init_called_next;
 
     /* Default array for 'l_scope'.  */
     struct r_scope_elem *l_scope_mem[4];

@@ -1043,6 +1043,10 @@ extern int _dl_check_map_versions (struct link_map *map, int verbose,
 extern void _dl_init (struct link_map *main_map, int argc, char **argv,
 		      char **env) attribute_hidden;
 
+/* List of ELF objects in reverse order of their constructor
+   invocation.  */
+extern struct link_map *_dl_init_called_list attribute_hidden;
+
 /* Call the finalizer functions of all shared objects whose
    initializer functions have completed.  */
 extern void _dl_fini (void) attribute_hidden;
@@ -1377,8 +1381,8 @@ void _dl_audit_preinit (struct link_map *l);
    the flags with LA_SYMB_NOPLTENTER | LA_SYMB_NOPLTEXIT prior calling
    la_symbind{32,64}.  */
 void _dl_audit_symbind (struct link_map *l, struct reloc_result *reloc_result,
-			const ElfW(Sym) *defsym, DL_FIXUP_VALUE_TYPE *value,
-			lookup_t result)
+			const void *reloc, const ElfW(Sym) *defsym,
+			DL_FIXUP_VALUE_TYPE *value, lookup_t result, bool lazy)
   attribute_hidden;
 /* Same as _dl_audit_symbind, but also sets LA_SYMB_DLSYM flag.  */
 void _dl_audit_symbind_alt (struct link_map *l, const ElfW(Sym) *ref,
