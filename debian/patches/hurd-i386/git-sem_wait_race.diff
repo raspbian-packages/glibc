@@ -1,0 +1,35 @@
+commit 289b098c9e21e2805e3835f9b5780235ab14a290
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Fri Dec 30 00:40:18 2022 +0100
+
+    htl: Fix sem_wait race between read and gsync_wait
+    
+    If the value changes between sem_wait's read and the gsync_wait call,
+    the kernel will return KERN_INVALID_ARGUMENT, which we have to interpret
+    as the value having already changed.
+    
+    This fixes applications (e.g. libgo) seeing sem_wait erroneously return
+    KERN_INVALID_ARGUMENT.
+
+diff --git a/sysdeps/htl/sem-timedwait.c b/sysdeps/htl/sem-timedwait.c
+index 1b1eec9f59..c610804b08 100644
+--- a/sysdeps/htl/sem-timedwait.c
++++ b/sysdeps/htl/sem-timedwait.c
+@@ -79,7 +79,7 @@ __sem_timedwait_internal (sem_t *restrict sem,
+ 		      ((unsigned int *) &sem->data) + SEM_VALUE_OFFSET,
+ 		      0, flags);
+ 
+-	  if (err != 0)
++	  if (err != 0 && err != KERN_INVALID_ARGUMENT)
+ 	    {
+ 	      /* Error, interruption or timeout, abort.  */
+ 	      if (err == KERN_TIMEDOUT)
+@@ -138,7 +138,7 @@ __sem_timedwait_internal (sem_t *restrict sem,
+ 		err = __lll_wait_intr (&isem->value,
+ 			  SEM_NWAITERS_MASK, flags);
+ 
+-	      if (err != 0)
++	      if (err != 0 && err != KERN_INVALID_ARGUMENT)
+ 		{
+ 		  /* Error, interruption or timeout, abort.  */
+ 		  if (err == KERN_TIMEDOUT)

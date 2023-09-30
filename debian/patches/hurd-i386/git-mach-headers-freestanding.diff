@@ -1,0 +1,82 @@
+commit 8b8c768e3c701ed1993789bb46acb8a12c7a93df
+Author: Flavio Cruz <flaviocruz@gmail.com>
+Date:   Sun Dec 18 19:46:15 2022 -0500
+
+    Force use of -ffreestanding when checking for gnumach headers
+    
+    Without this ./configure assumes that we are in a fully hosted
+    environment, which might not be the case. After this patch, we can rely on
+    the freestanding header files provided by GCC such as stdint.h.
+    Message-Id: <Y5+0V9osFc/zXMq0@mars>
+
+commit 7685630b98ca2a3f5de86eadf130993e6cf998a0
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Mon Dec 19 02:34:55 2022 +0100
+
+    mach: Fix passing -ffreestanding when checking for gnumach headers
+    
+    8b8c768e3c70 ("Force use of -ffreestanding when checking for gnumach
+    headers") was passing -ffreestanding to CFLAGS only, but headers checks are
+    performed with the preprocessor, so we rather need to pass it to CPPFLAGS.
+
+commit 0fb10e49ad169374650534509767ec1d4232e230
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Mon Dec 19 02:38:38 2022 +0100
+
+    mach: Drop remnants of old_CFLAGS
+
+---
+ sysdeps/mach/configure    |    9 ++++-----
+ sysdeps/mach/configure.ac |    7 +++----
+ 2 files changed, 7 insertions(+), 9 deletions(-)
+
+--- a/sysdeps/mach/configure
++++ b/sysdeps/mach/configure
+@@ -127,12 +127,13 @@ fi
+ config_vars="$config_vars
+ MIG = $MIG"
+ 
++OLD_CPPFLAGS=$CPPFLAGS
+ if test -n "$sysheaders"; then
+-  OLD_CPPFLAGS=$CPPFLAGS
+   CPPFLAGS="$CPPFLAGS $SYSINCLUDES"
+ fi
+ 
+ ### Sanity checks for Mach header installation
++CPPFLAGS="$CPPFLAGS -ffreestanding"
+ 
+ 
+ ac_fn_c_check_header_preproc "$LINENO" "mach/mach_types.h" "ac_cv_header_mach_mach_types_h"
+@@ -521,6 +522,4 @@ if test $hurd_cv_mig_retcode = yes; then
+ 
+ fi
+ 
+-if test -n "$sysheaders"; then
+-  CPPFLAGS=$OLD_CPPFLAGS
+-fi
++CPPFLAGS=$OLD_CPPFLAGS
+--- a/sysdeps/mach/configure.ac
++++ b/sysdeps/mach/configure.ac
+@@ -6,12 +6,13 @@ if test "x$MIG" = xMISSING; then
+ fi
+ LIBC_CONFIG_VAR([MIG], [$MIG])
+ 
++OLD_CPPFLAGS=$CPPFLAGS
+ if test -n "$sysheaders"; then
+-  OLD_CPPFLAGS=$CPPFLAGS
+   CPPFLAGS="$CPPFLAGS $SYSINCLUDES"
+ fi
+ 
+ ### Sanity checks for Mach header installation
++CPPFLAGS="$CPPFLAGS -ffreestanding"
+ AC_CHECK_HEADER(mach/mach_types.h,,
+                 [AC_MSG_ERROR([cannot find Mach headers])], -)
+ AC_CHECK_HEADER(mach/mach_types.defs,, [dnl
+@@ -130,6 +131,4 @@ fi])
+ 
+ hurd_MIG_RETCODE
+ 
+-if test -n "$sysheaders"; then
+-  CPPFLAGS=$OLD_CPPFLAGS
+-fi
++CPPFLAGS=$OLD_CPPFLAGS
