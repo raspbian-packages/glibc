@@ -80,6 +80,7 @@ __pthread_create (pthread_t * thread, const pthread_attr_t * attr,
   return err;
 }
 strong_alias (__pthread_create, pthread_create)
+hidden_def (__pthread_create)
 
 /* Internal version of pthread_create.  See comment in
    pt-internal.h.  */
