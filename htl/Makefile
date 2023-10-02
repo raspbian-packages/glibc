@@ -166,7 +166,7 @@ headers :=				\
 
 distribute :=
 
-routines := forward libc_pthread_init alloca_cutoff pt-atfork
+routines := forward libc_pthread_init alloca_cutoff register-atfork pt-atfork
 shared-only-routines = forward
 static-only-routines = pt-atfork
 
