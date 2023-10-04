@@ -1,4 +1,4 @@
-glibc (2.36-9+rpi1+deb12u1) bookworm-staging; urgency=medium
+glibc (2.36-9+rpi1+deb12u3) bookworm-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -6,7 +6,31 @@ glibc (2.36-9+rpi1+deb12u1) bookworm-staging; urgency=medium
   [changes brought forward from 2.35-1+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Sun, 02 Oct 2022 17:46:25 +0000]
   * Remove valgrind breaks.
 
- -- Raspbian forward porter <root@raspbian.org>  Sat, 29 Jul 2023 06:12:27 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Wed, 04 Oct 2023 15:52:45 +0000
+
+glibc (2.36-9+deb12u3) bookworm-security; urgency=medium
+
+  * debian/patches/any/local-CVE-2023-4911.patch: Fix a buffer overflow in the
+    dynamic loader's processing of the GLIBC_TUNABLES environment variable
+    (CVE-2023-4911).
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sat, 30 Sep 2023 10:31:05 +0200
+
+glibc (2.36-9+deb12u2) bookworm; urgency=medium
+
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix the value of F_GETLK/F_SETLK/F_SETLKW with __USE_FILE_OFFSET64 on
+      ppc64el.  Closes: #1050592.
+    - Fix a stack read overflow in getaddrinfo in no-aaaa mode
+      (CVE-2023-4527).  Closes: #1051958.
+    - Fix use after free in getcanonname (CVE-2023-4806, CVE-2023-5156).
+    - Update the x86 cacheinfo code to look at the per-thread L3 cache to
+      determine the non-temporal threshold. This improves memory and string
+      functions on modern CPUs.
+    - Fix _dl_find_object to return correct values even during early startup.
+    - Always call destructors in reverse constructor order.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Thu, 28 Sep 2023 22:50:47 +0200
 
 glibc (2.36-9+deb12u1) bookworm; urgency=medium
 
