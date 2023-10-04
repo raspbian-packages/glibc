@@ -1,4 +1,4 @@
-glibc (2.31-13+rpi1+deb11u6) bullseye-staging; urgency=medium
+glibc (2.31-13+rpi1+deb11u7) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -13,7 +13,15 @@ glibc (2.31-13+rpi1+deb11u6) bullseye-staging; urgency=medium
   * Change mode on sysdeps/x86_64/configure to 644, same dgit issue
     as above.
  
- -- Peter Michael Green <plugwash@raspbian.org>  Sat, 20 May 2023 09:21:02 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Wed, 04 Oct 2023 15:00:45 +0000
+
+glibc (2.31-13+deb11u7) bullseye-security; urgency=medium
+
+  * debian/patches/any/local-CVE-2023-4911.patch: Fix a buffer overflow in the
+    dynamic loader's processing of the GLIBC_TUNABLES environment variable
+    (CVE-2023-4911).
+
+ -- Aurelien Jarno <aurel32@debian.org>  Mon, 02 Oct 2023 22:22:57 +0200
 
 glibc (2.31-13+deb11u6) bullseye; urgency=medium
 

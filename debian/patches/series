@@ -169,3 +169,4 @@ any/local-test-install.diff
 any/git-surplus-tls-accounting.diff
 any/git-ld.so-cache-endianness-markup.diff
 any/local-CVE-2021-33574-mq_notify-use-after-free.diff
+any/local-CVE-2023-4911.patch
