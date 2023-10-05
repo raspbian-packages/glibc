@@ -1,5 +1,5 @@
 /* strcmp optimized with SSE2.
-   Copyright (C) 2017-2022 Free Software Foundation, Inc.
+   Copyright (C) 2017-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -104,7 +104,7 @@ ENTRY (STRCMP)
 #  else
 	mov	(%rdx), %RAX_LP
 #  endif
-	testl	$1, LOCALE_DATA_VALUES+_NL_CTYPE_NONASCII_CASE*SIZEOF_VALUES(%rax)
+	testb	$1, LOCALE_DATA_VALUES+_NL_CTYPE_NONASCII_CASE*SIZEOF_VALUES(%rax)
 	jne	__strcasecmp_l_nonascii
 # elif defined USE_AS_STRNCASECMP_L
 	/* We have to fall back on the C implementation for locales
@@ -114,7 +114,7 @@ ENTRY (STRCMP)
 #  else
 	mov	(%rcx), %RAX_LP
 #  endif
-	testl	$1, LOCALE_DATA_VALUES+_NL_CTYPE_NONASCII_CASE*SIZEOF_VALUES(%rax)
+	testb	$1, LOCALE_DATA_VALUES+_NL_CTYPE_NONASCII_CASE*SIZEOF_VALUES(%rax)
 	jne	__strncasecmp_l_nonascii
 # endif
 

@@ -1,4 +1,4 @@
-# Copyright (C) 1994-2022 Free Software Foundation, Inc.
+# Copyright (C) 1994-2023 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -101,6 +101,7 @@ tests += \
   tst-resolv-invalid-cname \
   tst-resolv-network \
   tst-resolv-noaaaa \
+  tst-resolv-noaaaa-vc \
   tst-resolv-nondecimal \
   tst-resolv-res_init-multi \
   tst-resolv-search \
@@ -234,6 +235,7 @@ LOCALES := en_US.UTF-8 en_US.ISO-8859-1
 include ../gen-locales.mk
 
 CFLAGS-res_hconf.c += -fexceptions
+CFLAGS-inet_pton.c += $(config-cflags-wno-ignored-attributes)
 
 # The DNS NSS modules needs the resolver.
 $(objpfx)libnss_dns.so: $(objpfx)libresolv.so
@@ -291,6 +293,7 @@ $(objpfx)tst-resolv-res_init-thread: $(objpfx)libresolv.so \
 $(objpfx)tst-resolv-invalid-cname: $(objpfx)libresolv.so \
   $(shared-thread-library)
 $(objpfx)tst-resolv-noaaaa: $(objpfx)libresolv.so $(shared-thread-library)
+$(objpfx)tst-resolv-noaaaa-vc: $(objpfx)libresolv.so $(shared-thread-library)
 $(objpfx)tst-resolv-nondecimal: $(objpfx)libresolv.so $(shared-thread-library)
 $(objpfx)tst-resolv-qtypes: $(objpfx)libresolv.so $(shared-thread-library)
 $(objpfx)tst-resolv-rotate: $(objpfx)libresolv.so $(shared-thread-library)

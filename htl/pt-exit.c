@@ -1,5 +1,5 @@
 /* Thread termination.
-   Copyright (C) 2000-2022 Free Software Foundation, Inc.
+   Copyright (C) 2000-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -46,11 +46,17 @@ __pthread_exit (void *status)
        *handlers = (*handlers)->__next)
     (*handlers)->__handler ((*handlers)->__arg);
 
+  /* Call destructors for the thread_local TLS variables.  */
+#ifndef SHARED
+  if (&__call_tls_dtors != NULL)
+#endif
+    __call_tls_dtors ();
+
   __pthread_setcancelstate (oldstate, &oldstate);
 
   /* Decrease the number of threads.  We use an atomic operation to
      make sure that only the last thread calls `exit'.  */
-  if (atomic_decrement_and_test (&__pthread_total))
+  if (atomic_fetch_add_relaxed (&__pthread_total, -1) == 1)
     /* We are the last thread.  */
     exit (0);
 

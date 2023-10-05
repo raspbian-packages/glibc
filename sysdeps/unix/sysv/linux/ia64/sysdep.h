@@ -1,4 +1,4 @@
-/* Copyright (C) 1999-2022 Free Software Foundation, Inc.
+/* Copyright (C) 1999-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -323,25 +323,5 @@
 #endif
 
 #endif /* not __ASSEMBLER__ */
-
-/* Pointer mangling support.  */
-#if IS_IN (rtld)
-/* We cannot use the thread descriptor because in ld.so we use setjmp
-   earlier than the descriptor is initialized.  */
-#else
-# ifdef __ASSEMBLER__
-#  define PTR_MANGLE(reg, tmpreg) \
-        add	tmpreg=-16,r13		\
-        ;;				\
-        ld8	tmpreg=[tmpreg]		\
-        ;;				\
-        xor	reg=reg, tmpreg
-#  define PTR_DEMANGLE(reg, tmpreg) PTR_MANGLE (reg, tmpreg)
-# else
-#  define PTR_MANGLE(var) \
-  (var) = (void *) ((uintptr_t) (var) ^ THREAD_GET_POINTER_GUARD ())
-#  define PTR_DEMANGLE(var)	PTR_MANGLE (var)
-# endif
-#endif
 
 #endif /* linux/ia64/sysdep.h */

@@ -1,5 +1,5 @@
 /* Transliteration using the locale's data.
-   Copyright (C) 2000-2022 Free Software Foundation, Inc.
+   Copyright (C) 2000-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -26,6 +26,7 @@
 #include <libc-lock.h>
 #include "gconv_int.h"
 #include "../locale/localeinfo.h"
+#include <pointer_guard.h>
 
 
 int
@@ -52,10 +53,8 @@ __gconv_transliterate (struct __gconv_step *step,
   winbufend = (const uint32_t *) inbufend;
 
   __gconv_fct fct = step->__fct;
-#ifdef PTR_DEMANGLE
   if (step->__shlib_handle != NULL)
     PTR_DEMANGLE (fct);
-#endif
 
   /* If there is no transliteration information in the locale don't do
      anything and return the error.  */

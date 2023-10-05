@@ -1,4 +1,4 @@
-/* Copyright (C) 1996-2022 Free Software Foundation, Inc.
+/* Copyright (C) 1996-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    This program is free software; you can redistribute it and/or modify
@@ -701,7 +701,7 @@ static bool
 utf8_sequence_error (struct linereader *lr, uint8_t ch1, int ch2, int ch3,
 		     int ch4)
 {
-  char buf[30];
+  char buf[38];
 
   if (ch2 < 0)
     snprintf (buf, sizeof (buf), "0x%02x", ch1);

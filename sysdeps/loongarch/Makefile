@@ -6,10 +6,8 @@ endif
 # definition of some assembler macros.
 ASFLAGS-.os += $(pic-ccflag)
 
-abi-variants := lp64
-
-ifeq (,$(filter $(default-abi),$(abi-variants)))
-$(error Unknown ABI $(default-abi), must be one of $(abi-variants))
+# All the objects in lib*_nonshared.a need to be compiled with medium code
+# model or large applications may fail to link.
+ifeq (yes,$(have-cmodel-medium))
+CFLAGS-.oS += -mcmodel=medium
 endif
-
-abi-lp64-condition    := defined __loongarch_lp64

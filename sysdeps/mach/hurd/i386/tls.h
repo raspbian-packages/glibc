@@ -1,5 +1,5 @@
 /* Definitions for thread-local data handling.  Hurd/i386 version.
-   Copyright (C) 2003-2022 Free Software Foundation, Inc.
+   Copyright (C) 2003-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -48,6 +48,9 @@ typedef struct
      compatible with the i386 Linux version.  */
   mach_port_t reply_port;      /* This thread's reply port.  */
   struct hurd_sigstate *_hurd_sigstate;
+
+  /* Used by the exception handling implementation in the dynamic loader.  */
+  struct rtld_catch *rtld_catch;
 } tcbhead_t;
 
 /* Return tcbhead_t from a TLS segment descriptor.  */
@@ -114,12 +117,12 @@ extern unsigned short __init1_desc;
 
 # define HURD_SEL_LDT(sel) (__builtin_expect ((sel) & 4, 0))
 
-static inline const char * __attribute__ ((unused))
+static inline bool __attribute__ ((unused))
 _hurd_tls_init (tcbhead_t *tcb)
 {
   HURD_TLS_DESC_DECL (desc, tcb);
   thread_t self = __mach_thread_self ();
-  const char *msg = NULL;
+  bool success = true;
 
   /* This field is used by TLS accesses to get our "thread pointer"
      from the TLS point of view.  */
@@ -138,14 +141,14 @@ _hurd_tls_init (tcbhead_t *tcb)
       assert_perror (err);
       if (err)
       {
-	msg = "i386_set_ldt failed";
+	success = false;
 	goto out;
       }
     }
   else if (err)
     {
       assert_perror (err); /* Separate from above with different line #. */
-      msg = "i386_set_gdt failed";
+      success = false;
       goto out;
     }
 
@@ -154,7 +157,7 @@ _hurd_tls_init (tcbhead_t *tcb)
 
 out:
   __mach_port_deallocate (__mach_task_self (), self);
-  return msg;
+  return success;
 }
 
 /* Code to initially initialize the thread pointer.  This might need

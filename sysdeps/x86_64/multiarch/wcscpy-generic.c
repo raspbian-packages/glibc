@@ -1,5 +1,5 @@
 /* wcscpy.
-   Copyright (C) 2022 Free Software Foundation, Inc.
+   Copyright (C) 2022-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -18,8 +18,7 @@
 
 
 #include <isa-level.h>
-
-#if ISA_SHOULD_BUILD (1)
+#if ISA_SHOULD_BUILD (2)
 
 # define WCSCPY  __wcscpy_generic
 # include <wcsmbs/wcscpy.c>

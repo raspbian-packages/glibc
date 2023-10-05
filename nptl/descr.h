@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2022 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -389,6 +389,9 @@ struct pthread
      restore the signal mask.  (Threads are launched with all signals
      masked.)  */
   internal_sigset_t sigmask;
+
+  /* Used by the exception handling implementation in the dynamic loader.  */
+  struct rtld_catch *rtld_catch;
 
   /* Indicates whether is a C11 thread created by thrd_creat.  */
   bool c11;

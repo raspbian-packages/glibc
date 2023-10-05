@@ -1,5 +1,5 @@
 /* Host and service name lookups using Name Service Switch modules.
-   Copyright (C) 1996-2022 Free Software Foundation, Inc.
+   Copyright (C) 1996-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -120,6 +120,7 @@ struct gaih_result
 {
   struct gaih_addrtuple *at;
   char *canon;
+  char *h_name;
   bool free_at;
   bool got_ipv6;
 };
@@ -165,6 +166,7 @@ gaih_result_reset (struct gaih_result *res)
   if (res->free_at)
     free (res->at);
   free (res->canon);
+  free (res->h_name);
   memset (res, 0, sizeof (*res));
 }
 
@@ -203,9 +205,8 @@ gaih_inet_serv (const char *servicename, const struct gaih_typeproto *tp,
   return 0;
 }
 
-/* Convert struct hostent to a list of struct gaih_addrtuple objects.  h_name
-   is not copied, and the struct hostent object must not be deallocated
-   prematurely.  The new addresses are appended to the tuple array in RES.  */
+/* Convert struct hostent to a list of struct gaih_addrtuple objects.  The new
+   addresses are appended to the tuple array in RES.  */
 static bool
 convert_hostent_to_gaih_addrtuple (const struct addrinfo *req, int family,
 				   struct hostent *h, struct gaih_result *res)
@@ -238,6 +239,15 @@ convert_hostent_to_gaih_addrtuple (const struct addrinfo *req, int family,
   res->at = array;
   res->free_at = true;
 
+  /* Duplicate h_name because it may get reclaimed when the underlying storage
+     is freed.  */
+  if (res->h_name == NULL)
+    {
+      res->h_name = __strdup (h->h_name);
+      if (res->h_name == NULL)
+	return false;
+    }
+
   /* Update the next pointers on reallocation.  */
   for (size_t i = 0; i < old; i++)
     array[i].next = array + i + 1;
@@ -262,7 +272,6 @@ convert_hostent_to_gaih_addrtuple (const struct addrinfo *req, int family,
 	}
       array[i].next = array + i + 1;
     }
-  array[0].name = h->h_name;
   array[count - 1].next = NULL;
 
   return true;
@@ -324,15 +333,15 @@ gethosts (nss_gethostbyname3_r fct, int family, const char *name,
    memory allocation failure.  The returned string is allocated on the
    heap; the caller has to free it.  */
 static char *
-getcanonname (nss_action_list nip, struct gaih_addrtuple *at, const char *name)
+getcanonname (nss_action_list nip, const char *hname, const char *name)
 {
   nss_getcanonname_r *cfct = __nss_lookup_function (nip, "getcanonname_r");
   char *s = (char *) name;
   if (cfct != NULL)
     {
       char buf[256];
-      if (DL_CALL_FCT (cfct, (at->name ?: name, buf, sizeof (buf),
-			      &s, &errno, &h_errno)) != NSS_STATUS_SUCCESS)
+      if (DL_CALL_FCT (cfct, (hname ?: name, buf, sizeof (buf), &s, &errno,
+			      &h_errno)) != NSS_STATUS_SUCCESS)
 	/* If the canonical name cannot be determined, use the passed
 	   string.  */
 	s = (char *) name;
@@ -771,7 +780,7 @@ get_nss_addresses (const char *name, const struct addrinfo *req,
 		  if ((req->ai_flags & AI_CANONNAME) != 0
 		      && res->canon == NULL)
 		    {
-		      char *canonbuf = getcanonname (nip, res->at, name);
+		      char *canonbuf = getcanonname (nip, res->h_name, name);
 		      if (canonbuf == NULL)
 			{
 			  __resolv_context_put (res_ctx);
@@ -1187,9 +1196,7 @@ free_and_return:
   if (malloc_name)
     free ((char *) name);
   free (addrmem);
-  if (res.free_at)
-    free (res.at);
-  free (res.canon);
+  gaih_result_reset (&res);
 
   return result;
 }
@@ -2253,24 +2260,10 @@ try_connect (int *fdp, int *afp, struct sockaddr_in6 *source_addrp,
   int fd = *fdp;
   int af = *afp;
   socklen_t sl = sizeof (*source_addrp);
-  const struct sockaddr *sa = addr;
-
-#ifdef __FreeBSD_kernel__
-  struct sockaddr_in6 sa_in6;
-  /* The FreeBSD kernel doesn't allow connections on port 0. Use
-     port 1 instead, as on the FreeBSD libc. */
-  if (((struct sockaddr_in *)sa)->sin_port == htons(0))
-    {
-      sa = (struct sockaddr *)&sa_in6;
-      memcpy(&sa_in6, q->ai_addr, q->ai_family == AF_INET6 ?
-           sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in));
-      sa_in6.sin6_port = htons(1);
-    }
-#endif
 
   while (true)
     {
-      if (fd != -1 && __connect (fd, sa, addrlen) == 0
+      if (fd != -1 && __connect (fd, addr, addrlen) == 0
 	  && __getsockname (fd, (struct sockaddr *) source_addrp, &sl) == 0)
 	return true;
 

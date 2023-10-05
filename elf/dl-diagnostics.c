@@ -1,5 +1,5 @@
 /* Print diagnostics data in ld.so.
-   Copyright (C) 2021-2022 Free Software Foundation, Inc.
+   Copyright (C) 2021-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -108,7 +108,7 @@ _dl_diagnostics_print_labeled_value (const char *label, uint64_t value)
       if (high == 0)
         _dl_printf ("%s=0x%x\n", label, low);
       else
-        _dl_printf ("%s=0x%x%08x\n", label, high, low);
+        _dl_printf ("%s=0x%x%0*x\n", label, high, 8, low);
     }
 }
 

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # Verify scripts/glibcelf.py contents against elf/elf.h.
-# Copyright (C) 2022 Free Software Foundation, Inc.
+# Copyright (C) 2022-2023 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 #
 # The GNU C Library is free software; you can redistribute it and/or
@@ -18,7 +18,6 @@
 # <https://www.gnu.org/licenses/>.
 
 import argparse
-import enum
 import sys
 
 import glibcelf
@@ -45,10 +44,56 @@ def find_constant_prefix(name):
 
 def find_enum_types():
     """A generator for OpenIntEnum and IntFlag classes in glibcelf."""
+    classes = set((glibcelf._TypedConstant, glibcelf._IntConstant,
+                   glibcelf._FlagConstant))
     for obj in vars(glibcelf).values():
-        if isinstance(obj, type) and obj.__bases__[0] in (
-                glibcelf._OpenIntEnum, enum.Enum, enum.IntFlag):
+        if isinstance(obj, type) and obj not in classes \
+           and obj.__bases__[0] in classes:
             yield obj
+
+def check_basic():
+    """Check basic functionality of the constant classes."""
+
+    if glibcelf.Pt.PT_NULL is not glibcelf.Pt(0):
+        error('Pt(0) not interned')
+    if glibcelf.Pt(17609) is glibcelf.Pt(17609):
+        error('Pt(17609) unexpectedly interned')
+    if glibcelf.Pt(17609) == glibcelf.Pt(17609):
+        pass
+    else:
+        error('Pt(17609) equality')
+    if glibcelf.Pt(17610) == glibcelf.Pt(17609):
+        error('Pt(17610) equality')
+
+    if str(glibcelf.Pt.PT_NULL) != 'PT_NULL':
+        error('str(PT_NULL)')
+    if str(glibcelf.Pt(17609)) != '17609':
+        error('str(Pt(17609))')
+
+    if repr(glibcelf.Pt.PT_NULL) != 'PT_NULL':
+        error('repr(PT_NULL)')
+    if repr(glibcelf.Pt(17609)) != 'Pt(17609)':
+        error('repr(Pt(17609))')
+
+    if glibcelf.Pt('PT_AARCH64_MEMTAG_MTE') \
+       is not glibcelf.Pt.PT_AARCH64_MEMTAG_MTE:
+        error('PT_AARCH64_MEMTAG_MTE identity')
+    if glibcelf.Pt(0x70000002) is glibcelf.Pt.PT_AARCH64_MEMTAG_MTE:
+        error('Pt(0x70000002) identity')
+    if glibcelf.PtAARCH64(0x70000002) is not glibcelf.Pt.PT_AARCH64_MEMTAG_MTE:
+        error('PtAARCH64(0x70000002) identity')
+    if glibcelf.Pt.PT_AARCH64_MEMTAG_MTE.short_name != 'AARCH64_MEMTAG_MTE':
+        error('PT_AARCH64_MEMTAG_MTE short name')
+
+    # Special cases for int-like Shn.
+    if glibcelf.Shn(32) == glibcelf.Shn.SHN_XINDEX:
+        error('Shn(32)')
+    if glibcelf.Shn(32) + 0 != 32:
+        error('Shn(32) + 0')
+    if 32 in glibcelf.Shn:
+        error('32 in Shn')
+    if 0 not in glibcelf.Shn:
+        error('0 not in Shn')
 
 def check_duplicates():
     """Verifies that enum types do not have duplicate values.
@@ -59,17 +104,16 @@ def check_duplicates():
     global_seen = {}
     for typ in find_enum_types():
         seen = {}
-        last = None
-        for (name, e) in typ.__members__.items():
+        for (name, e) in typ.by_name.items():
             if e.value in seen:
-                error('{} has {}={} and {}={}'.format(
-                    typ, seen[e.value], e.value, name, e.value))
-                last = e
+                other = seen[e.value]
+                # Value conflicts only count if they are between
+                # the same base type.
+                if e.__class__ is typ and other.__class__ is typ:
+                    error('{} has {}={} and {}={}'.format(
+                        typ, other, e.value, name, e.value))
             else:
                 seen[e.value] = name
-                if last is not None and last.value > e.value:
-                    error('{} has {}={} after {}={}'.format(
-                        typ, name, e.value, last.name, last.value))
                 if name in global_seen:
                     error('{} used in {} and {}'.format(
                         name, global_seen[name], typ))
@@ -81,7 +125,7 @@ def check_constant_prefixes():
     seen = set()
     for typ in find_enum_types():
         typ_prefix = None
-        for val in typ:
+        for val in typ.by_name.values():
             prefix = find_constant_prefix(val.name)
             if prefix is None:
                 error('constant {!r} for {} has unknown prefix'.format(
@@ -113,7 +157,6 @@ def find_elf_h_constants(cc):
 # used in <elf.h>.
 glibcelf_skipped_aliases = (
     ('EM_ARC_A5', 'EM_ARC_COMPACT'),
-    ('PF_PARISC_SBP', 'PF_HP_SBP')
 )
 
 # Constants that provide little value and are not included in
@@ -146,6 +189,7 @@ DT_VALRNGLO
 DT_VERSIONTAGNUM
 ELFCLASSNUM
 ELFDATANUM
+EM_NUM
 ET_HIOS
 ET_HIPROC
 ET_LOOS
@@ -159,6 +203,7 @@ PT_HISUNW
 PT_LOOS
 PT_LOPROC
 PT_LOSUNW
+PT_NUM
 SHF_MASKOS
 SHF_MASKPROC
 SHN_HIOS
@@ -193,7 +238,7 @@ def check_constant_values(cc):
     """Checks the values of <elf.h> constants against glibcelf."""
 
     glibcelf_constants = {
-        e.name: e for typ in find_enum_types() for e in typ}
+        e.name: e for typ in find_enum_types() for e in typ.by_name.values()}
     elf_h_constants = find_elf_h_constants(cc=cc)
 
     missing_in_glibcelf = (set(elf_h_constants) - set(glibcelf_constants)
@@ -229,16 +274,35 @@ def check_constant_values(cc):
     for name in sorted(set(glibcelf_constants) & set(elf_h_constants)):
         glibcelf_value = glibcelf_constants[name].value
         elf_h_value = int(elf_h_constants[name])
-        # On 32-bit architectures <elf.h> as some constants that are
+        # On 32-bit architectures <elf.h> has some constants that are
         # parsed as signed, while they are unsigned in glibcelf.  So
         # far, this only affects some flag constants, so special-case
         # them here.
         if (glibcelf_value != elf_h_value
-            and not (isinstance(glibcelf_constants[name], enum.IntFlag)
+            and not (isinstance(glibcelf_constants[name],
+                                glibcelf._FlagConstant)
                      and glibcelf_value == 1 << 31
                      and elf_h_value == -(1 << 31))):
             error('{}: glibcelf has {!r}, <elf.h> has {!r}'.format(
                 name, glibcelf_value, elf_h_value))
+
+def check_hashes():
+    for name, expected_elf, expected_gnu in (
+            ('', 0, 0x1505),
+            ('PPPPPPPPPPPP', 0, 0x9f105c45),
+            ('GLIBC_2.0', 0xd696910, 0xf66c3dd5),
+            ('GLIBC_2.34', 0x69691b4, 0xc3f3f90c),
+            ('GLIBC_PRIVATE', 0x963cf85, 0x692a260)):
+        for convert in (lambda x: x, lambda x: x.encode('UTF-8')):
+            name = convert(name)
+            actual_elf = glibcelf.elf_hash(name)
+            if actual_elf != expected_elf:
+                error('elf_hash({!r}): {:x} != 0x{:x}'.format(
+                    name, actual_elf, expected_elf))
+            actual_gnu = glibcelf.gnu_hash(name)
+            if actual_gnu != expected_gnu:
+                error('gnu_hash({!r}): {:x} != 0x{:x}'.format(
+                    name, actual_gnu, expected_gnu))
 
 def main():
     """The main entry point."""
@@ -248,9 +312,11 @@ def main():
                         help='C compiler (including options) to use')
     args = parser.parse_args()
 
+    check_basic()
     check_duplicates()
     check_constant_prefixes()
     check_constant_values(cc=args.cc)
+    check_hashes()
 
     if errors_encountered > 0:
         print("note: errors encountered:", errors_encountered)

@@ -1,4 +1,4 @@
-/* Copyright (C) 1999-2022 Free Software Foundation, Inc.
+/* Copyright (C) 1999-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -70,7 +70,7 @@ const char *glibc_hwcaps_subdirectory_name
 
 extern void add_to_cache (const char *path, const char *filename,
 			  const char *soname, int flags,
-			  unsigned int isa_level, uint64_t hwcap,
+			  unsigned int isa_level,
 			  struct glibc_hwcaps_subdirectory *);
 
 extern void init_aux_cache (void);
@@ -89,8 +89,6 @@ extern void save_aux_cache (const char *aux_cache_name);
 extern int process_file (const char *real_file_name, const char *file_name,
 			 const char *lib, int *flag, unsigned int *isa_level,
 			 char **soname, int is_link, struct stat *stat_buf);
-
-extern char *implicit_soname (const char *lib, int flag);
 
 /* Declared in readelflib.c.  */
 extern int process_elf_file (const char *file_name, const char *lib,

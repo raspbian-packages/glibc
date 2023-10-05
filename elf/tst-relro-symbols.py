@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # Verify that certain symbols are covered by RELRO.
-# Copyright (C) 2022 Free Software Foundation, Inc.
+# Copyright (C) 2022-2023 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 #
 # The GNU C Library is free software; you can redistribute it and/or
@@ -56,10 +56,10 @@ def get_parser():
     """Return an argument parser for this script."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('object', help='path to object file to check')
-    parser.add_argument('--required', metavar='NAME', default=(),
-                        help='required symbol names', nargs='*')
-    parser.add_argument('--optional', metavar='NAME', default=(),
-                        help='required symbol names', nargs='*')
+    parser.add_argument('--required', metavar='NAME', action='append',
+                        default=[], help='required symbol names')
+    parser.add_argument('--optional', metavar='NAME', action='append',
+                        default=[], help='required symbol names')
     return parser
 
 def main(argv):

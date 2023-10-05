@@ -1,5 +1,5 @@
 /* Map in a shared object's segments from the file.
-   Copyright (C) 1995-2022 Free Software Foundation, Inc.
+   Copyright (C) 1995-2023 Free Software Foundation, Inc.
    Copyright The GNU Toolchain Authors.
    This file is part of the GNU C Library.
 
@@ -1263,7 +1263,7 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 
     /* Now process the load commands and map segments into memory.
        This is responsible for filling in:
-       l_map_start, l_map_end, l_addr, l_contiguous, l_text_end, l_phdr
+       l_map_start, l_map_end, l_addr, l_contiguous, l_phdr
      */
     errstring = _dl_map_segments (l, fd, header, type, loadcmds, nloadcmds,
 				  maplength, has_holes, loader);
@@ -1406,7 +1406,7 @@ cannot enable executable stack as shared object requires");
 
   if (__glibc_unlikely (GLRO(dl_debug_mask) & DL_DEBUG_FILES))
     _dl_debug_printf ("\
-  dynamic: 0x%0*lx  base: 0x%0*lx   size: 0x%0*Zx\n\
+  dynamic: 0x%0*lx  base: 0x%0*lx   size: 0x%0*zx\n\
     entry: 0x%0*lx  phdr: 0x%0*lx  phnum:   %*u\n\n",
 			   (int) sizeof (void *) * 2,
 			   (unsigned long int) l->l_ld,

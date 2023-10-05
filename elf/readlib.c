@@ -1,4 +1,4 @@
-/* Copyright (C) 1999-2022 Free Software Foundation, Inc.
+/* Copyright (C) 1999-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    This program is free software; you can redistribute it and/or modify
@@ -43,24 +43,6 @@ struct known_names
   int flag;
 };
 
-static struct known_names interpreters[] =
-{
-  { "/lib/" LD_SO, FLAG_ELF_LIBC6 },
-#ifdef SYSDEP_KNOWN_INTERPRETER_NAMES
-  SYSDEP_KNOWN_INTERPRETER_NAMES
-#endif
-};
-
-static struct known_names known_libs[] =
-{
-  { LIBC_SO, FLAG_ELF_LIBC6 },
-  { LIBM_SO, FLAG_ELF_LIBC6 },
-#ifdef SYSDEP_KNOWN_LIBRARY_NAMES
-  SYSDEP_KNOWN_LIBRARY_NAMES
-#endif
-};
-
-
 /* Check if string corresponds to a GDB Python file.  */
 static bool
 is_gdb_python_file (const char *name)
@@ -83,7 +65,8 @@ process_file (const char *real_file_name, const char *file_name,
   struct exec *aout_header;
 
   ret = 0;
-  *flag = FLAG_ANY;
+  /* Just set FLAG_ELF_LIBC6 as old formats are not supported anymore.  */
+  *flag = FLAG_ELF_LIBC6;
   *soname = NULL;
 
   file = fopen (real_file_name, "rb");
@@ -150,7 +133,6 @@ process_file (const char *real_file_name, const char *file_name,
 	    *dot = '\0';
 	}
       *soname = copy;
-      *flag = FLAG_LIBC4;
       goto done;
     }
 
@@ -182,28 +164,6 @@ process_file (const char *real_file_name, const char *file_name,
 
   *stat_buf = statbuf;
   return ret;
-}
-
-/* Returns made up soname if lib doesn't have explicit DT_SONAME.  */
-
-char *
-implicit_soname (const char *lib, int flag)
-{
-  char *soname = xstrdup (lib);
-
-  if ((flag & FLAG_TYPE_MASK) != FLAG_LIBC4)
-    return soname;
-
-  /* Aout files don't have a soname, just return the name
-     including the major number.  */
-  char *major = strstr (soname, ".so.");
-  if (major)
-    {
-      char *dot = strstr (major + 4, ".");
-      if (dot)
-	*dot = '\0';
-    }
-  return soname;
 }
 
 /* Get architecture specific version of process_elf_file.  */

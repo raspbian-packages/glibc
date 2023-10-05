@@ -1,5 +1,5 @@
 /* Operating system support for run-time dynamic linker.  Hurd version.
-   Copyright (C) 1995-2022 Free Software Foundation, Inc.
+   Copyright (C) 1995-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -384,7 +384,7 @@ __ssize_t weak_function
 __write (int fd, const void *buf, size_t nbytes)
 {
   error_t err;
-  mach_msg_type_number_t nwrote;
+  vm_size_t nwrote;
 
   assert (fd < _hurd_init_dtablesize);
 
@@ -417,7 +417,7 @@ __writev (int fd, const struct iovec *iov, int niov)
     {
       char buf[total], *bufp = buf;
       error_t err;
-      mach_msg_type_number_t nwrote;
+      vm_size_t nwrote;
 
       for (i = 0; i < niov; ++i)
 	bufp = (memcpy (bufp, iov[i].iov_base, iov[i].iov_len)
@@ -701,7 +701,8 @@ void *weak_function
 __sbrk (intptr_t increment)
 {
   vm_address_t addr;
-  __vm_allocate (__mach_task_self (), &addr, increment, 1);
+  if (__vm_allocate (__mach_task_self (), &addr, increment, 1))
+    return NULL;
   return (void *) addr;
 }
 

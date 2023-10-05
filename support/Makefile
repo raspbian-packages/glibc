@@ -1,5 +1,5 @@
 # Makefile for support library, used only at build and test time
-# Copyright (C) 2016-2022 Free Software Foundation, Inc.
+# Copyright (C) 2016-2023 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -161,6 +161,7 @@ libsupport-routines = \
   xpthread_cancel \
   xpthread_check_return \
   xpthread_cond_wait \
+  xpthread_cond_signal \
   xpthread_create \
   xpthread_detach \
   xpthread_join \
@@ -276,12 +277,12 @@ $(objpfx)test-run-command : $(libsupport) $(common-objpfx)elf/static-stubs.o
 tests = \
   README-testing \
   tst-support-namespace \
+  tst-support-open-dev-null-range \
+  tst-support-process_state \
   tst-support_blob_repeat \
   tst-support_capture_subprocess \
   tst-support_descriptors \
   tst-support_format_dns_packet \
-  tst-support-open-dev-null-range \
-  tst-support-process_state \
   tst-support_quote_blob \
   tst-support_quote_blob_wide \
   tst-support_quote_string \
@@ -305,6 +306,12 @@ $(objpfx)tst-support_record_failure-2.out: tst-support_record_failure-2.sh \
 	  > $@; \
 	$(evaluate-test)
 endif
+
+tests-special += $(objpfx)tst-glibcpp.out
+
+$(objpfx)tst-glibcpp.out: tst-glibcpp.py $(..)scripts/glibcpp.py
+	PYTHONPATH=$(..)scripts $(PYTHON) tst-glibcpp.py > $@ 2>&1; \
+	$(evaluate-test)
 
 $(objpfx)tst-support_format_dns_packet: $(common-objpfx)resolv/libresolv.so
 

@@ -196,6 +196,7 @@ extern int __utimensat64_helper (int fd, const char *file,
                                  const struct __timespec64 tsp[2], int flags);
 libc_hidden_proto (__utimensat64_helper);
 
+extern int __futimesat (int __fd, const char *__file, const struct timeval __tvp[2]);
 #if __TIMESIZE == 64
 # define __futimes64 __futimes
 # define __futimesat64 __futimesat
@@ -346,9 +347,17 @@ libc_hidden_proto (__time64)
 /* Check whether T fits in int32_t, assume all usages are for
    sizeof(time_t) == 32.  */
 static inline bool
-in_time_t_range (__time64_t t)
+in_int32_t_range (__time64_t t)
 {
   int32_t s = t;
+  return s == t;
+}
+
+/* Check whether T fits in time_t.  */
+static inline bool
+in_time_t_range (__time64_t t)
+{
+  time_t s = t;
   return s == t;
 }
 

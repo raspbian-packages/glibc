@@ -1,5 +1,5 @@
 /* Common mmap definition for Linux implementation.
-   Copyright (C) 2017-2022 Free Software Foundation, Inc.
+   Copyright (C) 2017-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -28,7 +28,7 @@
 # define MMAP2_PAGE_UNIT 4096ULL
 #endif
 
-#if MMAP2_PAGE_UNIT == -1
+#if MMAP2_PAGE_UNIT == -1ULL
 static uint64_t page_unit;
 # define MMAP_CHECK_PAGE_UNIT()			\
   if (page_unit == 0)				\

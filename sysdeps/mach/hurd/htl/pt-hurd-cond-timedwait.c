@@ -1,5 +1,5 @@
 /* pthread_hurd_cond_timedwait_np.  Hurd-specific wait on a condition.
-   Copyright (C) 2012-2022 Free Software Foundation, Inc.
+   Copyright (C) 2012-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -72,6 +72,10 @@ __pthread_hurd_cond_timedwait_internal (pthread_cond_t *cond,
 
   if (abstime != NULL && ! valid_nanoseconds (abstime->tv_nsec))
     return EINVAL;
+
+  err = __pthread_mutex_checklocked (mutex);
+  if (err)
+    return err;
 
   /* Atomically enqueue our thread on the condition variable's queue of
      waiters, and mark our sigstate to indicate that `cancel_me' must be

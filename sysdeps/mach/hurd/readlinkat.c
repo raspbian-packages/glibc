@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2022 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -26,7 +26,7 @@
    than LEN bytes of BUF.  The contents are not null-terminated.
    Returns the number of characters read, or -1 for errors.  */
 ssize_t
-readlinkat (int fd, const char *file_name, char *buf, size_t len)
+__readlinkat (int fd, const char *file_name, char *buf, size_t len)
 {
   error_t err;
   file_t file_stat;
@@ -67,4 +67,5 @@ readlinkat (int fd, const char *file_name, char *buf, size_t len)
 
   return err ? __hurd_fail (err) : len;
 }
+weak_alias (__readlinkat, readlinkat)
 libc_hidden_def (readlinkat)

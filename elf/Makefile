@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2022 Free Software Foundation, Inc.
+# Copyright (C) 1995-2023 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -34,7 +34,6 @@ routines = \
   dl-addr \
   dl-addr-obj \
   dl-early_allocate \
-  dl-error \
   dl-iteratephdr \
   dl-libc \
   dl-origin \
@@ -53,6 +52,8 @@ routines = \
 # profiled libraries.
 dl-routines = \
   dl-call-libc-early-init \
+  dl-call_fini \
+  dl-catch \
   dl-close \
   dl-debug \
   dl-debug-symbols \
@@ -133,7 +134,6 @@ rtld-routines = \
   dl-diagnostics-cpu \
   dl-diagnostics-kernel \
   dl-environ \
-  dl-error-minimal \
   dl-hwcaps \
   dl-hwcaps-subdirs \
   dl-hwcaps_split \
@@ -160,11 +160,6 @@ CFLAGS-dl-minimal-malloc.op = $(no-stack-protector)
 # in _dl_start.  Make sure this isn't turned into a call to regular memset.
 ifeq (yes,$(have-loop-to-function))
 CFLAGS-rtld.c += -fno-tree-loop-distribute-patterns
-endif
-
-ifeq (yes,$(have-loop-to-function))
-# Likewise, during static library startup, memset is not yet available.
-CFLAGS-dl-support.c = -fno-tree-loop-distribute-patterns
 endif
 
 # Compile rtld itself without stack protection.
@@ -604,19 +599,16 @@ $(objpfx)tst-relro-libc.out: tst-relro-symbols.py $(..)/scripts/glibcelf.py \
 	    --required=_IO_file_jumps \
 	    --required=_IO_file_jumps_maybe_mmap \
 	    --required=_IO_file_jumps_mmap \
-	    --required=_IO_helper_jumps \
 	    --required=_IO_mem_jumps \
-	    --required=_IO_obstack_jumps \
+	    --required=_IO_printf_buffer_as_file_jumps \
 	    --required=_IO_proc_jumps \
-	    --required=_IO_str_chk_jumps \
 	    --required=_IO_str_jumps \
-	    --required=_IO_strn_jumps \
 	    --required=_IO_wfile_jumps \
 	    --required=_IO_wfile_jumps_maybe_mmap \
 	    --required=_IO_wfile_jumps_mmap \
 	    --required=_IO_wmem_jumps \
+	    --required=_IO_wprintf_buffer_as_file_jumps \
 	    --required=_IO_wstr_jumps \
-	    --required=_IO_wstrn_jumps \
 	    --optional=_IO_old_cookie_jumps \
 	    --optional=_IO_old_file_jumps \
 	    --optional=_IO_old_proc_jumps \
@@ -635,6 +627,7 @@ tests-special += \
   $(objpfx)noload-mem.out \
   $(objpfx)tst-ldconfig-X.out \
   $(objpfx)tst-ldconfig-p.out \
+  $(objpfx)tst-ldconfig-soname.out \
   $(objpfx)tst-leaks1-mem.out \
   $(objpfx)tst-rtld-help.out \
   # tests-special
@@ -867,6 +860,8 @@ modules-names += \
   tst-initorderb2 \
   tst-latepthreadmod \
   tst-ldconfig-ld-mod \
+  tst-ldconfig-soname-lib-with-soname \
+  tst-ldconfig-soname-lib-without-soname \
   tst-main1mod \
   tst-nodelete2mod \
   tst-nodelete-dlclose-dso \
@@ -1277,6 +1272,7 @@ $(objpfx)dl-allobjs.os: $(all-rtld-routines:%=$(objpfx)%.os)
 rtld-stubbed-symbols = \
   __GI___pthread_disable_asynccancel \
   __GI___pthread_enable_asynccancel \
+  __libc_assert_fail \
   __pthread_disable_asynccancel \
   __pthread_enable_asynccancel \
   calloc \
@@ -2409,6 +2405,17 @@ $(objpfx)tst-ldconfig-p.out : tst-ldconfig-p.sh $(objpfx)ldconfig
 		 '$(run-program-env)' > $@; \
 	$(evaluate-test)
 
+LDFLAGS-tst-ldconfig-soname-lib-with-soname.so = \
+  -Wl,-soname,libtst-ldconfig-soname-lib-with-soname.so.1
+
+$(objpfx)tst-ldconfig-soname.out : tst-ldconfig-soname.sh \
+  $(objpfx)ldconfig \
+  $(objpfx)tst-ldconfig-soname-lib-with-soname.so \
+  $(objpfx)tst-ldconfig-soname-lib-without-soname.so
+	$(SHELL) $< '$(common-objpfx)' '$(test-wrapper-env)' \
+		 '$(run-program-env)' > $@; \
+	$(evaluate-test)
+
 # Test static linking of all the libraries we can possibly link
 # together.  Note that in some configurations this may be less than the
 # complete list of libraries we build but we try to maxmimize this list.
@@ -2694,12 +2701,6 @@ $(objpfx)tst-rtld-help.out: $(objpfx)ld.so
 	$(test-wrapper) $(rtld-prefix) --help > $@; \
 	status=$$?; \
 	echo "info: ld.so exit status: $$status" >> $@; \
-	if ! grep -q 'Legacy HWCAP subdirectories under library search path directories' $@; then \
-	  echo "error: missing subdirectory pattern" >> $@; \
-	  if test $$status -eq 0; then \
-	    status=1; \
-	  fi; \
-	fi; \
 	(exit $$status); \
 	$(evaluate-test)
 
@@ -2887,7 +2888,7 @@ $(objpfx)tst-relr-mod3b.so: $(objpfx)tst-relr-mod3b.os
 $(objpfx)tst-relr-mod3a.so: $(objpfx)tst-relr-mod3a.os \
   $(objpfx)tst-relr-mod3b.so
 	$(LINK.o) -nostdlib -nostartfiles -Wl,-z,pack-relative-relocs \
-	$(LDFLAGS-soname-fname) \
+	$(LDFLAGS-soname-fname) $(LDFLAGS-rpath-ORIGIN) \
 	-shared -o $@.new $(filter-out $(map-file),$^)
 	$(call after-link,$@.new)
 	mv -f $@.new $@
@@ -2906,7 +2907,7 @@ $(objpfx)tst-relr-mod4b.so: $(objpfx)tst-relr-mod4b.os
 $(objpfx)tst-relr-mod4a.so: $(objpfx)tst-relr-mod4a.os \
   $(objpfx)tst-relr-mod4b.so
 	$(LINK.o) -nostdlib -nostartfiles -Wl,-z,pack-relative-relocs \
-	$(LDFLAGS-soname-fname) \
+	$(LDFLAGS-soname-fname) $(LDFLAGS-rpath-ORIGIN) \
 	-shared -o $@.new $(filter-out $(map-file),$^)
 	$(call after-link,$@.new)
 	mv -f $@.new $@

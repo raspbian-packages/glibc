@@ -1,4 +1,4 @@
-/* Copyright (C) 1998-2022 Free Software Foundation, Inc.
+/* Copyright (C) 1998-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -218,13 +218,9 @@ grantpt (int fd)
   else
     {
       int w;
-retry:
+
       if (__waitpid (pid, &w, 0) == -1)
-	{
-	if (errno == EINTR)
-	    goto retry;	
 	goto cleanup;
-	}; 
       if (!WIFEXITED (w))
 	__set_errno (ENOEXEC);
       else

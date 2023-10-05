@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2022 Free Software Foundation, Inc.
+# Copyright (C) 1991-2023 Free Software Foundation, Inc.
 # Copyright The GNU Toolchain Authors.
 # This file is part of the GNU C Library.
 
@@ -891,9 +891,9 @@ endif
 +extra-math-flags = $(if $(filter libm,$(in-module)),-fno-math-errno,-fmath-errno)
 
 # Use 64 bit time_t support for installed programs
-installed-modules = nonlib nscd lddlibc4 ldconfig locale_programs \
+installed-modules = nonlib nscd ldconfig locale_programs \
 		    iconvprogs libnss_files libnss_compat libnss_db libnss_hesiod \
-		    libutil libpcprofile libSegFault libnsl
+		    libutil libpcprofile libnsl
 +extra-time-flags = $(if $(filter $(installed-modules),\
                            $(in-module)),-D_TIME_BITS=64 -D_FILE_OFFSET_BITS=64)
 
@@ -991,8 +991,8 @@ endif	# $(+cflags) == ""
 libio-include = -I$(..)libio
 
 # List of non-library modules that we build.
-built-modules = iconvprogs iconvdata ldconfig lddlibc4 libmemusage \
-		libSegFault libpcprofile librpcsvc locale-programs \
+built-modules = iconvprogs iconvdata ldconfig libmemusage \
+		libpcprofile librpcsvc locale-programs \
 		memusagestat nonlib nscd extramodules libnldbl libsupport \
 		testsuite testsuite-internal
 
@@ -1077,7 +1077,7 @@ pic-ccflag = -fPIC
 PIC-ccflag = -fPIC
 endif
 # This can be changed by a sysdep makefile
-pie-ccflag = -fpie
+pie-ccflag = -fPIE
 no-pie-ccflag = -fno-pie
 # This one should always stay like this unless there is a very good reason.
 PIE-ccflag = -fPIE

@@ -116,6 +116,7 @@ endif
 		$(if $(filter $(pt_chown),yes),--enable-pt_chown) \
 		$(if $(filter $(threads),no),--disable-nscd) \
 		$(if $(filter $(call xx,mvec),no),--disable-mathvec) \
+		$(if $(filter -Wno-error,$(shell dpkg-buildflags --get CFLAGS)),--disable-werror) \
 		$(call xx,with_headers) $(call xx,extra_config_options)
 	touch $@
 

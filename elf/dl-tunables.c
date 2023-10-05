@@ -1,7 +1,7 @@
 /* The tunable framework.  See the README.tunables to know how to use the
    tunable in a glibc module.
 
-   Copyright (C) 2016-2022 Free Software Foundation, Inc.
+   Copyright (C) 2016-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -187,11 +187,7 @@ parse_tunables (char *tunestr, char *valstring)
       /* If we reach the end of the string before getting a valid name-value
 	 pair, bail out.  */
       if (p[len] == '\0')
-	{
-	  if (__libc_enable_secure)
-	    tunestr[off] = '\0';
-	  return;
-	}
+	break;
 
       /* We did not find a valid name-value pair before encountering the
 	 colon.  */
@@ -251,9 +247,16 @@ parse_tunables (char *tunestr, char *valstring)
 	    }
 	}
 
-      if (p[len] != '\0')
-	p += len + 1;
+      /* We reached the end while processing the tunable string.  */
+      if (p[len] == '\0')
+	break;
+
+      p += len + 1;
     }
+
+  /* Terminate tunestr before we leave.  */
+  if (__libc_enable_secure)
+    tunestr[off] = '\0';
 }
 #endif
 
@@ -380,7 +383,7 @@ __tunables_print (void)
 			  (long int) cur->type.max);
 	      break;
 	    case TUNABLE_TYPE_SIZE_T:
-	      _dl_printf ("0x%Zx (min: 0x%Zx, max: 0x%Zx)\n",
+	      _dl_printf ("0x%zx (min: 0x%zx, max: 0x%zx)\n",
 			  (size_t) cur->val.numval,
 			  (size_t) cur->type.min,
 			  (size_t) cur->type.max);

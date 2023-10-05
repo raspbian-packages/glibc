@@ -274,10 +274,6 @@ then
 
 	fi # end upgrading and $preversion lt DEB_VERSION_UPSTREAM
     fi # Upgrading
-
-    # This will keep us from using hwcap libs (optimized) during an
-    # upgrade.
-    touch "$DPKG_ROOT/etc/ld.so.nohwcap"
 fi
 
 # We create the top-level lib symlink on merged-usr systems, so that we can

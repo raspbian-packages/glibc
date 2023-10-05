@@ -1,4 +1,4 @@
-/* Copyright (C) 1995-2022 Free Software Foundation, Inc.
+/* Copyright (C) 1995-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    This program is free software; you can redistribute it and/or modify
@@ -231,7 +231,7 @@ No definition for %s category found"), "LC_MONETARY");
 	currency_symbol		""
 	mon_decimal_point	""
 	mon_thousands_sep	""
-	mon_grouping		"\177" i.e. CHAR_MAX 
+	mon_grouping		"\177" i.e. CHAR_MAX
 	positive_sign		""
 	negative_sign		""
 	int_frac_digits		-1

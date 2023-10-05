@@ -41,21 +41,55 @@ union printf_arg
     void *pa_user;
 };
 
+/* Invoke a registered printf callback.  Called from vfprintf and vfwprintf.  */
+int __printf_function_invoke (void *, printf_function callback,
+			      union printf_arg *args_value,
+			      size_t ndata_args,
+			      struct printf_info *info) attribute_hidden;
+int __wprintf_function_invoke (void *, printf_function callback,
+			       union printf_arg *args_value,
+			       size_t ndata_args,
+			       struct printf_info *info) attribute_hidden;
+
 #include <bits/types/locale_t.h>
 
-/* Now define the internal interfaces.  */
-extern int __printf_fphex (FILE *, const struct printf_info *,
-			   const void *const *) attribute_hidden;
+/* Returns the width (as for printf, in bytes) of the converted ASCII
+   number in the characters in the range [FIRST, LAST).  The range
+   must only contain ASCII digits.  The caller is responsible for
+   avoiding overflow.
+
+   This function is used during non-wide digit translation.  Wide
+   digit translate produces one wide character per ASCII digit,
+   so the width is simply LAST - FIRST.  */
+int __translated_number_width (locale_t loc,
+			       const char *first, const char *last)
+  attribute_hidden;
+
+
+struct __printf_buffer;
+void __printf_buffer (struct __printf_buffer *buf, const char *format,
+		      va_list ap, unsigned int mode_flags);
+struct __wprintf_buffer;
+void __wprintf_buffer (struct __wprintf_buffer *buf, const wchar_t *format,
+		       va_list ap, unsigned int mode_flags);
+
 extern int __printf_fp (FILE *, const struct printf_info *,
 			const void *const *);
 libc_hidden_proto (__printf_fp)
-extern int __printf_fp_l (FILE *, locale_t, const struct printf_info *,
-			  const void *const *);
-libc_hidden_proto (__printf_fp_l)
 
-extern unsigned int __guess_grouping (unsigned int intdig_max,
-				      const char *grouping)
-     attribute_hidden;
+void __printf_fphex_l_buffer (struct __printf_buffer *, locale_t,
+			      const struct printf_info *,
+			      const void *const *) attribute_hidden;
+void __printf_fp_l_buffer (struct __printf_buffer *, locale_t,
+			   const struct printf_info *,
+			   const void *const *) attribute_hidden;
+struct __wprintf_buffer;
+void __wprintf_fphex_l_buffer (struct __wprintf_buffer *, locale_t,
+			       const struct printf_info *,
+			       const void *const *) attribute_hidden;
+void __wprintf_fp_l_buffer (struct __wprintf_buffer *, locale_t,
+			    const struct printf_info *,
+			    const void *const *) attribute_hidden;
 
 # endif /* !_ISOMAC */
 #endif

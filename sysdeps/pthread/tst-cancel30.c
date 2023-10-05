@@ -1,7 +1,7 @@
 /* Check if printf like functions does not disable asynchronous cancellation
    mode (BZ#29214).
 
-   Copyright (C) 2022 Free Software Foundation, Inc.
+   Copyright (C) 2022-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -46,9 +46,7 @@ tf (void *arg)
 
   /* Wait indefinitely for cancellation, which only works if asynchronous
      cancellation is enabled.  */
-#ifdef SYS_pause
-  syscall (SYS_pause);
-#elif defined SYS_ppoll || defined SYS_ppoll_time64
+#if defined SYS_ppoll || defined SYS_ppoll_time64
 # ifndef SYS_ppoll_time64
 #  define SYS_ppoll_time64 SYS_ppoll
 # endif

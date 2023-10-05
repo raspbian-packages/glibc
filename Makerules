@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2022 Free Software Foundation, Inc.
+# Copyright (C) 1991-2023 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -546,14 +546,16 @@ endef
 
 ifeq (yes,$(use-default-link))
 # If the linker is good enough, we can let it use its default linker script.
+# In the long term the custom linker script will be removed.
 shlib-lds =
 shlib-lds-flags =
 else
 # binutils only position loadable notes into the first page for binaries,
 # not for shared objects
+# lld --verbose does not dump a linker script.  Use -fuse-ld=bfd.
 $(common-objpfx)shlib.lds: $(common-objpfx)config.make $(..)Makerules
 	$(LINK.o) -shared -Wl,-O1 \
-		  -nostdlib -nostartfiles \
+		  -nostdlib -nostartfiles -fuse-ld=bfd \
 		  $(sysdep-LDFLAGS) $(rtld-LDFLAGS) $(LDFLAGS.so) \
 		  -Wl,--verbose 2>/dev/null | \
 	  sed > $@T \
@@ -566,9 +568,6 @@ $(common-objpfx)shlib.lds: $(common-objpfx)config.make $(..)Makerules
 		 PROVIDE(__start___libc_subfreeres = .);\
 		 __libc_subfreeres : { *(__libc_subfreeres) }\
 		 PROVIDE(__stop___libc_subfreeres = .);\
-		 PROVIDE(__start___libc_atexit = .);\
-		 __libc_atexit : { *(__libc_atexit) }\
-		 PROVIDE(__stop___libc_atexit = .);\
 		 PROVIDE(__start___libc_IO_vtables = .);\
 		 __libc_IO_vtables : { *(__libc_IO_vtables) }\
 		 PROVIDE(__stop___libc_IO_vtables = .);\

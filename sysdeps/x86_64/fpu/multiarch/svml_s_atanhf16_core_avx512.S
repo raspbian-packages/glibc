@@ -1,5 +1,5 @@
 /* Function atanhf vectorized with AVX-512.
-   Copyright (C) 2021-2022 Free Software Foundation, Inc.
+   Copyright (C) 2021-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -61,7 +61,7 @@
 
 #define ATANHF_DATA(x)			((x)+__svml_satanh_data_internal_avx512_al64)
 
-	.section .text.exex512, "ax", @progbits
+	.section .text.evex512, "ax", @progbits
 ENTRY(_ZGVeN16v_atanhf_skx)
 	vandps	AbsMask+__svml_satanh_data_internal_avx512(%rip){1to16}, %zmm0, %zmm6
 	vmovups	ATANHF_DATA(One)(%rip), %zmm4

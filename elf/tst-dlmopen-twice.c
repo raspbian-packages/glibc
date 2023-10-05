@@ -1,5 +1,5 @@
 /* Initialization of libc after dlmopen/dlclose/dlmopen (bug 29528).  Main.
-   Copyright (C) 2022 Free Software Foundation, Inc.
+   Copyright (C) 2022-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -46,8 +46,8 @@ do_test (void)
   recurse (1);
 
   /* Then with nesting.  The constant needs to be less than the
-     internal DL_NNS namespace constant.  */
-  recurse (10);
+     glibc.rtld.nns tunable (which is 4 by default).  */
+  recurse (3);
   return 0;
 }
 

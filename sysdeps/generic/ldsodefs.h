@@ -1,5 +1,5 @@
 /* Run-time dynamic linker data structures for loaded ELF shared objects.
-   Copyright (C) 1995-2022 Free Software Foundation, Inc.
+   Copyright (C) 1995-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -29,7 +29,6 @@
 #include <stdint.h>
 
 #include <elf.h>
-#include <bits/auxv.h>
 #include <dlfcn.h>
 #include <fpu_control.h>
 #include <sys/mman.h>
@@ -105,6 +104,9 @@ typedef struct link_map *lookup_t;
 /* Type of a constructor function, in DT_INIT, DT_INIT_ARRAY,
    DT_PREINIT_ARRAY.  */
 typedef void (*dl_init_t) (int, char **, char **);
+
+/* Type of a constructor function, in DT_FINI, DT_FINI_ARRAY.  */
+typedef void (*fini_t) (void);
 
 /* On some architectures a pointer to a function is not just a pointer
    to the actual code of the function but rather an architecture
@@ -846,13 +848,13 @@ rtld_hidden_proto (_dl_exception_free)
 void _dl_signal_exception (int errcode, struct dl_exception *,
 			   const char *occasion)
   __attribute__ ((__noreturn__));
-libc_hidden_proto (_dl_signal_exception)
+rtld_hidden_proto (_dl_signal_exception)
 
 /* Like _dl_signal_exception, but creates the exception first.  */
 extern void _dl_signal_error (int errcode, const char *object,
 			      const char *occasion, const char *errstring)
      __attribute__ ((__noreturn__));
-libc_hidden_proto (_dl_signal_error)
+rtld_hidden_proto (_dl_signal_error)
 
 /* Like _dl_signal_exception, but may return when called in the
    context of _dl_receive_error.  This is only used during ld.so
@@ -904,11 +906,7 @@ extern void _dl_receive_error (receiver_fct fct, void (*operate) (void *),
    the returned string is allocated using the libc's malloc.  */
 extern int _dl_catch_error (const char **objname, const char **errstring,
 			    bool *mallocedp, void (*operate) (void *),
-			    void *args);
-libc_hidden_proto (_dl_catch_error)
-
-/* Used for initializing GLRO (_dl_catch_error).  */
-extern __typeof__ (_dl_catch_error) _rtld_catch_error attribute_hidden;
+			    void *args) attribute_hidden;
 
 /* Call OPERATE (ARGS).  If no error occurs, set *EXCEPTION to zero.
    Otherwise, store a copy of the raised exception in *EXCEPTION,
@@ -917,7 +915,7 @@ extern __typeof__ (_dl_catch_error) _rtld_catch_error attribute_hidden;
    disabled (so that exceptions are fatal).  */
 int _dl_catch_exception (struct dl_exception *exception,
 			 void (*operate) (void *), void *args);
-libc_hidden_proto (_dl_catch_exception)
+rtld_hidden_proto (_dl_catch_exception)
 
 /* Open the shared object NAME and map in its segments.
    LOADER's DT_RPATH is used in searching for NAME.
@@ -1045,9 +1043,18 @@ extern int _dl_check_map_versions (struct link_map *map, int verbose,
 extern void _dl_init (struct link_map *main_map, int argc, char **argv,
 		      char **env) attribute_hidden;
 
+/* List of ELF objects in reverse order of their constructor
+   invocation.  */
+extern struct link_map *_dl_init_called_list attribute_hidden;
+
 /* Call the finalizer functions of all shared objects whose
    initializer functions have completed.  */
 extern void _dl_fini (void) attribute_hidden;
+
+/* Invoke the DT_FINI_ARRAY and DT_FINI destructors for MAP, which
+   must be a struct link_map *.  Can be used as an argument to
+   _dl_catch_exception.  */
+void _dl_call_fini (void *map) attribute_hidden;
 
 /* Sort array MAPS according to dependencies of the contained objects.
    If FORCE_FIRST, MAPS[0] keeps its place even if the dependencies
@@ -1220,6 +1227,9 @@ extern void *_dl_allocate_tls_storage (void) attribute_hidden;
 extern void *_dl_allocate_tls_init (void *, bool);
 rtld_hidden_proto (_dl_allocate_tls_init)
 
+/* True if the TCB has been set up.  */
+extern bool __rtld_tls_init_tp_called attribute_hidden;
+
 /* Deallocate memory allocated with _dl_allocate_tls.  */
 extern void _dl_deallocate_tls (void *tcb, bool dealloc_tcb);
 rtld_hidden_proto (_dl_deallocate_tls)
@@ -1371,8 +1381,8 @@ void _dl_audit_preinit (struct link_map *l);
    the flags with LA_SYMB_NOPLTENTER | LA_SYMB_NOPLTEXIT prior calling
    la_symbind{32,64}.  */
 void _dl_audit_symbind (struct link_map *l, struct reloc_result *reloc_result,
-			const ElfW(Sym) *defsym, DL_FIXUP_VALUE_TYPE *value,
-			lookup_t result)
+			const void *reloc, const ElfW(Sym) *defsym,
+			DL_FIXUP_VALUE_TYPE *value, lookup_t result, bool lazy)
   attribute_hidden;
 /* Same as _dl_audit_symbind, but also sets LA_SYMB_DLSYM flag.  */
 void _dl_audit_symbind_alt (struct link_map *l, const ElfW(Sym) *ref,

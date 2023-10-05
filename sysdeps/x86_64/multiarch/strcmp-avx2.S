@@ -1,5 +1,5 @@
 /* strcmp/wcscmp/strncmp/wcsncmp optimized with AVX2.
-   Copyright (C) 2018-2022 Free Software Foundation, Inc.
+   Copyright (C) 2018-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -214,7 +214,7 @@ STRCMP:
 #  else
 	mov	(%LOCALE_REG), %RAX_LP
 #  endif
-	testl	$1, LOCALE_DATA_VALUES + _NL_CTYPE_NONASCII_CASE * SIZEOF_VALUES(%rax)
+	testb	$1, LOCALE_DATA_VALUES + _NL_CTYPE_NONASCII_CASE * SIZEOF_VALUES(%rax)
 	jne	STRCASECMP_L_NONASCII
 	leaq	_nl_C_LC_CTYPE_tolower + 128 * 4(%rip), TOLOWER_BASE
 # endif

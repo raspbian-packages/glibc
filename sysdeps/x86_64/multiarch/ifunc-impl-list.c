@@ -1,5 +1,5 @@
 /* Enumerate available IFUNC implementations of a function.  x86-64 version.
-   Copyright (C) 2012-2022 Free Software Foundation, Inc.
+   Copyright (C) 2012-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -63,6 +63,11 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 				      && CPU_FEATURE_USABLE (AVX512BW)
 				      && CPU_FEATURE_USABLE (BMI2)),
 				     __memchr_evex)
+	      X86_IFUNC_IMPL_ADD_V4 (array, i, memchr,
+				     (CPU_FEATURE_USABLE (AVX512VL)
+				      && CPU_FEATURE_USABLE (AVX512BW)
+				      && CPU_FEATURE_USABLE (BMI2)),
+				     __memchr_evex512)
 	      X86_IFUNC_IMPL_ADD_V4 (array, i, memchr,
 				     (CPU_FEATURE_USABLE (AVX512VL)
 				      && CPU_FEATURE_USABLE (AVX512BW)
@@ -341,6 +346,11 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 				     (CPU_FEATURE_USABLE (AVX512VL)
 				      && CPU_FEATURE_USABLE (AVX512BW)
 				      && CPU_FEATURE_USABLE (BMI2)),
+				     __rawmemchr_evex512)
+	      X86_IFUNC_IMPL_ADD_V4 (array, i, rawmemchr,
+				     (CPU_FEATURE_USABLE (AVX512VL)
+				      && CPU_FEATURE_USABLE (AVX512BW)
+				      && CPU_FEATURE_USABLE (BMI2)),
 				     __rawmemchr_evex_rtm)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, rawmemchr,
 				     (CPU_FEATURE_USABLE (AVX2)
@@ -534,6 +544,10 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 				      && CPU_FEATURE_USABLE (AVX512BW)
 				      && CPU_FEATURE_USABLE (BMI2)),
 				     __strchr_evex)
+	      X86_IFUNC_IMPL_ADD_V4 (array, i, strchr,
+				     (CPU_FEATURE_USABLE (AVX512VL)
+				      && CPU_FEATURE_USABLE (AVX512BW)),
+				     __strchr_evex512)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, strchr,
 				     (CPU_FEATURE_USABLE (AVX2)
 				      && CPU_FEATURE_USABLE (BMI2)),
@@ -559,6 +573,10 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 				      && CPU_FEATURE_USABLE (AVX512BW)
 				      && CPU_FEATURE_USABLE (BMI2)),
 				     __strchrnul_evex)
+	      X86_IFUNC_IMPL_ADD_V4 (array, i, strchrnul,
+				     (CPU_FEATURE_USABLE (AVX512VL)
+				      && CPU_FEATURE_USABLE (AVX512BW)),
+				     __strchrnul_evex512)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, strchrnul,
 				     (CPU_FEATURE_USABLE (AVX2)
 				      && CPU_FEATURE_USABLE (BMI2)),
@@ -582,6 +600,11 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 				      && CPU_FEATURE_USABLE (BMI1)
 				      && CPU_FEATURE_USABLE (BMI2)),
 				     __strrchr_evex)
+	      X86_IFUNC_IMPL_ADD_V4 (array, i, strrchr,
+				     (CPU_FEATURE_USABLE (AVX512VL)
+				      && CPU_FEATURE_USABLE (AVX512BW)
+				      && CPU_FEATURE_USABLE (BMI2)),
+				     __strrchr_evex512)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, strrchr,
 				     (CPU_FEATURE_USABLE (AVX2)
 				      && CPU_FEATURE_USABLE (BMI1)
@@ -783,6 +806,10 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 				      && CPU_FEATURE_USABLE (AVX512BW)
 				      && CPU_FEATURE_USABLE (BMI2)),
 				     __wcschr_evex)
+	      X86_IFUNC_IMPL_ADD_V4 (array, i, wcschr,
+				     (CPU_FEATURE_USABLE (AVX512VL)
+				      && CPU_FEATURE_USABLE (AVX512BW)),
+				     __wcschr_evex512)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, wcschr,
 				     (CPU_FEATURE_USABLE (AVX2)
 				      && CPU_FEATURE_USABLE (BMI2)),
@@ -806,6 +833,11 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 				      && CPU_FEATURE_USABLE (BMI1)
 				      && CPU_FEATURE_USABLE (BMI2)),
 				     __wcsrchr_evex)
+	      X86_IFUNC_IMPL_ADD_V4 (array, i, wcsrchr,
+				     (CPU_FEATURE_USABLE (AVX512VL)
+				      && CPU_FEATURE_USABLE (AVX512BW)
+				      && CPU_FEATURE_USABLE (BMI2)),
+				     __wcsrchr_evex512)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, wcsrchr,
 				     (CPU_FEATURE_USABLE (AVX2)
 				      && CPU_FEATURE_USABLE (BMI1)
@@ -869,15 +901,96 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 
   /* Support sysdeps/x86_64/multiarch/wcscpy.c.  */
   IFUNC_IMPL (i, name, wcscpy,
-	      /* ISA V4 wrapper for SSSE3 implementation because
-	         the SSSE3 implementation is also used at ISA
-	         level 3/4.  */
 	      X86_IFUNC_IMPL_ADD_V4 (array, i, wcscpy,
+				     (CPU_FEATURE_USABLE (AVX512VL)
+				      && CPU_FEATURE_USABLE (AVX512BW)
+				      && CPU_FEATURE_USABLE (BMI2)),
+				     __wcscpy_evex)
+	      X86_IFUNC_IMPL_ADD_V3 (array, i, wcscpy,
+				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)),
+				     __wcscpy_avx2)
+	      X86_IFUNC_IMPL_ADD_V2 (array, i, wcscpy,
 				     CPU_FEATURE_USABLE (SSSE3),
 				     __wcscpy_ssse3)
 	      X86_IFUNC_IMPL_ADD_V1 (array, i, wcscpy,
 				     1,
 				     __wcscpy_generic))
+
+  /* Support sysdeps/x86_64/multiarch/wcsncpy.c.  */
+  IFUNC_IMPL (i, name, wcsncpy,
+	      X86_IFUNC_IMPL_ADD_V4 (array, i, wcsncpy,
+				     (CPU_FEATURE_USABLE (AVX512VL)
+				      && CPU_FEATURE_USABLE (AVX512BW)
+				      && CPU_FEATURE_USABLE (BMI2)),
+				     __wcsncpy_evex)
+	      X86_IFUNC_IMPL_ADD_V3 (array, i, wcsncpy,
+				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)),
+				     __wcsncpy_avx2)
+	      X86_IFUNC_IMPL_ADD_V2 (array, i, wcpncpy,
+				     1,
+				     __wcsncpy_generic))
+
+  /* Support sysdeps/x86_64/multiarch/wcpcpy.c.  */
+  IFUNC_IMPL (i, name, wcpcpy,
+	      X86_IFUNC_IMPL_ADD_V4 (array, i, wcpcpy,
+				     (CPU_FEATURE_USABLE (AVX512VL)
+				      && CPU_FEATURE_USABLE (AVX512BW)
+				      && CPU_FEATURE_USABLE (BMI2)),
+				     __wcpcpy_evex)
+	      X86_IFUNC_IMPL_ADD_V3 (array, i, wcpcpy,
+				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)),
+				     __wcpcpy_avx2)
+	      X86_IFUNC_IMPL_ADD_V2 (array, i, wcpcpy,
+				     1,
+				     __wcpcpy_generic))
+
+  /* Support sysdeps/x86_64/multiarch/wcpncpy.c.  */
+  IFUNC_IMPL (i, name, wcpncpy,
+	      X86_IFUNC_IMPL_ADD_V4 (array, i, wcpncpy,
+				     (CPU_FEATURE_USABLE (AVX512VL)
+				      && CPU_FEATURE_USABLE (AVX512BW)
+				      && CPU_FEATURE_USABLE (BMI2)),
+				     __wcpncpy_evex)
+	      X86_IFUNC_IMPL_ADD_V3 (array, i, wcpncpy,
+				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)),
+				     __wcpncpy_avx2)
+	      X86_IFUNC_IMPL_ADD_V2 (array, i, wcsncpy,
+				     1,
+				     __wcpncpy_generic))
+
+  /* Support sysdeps/x86_64/multiarch/wcscat.c.  */
+  IFUNC_IMPL (i, name, wcscat,
+	      X86_IFUNC_IMPL_ADD_V4 (array, i, wcscat,
+				     (CPU_FEATURE_USABLE (AVX512VL)
+				      && CPU_FEATURE_USABLE (AVX512BW)
+				      && CPU_FEATURE_USABLE (BMI2)),
+				     __wcscat_evex)
+	      X86_IFUNC_IMPL_ADD_V3 (array, i, wcscat,
+				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)),
+				     __wcscat_avx2)
+	      X86_IFUNC_IMPL_ADD_V2 (array, i, wcscat,
+				     1,
+				     __wcscat_generic))
+
+  /* Support sysdeps/x86_64/multiarch/wcsncat.c.  */
+  IFUNC_IMPL (i, name, wcsncat,
+	      X86_IFUNC_IMPL_ADD_V4 (array, i, wcsncat,
+				     (CPU_FEATURE_USABLE (AVX512VL)
+				      && CPU_FEATURE_USABLE (AVX512BW)
+				      && CPU_FEATURE_USABLE (BMI2)),
+				     __wcsncat_evex)
+	      X86_IFUNC_IMPL_ADD_V3 (array, i, wcsncat,
+				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)),
+				     __wcsncat_avx2)
+	      X86_IFUNC_IMPL_ADD_V2 (array, i, wcsncat,
+				     1,
+				     __wcsncat_generic))
 
   /* Support sysdeps/x86_64/multiarch/wcslen.c.  */
   IFUNC_IMPL (i, name, wcslen,
@@ -942,6 +1055,11 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 				      && CPU_FEATURE_USABLE (AVX512BW)
 				      && CPU_FEATURE_USABLE (BMI2)),
 				     __wmemchr_evex)
+	      X86_IFUNC_IMPL_ADD_V4 (array, i, wmemchr,
+				     (CPU_FEATURE_USABLE (AVX512VL)
+				      && CPU_FEATURE_USABLE (AVX512BW)
+				      && CPU_FEATURE_USABLE (BMI2)),
+				     __wmemchr_evex512)
 	      X86_IFUNC_IMPL_ADD_V4 (array, i, wmemchr,
 				     (CPU_FEATURE_USABLE (AVX512VL)
 				      && CPU_FEATURE_USABLE (AVX512BW)

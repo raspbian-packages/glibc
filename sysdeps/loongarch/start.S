@@ -1,12 +1,28 @@
 /* Startup code compliant to the ELF LoongArch ABI.
-   Copyright (C) 2022 Free Software Foundation, Inc.
+   Copyright (C) 2022-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
-
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
    License as published by the Free Software Foundation; either
    version 2.1 of the License, or (at your option) any later version.
+
+   In addition to the permissions in the GNU Lesser General Public
+   License, the Free Software Foundation gives you unlimited
+   permission to link the compiled version of this file with other
+   programs, and to distribute those programs without any restriction
+   coming from the use of this file. (The GNU Lesser General Public
+   License restrictions do apply in other respects; for example, they
+   cover modification of the file, and distribution when not linked
+   into another program.)
+
+   Note that people who make modified versions of this file are not
+   obligated to grant this special exception for their modified
+   versions; it is their choice whether to do so. The GNU Lesser
+   General Public License gives permission to release a modified
+   version without this exception; this exception also makes it
+   possible to release a modified version which carries forward this
+   exception.
 
    The GNU C Library is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -14,7 +30,7 @@
    Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public
-   License along with the GNU C Library.  If not, see
+   License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
 #define __ASSEMBLY__ 1
@@ -44,9 +60,20 @@ ENTRY (ENTRY_POINT)
 	cfi_undefined (1)
 	or		a5, a0, zero /* rtld_fini */
 
-/* We must get symbol main through GOT table, since main may not be local.
-   For instance: googletest defines main in dynamic library.  */
-	la.got		a0, t0, main
+#if ENABLE_STATIC_PIE
+/* For static PIE, the GOT cannot be used in _start because the GOT entries are
+   offsets instead of real addresses before __libc_start_main.
+   __libc_start_main and/or main may be not local, so we rely on the linker to
+   produce PLT entries for them.  GNU ld >= 2.40 supports this.  */
+# define LA la.pcrel
+#else
+/* Old GNU ld (< 2.40) cannot handle PC relative address against a non-local
+   function correctly.  We deem these old linkers failing to support static PIE
+   and load the addresses from GOT.  */
+# define LA la.got
+#endif
+
+	LA		a0, t0, main
 	REG_L		a1, sp, 0
 	ADDI		a2, sp, SZREG
 
@@ -57,9 +84,9 @@ ENTRY (ENTRY_POINT)
 	move		a4, zero /* used to be fini */
 	or		a6, sp, zero /* stack_end */
 
-	la.got		ra, t0, __libc_start_main
+	LA		ra, t0, __libc_start_main
 	jirl		ra, ra, 0
 
-	la.got		ra, t0, abort
+	LA		ra, t0, abort
 	jirl		ra, ra, 0
 END (ENTRY_POINT)

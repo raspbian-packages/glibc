@@ -1,5 +1,5 @@
 /* setjmp for LoongArch.
-   Copyright (C) 2022 Free Software Foundation, Inc.
+   Copyright (C) 2022-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -17,6 +17,7 @@
    <https://www.gnu.org/licenses/>.  */
 
 #include <sysdep.h>
+#include <pointer_guard.h>
 #include <sys/asm.h>
 
 ENTRY (_setjmp)
@@ -29,8 +30,15 @@ ENTRY (setjmp)
 END (setjmp)
 
 ENTRY (__sigsetjmp)
+#ifdef PTR_MANGLE
+	PTR_MANGLE (t0, ra, t1)
+	REG_S t0, a0, 0*SZREG
+	PTR_MANGLE2 (t0, sp, t1)
+	REG_S t0, a0, 1*SZREG
+#else
 	REG_S ra, a0, 0*SZREG
 	REG_S sp, a0, 1*SZREG
+#endif
 	REG_S x,  a0, 2*SZREG
 	REG_S fp, a0, 3*SZREG
 	REG_S s0, a0, 4*SZREG
@@ -43,6 +51,7 @@ ENTRY (__sigsetjmp)
 	REG_S s7, a0, 11*SZREG
 	REG_S s8, a0, 12*SZREG
 
+#ifndef __loongarch_soft_float
 	FREG_S $f24, a0, 13*SZREG + 0*SZFREG
 	FREG_S $f25, a0, 13*SZREG + 1*SZFREG
 	FREG_S $f26, a0, 13*SZREG + 2*SZFREG
@@ -51,6 +60,7 @@ ENTRY (__sigsetjmp)
 	FREG_S $f29, a0, 13*SZREG + 5*SZFREG
 	FREG_S $f30, a0, 13*SZREG + 6*SZFREG
 	FREG_S $f31, a0, 13*SZREG + 7*SZFREG
+#endif
 
 #if !IS_IN (libc) && IS_IN(rtld)
 	li.w		v0, 0

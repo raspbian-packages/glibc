@@ -1,5 +1,5 @@
 /* Basic tests for Linux process_madvise.
-   Copyright (C) 2022 Free Software Foundation, Inc.
+   Copyright (C) 2022-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -101,8 +101,11 @@ do_test (void)
 
     /* We expect this to succeed in the target process because the mapping
        is valid.  */
-    TEST_COMPARE (process_madvise (pidfd, &iv, 1, MADV_COLD, 0),
-		  2 * page_size);
+    ssize_t ret = process_madvise (pidfd, &iv, 1, MADV_COLD, 0);
+    if (ret == -1 && errno == ENOSYS)
+      FAIL_UNSUPPORTED ("kernel does not support process_madvise, skipping"
+			"test");
+    TEST_COMPARE (ret, 2 * page_size);
   }
 
   {

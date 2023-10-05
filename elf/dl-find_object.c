@@ -1,5 +1,5 @@
 /* Locating objects in the process image.  ld.so implementation.
-   Copyright (C) 2021-2022 Free Software Foundation, Inc.
+   Copyright (C) 2021-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -46,7 +46,7 @@ _dl_find_object_slow (void *pc, struct dl_find_object *result)
           struct dl_find_object_internal internal;
           _dl_find_object_from_map (l, &internal);
           _dl_find_object_to_external (&internal, result);
-          return 1;
+          return 0;
         }
 
   /* Object not found.  */

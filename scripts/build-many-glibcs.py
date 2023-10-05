@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # Build many configurations of glibc.
-# Copyright (C) 2016-2022 Free Software Foundation, Inc.
+# Copyright (C) 2016-2023 Free Software Foundation, Inc.
 # Copyright The GNU Toolchain Authors.
 # This file is part of the GNU C Library.
 #
@@ -222,6 +222,10 @@ class Context(object):
                         os_name='linux-gnu',
                         variant='lp64d',
                         gcc_cfg=['--with-abi=lp64d','--disable-multilib'])
+        self.add_config(arch='loongarch64',
+                        os_name='linux-gnu',
+                        variant='lp64s',
+                        gcc_cfg=['--with-abi=lp64s','--disable-multilib'])
         self.add_config(arch='m68k',
                         os_name='linux-gnu',
                         gcc_cfg=['--disable-multilib'])
@@ -789,13 +793,13 @@ class Context(object):
 
     def checkout(self, versions):
         """Check out the desired component versions."""
-        default_versions = {'binutils': 'vcs-2.38',
+        default_versions = {'binutils': 'vcs-2.40',
                             'gcc': 'vcs-12',
                             'glibc': 'vcs-mainline',
                             'gmp': '6.2.1',
-                            'linux': '5.18',
-                            'mpc': '1.2.1',
-                            'mpfr': '4.1.0',
+                            'linux': '6.1',
+                            'mpc': '1.3.1',
+                            'mpfr': '4.2.0',
                             'mig': 'vcs-mainline',
                             'gnumach': 'vcs-mainline',
                             'hurd': 'vcs-mainline'}
@@ -854,7 +858,7 @@ class Context(object):
         """Check out the given version of the given component from version
         control.  Return a revision identifier."""
         if component == 'binutils':
-            git_url = 'git://sourceware.org/git/binutils-gdb.git'
+            git_url = 'https://sourceware.org/git/binutils-gdb.git'
             if version == 'mainline':
                 git_branch = 'master'
             else:
@@ -868,7 +872,7 @@ class Context(object):
                 branch = 'releases/gcc-%s' % version
             return self.gcc_checkout(branch, update)
         elif component == 'glibc':
-            git_url = 'git://sourceware.org/git/glibc.git'
+            git_url = 'https://sourceware.org/git/glibc.git'
             if version == 'mainline':
                 git_branch = 'master'
             else:
@@ -957,7 +961,7 @@ class Context(object):
             shutil.rmtree(self.component_srcdir('gcc'))
             update = False
         if not update:
-            self.git_checkout('gcc', 'git://gcc.gnu.org/git/gcc.git',
+            self.git_checkout('gcc', 'https://gcc.gnu.org/git/gcc.git',
                               branch, update)
         subprocess.run(['contrib/gcc_update', '--silent'],
                        cwd=self.component_srcdir('gcc'), check=True)
@@ -1517,15 +1521,6 @@ class GlibcPolicyDefault(object):
             '--host=%s' % glibc.triplet,
             'CC=%s' % glibc.tool_name('gcc'),
             'CXX=%s' % glibc.tool_name('g++'),
-            'AR=%s' % glibc.tool_name('ar'),
-            'AS=%s' % glibc.tool_name('as'),
-            'LD=%s' % glibc.tool_name('ld'),
-            'NM=%s' % glibc.tool_name('nm'),
-            'OBJCOPY=%s' % glibc.tool_name('objcopy'),
-            'OBJDUMP=%s' % glibc.tool_name('objdump'),
-            'RANLIB=%s' % glibc.tool_name('ranlib'),
-            'READELF=%s' % glibc.tool_name('readelf'),
-            'STRIP=%s' % glibc.tool_name('strip'),
         ]
         if glibc.os == 'gnu':
             self.configure_args.append('MIG=%s' % glibc.tool_name('mig'))

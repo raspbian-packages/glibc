@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2022 Free Software Foundation, Inc.
+# Copyright (C) 1991-2023 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -277,6 +277,7 @@ LDLIBS-test-on_exit-race = $(shared-thread-library)
 LDLIBS-tst-canon-bz26341 = $(shared-thread-library)
 LDLIBS-tst-arc4random-fork = $(shared-thread-library)
 LDLIBS-tst-arc4random-thread = $(shared-thread-library)
+LDLIBS-tst-system = $(shared-thread-library)
 
 LDLIBS-test-dlclose-exit-race = $(shared-thread-library)
 LDFLAGS-test-dlclose-exit-race = $(LDFLAGS-rdynamic)
@@ -375,6 +376,18 @@ CFLAGS-strfmon_l.c += $(libio-mtsafe)
 CFLAGS-strfromd.c += $(libio-mtsafe)
 CFLAGS-strfromf.c += $(libio-mtsafe)
 CFLAGS-strfroml.c += $(libio-mtsafe)
+
+CFLAGS-strtol.c += $(config-cflags-wno-ignored-attributes)
+CFLAGS-strtoul.c += $(config-cflags-wno-ignored-attributes)
+CFLAGS-strtoll.c += $(config-cflags-wno-ignored-attributes)
+CFLAGS-strtoull.c += $(config-cflags-wno-ignored-attributes)
+CFLAGS-strtof.c += $(config-cflags-wno-ignored-attributes)
+CFLAGS-strtof_l.c += $(config-cflags-wno-ignored-attributes)
+CFLAGS-strtod.c += $(config-cflags-wno-ignored-attributes)
+CFLAGS-strtod_l.c += $(config-cflags-wno-ignored-attributes)
+CFLAGS-strtold.c += $(config-cflags-wno-ignored-attributes)
+CFLAGS-strtold_l.c += $(config-cflags-wno-ignored-attributes)
+CFLAGS-secure-getenv.c += $(config-cflags-wno-ignored-attributes)
 
 CFLAGS-tst-bsearch.c += $(stack-align-test-flags)
 CFLAGS-tst-qsort.c += $(stack-align-test-flags)

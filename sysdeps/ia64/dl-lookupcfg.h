@@ -1,5 +1,5 @@
 /* Configuration of lookup functions.
-   Copyright (C) 2000-2022 Free Software Foundation, Inc.
+   Copyright (C) 2000-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -75,5 +75,5 @@ extern void attribute_hidden _dl_unmap (struct link_map *map);
 #define DL_FIXUP_VALUE_ADDR(value) ((uintptr_t) &(value))
 #define DL_FIXUP_ADDR_VALUE(addr) (*(struct fdesc *) (addr))
 #define DL_FIXUP_BINDNOW_ADDR_VALUE(addr) (addr)
-#define DL_FIXUP_BINDNOW_RELOC(value, new_value, st_value) \
+#define DL_FIXUP_BINDNOW_RELOC(l, reloc, value, new_value, st_value, lazy) \
   (*value) = *(struct fdesc *) (st_value)

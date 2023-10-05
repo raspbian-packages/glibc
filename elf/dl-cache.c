@@ -1,5 +1,5 @@
 /* Support for reading /etc/ld.so.cache files written by Linux ldconfig.
-   Copyright (C) 1996-2022 Free Software Foundation, Inc.
+   Copyright (C) 1996-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -26,9 +26,6 @@
 #include <_itoa.h>
 #include <dl-hwcaps.h>
 #include <dl-isa-level.h>
-#include <fcntl.h>
-#include <sysdep.h>
-#include <not-errno.h>
 
 #ifndef _DL_PLATFORMS_COUNT
 # define _DL_PLATFORMS_COUNT 0
@@ -219,11 +216,6 @@ search_cache (const char *string_table, uint32_t string_table_size,
 #ifdef SHARED
   uint32_t best_priority = 0;
 #endif
-  int disable_hwcap = 0;
-#ifdef NEED_LD_SO_NOHWCAP
-  if (__access_noerrno ("/etc/ld.so.nohwcap", F_OK) == 0)
-    disable_hwcap = 1;
-#endif
 
   while (left <= right)
     {
@@ -304,8 +296,6 @@ search_cache (const char *string_table, uint32_t string_table_size,
 			break;
 
 		      if ((libnew->hwcap & hwcap_exclude) && !named_hwcap)
-			continue;
-		      if (disable_hwcap && libnew->hwcap != 0)
 			continue;
 		      if (_DL_PLATFORMS_COUNT
 			  && (libnew->hwcap & _DL_HWCAP_PLATFORM) != 0

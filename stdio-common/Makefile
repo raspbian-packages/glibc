@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2022 Free Software Foundation, Inc.
+# Copyright (C) 1991-2023 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -39,6 +39,7 @@ routines := \
   gentempfd \
   getline \
   getw \
+  grouping_iterator \
   iovfscanf \
   isoc99_fscanf \
   isoc99_scanf \
@@ -52,8 +53,17 @@ routines := \
   perror \
   printf \
   printf-prs \
+  printf_buffer_as_file \
+  printf_buffer_done \
+  printf_buffer_flush \
+  printf_buffer_pad_1 \
+  printf_buffer_putc_1 \
+  printf_buffer_puts_1 \
+  printf_buffer_to_file \
+  printf_buffer_write \
   printf_fp \
   printf_fphex \
+  printf_function_invoke \
   printf_size \
   psiginfo \
   psignal \
@@ -75,6 +85,7 @@ routines := \
   tmpfile64 \
   tmpnam \
   tmpnam_r \
+  translated_number_width \
   vfprintf \
   vfprintf-internal \
   vfscanf \
@@ -84,6 +95,15 @@ routines := \
   vfwscanf \
   vfwscanf-internal \
   vprintf \
+  wprintf_buffer_as_file \
+  wprintf_buffer_done \
+  wprintf_buffer_flush \
+  wprintf_buffer_pad_1 \
+  wprintf_buffer_putc_1 \
+  wprintf_buffer_puts_1 \
+  wprintf_buffer_to_file \
+  wprintf_buffer_write \
+  wprintf_function_invoke \
   # routines
 
 aux := \
@@ -160,6 +180,7 @@ tests := \
   tst-bz11319 \
   tst-bz11319-fortify2 \
   tst-cookie \
+  tst-dprintf-length \
   tst-fdopen \
   tst-ferror \
   tst-fgets \
@@ -174,6 +195,8 @@ tests := \
   tst-fwrite \
   tst-gets \
   tst-grouping \
+  tst-grouping2 \
+  tst-grouping3 \
   tst-long-dbl-fphex \
   tst-memstream-string \
   tst-obprintf \
@@ -185,6 +208,7 @@ tests := \
   tst-printf-bz25691 \
   tst-printf-fp-free \
   tst-printf-fp-leak \
+  tst-printf-oct \
   tst-printf-round \
   tst-printfsz \
   tst-put-error \
@@ -220,6 +244,10 @@ generated += \
   siglist-aux-shared.S \
   siglist-aux.S \
   # generated
+
+tests-internal = \
+  tst-grouping_iterator \
+  # tests-internal
 
 test-srcs = tst-unbputc tst-printf tst-printfsz-islongdouble
 
@@ -266,8 +294,13 @@ $(objpfx)errlist-data-aux.S: errlist-data-gen.c
 	$(make-target-directory)
 	$(compile-command.c) $(pie-default) $(no-stack-protector) -S
 
+ifndef no_deps
+-include $(objpfx)errlist-data-aux.S.d $(objpfx)errlist-data-aux-shared.S.d
+endif
+
 $(objpfx)errlist-data.os: $(objpfx)errlist-data-aux-shared.S
-$(objpfx)errlist-data.o: $(objpfx)errlist-data-aux.S
+$(addprefix $(objpfx)errlist-data, $(object-suffixes-noshared)): \
+  $(objpfx)errlist-data-aux.S
 
 $(objpfx)siglist-aux-shared.S: siglist-gen.c
 	$(make-target-directory)
@@ -277,8 +310,13 @@ $(objpfx)siglist-aux.S: siglist-gen.c
 	$(make-target-directory)
 	$(compile-command.c) $(pie-default) $(no-stack-protector) -S
 
+ifndef no_deps
+-include $(objpfx)siglist-aux.S.d $(objpfx)siglist-aux-shared.S.d
+endif
+
 $(objpfx)siglist.os: $(objpfx)siglist-aux-shared.S
-$(objpfx)siglist.o: $(objpfx)siglist-aux.S
+$(addprefix $(objpfx)siglist, $(object-suffixes-noshared)): \
+  $(objpfx)siglist-aux.S
 
 ifeq ($(run-built-tests),yes)
 LOCALES := \
@@ -288,18 +326,22 @@ LOCALES := \
   hi_IN.UTF-8 \
   ja_JP.EUC-JP \
   ps_AF.UTF-8 \
-  # LOCALES
+  tg_TJ.UTF-8 \
+ # LOCALES
 include ../gen-locales.mk
 
 $(objpfx)bug14.out: $(gen-locales)
 $(objpfx)scanf13.out: $(gen-locales)
 $(objpfx)test-vfprintf.out: $(gen-locales)
 $(objpfx)tst-grouping.out: $(gen-locales)
+$(objpfx)tst-grouping2.out: $(gen-locales)
+$(objpfx)tst-grouping_iterator.out: $(gen-locales)
 $(objpfx)tst-sprintf.out: $(gen-locales)
 $(objpfx)tst-sscanf.out: $(gen-locales)
 $(objpfx)tst-swprintf.out: $(gen-locales)
 $(objpfx)tst-vfprintf-mbs-prec.out: $(gen-locales)
 $(objpfx)tst-vfprintf-width-i18n.out: $(gen-locales)
+$(objpfx)tst-grouping3.out: $(gen-locales)
 endif
 
 tst-printf-bz18872-ENV = MALLOC_TRACE=$(objpfx)tst-printf-bz18872.mtrace \
@@ -371,6 +413,8 @@ CFLAGS-isoc99_vscanf.c += -fexceptions
 CFLAGS-isoc99_fscanf.c += -fexceptions
 CFLAGS-isoc99_scanf.c += -fexceptions
 
+CFLAGS-dprintf.c += $(config-cflags-wno-ignored-attributes)
+
 # scanf14a.c and scanf16a.c test a deprecated extension which is no
 # longer visible under most conformance levels; see the source files
 # for more detail.
@@ -389,7 +433,7 @@ CFLAGS-tst-gets.c += -Wno-deprecated-declarations
 
 # BZ #11319 was first fixed for regular vdprintf, then reopened because
 # the fortified version had the same bug.
-CFLAGS-tst-bz11319-fortify2.c += -D_FORTIFY_SOURCE=2
+CFLAGS-tst-bz11319-fortify2.c += -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2
 
 CFLAGS-tst-memstream-string.c += -fno-builtin-fprintf
 

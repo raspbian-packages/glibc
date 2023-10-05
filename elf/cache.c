@@ -1,4 +1,4 @@
-/* Copyright (C) 1999-2022 Free Software Foundation, Inc.
+/* Copyright (C) 1999-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    This program is free software; you can redistribute it and/or modify
@@ -145,10 +145,8 @@ struct cache_entry
   struct stringtable_entry *path; /* Path to find library.  */
   int flags;			/* Flags to indicate kind of library.  */
   unsigned int isa_level;	/* Required ISA level.  */
-  uint64_t hwcap;		/* Important hardware capabilities.  */
-  int bits_hwcap;		/* Number of bits set in hwcap.  */
 
-  /* glibc-hwcaps subdirectory.  If not NULL, hwcap must be zero.  */
+  /* glibc-hwcaps subdirectory.  */
   struct glibc_hwcaps_subdirectory *hwcaps;
 
   struct cache_entry *next;	/* Next entry in list.  */
@@ -157,6 +155,7 @@ struct cache_entry
 /* List of all cache entries.  */
 static struct cache_entry *entries;
 
+/* libc4, ELF and libc5 are unsupported.  */
 static const char *flag_descr[] =
 { "libc4", "ELF", "libc5", "libc6"};
 
@@ -168,14 +167,11 @@ print_entry (const char *lib, int flag, uint64_t hwcap,
   printf ("\t%s (", lib);
   switch (flag & FLAG_TYPE_MASK)
     {
-    case FLAG_LIBC4:
-    case FLAG_ELF:
-    case FLAG_ELF_LIBC5:
     case FLAG_ELF_LIBC6:
       fputs (flag_descr[flag & FLAG_TYPE_MASK], stdout);
       break;
     default:
-      fputs (_("unknown"), stdout);
+      fputs (_("unknown or unsupported flag"), stdout);
       break;
     }
   switch (flag & FLAG_REQUIRED_MASK)
@@ -435,15 +431,6 @@ compare (const struct cache_entry *e1, const struct cache_entry *e2)
 	  if (res != 0)
 	    return res;
 	}
-      /* Sort by most specific hwcap.  */
-      if (e2->bits_hwcap > e1->bits_hwcap)
-	return 1;
-      else if (e2->bits_hwcap < e1->bits_hwcap)
-	return -1;
-      else if (e2->hwcap > e1->hwcap)
-	return 1;
-      else if (e2->hwcap < e1->hwcap)
-	return -1;
     }
   return res;
 }
@@ -549,14 +536,13 @@ save_cache (const char *cache_name)
   int cache_entry_count = 0;
   /* The old format doesn't contain hwcap entries and doesn't contain
      libraries in subdirectories with hwcaps entries.  Count therefore
-     also all entries with hwcap == 0.  */
+     all entries.  */
   int cache_entry_old_count = 0;
 
   for (entry = entries; entry != NULL; entry = entry->next)
     {
       ++cache_entry_count;
-      if (entry->hwcap == 0)
-	++cache_entry_old_count;
+      ++cache_entry_old_count;
     }
 
   struct stringtable_finalized strings_finalized;
@@ -628,7 +614,7 @@ save_cache (const char *cache_name)
   for (idx_old = 0, idx_new = 0, entry = entries; entry != NULL;
        entry = entry->next, ++idx_new)
     {
-      if (opt_format != opt_format_new && entry->hwcap == 0)
+      if (opt_format != opt_format_new)
 	{
 	  file_entries->libs[idx_old].flags = entry->flags;
 	  /* XXX: Actually we can optimize here and remove duplicates.  */
@@ -646,7 +632,7 @@ save_cache (const char *cache_name)
 	  file_entries_new->libs[idx_new].flags = entry->flags;
 	  file_entries_new->libs[idx_new].osversion_unused = 0;
 	  if (entry->hwcaps == NULL)
-	    file_entries_new->libs[idx_new].hwcap = entry->hwcap;
+	    file_entries_new->libs[idx_new].hwcap = 0;
 	  else
 	    file_entries_new->libs[idx_new].hwcap
 	      = compute_hwcap_value (entry);
@@ -656,9 +642,7 @@ save_cache (const char *cache_name)
 	    = str_offset + entry->path->offset;
 	}
 
-      /* Ignore entries with hwcap for old format.  */
-      if (entry->hwcap == 0)
-	++idx_old;
+      ++idx_old;
     }
 
   /* Duplicate last old cache entry if needed.  */
@@ -766,7 +750,7 @@ save_cache (const char *cache_name)
 /* Add one library to the cache.  */
 void
 add_to_cache (const char *path, const char *filename, const char *soname,
-	      int flags, unsigned int isa_level, uint64_t hwcap,
+	      int flags, unsigned int isa_level,
 	      struct glibc_hwcaps_subdirectory *hwcaps)
 {
   struct cache_entry *new_entry = xmalloc (sizeof (*new_entry));
@@ -784,22 +768,10 @@ add_to_cache (const char *path, const char *filename, const char *soname,
   new_entry->path = path_interned;
   new_entry->flags = flags;
   new_entry->isa_level = isa_level;
-  new_entry->hwcap = hwcap;
   new_entry->hwcaps = hwcaps;
-  new_entry->bits_hwcap = 0;
 
   if (hwcaps != NULL)
-    {
-      assert (hwcap == 0);
-      hwcaps->used = true;
-    }
-
-  /* Count the number of bits set in the masked value.  */
-  for (size_t i = 0;
-       (~((1ULL << i) - 1) & hwcap) != 0 && i < 8 * sizeof (hwcap); ++i)
-    if ((hwcap & (1ULL << i)) != 0)
-      ++new_entry->bits_hwcap;
-
+    hwcaps->used = true;
 
   /* Keep the list sorted - search for right place to insert.  */
   struct cache_entry *ptr = entries;

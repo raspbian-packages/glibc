@@ -1,4 +1,4 @@
-/* Copyright (C) 1996-2022 Free Software Foundation, Inc.
+/* Copyright (C) 1996-2023 Free Software Foundation, Inc.
    Copyright The GNU Toolchain Authors.
    This file is part of the GNU C Library.
 
@@ -25,7 +25,7 @@
 #include <wchar.h>
 #include <wcsmbsload.h>
 
-#include <sysdep.h>
+#include <pointer_guard.h>
 
 #ifndef EILSEQ
 # define EILSEQ EINVAL
@@ -63,10 +63,8 @@ __wcrtomb_internal (char *s, wchar_t wc, mbstate_t *ps, size_t s_size)
   /* Get the conversion functions.  */
   fcts = get_gconv_fcts (_NL_CURRENT_DATA (LC_CTYPE));
   __gconv_fct fct = fcts->tomb->__fct;
-#ifdef PTR_DEMANGLE
   if (fcts->tomb->__shlib_handle != NULL)
     PTR_DEMANGLE (fct);
-#endif
 
   /* If WC is the NUL character we write into the output buffer the byte
      sequence necessary for PS to get into the initial state, followed

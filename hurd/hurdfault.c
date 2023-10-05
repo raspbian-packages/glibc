@@ -1,5 +1,5 @@
 /* Handle faults in the signal thread.
-   Copyright (C) 1994-2022 Free Software Foundation, Inc.
+   Copyright (C) 1994-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -45,7 +45,7 @@ _hurdsig_fault_catch_exception_raise (mach_port_t port,
 				      mach_msg_type_number_t codeCnt
 #else				/* Vanilla Mach 3.0 interface.  */
 				      integer_t exception,
-				      integer_t code, integer_t subcode
+				      integer_t code, long_integer_t subcode
 #endif
 				      )
 {

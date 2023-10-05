@@ -1,5 +1,5 @@
 /* System-specific socket constants and types.  Hurd version.
-   Copyright (C) 1991-2022 Free Software Foundation, Inc.
+   Copyright (C) 1991-2023 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -147,7 +147,7 @@ enum __socket_type
 #define	AF_MAX		PF_MAX
 
 /* Maximum queue length specifiable by listen.  */
-#define SOMAXCONN	4096	/* 5 on the origional 4.4 BSD.  */
+#define SOMAXCONN	4096	/* 5 on the original 4.4 BSD.  */
 
 /* Get the definition of the macro to define the common sockaddr members.  */
 #include <bits/sockaddr.h>

@@ -1,4 +1,4 @@
-/* Copyright (C) 2012-2022 Free Software Foundation, Inc.
+/* Copyright (C) 2012-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -27,21 +27,16 @@ __getauxval2 (unsigned long int type, unsigned long int *result)
   ElfW(auxv_t) *p;
 #endif
 
-#ifdef AT_HWCAP
   if (type == AT_HWCAP)
     {
       *result = GLRO(dl_hwcap);
       return true;
     }
-#endif
-
-#ifdef AT_HWCAP2
-  if (type == AT_HWCAP2)
+  else if (type == AT_HWCAP2)
     {
       *result = GLRO(dl_hwcap2);
       return true;
     }
-#endif
 
 #ifdef HAVE_AUX_VECTOR
   for (p = GLRO(dl_auxv); p->a_type != AT_NULL; p++)

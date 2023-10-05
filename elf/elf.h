@@ -1,5 +1,5 @@
 /* This file defines standard ELF types, structures, and macros.
-   Copyright (C) 1995-2022 Free Software Foundation, Inc.
+   Copyright (C) 1995-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -506,6 +506,7 @@ typedef struct
 
 /* Legal values for ch_type (compression algorithm).  */
 #define ELFCOMPRESS_ZLIB	1	   /* ZLIB/DEFLATE algorithm.  */
+#define ELFCOMPRESS_ZSTD	2	   /* Zstandard algorithm.  */
 #define ELFCOMPRESS_LOOS	0x60000000 /* Start of OS-specific.  */
 #define ELFCOMPRESS_HIOS	0x6fffffff /* End of OS-specific.  */
 #define ELFCOMPRESS_LOPROC	0x70000000 /* Start of processor-specific.  */
@@ -808,6 +809,7 @@ typedef struct
 #define NT_S390_GS_BC	0x30c		/* s390 guarded storage
 					   broadcast control block.  */
 #define NT_S390_RI_CB	0x30d		/* s390 runtime instrumentation.  */
+#define NT_S390_PV_CPU_DATA	0x30e	/* s390 protvirt cpu dump data.  */
 #define NT_ARM_VFP	0x400		/* ARM VFP/NEON registers */
 #define NT_ARM_TLS	0x401		/* ARM TLS register */
 #define NT_ARM_HW_BREAK	0x402		/* ARM hardware breakpoint registers */
@@ -829,6 +831,15 @@ typedef struct
 #define NT_MIPS_DSP	0x800		/* MIPS DSP ASE registers.  */
 #define NT_MIPS_FP_MODE	0x801		/* MIPS floating-point mode.  */
 #define NT_MIPS_MSA	0x802		/* MIPS SIMD registers.  */
+#define NT_LOONGARCH_CPUCFG	0xa00	/* LoongArch CPU config registers.  */
+#define NT_LOONGARCH_CSR	0xa01	/* LoongArch control and
+					   status registers.  */
+#define NT_LOONGARCH_LSX	0xa02	/* LoongArch Loongson SIMD
+					   Extension registers.  */
+#define NT_LOONGARCH_LASX	0xa03	/* LoongArch Loongson Advanced
+					   SIMD Extension registers.  */
+#define NT_LOONGARCH_LBT	0xa04	/* LoongArch Loongson Binary
+					   Translation registers.  */
 
 /* Legal values for the note segment descriptor types for object files.  */
 
@@ -1054,7 +1065,8 @@ typedef struct
 
 /* Legal values for vd_flags (version information flags).  */
 #define VER_FLG_BASE	0x1		/* Version definition of file itself */
-#define VER_FLG_WEAK	0x2		/* Weak version identifier */
+#define VER_FLG_WEAK	0x2		/* Weak version identifier.  Also
+					   used by vna_flags below.  */
 
 /* Versym symbol index values.  */
 #define	VER_NDX_LOCAL		0	/* Symbol is local.  */
@@ -1132,10 +1144,6 @@ typedef struct
 } Elf64_Vernaux;
 
 
-/* Legal values for vna_flags.  */
-#define VER_FLG_WEAK	0x2		/* Weak version identifier */
-
-
 /* Auxiliary vector.  */
 
 /* This vector is normally only used by the program interpreter.  The
@@ -1169,7 +1177,80 @@ typedef struct
     } a_un;
 } Elf64_auxv_t;
 
-#include <bits/auxv.h>
+/* Legal values for a_type (entry type).  */
+
+#define AT_NULL		0		/* End of vector */
+#define AT_IGNORE	1		/* Entry should be ignored */
+#define AT_EXECFD	2		/* File descriptor of program */
+#define AT_PHDR		3		/* Program headers for program */
+#define AT_PHENT	4		/* Size of program header entry */
+#define AT_PHNUM	5		/* Number of program headers */
+#define AT_PAGESZ	6		/* System page size */
+#define AT_BASE		7		/* Base address of interpreter */
+#define AT_FLAGS	8		/* Flags */
+#define AT_ENTRY	9		/* Entry point of program */
+#define AT_NOTELF	10		/* Program is not ELF */
+#define AT_UID		11		/* Real uid */
+#define AT_EUID		12		/* Effective uid */
+#define AT_GID		13		/* Real gid */
+#define AT_EGID		14		/* Effective gid */
+#define AT_CLKTCK	17		/* Frequency of times() */
+
+/* Some more special a_type values describing the hardware.  */
+#define AT_PLATFORM	15		/* String identifying platform.  */
+#define AT_HWCAP	16		/* Machine-dependent hints about
+					   processor capabilities.  */
+
+/* This entry gives some information about the FPU initialization
+   performed by the kernel.  */
+#define AT_FPUCW	18		/* Used FPU control word.  */
+
+/* Cache block sizes.  */
+#define AT_DCACHEBSIZE	19		/* Data cache block size.  */
+#define AT_ICACHEBSIZE	20		/* Instruction cache block size.  */
+#define AT_UCACHEBSIZE	21		/* Unified cache block size.  */
+
+/* A special ignored value for PPC, used by the kernel to control the
+   interpretation of the AUXV. Must be > 16.  */
+#define AT_IGNOREPPC	22		/* Entry should be ignored.  */
+
+#define	AT_SECURE	23		/* Boolean, was exec setuid-like?  */
+
+#define AT_BASE_PLATFORM 24		/* String identifying real platforms.*/
+
+#define AT_RANDOM	25		/* Address of 16 random bytes.  */
+
+#define AT_HWCAP2	26		/* More machine-dependent hints about
+					   processor capabilities.  */
+
+#define AT_EXECFN	31		/* Filename of executable.  */
+
+/* Pointer to the global system page used for system calls and other
+   nice things.  */
+#define AT_SYSINFO	32
+#define AT_SYSINFO_EHDR	33
+
+/* Shapes of the caches.  Bits 0-3 contains associativity; bits 4-7 contains
+   log2 of line size; mask those to get cache size.  */
+#define AT_L1I_CACHESHAPE	34
+#define AT_L1D_CACHESHAPE	35
+#define AT_L2_CACHESHAPE	36
+#define AT_L3_CACHESHAPE	37
+
+/* Shapes of the caches, with more room to describe them.
+   *GEOMETRY are comprised of cache line size in bytes in the bottom 16 bits
+   and the cache associativity in the next 16 bits.  */
+#define AT_L1I_CACHESIZE	40
+#define AT_L1I_CACHEGEOMETRY	41
+#define AT_L1D_CACHESIZE	42
+#define AT_L1D_CACHEGEOMETRY	43
+#define AT_L2_CACHESIZE		44
+#define AT_L2_CACHEGEOMETRY	45
+#define AT_L3_CACHESIZE		46
+#define AT_L3_CACHEGEOMETRY	47
+
+#define AT_MINSIGSTKSZ		51 /* Stack needed for signal delivery  */
+
 /* Note section contents.  Each entry in the note section begins with
    a header of a fixed form.  */
 
@@ -4078,6 +4159,55 @@ enum
 #define R_LARCH_GNU_VTINHERIT  57
 #define R_LARCH_GNU_VTENTRY  58
 
+/* reserved 59-63 */
+
+#define R_LARCH_B16 64
+#define R_LARCH_B21 65
+#define R_LARCH_B26 66
+#define R_LARCH_ABS_HI20 67
+#define R_LARCH_ABS_LO12 68
+#define R_LARCH_ABS64_LO20 69
+#define R_LARCH_ABS64_HI12 70
+#define R_LARCH_PCALA_HI20 71
+#define R_LARCH_PCALA_LO12 72
+#define R_LARCH_PCALA64_LO20 73
+#define R_LARCH_PCALA64_HI12 74
+#define R_LARCH_GOT_PC_HI20 75
+#define R_LARCH_GOT_PC_LO12 76
+#define R_LARCH_GOT64_PC_LO20 77
+#define R_LARCH_GOT64_PC_HI12 78
+#define R_LARCH_GOT_HI20 79
+#define R_LARCH_GOT_LO12 80
+#define R_LARCH_GOT64_LO20 81
+#define R_LARCH_GOT64_HI12 82
+#define R_LARCH_TLS_LE_HI20 83
+#define R_LARCH_TLS_LE_LO12 84
+#define R_LARCH_TLS_LE64_LO20 85
+#define R_LARCH_TLS_LE64_HI12 86
+#define R_LARCH_TLS_IE_PC_HI20 87
+#define R_LARCH_TLS_IE_PC_LO12 88
+#define R_LARCH_TLS_IE64_PC_LO20 89
+#define R_LARCH_TLS_IE64_PC_HI12 90
+#define R_LARCH_TLS_IE_HI20 91
+#define R_LARCH_TLS_IE_LO12 92
+#define R_LARCH_TLS_IE64_LO20 93
+#define R_LARCH_TLS_IE64_HI12 94
+#define R_LARCH_TLS_LD_PC_HI20 95
+#define R_LARCH_TLS_LD_HI20 96
+#define R_LARCH_TLS_GD_PC_HI20 97
+#define R_LARCH_TLS_GD_HI20 98
+#define R_LARCH_32_PCREL 99
+#define R_LARCH_RELAX 100
+
+/* ARC specific declarations.  */
+
+/* Processor specific flags for the Ehdr e_flags field.  */
+#define EF_ARC_MACH_MSK	    0x000000ff
+#define EF_ARC_OSABI_MSK    0x00000f00
+#define EF_ARC_ALL_MSK	    (EF_ARC_MACH_MSK | EF_ARC_OSABI_MSK)
+
+/* Processor specific values for the Shdr sh_type field.  */
+#define SHT_ARC_ATTRIBUTES	(SHT_LOPROC + 1) /* ARC attributes section.  */
 
 /* ARCompact/ARCv2 specific relocs.  */
 #define R_ARC_NONE		0x0
@@ -4085,7 +4215,7 @@ enum
 #define R_ARC_16		0x2
 #define R_ARC_24		0x3
 #define R_ARC_32		0x4
-#define R_ARC_B26		0x5
+
 #define R_ARC_B22_PCREL		0x6
 #define R_ARC_H30		0x7
 #define R_ARC_N8		0x8
@@ -4125,16 +4255,23 @@ enum
 #define R_ARC_SECTOFF_ME_2	0x2A
 #define R_ARC_SECTOFF_1		0x2B
 #define R_ARC_SECTOFF_2		0x2C
+#define R_ARC_SDA_12		0x2D
+#define R_ARC_SDA16_ST2		0x30
+#define R_ARC_32_PCREL		0x31
 #define R_ARC_PC32		0x32
 #define R_ARC_GOTPC32		0x33
 #define R_ARC_PLT32		0x34
 #define R_ARC_COPY		0x35
 #define R_ARC_GLOB_DAT		0x36
-#define R_ARC_JUMP_SLOT		0x37
+#define R_ARC_JMP_SLOT		0x37
 #define R_ARC_RELATIVE		0x38
 #define R_ARC_GOTOFF		0x39
 #define R_ARC_GOTPC		0x3A
 #define R_ARC_GOT32		0x3B
+#define R_ARC_S21W_PCREL_PLT	0x3C
+#define R_ARC_S25H_PCREL_PLT	0x3D
+
+#define R_ARC_JLI_SECTOFF	0x3F
 
 #define R_ARC_TLS_DTPMOD	0x42
 #define R_ARC_TLS_DTPOFF	0x43
@@ -4143,9 +4280,12 @@ enum
 #define R_ARC_TLS_GD_LD	        0x46
 #define R_ARC_TLS_GD_CALL	0x47
 #define R_ARC_TLS_IE_GOT	0x48
-#define R_ARC_TLS_DTPOFF_S9	0x4a
-#define R_ARC_TLS_LE_S9		0x4a
-#define R_ARC_TLS_LE_32		0x4b
+#define R_ARC_TLS_DTPOFF_S9	0x49
+#define R_ARC_TLS_LE_S9		0x4A
+#define R_ARC_TLS_LE_32		0x4B
+#define R_ARC_S25W_PCREL_PLT	0x4C
+#define R_ARC_S21H_PCREL_PLT	0x4D
+#define R_ARC_NPS_CMEM16	0x4E
 
 /* OpenRISC 1000 specific relocs.  */
 #define R_OR1K_NONE		0

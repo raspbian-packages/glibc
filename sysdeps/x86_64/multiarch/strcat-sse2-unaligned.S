@@ -1,5 +1,5 @@
 /* strcat with SSE2
-   Copyright (C) 2011-2022 Free Software Foundation, Inc.
+   Copyright (C) 2011-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -35,6 +35,10 @@
 ENTRY (STRCAT)
 	mov	%rdi, %r9
 # ifdef USE_AS_STRNCAT
+#  ifdef __ILP32__
+	/* Clear the upper 32 bits.  */
+	movl	%edx, %edx
+#  endif
 	mov	%rdx, %r8
 # endif
 

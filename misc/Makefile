@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2022 Free Software Foundation, Inc.
+# Copyright (C) 1991-2023 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -35,7 +35,7 @@ headers	:= sys/uio.h bits/uio-ext.h bits/uio_lim.h \
 	   regexp.h bits/select.h bits/mman.h sys/xattr.h \
 	   syslog.h sys/syslog.h \
 	   bits/syslog.h bits/syslog-ldbl.h bits/syslog-path.h bits/error.h \
-	   bits/select2.h bits/hwcap.h bits/auxv.h sys/auxv.h \
+	   bits/select2.h bits/hwcap.h sys/auxv.h \
 	   sys/sysmacros.h bits/sysmacros.h bits/types/struct_iovec.h \
 	   bits/err-ldbl.h bits/error-ldbl.h \
 	   sys/single_threaded.h
@@ -144,6 +144,8 @@ CFLAGS-tst-tsearch.c += $(stack-align-test-flags)
 CFLAGS-msync.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-fdatasync.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-fsync.c += -fexceptions -fasynchronous-unwind-tables
+CFLAGS-makedev.c += $(config-cflags-wno-ignored-attributes)
+CFLAGS-mmap64.c += $(config-cflags-wno-ignored-attributes)
 
 # Called during static library initialization, so turn stack-protection
 # off for non-shared builds.

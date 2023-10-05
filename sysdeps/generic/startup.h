@@ -1,5 +1,5 @@
 /* Generic definitions of functions used by static libc main startup.
-   Copyright (C) 2017-2022 Free Software Foundation, Inc.
+   Copyright (C) 2017-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
 /* Targets should override this file if the default definitions below
    will not work correctly very early before TLS is initialized.  */
 
-#include <unistd.h>
+#include <stdio.h>
 
 /* Use macro instead of inline function to avoid including <stdio.h>.  */
 #define _startup_fatal(message) __libc_fatal ((message))

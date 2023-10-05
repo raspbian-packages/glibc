@@ -1,5 +1,5 @@
 /* Run-time dynamic linker data structures for loaded ELF shared objects.
-   Copyright (C) 2012-2022 Free Software Foundation, Inc.
+   Copyright (C) 2012-2023 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -36,8 +36,6 @@ struct La_alpha_retval;
 				      const struct La_alpha_regs *,	\
 				      struct La_alpha_retval *,		\
 				      const char *);
-
-#define NEED_LD_SO_NOHWCAP
 
 #include_next <ldsodefs.h>
 

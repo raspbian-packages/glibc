@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2022 Free Software Foundation, Inc.
+# Copyright (C) 2013-2023 Free Software Foundation, Inc.
 # Copyright The GNU Toolchain Authors.
 # This file is part of the GNU C Library.
 
@@ -103,10 +103,18 @@ endif
 
 bench-pthread := \
   pthread-locks \
-  pthread-mutex-locks \
+  pthread-mutex-lock \
+  pthread-mutex-trylock \
+  pthread-spin-lock \
+  pthread-spin-trylock \
   pthread_once \
   thread_create \
 # bench-pthread
+
+LDLIBS-bench-pthread-mutex-lock += -lm
+LDLIBS-bench-pthread-mutex-trylock += -lm
+LDLIBS-bench-pthread-spin-lock += -lm
+LDLIBS-bench-pthread-spin-trylock += -lm
 
 bench-string := \
   ffs \
@@ -260,9 +268,9 @@ CFLAGS-bench-trunc.c += -fno-builtin
 CFLAGS-bench-truncf.c += -fno-builtin
 CFLAGS-bench-roundeven.c += -fno-builtin
 CFLAGS-bench-roundevenf.c += -fno-builtin
-CFLAGS-bench-isnan.c += -fsignaling-nans
-CFLAGS-bench-isinf.c += -fsignaling-nans
-CFLAGS-bench-isfinite.c += -fsignaling-nans
+CFLAGS-bench-isnan.c += $(config-cflags-signaling-nans)
+CFLAGS-bench-isinf.c += $(config-cflags-signaling-nans)
+CFLAGS-bench-isfinite.c += $(config-cflags-signaling-nans)
 
 ifeq (${BENCHSET},)
 bench-malloc := malloc-thread malloc-simple

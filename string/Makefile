@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2022 Free Software Foundation, Inc.
+# Copyright (C) 1991-2023 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -230,6 +230,15 @@ LDFLAGS-tst-xbzero-opt = -z now
 # Called during TLS initialization.
 CFLAGS-memcpy.c += $(no-stack-protector)
 CFLAGS-wordcopy.c += $(no-stack-protector)
+
+CFLAGS-argz-next.c += $(config-cflags-wno-ignored-attributes)
+CFLAGS-basename.c += $(config-cflags-wno-ignored-attributes)
+CFLAGS-ffs.c += $(config-cflags-wno-ignored-attributes)
+CFLAGS-memmem.c += $(config-cflags-wno-ignored-attributes)
+CFLAGS-memchr.c += $(config-cflags-wno-ignored-attributes)
+CFLAGS-mempcpy.c += $(config-cflags-wno-ignored-attributes)
+CFLAGS-stpcpy.c += $(config-cflags-wno-ignored-attributes)
+CFLAGS-strnlen.c += $(config-cflags-wno-ignored-attributes)
 
 ifeq ($(run-built-tests),yes)
 $(objpfx)tst-svc-cmp.out: tst-svc.expect $(objpfx)tst-svc.out
