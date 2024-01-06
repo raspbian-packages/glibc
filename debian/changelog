@@ -1,15 +1,38 @@
-glibc (2.37-12+rpi2) trixie-staging; urgency=medium
-
-  * Remove valgrind conflicts.
-
- -- Peter Michael Green <plugwash@raspbian.org>  Tue, 17 Oct 2023 12:00:24 +0000
-
-glibc (2.37-12+rpi1) trixie-staging; urgency=medium
+glibc (2.37-13+rpi1) trixie-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
 
- -- Peter Michael Green <plugwash@raspbian.org>  Thu, 05 Oct 2023 23:15:41 +0000
+  [changes brought forward from 2.37-12+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Tue, 17 Oct 2023 12:00:24 +0000]
+  * Remove valgrind conflicts.
+
+ -- Raspbian forward porter <root@raspbian.org>  Sat, 06 Jan 2024 17:03:00 +0000
+
+glibc (2.37-13) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/rules.d/control.mk: enable build on loong64.  Closes: #1053717.
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+  * debian/patches/any/local-tcsetaddr.diff: fix a thinko in handling of
+    CREAD, CSIZE, PARENB bits in tcsetaddr(). Thanks to Ian Abbott for the
+    hint.  Closes: #1050290.
+  * Update Swedish debconf translation, by Martin Bagge.  Closes: #1056957.
+  * debian/local/manpages/getconf.1: fix issues reported py mandoc.  Closes:
+    #1052267.
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/git-statfs_f_ffree.patch: Add missing f_ffree
+    conversion.
+  * debian/patches/hurd-i386/git-send_interrupt.diff: Fix spurious send
+    interrupts.
+  * debian/patches/hurd-i386/git-exec-intr.diff: Fix "invalid destination"
+    errors during ghc builds.
+  * debian/patches/hurd-i386/git-ioctls-bsd.diff: Fix missing BSD macros after
+    including termios.h then ioctl.h
+  * debian/patches/hurd-i386/git-dtable_reauth.diff: Fix restarting
+    reauth_dtable on signal.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 03 Dec 2023 14:23:52 +0100
 
 glibc (2.37-12) unstable; urgency=critical
 

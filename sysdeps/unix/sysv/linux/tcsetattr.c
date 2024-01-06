@@ -107,8 +107,8 @@ __tcsetattr (int fd, int optional_actions, const struct termios *termios_p)
 	  __set_errno (save);
 	  retval = 0;
 	}
-      else if ((k_termios_old.c_cflag | (PARENB & CREAD & CSIZE)) !=
-	       (k_termios.c_cflag | (PARENB & CREAD & CSIZE)))
+      else if ((k_termios_old.c_cflag & ~(PARENB | CREAD | CSIZE)) !=
+	       (k_termios.c_cflag & ~(PARENB | CREAD | CSIZE)))
 	{
 	  /* Some other c_cflag setting was successfully changed, which
 	     means we should not return an error. */

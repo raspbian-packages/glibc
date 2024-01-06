@@ -33,6 +33,11 @@ hurd-i386/git-jemalloc2.diff
 hurd-i386/git-error_t.diff
 hurd-i386/git-tls_dtors.diff
 hurd-i386/git-main_stack.diff
+hurd-i386/git-statfs_f_ffree.patch
+hurd-i386/git-send_interrupt.diff
+hurd-i386/git-exec-intr.diff
+hurd-i386/git-ioctls-bsd.diff
+hurd-i386/git-dtable_reauth.diff
 hurd-i386/local-enable-ldconfig.diff
 hurd-i386/tg-sysvshm.diff
 hurd-i386/tg-thread-cancel.diff
