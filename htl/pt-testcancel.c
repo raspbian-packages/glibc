@@ -22,7 +22,7 @@
 #include <pthreadP.h>
 
 void
-pthread_testcancel (void)
+__pthread_testcancel (void)
 {
   struct __pthread *p = _pthread_self ();
   int cancelled;
@@ -34,3 +34,4 @@ pthread_testcancel (void)
   if (cancelled)
     __pthread_exit (PTHREAD_CANCELED);
 }
+strong_alias (__pthread_testcancel, pthread_testcancel)
