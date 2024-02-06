@@ -1,0 +1,16 @@
+Disable tst-bz29951 as the corresponding binary test file can't be included in git-updates.diff
+
+To be removed for 2.37.
+
+--- a/timezone/Makefile
++++ b/timezone/Makefile
+@@ -23,7 +23,7 @@ subdir	:= timezone
+ include ../Makeconfig
+ 
+ others	:= zdump zic
+-tests	:= test-tz tst-timezone tst-tzset tst-bz28707 tst-bz29951
++tests	:= test-tz tst-timezone tst-tzset tst-bz28707
+ 
+ generated-dirs += testdata
+ 
+
