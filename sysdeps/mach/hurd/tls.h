@@ -25,6 +25,7 @@
 # include <stdint.h>
 # include <stdbool.h>
 # include <sysdep.h>
+# include <sys/param.h>
 # include <mach/mig_errors.h>
 # include <mach.h>
 # include <atomic.h>
@@ -34,7 +35,7 @@
 # define TLS_INIT_TCB_SIZE sizeof (tcbhead_t)
 
 /* Alignment requirements for the initial TCB.  */
-# define TLS_INIT_TCB_ALIGN __alignof__ (tcbhead_t)
+# define TLS_INIT_TCB_ALIGN MAX(__alignof__ (tcbhead_t), 8)
 
 /* This is the size of the TCB.  */
 # define TLS_TCB_SIZE TLS_INIT_TCB_SIZE	/* XXX */
