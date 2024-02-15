@@ -499,6 +499,7 @@ extern const struct cpu_features *__get_cpu_features (void)
 #define bit_cpu_AVX512_4VNNIW	(1u << 2)
 #define bit_cpu_AVX512_4FMAPS	(1u << 3)
 #define bit_cpu_FSRM		(1u << 4)
+#define bit_cpu_RTM_ALWAYS_ABORT (1u << 11)
 #define bit_cpu_PCONFIG		(1u << 18)
 #define bit_cpu_IBT		(1u << 20)
 #define bit_cpu_IBRS_IBPB	(1u << 26)
@@ -667,6 +668,7 @@ extern const struct cpu_features *__get_cpu_features (void)
 #define index_cpu_AVX512_4VNNIW COMMON_CPUID_INDEX_7
 #define index_cpu_AVX512_4FMAPS	COMMON_CPUID_INDEX_7
 #define index_cpu_FSRM		COMMON_CPUID_INDEX_7
+#define index_cpu_RTM_ALWAYS_ABORT COMMON_CPUID_INDEX_7
 #define index_cpu_PCONFIG	COMMON_CPUID_INDEX_7
 #define index_cpu_IBT		COMMON_CPUID_INDEX_7
 #define index_cpu_IBRS_IBPB	COMMON_CPUID_INDEX_7
@@ -835,6 +837,7 @@ extern const struct cpu_features *__get_cpu_features (void)
 #define reg_AVX512_4VNNIW	edx
 #define reg_AVX512_4FMAPS	edx
 #define reg_FSRM		edx
+#define reg_RTM_ALWAYS_ABORT	edx
 #define reg_PCONFIG		edx
 #define reg_IBT			edx
 #define reg_IBRS_IBPB		edx
@@ -897,6 +900,7 @@ extern const struct cpu_features *__get_cpu_features (void)
 #define bit_arch_Prefer_FSRM			(1u << 13)
 #define bit_arch_Prefer_No_AVX512		(1u << 14)
 #define bit_arch_MathVec_Prefer_No_AVX512	(1u << 15)
+#define bit_arch_Prefer_AVX2_STRCMP		(1u << 16)
 
 #define index_arch_Fast_Rep_String		FEATURE_INDEX_2
 #define index_arch_Fast_Copy_Backward		FEATURE_INDEX_2
@@ -914,6 +918,7 @@ extern const struct cpu_features *__get_cpu_features (void)
 #define index_arch_Prefer_No_AVX512		FEATURE_INDEX_2
 #define index_arch_MathVec_Prefer_No_AVX512	FEATURE_INDEX_2
 #define index_arch_Prefer_FSRM			FEATURE_INDEX_2
+#define index_arch_Prefer_AVX2_STRCMP		FEATURE_INDEX_2
 
 /* XCR0 Feature flags.  */
 #define bit_XMM_state		(1u << 1)
