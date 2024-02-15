@@ -32,7 +32,7 @@ __pthread_mutex_timedlock (pthread_mutex_t *mtxp, const struct timespec *tsp)
   switch (MTX_TYPE (mtxp))
     {
     case PT_MTX_NORMAL:
-      ret = lll_abstimed_lock (&mtxp->__lock, tsp, flags);
+      ret = lll_abstimed_lock (mtxp->__lock, tsp, flags);
       break;
 
     case PT_MTX_RECURSIVE:
@@ -45,7 +45,7 @@ __pthread_mutex_timedlock (pthread_mutex_t *mtxp, const struct timespec *tsp)
 	  ++mtxp->__cnt;
 	  ret = 0;
 	}
-      else if ((ret = lll_abstimed_lock (&mtxp->__lock, tsp, flags)) == 0)
+      else if ((ret = lll_abstimed_lock (mtxp->__lock, tsp, flags)) == 0)
 	{
 	  mtx_set_owner (mtxp, self, flags);
 	  mtxp->__cnt = 1;
@@ -57,7 +57,7 @@ __pthread_mutex_timedlock (pthread_mutex_t *mtxp, const struct timespec *tsp)
       self = _pthread_self ();
       if (mtx_owned_p (mtxp, self, flags))
 	ret = EDEADLK;
-      else if ((ret = lll_abstimed_lock (&mtxp->__lock, tsp, flags)) == 0)
+      else if ((ret = lll_abstimed_lock (mtxp->__lock, tsp, flags)) == 0)
 	mtx_set_owner (mtxp, self, flags);
 
       break;
