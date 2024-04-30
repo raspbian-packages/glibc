@@ -23,7 +23,10 @@
 #include <sys/time.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <lowlevellock-futex.h>
 #include <libc-diag.h>
+#include <errno.h>
+#include <pthread.h>
 
 /* This file defines futex operations used internally in glibc.  A futex
    consists of the so-called futex word in userspace, which is of type
