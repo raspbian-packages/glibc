@@ -46,6 +46,9 @@
 #include <libc-internal.h>
 #include <not-cancel.h>
 
+#define TUNABLE_NAMESPACE gmon
+#include <elf/dl-tunables.h>
+
 #ifdef PIC
 # include <link.h>
 
@@ -125,9 +128,14 @@ __monstartup (u_long lowpc, u_long highpc)
   struct gmonparam *p = &_gmonparam;
   long int minarcs, maxarcs;
 
-  /* No tunables, we use hardcoded defaults */
-  minarcs = MINARCS;
-  maxarcs = MAXARCS;
+  /* Read minarcs/maxarcs tunables. */
+  minarcs = TUNABLE_GET (minarcs, int32_t, NULL);
+  maxarcs = TUNABLE_GET (maxarcs, int32_t, NULL);
+  if (maxarcs < minarcs)
+    {
+      ERR("monstartup: maxarcs < minarcs, setting maxarcs = minarcs\n");
+      maxarcs = minarcs;
+    }
 
   /*
    * If we are incorrectly called twice in a row (without an
@@ -376,13 +384,14 @@ write_gmon (void)
 	size_t len = strlen (env);
 	char buf[len + 20];
 	__snprintf (buf, sizeof (buf), "%s.%u", env, __getpid ());
-	fd = __open_nocancel (buf, O_CREAT|O_TRUNC|O_WRONLY|O_NOFOLLOW, 0666);
+	fd = __open_nocancel (buf, O_CREAT | O_TRUNC | O_WRONLY | O_NOFOLLOW
+			      | O_CLOEXEC, 0666);
       }
 
     if (fd == -1)
       {
-	fd = __open_nocancel ("gmon.out", O_CREAT|O_TRUNC|O_WRONLY|O_NOFOLLOW,
-			      0666);
+	fd = __open_nocancel ("gmon.out", O_CREAT | O_TRUNC | O_WRONLY
+			      | O_NOFOLLOW | O_CLOEXEC, 0666);
 	if (fd < 0)
 	  {
 	    char buf[300];

@@ -26,8 +26,6 @@
 #include <pt-internal.h>
 #include <pthreadP.h>
 
-__thread struct __pthread *___pthread_self;
-
 /* Initial thread structure used temporarily during initialization, so various
  * functions can already work at least basically.  */
 static struct __pthread init_thread;

@@ -97,8 +97,8 @@ endif
 	echo -n "Build started: " ; date --rfc-2822; \
 	echo "---------------"; \
 	cd $(DEB_BUILDDIR) && \
-		CC="$(call xx,CC)" \
-		CXX=$(if $(filter nocheck,$(DEB_BUILD_OPTIONS)),:,"$(call xx,CXX)") \
+		CC="$(call xx,CC) -U_FILE_OFFSET_BITS -U_TIME_BITS" \
+		CXX=$(if $(filter nocheck,$(DEB_BUILD_OPTIONS)),:,"$(call xx,CXX) -U_FILE_OFFSET_BITS -U_TIME_BITS") \
 		MIG="$(call xx,MIG)" \
 		AUTOCONF=false \
 		MAKEINFO=: \
@@ -108,6 +108,8 @@ endif
 		--enable-add-ons=$(standard-add-ons)"$(call xx,add-ons)" \
 		--without-selinux \
 		--disable-crypt \
+		--enable-bind-now \
+		--enable-fortify-source \
 		--enable-stackguard-randomization \
 		--enable-stack-protector=strong \
 		--with-pkgversion="Debian GLIBC $(DEB_VERSION)" \

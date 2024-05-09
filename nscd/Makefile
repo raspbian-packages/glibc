@@ -35,7 +35,7 @@ nscd-modules := nscd connections pwdcache getpwnam_r getpwuid_r grpcache \
 		getgrnam_r getgrgid_r hstcache gethstbyad_r gethstbynm3_r \
 		getsrvbynm_r getsrvbypt_r servicescache \
 		dbg_log nscd_conf nscd_stat cache mem nscd_setup_thread \
-		xmalloc xstrdup aicache initgrcache gai res_hconf \
+		xmalloc xstrdup aicache initgrcache res_hconf \
 		netgroupcache cachedumper
 
 ifeq ($(build-nscd)$(have-thread-library),yesyes)
@@ -78,8 +78,6 @@ CFLAGS-nscd_getgr_r.c += -fexceptions
 CFLAGS-nscd_gethst_r.c += -fexceptions
 CFLAGS-nscd_getai.c += -fexceptions
 CFLAGS-nscd_initgroups.c += -fexceptions
-
-CPPFLAGS-nscd += -D_FORTIFY_SOURCE=2
 
 ifeq (yesyes,$(have-fpie)$(build-shared))
 CFLAGS-nscd += $(pie-ccflag)

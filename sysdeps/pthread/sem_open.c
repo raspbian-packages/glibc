@@ -32,6 +32,8 @@
 # define __unlink unlink
 #endif
 
+#define SEM_OPEN_FLAGS (O_RDWR | O_NOFOLLOW | O_CLOEXEC)
+
 sem_t *
 __sem_open (const char *name, int oflag, ...)
 {
@@ -47,9 +49,10 @@ __sem_open (const char *name, int oflag, ...)
     }
 
   struct shmdir_name dirname;
-  if (__shm_get_name (&dirname, name, true) != 0)
+  int ret = __shm_get_name (&dirname, name, true);
+  if (ret != 0)
     {
-      __set_errno (EINVAL);
+      __set_errno (ret);
       return SEM_FAILED;
     }
 
@@ -64,8 +67,7 @@ __sem_open (const char *name, int oflag, ...)
   if ((oflag & O_CREAT) == 0 || (oflag & O_EXCL) == 0)
     {
     try_again:
-      fd = __open (dirname.name,
-		   (oflag & ~(O_CREAT|O_ACCMODE)) | O_NOFOLLOW | O_RDWR);
+      fd = __open (dirname.name, (oflag & O_EXCL) | SEM_OPEN_FLAGS);
 
       if (fd == -1)
 	{
@@ -132,7 +134,7 @@ __sem_open (const char *name, int oflag, ...)
 	    }
 
 	  /* Open the file.  Make sure we do not overwrite anything.  */
-	  fd = __open (tmpfname, O_RDWR | O_CREAT | O_EXCL, mode);
+	  fd = __open (tmpfname, O_CREAT | O_EXCL | SEM_OPEN_FLAGS, mode);
 	  if (fd == -1)
 	    {
 	      if (errno == EEXIST)

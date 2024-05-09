@@ -17,6 +17,7 @@
    <https://www.gnu.org/licenses/>.  */
 
 #include <mach.h>
+#include <mach_rpc.h>
 #include <mach/mig_errors.h>
 #include <mach/mig_support.h>
 #include <hurd/signal.h>
@@ -61,7 +62,7 @@ _hurd_intr_rpc_mach_msg (mach_msg_header_t *msg,
 #ifdef NDR_CHAR_ASCII
       NDR_record_t ndr;
 #else
-      int type;
+      mach_msg_type_t type;
 #endif
       int code;
     } check;
@@ -185,12 +186,14 @@ _hurd_intr_rpc_mach_msg (mach_msg_header_t *msg,
 	      mach_msg_type_size_t size;
 	      mach_msg_type_number_t number;
 
-	      inline void clean_ports (mach_port_t *ports, int dealloc)
+	      inline void clean_ports_and_memory (char *data, const vm_size_t length,
+						int dealloc)
 		{
 		  mach_msg_type_number_t i;
 		  switch (name)
 		    {
 		    case MACH_MSG_TYPE_MOVE_SEND:
+		      mach_port_t *ports = (mach_port_t *) data;
 		      for (i = 0; i < number; i++)
 			__mach_port_deallocate (__mach_task_self (), *ports++);
 		      if (ty->msgtl_header.msgt_longform)
@@ -206,39 +209,60 @@ _hurd_intr_rpc_mach_msg (mach_msg_header_t *msg,
 			assert (! "unexpected port type in interruptible RPC");
 		    }
 		  if (dealloc)
-		    __vm_deallocate (__mach_task_self (),
-				     (vm_address_t) ports,
-				     number * sizeof (mach_port_t));
+		    __vm_deallocate (__mach_task_self (), (vm_address_t) data, length);
 		}
 
+	      inline void clean_inlined_ports (mach_port_name_inlined_t *ports)
+		{
+		  mach_msg_type_number_t i;
+		  switch (name)
+		    {
+		    case MACH_MSG_TYPE_MOVE_SEND:
+		      for (i = 0; i < number; i++)
+			__mach_port_deallocate (__mach_task_self (), ports[i].name);
+		      if (ty->msgtl_header.msgt_longform)
+			ty->msgtl_name = MACH_MSG_TYPE_COPY_SEND;
+		      else
+			ty->msgtl_header.msgt_name = MACH_MSG_TYPE_COPY_SEND;
+		      break;
+		    case MACH_MSG_TYPE_COPY_SEND:
+		    case MACH_MSG_TYPE_MOVE_RECEIVE:
+		      break;
+		    default:
+		      if (MACH_MSG_TYPE_PORT_ANY (name))
+			assert (! "unexpected port type in interruptible RPC");
+		    }
+		}
+
+	      char *data;
 	      if (ty->msgtl_header.msgt_longform)
 		{
 		  name = ty->msgtl_name;
 		  size = ty->msgtl_size;
 		  number = ty->msgtl_number;
-		  ty = (void *) ty + sizeof (mach_msg_type_long_t);
+		  data = (char *) ty + sizeof (mach_msg_type_long_t);
 		}
 	      else
 		{
 		  name = ty->msgtl_header.msgt_name;
 		  size = ty->msgtl_header.msgt_size;
 		  number = ty->msgtl_header.msgt_number;
-		  ty = (void *) ty + sizeof (mach_msg_type_t);
+		  data = (char *) ty + sizeof (mach_msg_type_t);
 		}
 
+	      /* Calculate length of data in bytes.  */
+	      const vm_size_t length = ((number * size) + 7) >> 3;
 	      if (ty->msgtl_header.msgt_inline)
 		{
-		  clean_ports ((void *) ty, 0);
-		  /* calculate length of data in bytes, rounding up */
-		  ty = (void *) ty + (((((number * size) + 7) >> 3)
-				       + sizeof (mach_msg_type_t) - 1)
-				      &~ (sizeof (mach_msg_type_t) - 1));
+		  clean_inlined_ports ((mach_port_name_inlined_t *) data);
+		  /* Move to the next argument.  */
+		  ty = (void *) PTR_ALIGN_UP (data + length, __alignof__ (uintptr_t));
 		}
 	      else
 		{
-		  clean_ports (*(void **) ty,
+		  clean_ports_and_memory (*(void **) data, length,
 			       ty->msgtl_header.msgt_deallocate);
-		  ty = (void *) ty + sizeof (void *);
+		  ty = (void *) data + sizeof (void *);
 		}
 	    }
 #else  /* Untyped Mach IPC flavor. */
@@ -311,6 +335,7 @@ _hurd_intr_rpc_mach_msg (mach_msg_header_t *msg,
 	{
 	  /* Make sure we have a valid reply port.  The one we were using
 	     may have been destroyed by interruption.  */
+	  __mig_dealloc_reply_port (rcv_name);
 	  m->header.msgh_local_port = rcv_name = __mig_get_reply_port ();
 	  m->header.msgh_bits = msgh_bits;
 	  option = user_option;
@@ -359,19 +384,21 @@ _hurd_intr_rpc_mach_msg (mach_msg_header_t *msg,
       {
 	/* We got a reply.  Was it EINTR?  */
 #ifdef MACH_MSG_TYPE_BIT
-	const union
-	{
-	  mach_msg_type_t t;
-	  int i;
-	} check =
-	  { t: { MACH_MSG_TYPE_INTEGER_T, sizeof (integer_t) * 8,
-		 1, TRUE, FALSE, FALSE, 0 } };
+	static const mach_msg_type_t type_check = {
+	  .msgt_name = MACH_MSG_TYPE_INTEGER_T,
+	  .msgt_size = sizeof (integer_t) * 8,
+	  .msgt_number = 1,
+	  .msgt_inline = TRUE,
+	  .msgt_longform = FALSE,
+	  .msgt_deallocate = FALSE,
+	  .msgt_unused = 0
+	};
 #endif
 
         if (m->reply.RetCode == EINTR
 	    && m->header.msgh_size == sizeof m->reply
 #ifdef MACH_MSG_TYPE_BIT
-	    && m->check.type == check.i
+	    && !BAD_TYPECHECK(&m->check.type, &type_check)
 #endif
 	    && !(m->header.msgh_bits & MACH_MSGH_BITS_COMPLEX))
 	  {

@@ -909,19 +909,25 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
   cpu_features->level3_cache_linesize = level3_cache_linesize;
   cpu_features->level4_cache_size = level4_cache_size;
 
-  /* The default setting for the non_temporal threshold is 1/4 of size
-     of the chip's cache. For most Intel and AMD processors with an
-     initial release date between 2017 and 2023, a thread's typical
-     share of the cache is from 18-64MB. Using the 1/4 L3 is meant to
-     estimate the point where non-temporal stores begin out-competing
-     REP MOVSB. As well the point where the fact that non-temporal
-     stores are forced back to main memory would already occurred to the
-     majority of the lines in the copy. Note, concerns about the
-     entire L3 cache being evicted by the copy are mostly alleviated
-     by the fact that modern HW detects streaming patterns and
-     provides proper LRU hints so that the maximum thrashing
-     capped at 1/associativity. */
-  unsigned long int non_temporal_threshold = shared / 4;
+  unsigned long int cachesize_non_temporal_divisor
+      = cpu_features->cachesize_non_temporal_divisor;
+  if (cachesize_non_temporal_divisor <= 0)
+    cachesize_non_temporal_divisor = 4;
+
+  /* The default setting for the non_temporal threshold is [1/8, 1/2] of size
+     of the chip's cache (depending on `cachesize_non_temporal_divisor` which
+     is microarch specific. The default is 1/4). For most Intel processors
+     with an initial release date between 2017 and 2023, a thread's
+     typical share of the cache is from 18-64MB. Using a reasonable size
+     fraction of L3 is meant to estimate the point where non-temporal stores
+     begin out-competing REP MOVSB. As well the point where the fact that
+     non-temporal stores are forced back to main memory would already occurred
+     to the majority of the lines in the copy. Note, concerns about the entire
+     L3 cache being evicted by the copy are mostly alleviated by the fact that
+     modern HW detects streaming patterns and provides proper LRU hints so that
+     the maximum thrashing capped at 1/associativity. */
+  unsigned long int non_temporal_threshold
+      = shared / cachesize_non_temporal_divisor;
 
   /* If the computed non_temporal_threshold <= 3/4 * per-thread L3, we most
      likely have incorrect/incomplete cache info in which case, default to
@@ -945,15 +951,21 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
      reflected in the manual.  */
   unsigned long int maximum_non_temporal_threshold = SIZE_MAX >> 4;
   unsigned long int minimum_non_temporal_threshold = 0x4040;
+
+  /* If `non_temporal_threshold` less than `minimum_non_temporal_threshold`
+     it most likely means we failed to detect the cache info. We don't want
+     to default to `minimum_non_temporal_threshold` as such a small value,
+     while correct, has bad performance. We default to 64MB as reasonable
+     default bound. 64MB is likely conservative in that most/all systems would
+     choose a lower value so it should never forcing non-temporal stores when
+     they otherwise wouldn't be used.  */
   if (non_temporal_threshold < minimum_non_temporal_threshold)
-    non_temporal_threshold = minimum_non_temporal_threshold;
+    non_temporal_threshold = 64 * 1024 * 1024;
   else if (non_temporal_threshold > maximum_non_temporal_threshold)
     non_temporal_threshold = maximum_non_temporal_threshold;
 
-#if HAVE_TUNABLES
   /* NB: The REP MOVSB threshold must be greater than VEC_SIZE * 8.  */
   unsigned int minimum_rep_movsb_threshold;
-#endif
   /* NB: The default REP MOVSB threshold is 4096 * (VEC_SIZE / 16) for
      VEC_SIZE == 64 or 32.  For VEC_SIZE == 16, the default REP MOVSB
      threshold is 2048 * (VEC_SIZE / 16).  */
@@ -962,24 +974,18 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
       && !CPU_FEATURE_PREFERRED_P (cpu_features, Prefer_No_AVX512))
     {
       rep_movsb_threshold = 4096 * (64 / 16);
-#if HAVE_TUNABLES
       minimum_rep_movsb_threshold = 64 * 8;
-#endif
     }
   else if (CPU_FEATURE_PREFERRED_P (cpu_features,
 				    AVX_Fast_Unaligned_Load))
     {
       rep_movsb_threshold = 4096 * (32 / 16);
-#if HAVE_TUNABLES
       minimum_rep_movsb_threshold = 32 * 8;
-#endif
     }
   else
     {
       rep_movsb_threshold = 2048 * (16 / 16);
-#if HAVE_TUNABLES
       minimum_rep_movsb_threshold = 16 * 8;
-#endif
     }
   /* NB: The default REP MOVSB threshold is 2112 on processors with fast
      short REP MOVSB (FSRM).  */
@@ -989,7 +995,6 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
   /* The default threshold to use Enhanced REP STOSB.  */
   unsigned long int rep_stosb_threshold = 2048;
 
-#if HAVE_TUNABLES
   long int tunable_size;
 
   tunable_size = TUNABLE_GET (x86_data_cache_size, long int, NULL);
@@ -1026,7 +1031,6 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
 			   minimum_rep_movsb_threshold, SIZE_MAX);
   TUNABLE_SET_WITH_BOUNDS (x86_rep_stosb_threshold, rep_stosb_threshold, 1,
 			   SIZE_MAX);
-#endif
 
   unsigned long int rep_movsb_stop_threshold;
   /* ERMS feature is implemented from AMD Zen3 architecture and it is

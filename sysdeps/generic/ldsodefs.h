@@ -38,7 +38,6 @@
 #include <dl-fixup-attribute.h>
 #include <libc-lock.h>
 #include <hp-timing.h>
-#include <tls.h>
 #include <list_t.h>
 
 __BEGIN_DECLS
@@ -358,7 +357,7 @@ struct rtld_global
   EXTERN size_t _dl_nns;
 
   /* During the program run we must not modify the global data of
-     loaded shared object simultanously in two threads.  Therefore we
+     loaded shared object simultaneously in two threads.  Therefore we
      protect `_dl_open' and `_dl_close' in dl-close.c.
 
      This must be a recursive lock since the initializer function of
@@ -585,11 +584,6 @@ struct rtld_global_ro
 
   /* Mask for hardware capabilities that are available.  */
   EXTERN uint64_t _dl_hwcap;
-
-#if !HAVE_TUNABLES
-  /* Mask for important hardware capabilities we honour. */
-  EXTERN uint64_t _dl_hwcap_mask;
-#endif
 
 #ifdef HAVE_AUX_VECTOR
   /* Pointer to the auxv list supplied to the program at startup.  */
@@ -1187,26 +1181,17 @@ extern struct link_map * _dl_get_dl_main_map (void)
 # endif
 #endif
 
-/* Perform early memory allocation, avoding a TCB dependency.
+/* Perform early memory allocation, avoiding a TCB dependency.
    Terminate the process if allocation fails.  May attempt to use
    brk.  */
 void *_dl_early_allocate (size_t size) attribute_hidden;
 
-/* Initialize the DSO sort algorithm to use.  */
-#if !HAVE_TUNABLES
-static inline void
-__always_inline
-_dl_sort_maps_init (void)
-{
-  /* This is optimized out if tunables are not enabled.  */
-}
-#else
-extern void _dl_sort_maps_init (void) attribute_hidden;
-#endif
-
 /* Initialization of libpthread for statically linked applications.
    If libpthread is not linked in, this is an empty function.  */
 void __pthread_initialize_minimal (void) weak_function;
+
+/* Initialize the DSO sort algorithm to use.  */
+extern void _dl_sort_maps_init (void) attribute_hidden;
 
 /* Allocate memory for static TLS block (unless MEM is nonzero) and dtv.  */
 extern void *_dl_allocate_tls (void *mem);

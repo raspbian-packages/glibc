@@ -20,6 +20,7 @@
 #include <sys/auxv.h>
 #include <elf/dl-hwcaps.h>
 #include <sys/prctl.h>
+#include <sys/utsname.h>
 
 #define DCZID_DZP_MASK (1 << 4)
 #define DCZID_BS_MASK (0xf)
@@ -30,7 +31,6 @@
    to see when pointer have been correctly tagged.  */
 #define MTE_ALLOWED_TAGS (0xfffe << PR_MTE_TAG_SHIFT)
 
-#if HAVE_TUNABLES
 struct cpu_list
 {
   const char *name;
@@ -38,11 +38,9 @@ struct cpu_list
 };
 
 static struct cpu_list cpu_list[] = {
-      {"falkor",	 0x510FC000},
       {"thunderxt88",	 0x430F0A10},
       {"thunderx2t99",   0x431F0AF0},
       {"thunderx2t99p1", 0x420F5160},
-      {"phecda",	 0x680F0000},
       {"ares",		 0x411FD0C0},
       {"emag",		 0x503F0001},
       {"kunpeng920", 	 0x481FD010},
@@ -59,6 +57,45 @@ get_midr_from_mcpu (const char *mcpu)
 
   return UINT64_MAX;
 }
+
+#if __LINUX_KERNEL_VERSION < 0x060200
+
+/* Return true if we prefer using SVE in string ifuncs.  Old kernels disable
+   SVE after every system call which results in unnecessary traps if memcpy
+   uses SVE.  This is true for kernels between 4.15.0 and before 6.2.0, except
+   for 5.14.0 which was patched.  For these versions return false to avoid using
+   SVE ifuncs.
+   Parse the kernel version into a 24-bit kernel.major.minor value without
+   calling any library functions.  If uname() is not supported or if the version
+   format is not recognized, assume the kernel is modern and return true.  */
+
+static inline bool
+prefer_sve_ifuncs (void)
+{
+  struct utsname buf;
+  const char *p = &buf.release[0];
+  int kernel = 0;
+  int val;
+
+  if (__uname (&buf) < 0)
+    return true;
+
+  for (int shift = 16; shift >= 0; shift -= 8)
+    {
+      for (val = 0; *p >= '0' && *p <= '9'; p++)
+	val = val * 10 + *p - '0';
+      kernel |= (val & 255) << shift;
+      if (*p++ != '.')
+	break;
+    }
+
+  if (kernel >= 0x060200 || kernel == 0x050e00)
+    return true;
+  if (kernel >= 0x040f00)
+    return false;
+  return true;
+}
+
 #endif
 
 static inline void
@@ -66,12 +103,10 @@ init_cpu_features (struct cpu_features *cpu_features)
 {
   register uint64_t midr = UINT64_MAX;
 
-#if HAVE_TUNABLES
   /* Get the tunable override.  */
   const char *mcpu = TUNABLE_GET (glibc, cpu, name, const char *, NULL);
   if (mcpu != NULL)
     midr = get_midr_from_mcpu (mcpu);
-#endif
 
   /* If there was no useful tunable override, query the MIDR if the kernel
      allows it.  */
@@ -100,13 +135,11 @@ init_cpu_features (struct cpu_features *cpu_features)
   cpu_features->mte_state = 0;
 
 #ifdef USE_MTAG
-# if HAVE_TUNABLES
   int mte_state = TUNABLE_GET (glibc, mem, tagging, unsigned, 0);
   cpu_features->mte_state = (GLRO (dl_hwcap2) & HWCAP2_MTE) ? mte_state : 0;
   /* If we lack the MTE feature, disable the tunable, since it will
      otherwise cause instructions that won't run on this CPU to be used.  */
   TUNABLE_SET (glibc, mem, tagging, cpu_features->mte_state);
-# endif
 
   if (cpu_features->mte_state & 4)
     /* Enable choosing system-preferred faulting mode.  */
@@ -126,4 +159,14 @@ init_cpu_features (struct cpu_features *cpu_features)
 
   /* Check if SVE is supported.  */
   cpu_features->sve = GLRO (dl_hwcap) & HWCAP_SVE;
+
+  cpu_features->prefer_sve_ifuncs = cpu_features->sve;
+
+#if __LINUX_KERNEL_VERSION < 0x060200
+  if (cpu_features->sve)
+    cpu_features->prefer_sve_ifuncs = prefer_sve_ifuncs ();
+#endif
+
+  /* Check if MOPS is supported.  */
+  cpu_features->mops = GLRO (dl_hwcap2) & HWCAP2_MOPS;
 }

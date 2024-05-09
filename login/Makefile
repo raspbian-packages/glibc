@@ -44,7 +44,9 @@ subdir-dirs = programs
 vpath %.c programs
 
 tests := tst-utmp tst-utmpx tst-grantpt tst-ptsname tst-getlogin tst-updwtmpx \
-  tst-pututxline-lockfail tst-pututxline-cache
+  tst-pututxline-lockfail tst-pututxline-cache tst-utmp-size tst-utmp-size-64
+
+CFLAGS-tst-utmp-size-64.c += -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
 
 # Empty compatibility library for old binaries.
 extra-libs      := libutil
@@ -65,6 +67,12 @@ include ../Rules
 
 CFLAGS-getpt.c += -fexceptions
 CFLAGS-getlogin_r.c += $(config-cflags-wno-ignored-attributes)
+
+# Exclude fortified routines from being built with _FORTIFY_SOURCE
+routines_no_fortify += \
+  getlogin_r \
+  ptsname_r \
+  # routines_no_fortify
 
 ifeq (yesyes,$(have-fpie)$(build-shared))
 pt_chown-cflags += $(pie-ccflag)

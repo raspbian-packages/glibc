@@ -21,10 +21,12 @@
 #if HAVE_STRCHRNUL_C
 # if HAVE_STRCHRNUL_IFUNC
 #  define STRCHRNUL STRCHRNUL_C
-#  define __strchrnul STRCHRNUL
-#  undef weak_alias
-#  define weak_alias(name, alias)
 # endif
 
 # include <string/strchrnul.c>
+# if HAVE_STRCHRNUL_IFUNC
+#  if defined SHARED && IS_IN (libc)
+__hidden_ver1 (__strchrnul_c, __GI___strchrnul, __strchrnul_c);
+#  endif
+# endif
 #endif

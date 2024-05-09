@@ -38,11 +38,6 @@
 
 #include <not-errno.h>
 
-#if TUNABLES_FRONTEND == TUNABLES_FRONTEND_valstring
-# define GLIBC_TUNABLES "GLIBC_TUNABLES"
-#endif
-
-#if TUNABLES_FRONTEND == TUNABLES_FRONTEND_valstring
 static char *
 tunables_strdup (const char *in)
 {
@@ -62,7 +57,6 @@ tunables_strdup (const char *in)
 
   return out;
 }
-#endif
 
 static char **
 get_next_env (char **envp, char **name, size_t *namelen, char **val,
@@ -160,7 +154,6 @@ __tunable_set_val (tunable_id_t id, tunable_val_t *valp, tunable_num_t *minp,
   do_tunable_update_val (cur, valp, minp, maxp);
 }
 
-#if TUNABLES_FRONTEND == TUNABLES_FRONTEND_valstring
 /* Parse the tunable string TUNESTR and adjust it to drop any tunables that may
    be unsafe for AT_SECURE processes so that it can be used as the new
    environment variable value for GLIBC_TUNABLES.  VALSTRING is the original
@@ -258,7 +251,6 @@ parse_tunables (char *tunestr, char *valstring)
   if (__libc_enable_secure)
     tunestr[off] = '\0';
 }
-#endif
 
 /* Enable the glibc.malloc.check tunable in SETUID/SETGID programs only when
    the system administrator has created the /etc/suid-debug file.  This is a
@@ -290,8 +282,7 @@ __tunables_init (char **envp)
   while ((envp = get_next_env (envp, &envname, &len, &envval,
 			       &prev_envp)) != NULL)
     {
-#if TUNABLES_FRONTEND == TUNABLES_FRONTEND_valstring
-      if (tunable_is_name (GLIBC_TUNABLES, envname))
+      if (tunable_is_name ("GLIBC_TUNABLES", envname))
 	{
 	  char *new_env = tunables_strdup (envname);
 	  if (new_env != NULL)
@@ -300,7 +291,6 @@ __tunables_init (char **envp)
 	  *prev_envp = new_env;
 	  continue;
 	}
-#endif
 
       for (int i = 0; i < sizeof (tunable_list) / sizeof (tunable_t); i++)
 	{

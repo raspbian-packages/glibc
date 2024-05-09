@@ -141,3 +141,15 @@ Index: glibc-2.33/sysdeps/mach/hurd/i386/libc.abilist
  GLIBC_2.21 pthread_attr_destroy F
  GLIBC_2.21 pthread_attr_getdetachstate F
  GLIBC_2.21 pthread_attr_getinheritsched F
+Index: glibc-2.38/sysdeps/mach/hurd/x86_64/libc.abilist
+===================================================================
+--- glibc-2.38/sysdeps/mach/hurd/x86_64/libc.abilist.original	2024-02-19 00:36:33.000000000 +0000
++++ glibc-2.38/sysdeps/mach/hurd/x86_64/libc.abilist	2024-02-19 00:36:43.000000000 +0000
+@@ -573,6 +573,7 @@
+ GLIBC_2.38 _hurd_dtablesize D 0x4
+ GLIBC_2.38 _hurd_exception2signal F
+ GLIBC_2.38 _hurd_exec F
++GLIBC_2.38 _hurd_exec_file_name F
+ GLIBC_2.38 _hurd_exec_paths F
+ GLIBC_2.38 _hurd_fd_error F
+ GLIBC_2.38 _hurd_fd_error_signal F

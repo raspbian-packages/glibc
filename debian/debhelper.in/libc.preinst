@@ -25,7 +25,10 @@ then
     # Only change LC_ALL after loading debconf to ensure the debconf templates
     # are properly localized.
     export LC_ALL=C
+fi
 
+if [ "$type" != abort-upgrade ] && [ -z "$DPKG_ROOT" ]
+then
     # See if LD_LIBRARY_PATH contains the traditional /lib, but not the
     # multiarch path
     dirs=$(echo $LD_LIBRARY_PATH | sed 's/:/ /g')
