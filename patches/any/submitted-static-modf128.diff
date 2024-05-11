@@ -1,0 +1,32 @@
+From: Adhemerval Zanella <adhemerval.zanella@linaro.org>
+Subject: [PATCH v3 7/7] math: Provide modf128 for static libm on alpha, s390,
+ and sparcv9
+Date: Tue,  2 Apr 2024 11:06:44 -0300
+Message-Id: <20240402140644.2172819-8-adhemerval.zanella@linaro.org>
+
+Checked with a build for the affected ABIs
+---
+ sysdeps/ieee754/ldbl-64-128/s_modfl.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/sysdeps/ieee754/ldbl-64-128/s_modfl.c b/sysdeps/ieee754/ldbl-64-128/s_modfl.c
+index 7d7aeae111..ba3d31334a 100644
+--- a/sysdeps/ieee754/ldbl-64-128/s_modfl.c
++++ b/sysdeps/ieee754/ldbl-64-128/s_modfl.c
+@@ -1,10 +1,10 @@
+ #include <math_ldbl_opt.h>
+ #include <libm-alias-ldouble.h>
+-#if IS_IN (libc)
++#if IS_IN (libc) && defined SHARED
+ # undef libm_alias_ldouble
+ # define libm_alias_ldouble(from, to)
+ #endif
+ #include <sysdeps/ieee754/ldbl-128/s_modfl.c>
+-#if IS_IN (libc)
++#if IS_IN (libc) && defined SHARED
+ long_double_symbol (libc, __modfl, modfl);
+ #endif
+-- 
+2.34.1
+
+
