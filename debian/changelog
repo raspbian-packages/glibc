@@ -1,9 +1,17 @@
-glibc (2.28-10+rpi1+deb10u2) buster-staging; urgency=medium
+glibc (2.28-10+rpi1+deb10u3) buster-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Tue, 18 Oct 2022 23:38:57 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Sat, 25 May 2024 18:05:05 +0000
+
+glibc (2.28-10+deb10u3) buster-security; urgency=medium
+
+  * Non-maintainer upload by the LTS Team.
+  * CVE-2024-2961: Out-of-bounds write in iconv ISO-2022-CN-EXT module
+  * Don't ignore test failures during the build.
+
+ -- Adrian Bunk <bunk@debian.org>  Tue, 23 Apr 2024 19:23:00 +0300
 
 glibc (2.28-10+deb10u2) buster-security; urgency=medium
 

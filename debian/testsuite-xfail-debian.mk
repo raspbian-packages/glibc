@@ -15,6 +15,9 @@ test-xfail-tst-cancel24-static = yes
 # control, we'll just let it fail
 test-xfail-tst-create-detached = yes
 
+test-xfail-tst-iconv_prog = yes
+test-xfail-tst-support_descriptors = yes
+
 ######################################################################
 # alpha (including optimized flavours)
 ######################################################################
