@@ -1,0 +1,47 @@
+From: Adhemerval Zanella <adhemerval.zanella@linaro.org>
+Subject: [PATCH v3 4/7] math: Fix isnanf128 static build
+Date: Tue,  2 Apr 2024 11:06:41 -0300
+Message-Id: <20240402140644.2172819-5-adhemerval.zanella@linaro.org>
+
+Some static implementation of float128 routines might call __isnanf128,
+which is not provided by the static object.
+
+Checked on x86_64-linux-gnu.
+---
+ sysdeps/ieee754/float128/float128_private.h | 2 +-
+ sysdeps/ieee754/float128/s_isnanf128.c      | 4 ++++
+ 2 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/sysdeps/ieee754/float128/float128_private.h b/sysdeps/ieee754/float128/float128_private.h
+index 38a8bdd0fe..672bf3cccf 100644
+--- a/sysdeps/ieee754/float128/float128_private.h
++++ b/sysdeps/ieee754/float128/float128_private.h
+@@ -352,7 +352,7 @@
+ #define frexpl frexpf128
+ #define getpayloadl getpayloadf128
+ #define isinfl isinff128_do_not_use
+-#define isnanl isnanf128_do_not_use
++#define isnanl isnanf128
+ #define ldexpl ldexpf128
+ #define llrintl llrintf128
+ #define llroundl llroundf128
+diff --git a/sysdeps/ieee754/float128/s_isnanf128.c b/sysdeps/ieee754/float128/s_isnanf128.c
+index 59f71533ce..b73a4e80d7 100644
+--- a/sysdeps/ieee754/float128/s_isnanf128.c
++++ b/sysdeps/ieee754/float128/s_isnanf128.c
+@@ -11,7 +11,11 @@
+ #include "../ldbl-128/s_isnanl.c"
+ #if !IS_IN (libm)
+ #include <float128-abi.h>
++#ifdef SHARED
+ hidden_ver (__isnanf128_impl, __isnanf128)
++#else
++strong_alias (__isnanf128_impl, __isnanf128)
++#endif
+ _weak_alias (__isnanf128_impl, isnanl)
+ versioned_symbol (libc, __isnanf128_impl, __isnanf128, GLIBC_2_34);
+ #if (SHLIB_COMPAT (libc, FLOAT128_VERSION_M, GLIBC_2_34))
+-- 
+2.34.1
+
+
