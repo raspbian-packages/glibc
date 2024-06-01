@@ -1,5 +1,5 @@
-/* A Generic Optimized strlen implementation for AARCH64.
-   Copyright (C) 2018-2023 Free Software Foundation, Inc.
+/* Check expected sizes of struct utmp, struct utmpx, struct lastlog.
+   Copyright (C) 2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,24 +16,18 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-/* The actual strlen code is in ../strlen.S.  If we are building libc this file
-   defines __strlen_mte.  Otherwise the include of ../strlen.S will define
-   the normal __strlen  entry points.  */
+#include <utmp.h>
+#include <utmpx.h>
+#include <utmp-size.h>
 
-#include <sysdep.h>
+static int
+do_test (void)
+{
+  _Static_assert (sizeof (struct utmp) == UTMP_SIZE, "struct utmp size");
+  _Static_assert (sizeof (struct utmpx) == UTMP_SIZE, "struct utmpx size");
+  _Static_assert (sizeof (struct lastlog) == LASTLOG_SIZE,
+                  "struct lastlog size");
+  return 0;
+}
 
-#if IS_IN (libc)
-
-# define STRLEN __strlen_mte
-
-/* Do not hide the generic version of strlen, we use it internally.  */
-# undef libc_hidden_builtin_def
-# define libc_hidden_builtin_def(name)
-
-# ifdef SHARED
-/* It doesn't make sense to send libc-internal strlen calls through a PLT. */
-	.globl __GI_strlen; __GI_strlen = __strlen_mte
-# endif
-#endif
-
-#include "../strlen.S"
+#include <support/test-driver.c>
