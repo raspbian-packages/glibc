@@ -1,4 +1,4 @@
-glibc (2.38-8+rpi1) trixie-staging; urgency=medium
+glibc (2.38-12+rpi1) trixie-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -6,7 +6,65 @@ glibc (2.38-8+rpi1) trixie-staging; urgency=medium
   [changes brought forward from 2.37-12+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Tue, 17 Oct 2023 12:00:24 +0000]
   * Remove valgrind conflicts.
 
- -- Raspbian forward porter <root@raspbian.org>  Thu, 09 May 2024 16:39:17 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 06 Jun 2024 08:24:46 +0000
+
+glibc (2.38-12) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/debhelper.in/libc.postinst: do not try to call telinit if it is
+    provided by systemd, it is just broken.  Closes: #1071462.
+  * debian/debhelper.in/libc.postinst: test for $DPKG_ROOT first.
+  * debian/debhelper.in/libc.postinst: emit libc-upgrade trigger on every
+    upgrade and libc-major-upgrade on major glibc upgrade. This interface
+    should be used by depending packages to restart themselves if needed.
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+
+  [ Dominik Stadler ]
+  * debian/local/usr_sbin/update-locale: improve error reporting in
+   update-locale.  Closes: #1071084.
+
+  [ Bjarni Ingi Gislason ]
+  * debian/local/manpages/gencat.1: editorial fixes.  Closes: #1071549.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sat, 01 Jun 2024 23:16:35 +0200
+
+glibc (2.38-11) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/testsuite-xfail-debian.mk: ignore a few math failures due to GCC
+    13 on hppa.  Closes: #1070875.
+  * debian/patches/any/submitted-static-*.diff: add proposed patches to fix
+    various missing math function in libm.a.  Closes: #1070872.
+  * debian/testsuite-xfail-debian.mk: mark tst-support_descriptors as XFAIL,
+    due to sbuild bug #1070003.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sat, 11 May 2024 23:17:18 +0200
+
+glibc (2.38-10) unstable; urgency=medium
+
+  * debian/control.in/main, debian/rules.d/control.mk: build-depends on
+    g++$(DEB_GCC_VERSION)-for-host instead of listing cross-build-dependency
+    per architecture. Also depends on g++$(DEB_GCC_VERSION)-multilib instead
+    of hardcoding the version.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Fri, 10 May 2024 17:59:41 +0200
+
+glibc (2.38-9) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/rules: build with gcc-13.
+  * debian/tests/control: re-enable autopkgtest on arm64, the memory
+    consumption should be lower with gcc-13.
+  * debian/testsuite-xfail-debian.mk: remove now fixed riscv64 XFAILs.
+  * debian/debhelper.in/libc-bin.{install,lintian-overrides}: move ldconfig to
+    /usr/sbin.
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+
+  [ M. Buecher ]
+  * debian/local/usr_sbin/locale-gen: enhance to support referencing locales
+    in /usr/local/share/i18n/locales through copy.  Closes: #1066887
+
+ -- Aurelien Jarno <aurel32@debian.org>  Fri, 10 May 2024 15:59:00 +0200
 
 glibc (2.38-8) unstable; urgency=medium
 

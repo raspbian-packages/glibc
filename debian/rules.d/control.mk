@@ -15,8 +15,6 @@ $(patsubst %,debian/control.in/%,$(libc_packages)) :: debian/control.in/% : debi
 	    -e "s%@libc-dev-conflict@%$(foreach arch,$(filter-out $*,$(libc_packages)),$(arch)-dev,)%g" \
 	    < $< > $@
 
-GPP_CROSS_DEP = $(foreach a,$(libc6_archs) $(libc6_1_archs),g++$(DEB_GCC_VERSION)-$(shell dpkg-architecture -f -a$(a) -qDEB_HOST_GNU_TYPE | tr _ -) [$(a)] <cross>,)
-
 debian/control: $(stamp)control
 $(stamp)control: debian/rules.d/control.mk $(control_deps) debian/tests/control.in
 
@@ -40,7 +38,7 @@ $(stamp)control: debian/rules.d/control.mk $(control_deps) debian/tests/control.
 	cat debian/control.in/mipsn32		>> $@T
 	cat debian/control.in/mips64		>> $@T
 	cat debian/control.in/x32		>> $@T
-	sed -e 's%@libc@%$(libc)%g' -e 's%@DEB_VERSION_UPSTREAM@%$(DEB_VERSION_UPSTREAM)%g' -e 's%@GPP_CROSS_DEP@%$(GPP_CROSS_DEP)%g' < $@T > debian/control
+	sed -e 's%@libc@%$(libc)%g' -e 's%@DEB_VERSION_UPSTREAM@%$(DEB_VERSION_UPSTREAM)%g' -e 's%@DEB_GCC_VERSION@%$(DEB_GCC_VERSION)%g' < $@T > debian/control
 	rm $@T
 
 	# And generate the tests control file with the current GCC

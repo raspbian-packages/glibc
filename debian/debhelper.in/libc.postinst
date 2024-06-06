@@ -151,11 +151,11 @@ then
     # assumes anything else is going to not fail at behaving like
     # sysvinit:
     TELINIT=yes
-    if ischroot 2>/dev/null; then
-        # Don't bother trying to re-exec init from a chroot:
-        TELINIT=no
-    elif [ -n "${DPKG_ROOT:-}" ]; then
+    if [ -n "${DPKG_ROOT:-}" ]; then
         # Do not re-exec init if we are operating on a chroot from outside:
+        TELINIT=no
+    elif ischroot 2>/dev/null; then
+        # Don't bother trying to re-exec init from a chroot:
         TELINIT=no
     elif [ -d /run/systemd/system ]; then
         # Restart systemd on upgrade, but carefully.
@@ -170,9 +170,24 @@ then
         else
             echo "Error: Could not restart systemd, systemd binary not working" >&2
         fi
+    elif ! command -v telinit >/dev/null; then
+        # There is not telinit binary:
+        TELINIT=no
+    elif readlink $(command -v telinit) | grep -q systemctl; then
+        # Systemd's telinit tends to do bad things (#1063147, #1071462), so
+        # just ignore that case:
+        TELINIT=no
     fi
     if [ "$TELINIT" = "yes" ]; then
         telinit u 2>/dev/null || true ; sleep 1
+    fi
+
+    # Emit triggers to allow depending packages to restart themselves if
+    # needed.  The triggers are called with "--no-await", as packages with the
+    # triggers-awaited state do not satisfy dependencies.
+    dpkg-trigger --no-await libc-upgrade
+    if [ -n "$preversion" ] && dpkg --compare-versions "$preversion" lt DEB_VERSION_UPSTREAM; then
+        dpkg-trigger --no-await libc-major-upgrade
     fi
 fi
 

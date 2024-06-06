@@ -11,6 +11,10 @@ test-xfail-tst-timer = yes
 # control, we'll just let it fail
 test-xfail-tst-create-detached = yes
 
+# Due to a bug/limitation in sbuild, this test fails when running unshare
+# chroot mode, see bug #1070003.
+test-xfail-tst-support_descriptors = yes
+
 ######################################################################
 # alpha
 ######################################################################
@@ -214,6 +218,14 @@ test-xfail-tst-minsigstksz-5 = yes
 
 # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=106458
 test-xfail-tst-scratch_buffer = yes
+
+# See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111709
+test-xfail-test-double-fma = yes
+test-xfail-test-double-ldouble-fma = yes
+test-xfail-test-float32x-float64-fma = yes
+test-xfail-test-float32x-fma = yes
+test-xfail-test-float64-fma = yes
+test-xfail-test-ldouble-fma = yes
 endif
 
 
@@ -623,9 +635,6 @@ endif
 # riscv64
 ######################################################################
 ifeq ($(config-machine)-$(config-os),riscv64-linux-gnu)
-test-xfail-tst-resolv-res_init = yes
-test-xfail-tst-resolv-res_init-thread = yes
-test-xfail-tst-resolv-threads = yes
 endif
 
 

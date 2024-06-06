@@ -102,4 +102,9 @@ any/local-cross.patch
 any/git-c-utf-8-language.diff
 any/local-qsort-memory-corruption.patch
 any/git-test-epoll.diff
+any/submitted-static-copysignf128.diff
+any/submitted-static-fmod-fmodf.diff
+any/submitted-static-frexpf128.diff
+any/submitted-static-isnanf128.diff
+any/submitted-static-modf128.diff
 auto-2.34-7+rpi1-de346af12a6cb5181ed2ab174fb35c88f3b64f4b-1663212931

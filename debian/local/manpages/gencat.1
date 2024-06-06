@@ -27,7 +27,7 @@
 .PP
 ..
 .de Sp
-.if t .sp .5v
+.if t .sp 0.5v
 .if n .sp
 ..
 .de Ip
@@ -94,14 +94,14 @@
 'br\}
 .\"	If the F register is turned on, we'll generate
 .\"	index entries out stderr for the following things:
-.\"		TH	Title 
+.\"		TH	Title
 .\"		SH	Header
-.\"		Sh	Subsection 
+.\"		Sh	Subsection
 .\"		Ip	Item
 .\"		X<>	Xref  (embedded
 .\"	Of course, you have to process the output yourself
 .\"	in some meaningful fashion.
-.if \nF \{
+.if \nF \{\
 .de IX
 .tm Index:\\$1\t\\n%\t"\\$2"
 ..
@@ -112,7 +112,7 @@
 .UC
 .if n .hy 0
 .if n .na
-.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s+2\v'.1v'\h'-1p'
 .de CQ          \" put $1 in typewriter font
 .ft CW
 'if n "\c
@@ -128,14 +128,14 @@
 .	\" fudge factors for nroff and troff
 .if n \{\
 .	ds #H 0
-.	ds #V .8m
-.	ds #F .3m
+.	ds #V 0.8m
+.	ds #F 0.3m
 .	ds #[ \f1
 .	ds #] \fP
 .\}
 .if t \{\
 .	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
-.	ds #V .6m
+.	ds #V 0.6m
 .	ds #F 0
 .	ds #[ \&
 .	ds #] \&
@@ -166,10 +166,10 @@
 .	\" troff and (daisy-wheel) nroff accents
 .ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
 .ds 8 \h'\*(#H'\(*b\h'-\*(#H'
-.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s+4\v'\*(#V'\h'|\\n:u'\*(#]
 .ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
 .ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
-.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds 3 \*(#[\v'.2m'\s-2\&3\s+2\v'-.2m'\*(#]
 .ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
 .ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
 .ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
@@ -205,21 +205,21 @@
 .SH "NAME"
 gencat \- Generate message catalog
 .SH "SYNOPSIS"
-gencat [OPTION...] -o OUTPUT-FILE [INPUT-FILE]...
+gencat [OPTION ...\&] \-o OUTPUT-FILE [INPUT-FILE ...]
 .SH "DESCRIPTION"
 The \fBgencat\fR program is specified in the X/Open standard and the
 GNU implementation follows this specification and so processes all
-correctly formed input files. Additionally some extension are implemented
+correctly formed input files.
+Additionally some extension are implemented
 which help to work in a more reasonable way with the \fBcatgets\fR(3) functions.
-.PP
 .TP
-\fB-H\fR, \fB--header\fR \fINAME\fR
+\fB\-H\fR, \fB\-\-header\fR \fINAME\fR
 Create C header file NAME containing symbol definitions
 .TP
-\fB--new\fR
+\fB\-\-new\fR
 Do not use existing catalog, force new output file
 .TP
-\fB-o\fR, \fB--output\fR \fINAME\fR
+\fB\-o\fR, \fB\-\-output\fR \fINAME\fR
 Write output to file NAME
 .SH "AUTHOR"
 \fIgencat\fR was written by Ulrich Drepper as part of the GNU C Library.
