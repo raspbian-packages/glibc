@@ -1,4 +1,4 @@
-glibc (2.38-12+rpi1) trixie-staging; urgency=medium
+glibc (2.38-13+rpi1) trixie-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -6,7 +6,31 @@ glibc (2.38-12+rpi1) trixie-staging; urgency=medium
   [changes brought forward from 2.37-12+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Tue, 17 Oct 2023 12:00:24 +0000]
   * Remove valgrind conflicts.
 
- -- Raspbian forward porter <root@raspbian.org>  Thu, 06 Jun 2024 08:24:46 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Fri, 14 Jun 2024 12:29:52 +0000
+
+glibc (2.38-13) unstable; urgency=medium
+
+  * debian/debhelper.in/libc-udeb.install.hurd-amd64: Complete DEP17.
+  * debian/debhelper.in/libc-udeb.install.hurd-i386: Complete DEP17.
+  * debian/patches/hurd-i386/git-xattr.diff: Fix xattr corner cases.
+
+ -- Samuel Thibault <sthibault@debian.org>  Mon, 10 Jun 2024 22:25:19 +0200
+
+glibc (2.38-12.1) unstable; urgency=medium
+
+  * Non-maintainer upload acked by Aurelien Jarno.
+  * Move all aliased files including the dynamic loader to /usr. (DEP17,
+    Closes: #1061248)
+    + Install a protective diversion for the dynamic loader to avoid accidental
+      deletion (DEP17 P1 M8).
+    + Manage the dynamic loader symlink via maintainer scripts and triggers
+      in multilib packages to avoid interaction of Replaces and /usr-move.
+    + Avoid a versioned dependency on base-files.
+      - Continue managing toplevel multilib aliasing links for the time being.
+      - Install protective diversions for aliasing symlinks that base-files
+        would also install in case libc is upgraded first. (DEP17 P9 M4)
+
+ -- Helmut Grohne <helmut@subdivi.de>  Wed, 05 Jun 2024 17:31:36 +0200
 
 glibc (2.38-12) unstable; urgency=medium
 

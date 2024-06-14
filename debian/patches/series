@@ -43,6 +43,7 @@ hurd-i386/git-dtable_reauth.diff
 hurd-i386/git-64bit-abi.diff
 # Committed for 2.40
 hurd-i386/git-context.diff
+hurd-i386/git-xattr.diff
 # 2.40
 hurd-i386/git-proc_getchildren_rusage.diff
 hurd-i386/git-AT_NO_AUTOMOUNT.diff
