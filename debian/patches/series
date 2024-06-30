@@ -178,3 +178,9 @@ all/git-CVE-2022-23219-Buffer-overflow-in-sunrpc-clnt_create.diff
 
 all/git-0001-iconv-ISO-2022-CN-EXT-fix-out-of-bound-writes-when-w.patch
 all/git-0002-misc-test-errno-linux-Handle-EINVAL-from-quotactl.patch
+
+all/git-0001-CVE-2024-33599-nscd-Stack-based-buffer-overflow-in-n.patch
+all/git-0002-CVE-2024-33600-nscd-Do-not-send-missing-not-found-re.patch
+all/git-0003-CVE-2024-33600-nscd-Avoid-null-pointer-crashes-after.patch
+all/git-0004-CVE-2024-33601-CVE-2024-33602-nscd-netgroup-Use-two-.patch
+all/git-0005-nscd-Use-time_t-for-return-type-of-addgetnetgrentX.patch
