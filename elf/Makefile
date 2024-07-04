@@ -166,6 +166,7 @@ CFLAGS-.op += $(call elide-stack-protector,.op,$(elide-routines.os))
 CFLAGS-.os += $(call elide-stack-protector,.os,$(all-rtld-routines))
 
 # Add the requested compiler flags to the early startup code.
+CFLAGS-dl-misc.os += $(rtld-early-cflags)
 CFLAGS-dl-printf.os += $(rtld-early-cflags)
 CFLAGS-dl-setup_hash.os += $(rtld-early-cflags)
 CFLAGS-dl-sysdep.os += $(rtld-early-cflags)
@@ -459,6 +460,7 @@ tests += \
   tst-tls21 \
   tst-tlsalign \
   tst-tlsalign-extern \
+  tst-tlsgap \
   tst-unique1 \
   tst-unique2 \
   tst-unwind-ctor \
@@ -883,6 +885,9 @@ modules-names += \
   tst-tls20mod-bad \
   tst-tls21mod \
   tst-tlsalign-lib \
+  tst-tlsgap-mod0 \
+  tst-tlsgap-mod1 \
+  tst-tlsgap-mod2 \
   tst-tlsmod1 \
   tst-tlsmod10 \
   tst-tlsmod11 \
@@ -3009,3 +3014,14 @@ LDFLAGS-tst-dlclose-lazy-mod1.so = -Wl,-z,lazy,--no-as-needed
 $(objpfx)tst-dlclose-lazy-mod1.so: $(objpfx)tst-dlclose-lazy-mod2.so
 $(objpfx)tst-dlclose-lazy.out: \
   $(objpfx)tst-dlclose-lazy-mod1.so $(objpfx)tst-dlclose-lazy-mod2.so
+
+$(objpfx)tst-tlsgap: $(shared-thread-library)
+$(objpfx)tst-tlsgap.out: \
+  $(objpfx)tst-tlsgap-mod0.so \
+  $(objpfx)tst-tlsgap-mod1.so \
+  $(objpfx)tst-tlsgap-mod2.so
+ifeq (yes,$(have-mtls-dialect-gnu2))
+CFLAGS-tst-tlsgap-mod0.c += -mtls-dialect=gnu2
+CFLAGS-tst-tlsgap-mod1.c += -mtls-dialect=gnu2
+CFLAGS-tst-tlsgap-mod2.c += -mtls-dialect=gnu2
+endif
