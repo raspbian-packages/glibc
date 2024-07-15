@@ -16,17 +16,20 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <libm-alias-double.h>
+#include <sysdeps/x86/isa-level.h>
+#if MINIMUM_X86_ISA_LEVEL < SSE4_1_X86_ISA_LEVEL
+# include <libm-alias-double.h>
 
-#define nearbyint __redirect_nearbyint
-#define __nearbyint __redirect___nearbyint
-#include <math.h>
-#undef nearbyint
-#undef __nearbyint
+# define nearbyint __redirect_nearbyint
+# define __nearbyint __redirect___nearbyint
+# include <math.h>
+# undef nearbyint
+# undef __nearbyint
 
-#define SYMBOL_NAME nearbyint
-#include "ifunc-sse4_1.h"
+# define SYMBOL_NAME nearbyint
+# include "ifunc-sse4_1.h"
 
 libc_ifunc_redirected (__redirect_nearbyint, __nearbyint,
 		       IFUNC_SELECTOR ());
 libm_alias_double (__nearbyint, nearbyint)
+#endif

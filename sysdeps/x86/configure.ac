@@ -72,6 +72,7 @@ if test $libc_cv_include_x86_isa_level = yes; then
     fi])
   if test $libc_cv_have_x86_lahf_sahf = yes; then
     AC_DEFINE(HAVE_X86_LAHF_SAHF)
+    ISAFLAG="-DHAVE_X86_LAHF_SAHF"
   fi
   AC_CACHE_CHECK([for MOVBE instruction support],
 		 libc_cv_have_x86_movbe, [dnl
@@ -81,8 +82,42 @@ if test $libc_cv_include_x86_isa_level = yes; then
     fi])
   if test $libc_cv_have_x86_movbe = yes; then
     AC_DEFINE(HAVE_X86_MOVBE)
+    ISAFLAG="$ISAFLAG -DHAVE_X86_MOVBE"
   fi
+
+  # Check for ISA level support.
+  AC_CACHE_CHECK([for ISA level support],
+		 libc_cv_have_x86_isa_level, [dnl
+cat > conftest.c <<EOF
+#include <sysdeps/x86/isa-level.h>
+#if MINIMUM_X86_ISA_LEVEL >= 4
+libc_cv_have_x86_isa_level=4
+#elif MINIMUM_X86_ISA_LEVEL == 3
+libc_cv_have_x86_isa_level=3
+#elif MINIMUM_X86_ISA_LEVEL == 2
+libc_cv_have_x86_isa_level=2
+#elif defined __x86_64__
+libc_cv_have_x86_isa_level=baseline
+#elif MINIMUM_X86_ISA_LEVEL == 1
+libc_cv_have_x86_isa_level=1
+#else
+libc_cv_have_x86_isa_level=0
+#endif
+EOF
+		 eval `${CC-cc} $CFLAGS $CPPFLAGS $ISAFLAG -I$srcdir -E conftest.c | grep libc_cv_have_x86_isa_level`
+		 rm -rf conftest*])
+elif test $base_machine = x86_64; then
+  libc_cv_have_x86_isa_level=baseline
+else
+  libc_cv_have_x86_isa_level=0
 fi
+if test $libc_cv_have_x86_isa_level = baseline; then
+  AC_DEFINE_UNQUOTED(MINIMUM_X86_ISA_LEVEL, 1)
+else
+  AC_DEFINE_UNQUOTED(MINIMUM_X86_ISA_LEVEL, $libc_cv_have_x86_isa_level)
+fi
+LIBC_CONFIG_VAR([have-x86-isa-level], [$libc_cv_have_x86_isa_level])
+LIBC_CONFIG_VAR([x86-isa-level-3-or-above], [3 4])
 LIBC_CONFIG_VAR([enable-x86-isa-level], [$libc_cv_include_x86_isa_level])
 
 dnl Static PIE is supported.

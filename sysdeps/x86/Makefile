@@ -1,5 +1,5 @@
 ifeq ($(subdir),csu)
-gen-as-const-headers += cpu-features-offsets.sym
+gen-as-const-headers += cpu-features-offsets.sym features-offsets.sym
 endif
 
 ifeq ($(subdir),elf)
@@ -15,18 +15,18 @@ CFLAGS-dl-get-cpu-features.os += $(rtld-early-cflags)
 CFLAGS-get-cpuid-feature-leaf.o += $(no-stack-protector)
 
 tests += \
-  tst-get-cpu-features \
-  tst-get-cpu-features-static \
   tst-cpu-features-cpuinfo \
   tst-cpu-features-cpuinfo-static \
   tst-cpu-features-supports \
   tst-cpu-features-supports-static \
+  tst-get-cpu-features \
+  tst-get-cpu-features-static \
   tst-hwcap-tunables \
 # tests
 tests-static += \
-  tst-get-cpu-features-static \
   tst-cpu-features-cpuinfo-static \
   tst-cpu-features-supports-static \
+  tst-get-cpu-features-static \
 # tests-static
 ifeq (yes,$(have-ifunc))
 ifeq (yes,$(have-gcc-ifunc))
@@ -86,6 +86,11 @@ endif
 tst-ifunc-isa-2-ENV = GLIBC_TUNABLES=glibc.cpu.hwcaps=-SSE4_2,-AVX,-AVX2,-AVX512F
 tst-ifunc-isa-2-static-ENV = $(tst-ifunc-isa-2-ENV)
 tst-hwcap-tunables-ARGS = -- $(host-test-program-cmd)
+
+CFLAGS-tst-gnu2-tls2.c += -msse
+CFLAGS-tst-gnu2-tls2mod0.c += -msse2 -mtune=haswell
+CFLAGS-tst-gnu2-tls2mod1.c += -msse2 -mtune=haswell
+CFLAGS-tst-gnu2-tls2mod2.c += -msse2 -mtune=haswell
 endif
 
 ifeq ($(subdir),math)
