@@ -572,6 +572,7 @@ GLIBC_2.38 _hurd_dtable_lock D 0x28
 GLIBC_2.38 _hurd_dtablesize D 0x4
 GLIBC_2.38 _hurd_exception2signal F
 GLIBC_2.38 _hurd_exec F
+GLIBC_2.38 _hurd_exec_file_name F
 GLIBC_2.38 _hurd_exec_paths F
 GLIBC_2.38 _hurd_fd_error F
 GLIBC_2.38 _hurd_fd_error_signal F
