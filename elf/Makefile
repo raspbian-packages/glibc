@@ -170,6 +170,7 @@ CFLAGS-.op += $(call elide-stack-protector,.op,$(elide-routines.os))
 CFLAGS-.os += $(call elide-stack-protector,.os,$(all-rtld-routines))
 
 # Add the requested compiler flags to the early startup code.
+CFLAGS-dl-misc.os += $(rtld-early-cflags)
 CFLAGS-dl-printf.os += $(rtld-early-cflags)
 CFLAGS-dl-setup_hash.os += $(rtld-early-cflags)
 CFLAGS-dl-sysdep.os += $(rtld-early-cflags)
@@ -424,6 +425,7 @@ tests += \
   tst-glibc-hwcaps-prepend \
   tst-global1 \
   tst-global2 \
+  tst-gnu2-tls2 \
   tst-initfinilazyfail \
   tst-initorder \
   tst-initorder2 \
@@ -846,6 +848,9 @@ modules-names += \
   tst-filterobj-flt \
   tst-finilazyfailmod \
   tst-globalmod2 \
+  tst-gnu2-tls2mod0 \
+  tst-gnu2-tls2mod1 \
+  tst-gnu2-tls2mod2 \
   tst-initlazyfailmod \
   tst-initorder2a \
   tst-initorder2b \
@@ -995,13 +1000,13 @@ modules-names-tests = $(filter-out ifuncmod% tst-tlsmod%,\
 # For +depfiles in Makerules.
 extra-test-objs += tst-auditmod17.os
 
-ifeq (yes,$(have-mtls-dialect-gnu2))
+ifneq (no,$(have-mtls-descriptor))
 tests += tst-gnu2-tls1
 modules-names += tst-gnu2-tls1mod
 $(objpfx)tst-gnu2-tls1: $(objpfx)tst-gnu2-tls1mod.so
 tst-gnu2-tls1mod.so-no-z-defs = yes
-CFLAGS-tst-gnu2-tls1mod.c += -mtls-dialect=gnu2
-endif # $(have-mtls-dialect-gnu2)
+CFLAGS-tst-gnu2-tls1mod.c += -mtls-dialect=$(have-mtls-descriptor)
+endif # $(have-mtls-descriptor)
 
 ifeq (yes,$(have-protected-data))
 modules-names += tst-protected1moda tst-protected1modb
@@ -2968,11 +2973,11 @@ $(objpfx)tst-tls-allocation-failure-static-patched.out: \
 $(objpfx)tst-audit-tlsdesc: $(objpfx)tst-audit-tlsdesc-mod1.so \
 			    $(objpfx)tst-audit-tlsdesc-mod2.so \
 			    $(shared-thread-library)
-ifeq (yes,$(have-mtls-dialect-gnu2))
+ifneq (no,$(have-mtls-descriptor))
 # The test is valid for all TLS types, but we want to exercise GNU2
 # TLS if possible.
-CFLAGS-tst-audit-tlsdesc-mod1.c += -mtls-dialect=gnu2
-CFLAGS-tst-audit-tlsdesc-mod2.c += -mtls-dialect=gnu2
+CFLAGS-tst-audit-tlsdesc-mod1.c += -mtls-dialect=$(have-mtls-descriptor)
+CFLAGS-tst-audit-tlsdesc-mod2.c += -mtls-dialect=$(have-mtls-descriptor)
 endif
 $(objpfx)tst-audit-tlsdesc-dlopen: $(shared-thread-library)
 $(objpfx)tst-audit-tlsdesc-dlopen.out: $(objpfx)tst-audit-tlsdesc-mod1.so \
@@ -3044,8 +3049,18 @@ $(objpfx)tst-tlsgap.out: \
   $(objpfx)tst-tlsgap-mod0.so \
   $(objpfx)tst-tlsgap-mod1.so \
   $(objpfx)tst-tlsgap-mod2.so
-ifeq (yes,$(have-mtls-dialect-gnu2))
-CFLAGS-tst-tlsgap-mod0.c += -mtls-dialect=gnu2
-CFLAGS-tst-tlsgap-mod1.c += -mtls-dialect=gnu2
-CFLAGS-tst-tlsgap-mod2.c += -mtls-dialect=gnu2
+
+$(objpfx)tst-gnu2-tls2: $(shared-thread-library)
+$(objpfx)tst-gnu2-tls2.out: \
+  $(objpfx)tst-gnu2-tls2mod0.so \
+  $(objpfx)tst-gnu2-tls2mod1.so \
+  $(objpfx)tst-gnu2-tls2mod2.so
+
+ifneq (no,$(have-mtls-descriptor))
+CFLAGS-tst-tlsgap-mod0.c += -mtls-dialect=$(have-mtls-descriptor)
+CFLAGS-tst-tlsgap-mod1.c += -mtls-dialect=$(have-mtls-descriptor)
+CFLAGS-tst-tlsgap-mod2.c += -mtls-dialect=$(have-mtls-descriptor)
+CFLAGS-tst-gnu2-tls2mod0.c += -mtls-dialect=$(have-mtls-descriptor)
+CFLAGS-tst-gnu2-tls2mod1.c += -mtls-dialect=$(have-mtls-descriptor)
+CFLAGS-tst-gnu2-tls2mod2.c += -mtls-dialect=$(have-mtls-descriptor)
 endif

@@ -18,6 +18,7 @@
 
 #include <dl-hwcap.h>
 #include <libc-pointer-arith.h>
+#include <isa-level.h>
 #include <get-isa-level.h>
 #include <cacheinfo.h>
 #include <dl-cacheinfo.h>
@@ -27,8 +28,13 @@
 extern void TUNABLE_CALLBACK (set_hwcaps) (tunable_val_t *)
   attribute_hidden;
 
-#if defined SHARED && defined __x86_64__
-# include <dl-plt-rewrite.h>
+#if defined SHARED
+extern void _dl_tlsdesc_dynamic_fxsave (void) attribute_hidden;
+extern void _dl_tlsdesc_dynamic_xsave (void) attribute_hidden;
+extern void _dl_tlsdesc_dynamic_xsavec (void) attribute_hidden;
+
+# ifdef __x86_64__
+#  include <dl-plt-rewrite.h>
 
 static void
 TUNABLE_CALLBACK (set_plt_rewrite) (tunable_val_t *valp)
@@ -47,6 +53,15 @@ TUNABLE_CALLBACK (set_plt_rewrite) (tunable_val_t *valp)
 		 : plt_rewrite_jmp);
     }
 }
+# else
+extern void _dl_tlsdesc_dynamic_fnsave (void) attribute_hidden;
+# endif
+#endif
+
+#ifdef __x86_64__
+extern void _dl_runtime_resolve_fxsave (void) attribute_hidden;
+extern void _dl_runtime_resolve_xsave (void) attribute_hidden;
+extern void _dl_runtime_resolve_xsavec (void) attribute_hidden;
 #endif
 
 #ifdef __LP64__
@@ -293,8 +308,10 @@ update_active (struct cpu_features *cpu_features)
 	  __cpuid_count (0xd, 0, eax, ebx, ecx, edx);
 	  if (ebx != 0)
 	    {
+	      /* NB: On AMX capable processors, ebx always includes AMX
+		 states.  */
 	      unsigned int xsave_state_full_size
-		= ALIGN_UP (ebx + STATE_SAVE_OFFSET, 64);
+		= ALIGN_UP (ebx + TLSDESC_CALL_REGISTER_SAVE_AREA, 64);
 
 	      cpu_features->xsave_state_size
 		= xsave_state_full_size;
@@ -306,6 +323,11 @@ update_active (struct cpu_features *cpu_features)
 		{
 		  unsigned int xstate_comp_offsets[32];
 		  unsigned int xstate_comp_sizes[32];
+#ifdef __x86_64__
+		  unsigned int xstate_amx_comp_offsets[32];
+		  unsigned int xstate_amx_comp_sizes[32];
+		  unsigned int amx_ecx;
+#endif
 		  unsigned int i;
 
 		  xstate_comp_offsets[0] = 0;
@@ -313,16 +335,39 @@ update_active (struct cpu_features *cpu_features)
 		  xstate_comp_offsets[2] = 576;
 		  xstate_comp_sizes[0] = 160;
 		  xstate_comp_sizes[1] = 256;
+#ifdef __x86_64__
+		  xstate_amx_comp_offsets[0] = 0;
+		  xstate_amx_comp_offsets[1] = 160;
+		  xstate_amx_comp_offsets[2] = 576;
+		  xstate_amx_comp_sizes[0] = 160;
+		  xstate_amx_comp_sizes[1] = 256;
+#endif
 
 		  for (i = 2; i < 32; i++)
 		    {
-		      if ((STATE_SAVE_MASK & (1 << i)) != 0)
+		      if ((FULL_STATE_SAVE_MASK & (1 << i)) != 0)
 			{
 			  __cpuid_count (0xd, i, eax, ebx, ecx, edx);
-			  xstate_comp_sizes[i] = eax;
+#ifdef __x86_64__
+			  /* Include this in xsave_state_full_size.  */
+			  amx_ecx = ecx;
+			  xstate_amx_comp_sizes[i] = eax;
+			  if ((AMX_STATE_SAVE_MASK & (1 << i)) != 0)
+			    {
+			      /* Exclude this from xsave_state_size.  */
+			      ecx = 0;
+			      xstate_comp_sizes[i] = 0;
+			    }
+			  else
+#endif
+			    xstate_comp_sizes[i] = eax;
 			}
 		      else
 			{
+#ifdef __x86_64__
+			  amx_ecx = 0;
+			  xstate_amx_comp_sizes[i] = 0;
+#endif
 			  ecx = 0;
 			  xstate_comp_sizes[i] = 0;
 			}
@@ -335,6 +380,15 @@ update_active (struct cpu_features *cpu_features)
 			  if ((ecx & (1 << 1)) != 0)
 			    xstate_comp_offsets[i]
 			      = ALIGN_UP (xstate_comp_offsets[i], 64);
+#ifdef __x86_64__
+			  xstate_amx_comp_offsets[i]
+			    = (xstate_amx_comp_offsets[i - 1]
+			       + xstate_amx_comp_sizes[i - 1]);
+			  if ((amx_ecx & (1 << 1)) != 0)
+			    xstate_amx_comp_offsets[i]
+			      = ALIGN_UP (xstate_amx_comp_offsets[i],
+					  64);
+#endif
 			}
 		    }
 
@@ -343,8 +397,23 @@ update_active (struct cpu_features *cpu_features)
 		    = xstate_comp_offsets[31] + xstate_comp_sizes[31];
 		  if (size)
 		    {
+#ifdef __x86_64__
+		      unsigned int amx_size
+			= (xstate_amx_comp_offsets[31]
+			   + xstate_amx_comp_sizes[31]);
+		      amx_size
+			= ALIGN_UP ((amx_size
+				     + TLSDESC_CALL_REGISTER_SAVE_AREA),
+				    64);
+		      /* Set xsave_state_full_size to the compact AMX
+			 state size for XSAVEC.  NB: xsave_state_full_size
+			 is only used in _dl_tlsdesc_dynamic_xsave and
+			 _dl_tlsdesc_dynamic_xsavec.  */
+		      cpu_features->xsave_state_full_size = amx_size;
+#endif
 		      cpu_features->xsave_state_size
-			= ALIGN_UP (size + STATE_SAVE_OFFSET, 64);
+			= ALIGN_UP (size + TLSDESC_CALL_REGISTER_SAVE_AREA,
+				    64);
 		      CPU_FEATURE_SET (cpu_features, XSAVEC);
 		    }
 		}
@@ -1129,6 +1198,45 @@ no_cpuid:
   TUNABLE_GET (x86_shstk, tunable_val_t *,
 	       TUNABLE_CALLBACK (set_x86_shstk));
 #endif
+
+  if (MINIMUM_X86_ISA_LEVEL >= AVX_X86_ISA_LEVEL
+      || (GLRO(dl_x86_cpu_features).xsave_state_size != 0))
+    {
+      if (CPU_FEATURE_USABLE_P (cpu_features, XSAVEC))
+	{
+#ifdef __x86_64__
+	  GLRO(dl_x86_64_runtime_resolve) = _dl_runtime_resolve_xsavec;
+#endif
+#ifdef SHARED
+	  GLRO(dl_x86_tlsdesc_dynamic) = _dl_tlsdesc_dynamic_xsavec;
+#endif
+	}
+      else
+	{
+#ifdef __x86_64__
+	  GLRO(dl_x86_64_runtime_resolve) = _dl_runtime_resolve_xsave;
+#endif
+#ifdef SHARED
+	  GLRO(dl_x86_tlsdesc_dynamic) = _dl_tlsdesc_dynamic_xsave;
+#endif
+	}
+    }
+  else
+    {
+#ifdef __x86_64__
+      GLRO(dl_x86_64_runtime_resolve) = _dl_runtime_resolve_fxsave;
+# ifdef SHARED
+      GLRO(dl_x86_tlsdesc_dynamic) = _dl_tlsdesc_dynamic_fxsave;
+# endif
+#else
+# ifdef SHARED
+      if (CPU_FEATURE_USABLE_P (cpu_features, FXSR))
+	GLRO(dl_x86_tlsdesc_dynamic) = _dl_tlsdesc_dynamic_fxsave;
+      else
+	GLRO(dl_x86_tlsdesc_dynamic) = _dl_tlsdesc_dynamic_fnsave;
+# endif
+#endif
+    }
 
 #ifdef SHARED
 # ifdef __x86_64__
