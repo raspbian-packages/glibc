@@ -1,0 +1,31 @@
+Commited for 2.40
+
+commit c8b4ce0b368115714bd4cce131e1683759471099
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Sat Jul 13 17:00:55 2024 +0200
+
+    hurd: Fix restoring message to be retried
+    
+    save_data stores the start of the original message to be retried,
+    overwritten by the EINTR reply. In 64b builds the overwrite is however
+    rounded up to the 64b pointer size, so we have to save more than just
+    the 32b err.
+    
+    Thanks a lot to Luca Dariz for the investigation!
+
+diff --git a/hurd/intr-msg.c b/hurd/intr-msg.c
+index 2c2e7dc463..424c1fc700 100644
+--- a/hurd/intr-msg.c
++++ b/hurd/intr-msg.c
+@@ -42,7 +42,10 @@ _hurd_intr_rpc_mach_msg (mach_msg_header_t *msg,
+   struct clobber
+   {
+     mach_msg_type_t type;
+-    error_t err;
++    union {
++      error_t err;
++      uintptr_t align;
++    };
+   };
+   union msg
+   {
