@@ -1,0 +1,294 @@
+commit e3da8f9badf95dff63547c9a7886cdfed284aa3f
+Author: Flavio Cruz <flaviocruz@gmail.com>
+Date:   Sat Feb 17 11:48:46 2024 -0500
+
+    Use proc_getchildren_rusage when available in getrusage and times.
+    
+    Message-ID: <20240217164846.1837223-1-flaviocruz@gmail.com>
+
+diff --git a/config.h.in b/config.h.in
+index 44a34072a4..2f0669e19b 100644
+--- a/config.h.in
++++ b/config.h.in
+@@ -159,6 +159,9 @@
+ /* Mach/i386 specific: define if the `i386_set_gdt' RPC is available.  */
+ #undef	HAVE_I386_SET_GDT
+ 
++/* Hurd specific; define if the `proc_getchildren_rusage' RPC is available.  */
++#undef HAVE_HURD_PROC_GETCHILDREN_RUSAGE
++
+ /* Define if inlined system calls are available.  */
+ #undef HAVE_INLINED_SYSCALLS
+ 
+diff --git a/sysdeps/mach/hurd/configure b/sysdeps/mach/hurd/configure
+index 33d3e1fc0f..cd5af1cd20 100644
+--- a/sysdeps/mach/hurd/configure
++++ b/sysdeps/mach/hurd/configure
+@@ -45,6 +45,180 @@ if test "x$libc_cv_hurd_version" != xok; then
+   as_fn_error $? "Hurd headers not installed or too old" "$LINENO" 5
+ fi
+ 
++
++
++
++{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for grep that handles long lines and -e" >&5
++printf %s "checking for grep that handles long lines and -e... " >&6; }
++if test ${ac_cv_path_GREP+y}
++then :
++  printf %s "(cached) " >&6
++else $as_nop
++  if test -z "$GREP"; then
++  ac_path_GREP_found=false
++  # Loop through the user's path and test for each of PROGNAME-LIST
++  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
++for as_dir in $PATH$PATH_SEPARATOR/usr/xpg4/bin
++do
++  IFS=$as_save_IFS
++  case $as_dir in #(((
++    '') as_dir=./ ;;
++    */) ;;
++    *) as_dir=$as_dir/ ;;
++  esac
++    for ac_prog in grep ggrep
++   do
++    for ac_exec_ext in '' $ac_executable_extensions; do
++      ac_path_GREP="$as_dir$ac_prog$ac_exec_ext"
++      as_fn_executable_p "$ac_path_GREP" || continue
++# Check for GNU ac_path_GREP and select it if it is found.
++  # Check for GNU $ac_path_GREP
++case `"$ac_path_GREP" --version 2>&1` in
++*GNU*)
++  ac_cv_path_GREP="$ac_path_GREP" ac_path_GREP_found=:;;
++*)
++  ac_count=0
++  printf %s 0123456789 >"conftest.in"
++  while :
++  do
++    cat "conftest.in" "conftest.in" >"conftest.tmp"
++    mv "conftest.tmp" "conftest.in"
++    cp "conftest.in" "conftest.nl"
++    printf "%s\n" 'GREP' >> "conftest.nl"
++    "$ac_path_GREP" -e 'GREP$' -e '-(cannot match)-' < "conftest.nl" >"conftest.out" 2>/dev/null || break
++    diff "conftest.out" "conftest.nl" >/dev/null 2>&1 || break
++    as_fn_arith $ac_count + 1 && ac_count=$as_val
++    if test $ac_count -gt ${ac_path_GREP_max-0}; then
++      # Best one so far, save it but keep looking for a better one
++      ac_cv_path_GREP="$ac_path_GREP"
++      ac_path_GREP_max=$ac_count
++    fi
++    # 10*(2^10) chars as input seems more than enough
++    test $ac_count -gt 10 && break
++  done
++  rm -f conftest.in conftest.tmp conftest.nl conftest.out;;
++esac
++
++      $ac_path_GREP_found && break 3
++    done
++  done
++  done
++IFS=$as_save_IFS
++  if test -z "$ac_cv_path_GREP"; then
++    as_fn_error $? "no acceptable grep could be found in $PATH$PATH_SEPARATOR/usr/xpg4/bin" "$LINENO" 5
++  fi
++else
++  ac_cv_path_GREP=$GREP
++fi
++
++fi
++{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_path_GREP" >&5
++printf "%s\n" "$ac_cv_path_GREP" >&6; }
++ GREP="$ac_cv_path_GREP"
++
++
++{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for egrep" >&5
++printf %s "checking for egrep... " >&6; }
++if test ${ac_cv_path_EGREP+y}
++then :
++  printf %s "(cached) " >&6
++else $as_nop
++  if echo a | $GREP -E '(a|b)' >/dev/null 2>&1
++   then ac_cv_path_EGREP="$GREP -E"
++   else
++     if test -z "$EGREP"; then
++  ac_path_EGREP_found=false
++  # Loop through the user's path and test for each of PROGNAME-LIST
++  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
++for as_dir in $PATH$PATH_SEPARATOR/usr/xpg4/bin
++do
++  IFS=$as_save_IFS
++  case $as_dir in #(((
++    '') as_dir=./ ;;
++    */) ;;
++    *) as_dir=$as_dir/ ;;
++  esac
++    for ac_prog in egrep
++   do
++    for ac_exec_ext in '' $ac_executable_extensions; do
++      ac_path_EGREP="$as_dir$ac_prog$ac_exec_ext"
++      as_fn_executable_p "$ac_path_EGREP" || continue
++# Check for GNU ac_path_EGREP and select it if it is found.
++  # Check for GNU $ac_path_EGREP
++case `"$ac_path_EGREP" --version 2>&1` in
++*GNU*)
++  ac_cv_path_EGREP="$ac_path_EGREP" ac_path_EGREP_found=:;;
++*)
++  ac_count=0
++  printf %s 0123456789 >"conftest.in"
++  while :
++  do
++    cat "conftest.in" "conftest.in" >"conftest.tmp"
++    mv "conftest.tmp" "conftest.in"
++    cp "conftest.in" "conftest.nl"
++    printf "%s\n" 'EGREP' >> "conftest.nl"
++    "$ac_path_EGREP" 'EGREP$' < "conftest.nl" >"conftest.out" 2>/dev/null || break
++    diff "conftest.out" "conftest.nl" >/dev/null 2>&1 || break
++    as_fn_arith $ac_count + 1 && ac_count=$as_val
++    if test $ac_count -gt ${ac_path_EGREP_max-0}; then
++      # Best one so far, save it but keep looking for a better one
++      ac_cv_path_EGREP="$ac_path_EGREP"
++      ac_path_EGREP_max=$ac_count
++    fi
++    # 10*(2^10) chars as input seems more than enough
++    test $ac_count -gt 10 && break
++  done
++  rm -f conftest.in conftest.tmp conftest.nl conftest.out;;
++esac
++
++      $ac_path_EGREP_found && break 3
++    done
++  done
++  done
++IFS=$as_save_IFS
++  if test -z "$ac_cv_path_EGREP"; then
++    as_fn_error $? "no acceptable egrep could be found in $PATH$PATH_SEPARATOR/usr/xpg4/bin" "$LINENO" 5
++  fi
++else
++  ac_cv_path_EGREP=$EGREP
++fi
++
++   fi
++fi
++{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_path_EGREP" >&5
++printf "%s\n" "$ac_cv_path_EGREP" >&6; }
++ EGREP="$ac_cv_path_EGREP"
++
++
++{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for proc_getchildren_rusage in process.defs" >&5
++printf %s "checking for proc_getchildren_rusage in process.defs... " >&6; }
++if test ${libc_cv_hurd_rpc_proc_getchildren_rusage+y}
++then :
++  printf %s "(cached) " >&6
++else $as_nop
++  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++#include <hurd/process.defs>
++
++_ACEOF
++if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
++  $EGREP "proc_getchildren_rusage" >/dev/null 2>&1
++then :
++  libc_cv_hurd_rpc_proc_getchildren_rusage=yes
++else $as_nop
++  libc_cv_hurd_rpc_proc_getchildren_rusage=no
++fi
++rm -rf conftest*
++
++fi
++{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $libc_cv_hurd_rpc_proc_getchildren_rusage" >&5
++printf "%s\n" "$libc_cv_hurd_rpc_proc_getchildren_rusage" >&6; }
++if test $libc_cv_hurd_rpc_proc_getchildren_rusage = yes; then
++  printf "%s\n" "#define HAVE_HURD_PROC_GETCHILDREN_RUSAGE 1" >>confdefs.h
++
++fi
++
++
+ if test -n "$sysheaders"; then
+   CPPFLAGS=$OLD_CPPFLAGS
+ fi
+diff --git a/sysdeps/mach/hurd/configure.ac b/sysdeps/mach/hurd/configure.ac
+index 82d085af33..1695e94ecc 100644
+--- a/sysdeps/mach/hurd/configure.ac
++++ b/sysdeps/mach/hurd/configure.ac
+@@ -23,6 +23,25 @@ if test "x$libc_cv_hurd_version" != xok; then
+   AC_MSG_ERROR(Hurd headers not installed or too old)
+ fi
+ 
++dnl
++dnl hurd_RPC_CHECK(interface.defs, rpc_method, define)
++dnl
++dnl Check if rpc_method RPC is defined by interface.defs
++dnl and define `define`.
++dnl
++AC_DEFUN([hurd_RPC_CHECK], [dnl
++AC_CACHE_CHECK(for $2 in $1, libc_cv_hurd_rpc_$2, [dnl
++AC_EGREP_HEADER($2, hurd/$1,
++		libc_cv_hurd_rpc_$2=yes,
++		libc_cv_hurd_rpc_$2=no)])
++if test $libc_cv_hurd_rpc_$2 = yes; then
++  AC_DEFINE([$3])
++fi
++])
++
++hurd_RPC_CHECK(process.defs, proc_getchildren_rusage,
++	       HAVE_HURD_PROC_GETCHILDREN_RUSAGE)
++
+ if test -n "$sysheaders"; then
+   CPPFLAGS=$OLD_CPPFLAGS
+ fi
+diff --git a/sysdeps/mach/hurd/getrusage.c b/sysdeps/mach/hurd/getrusage.c
+index 7be4dd1793..8151c297e1 100644
+--- a/sysdeps/mach/hurd/getrusage.c
++++ b/sysdeps/mach/hurd/getrusage.c
+@@ -75,9 +75,13 @@ __getrusage (enum __rusage_who who, struct rusage *usage)
+       break;
+ 
+     case RUSAGE_CHILDREN:
+-      /* XXX Not implemented yet.  However, zero out USAGE to be
+-         consistent with the wait3 and wait4 functions.  */
++#ifdef HAVE_HURD_PROC_GETCHILDREN_RUSAGE
++      err = __USEPORT (PROC, __proc_getchildren_rusage (port, usage));
++      if (err)
++	return __hurd_fail (err);
++#else
+       memset (usage, 0, sizeof (struct rusage));
++#endif
+ 
+       break;
+ 
+diff --git a/sysdeps/mach/hurd/times.c b/sysdeps/mach/hurd/times.c
+index 0c3880d5b6..3e384dd6a5 100644
+--- a/sysdeps/mach/hurd/times.c
++++ b/sysdeps/mach/hurd/times.c
+@@ -32,6 +32,13 @@ clock_from_time_value (const time_value_t *t)
+   return t->seconds * 1000000 + t->microseconds;
+ }
+ 
++#ifdef HAVE_HURD_PROC_GETCHILDREN_RUSAGE
++static inline clock_t
++clock_from_timeval (const struct timeval *t) {
++  return t->tv_sec * 1000000 + t->tv_usec;
++}
++#endif
++
+ /* Store the CPU time used by this process and all its
+    dead children (and their dead children) in BUFFER.
+    Return the elapsed real time, or (clock_t) -1 for errors.
+@@ -62,8 +69,17 @@ __times (struct tms *tms)
+   tms->tms_stime = (clock_from_time_value (&bi.system_time)
+ 		    + clock_from_time_value (&tti.system_time));
+ 
+-  /* XXX This can't be implemented until getrusage(RUSAGE_CHILDREN) can be.  */
++#ifdef HAVE_HURD_PROC_GETCHILDREN_RUSAGE
++  struct rusage child_rusage;
++  err = __USEPORT (PROC, __proc_getchildren_rusage (port, &child_rusage));
++  if (err)
++    return __hurd_fail (err);
++
++  tms->tms_cutime = clock_from_timeval (&child_rusage.ru_utime);
++  tms->tms_cstime = clock_from_timeval (&child_rusage.ru_stime);
++#else
+   tms->tms_cutime = tms->tms_cstime = 0;
++#endif
+ 
+   __host_get_time (__mach_host_self (), &now);
+ 
