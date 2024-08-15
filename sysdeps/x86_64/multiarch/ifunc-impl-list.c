@@ -69,10 +69,12 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 				      && CPU_FEATURE_USABLE (BMI2)),
 				     __memchr_evex_rtm)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, memchr,
-				     CPU_FEATURE_USABLE (AVX2),
+				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)),
 				     __memchr_avx2)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, memchr,
 				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)
 				      && CPU_FEATURE_USABLE (RTM)),
 				     __memchr_avx2_rtm)
 	      /* ISA V2 wrapper for SSE2 implementation because the SSE2
@@ -207,13 +209,19 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
   IFUNC_IMPL (i, name, memrchr,
 	      X86_IFUNC_IMPL_ADD_V4 (array, i, memrchr,
 				     (CPU_FEATURE_USABLE (AVX512VL)
-				      && CPU_FEATURE_USABLE (AVX512BW)),
+				      && CPU_FEATURE_USABLE (AVX512BW)
+				      && CPU_FEATURE_USABLE (BMI2)
+				      && CPU_FEATURE_USABLE (LZCNT)),
 				     __memrchr_evex)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, memrchr,
-				     CPU_FEATURE_USABLE (AVX2),
+				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)
+				      && CPU_FEATURE_USABLE (LZCNT)),
 				     __memrchr_avx2)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, memrchr,
 				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)
+				      && CPU_FEATURE_USABLE (LZCNT)
 				      && CPU_FEATURE_USABLE (RTM)),
 				     __memrchr_avx2_rtm)
 	      /* ISA V2 wrapper for SSE2 implementation because the SSE2
@@ -335,10 +343,12 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 				      && CPU_FEATURE_USABLE (BMI2)),
 				     __rawmemchr_evex_rtm)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, rawmemchr,
-				     CPU_FEATURE_USABLE (AVX2),
+				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)),
 				     __rawmemchr_avx2)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, rawmemchr,
 				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)
 				      && CPU_FEATURE_USABLE (RTM)),
 				     __rawmemchr_avx2_rtm)
 	      /* ISA V2 wrapper for SSE2 implementation because the SSE2
@@ -448,13 +458,16 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
   IFUNC_IMPL (i, name, strcasecmp,
 	      X86_IFUNC_IMPL_ADD_V4 (array, i, strcasecmp,
 				     (CPU_FEATURE_USABLE (AVX512VL)
-				      && CPU_FEATURE_USABLE (AVX512BW)),
+				      && CPU_FEATURE_USABLE (AVX512BW)
+				      && CPU_FEATURE_USABLE (BMI2)),
 				     __strcasecmp_evex)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, strcasecmp,
-				     CPU_FEATURE_USABLE (AVX2),
+				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)),
 				     __strcasecmp_avx2)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, strcasecmp,
 				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)
 				      && CPU_FEATURE_USABLE (RTM)),
 				     __strcasecmp_avx2_rtm)
 	      X86_IFUNC_IMPL_ADD_V2 (array, i, strcasecmp,
@@ -470,13 +483,16 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
   IFUNC_IMPL (i, name, strcasecmp_l,
 	      X86_IFUNC_IMPL_ADD_V4 (array, i, strcasecmp,
 				     (CPU_FEATURE_USABLE (AVX512VL)
-				      && CPU_FEATURE_USABLE (AVX512BW)),
+				      && CPU_FEATURE_USABLE (AVX512BW)
+				      && CPU_FEATURE_USABLE (BMI2)),
 				     __strcasecmp_l_evex)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, strcasecmp,
-				     CPU_FEATURE_USABLE (AVX2),
+				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)),
 				     __strcasecmp_l_avx2)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, strcasecmp,
 				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)
 				      && CPU_FEATURE_USABLE (RTM)),
 				     __strcasecmp_l_avx2_rtm)
 	      X86_IFUNC_IMPL_ADD_V2 (array, i, strcasecmp_l,
@@ -562,13 +578,19 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
   IFUNC_IMPL (i, name, strrchr,
 	      X86_IFUNC_IMPL_ADD_V4 (array, i, strrchr,
 				     (CPU_FEATURE_USABLE (AVX512VL)
-				      && CPU_FEATURE_USABLE (AVX512BW)),
+				      && CPU_FEATURE_USABLE (AVX512BW)
+				      && CPU_FEATURE_USABLE (BMI1)
+				      && CPU_FEATURE_USABLE (BMI2)),
 				     __strrchr_evex)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, strrchr,
-				     CPU_FEATURE_USABLE (AVX2),
+				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI1)
+				      && CPU_FEATURE_USABLE (BMI2)),
 				     __strrchr_avx2)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, strrchr,
 				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI1)
+				      && CPU_FEATURE_USABLE (BMI2)
 				      && CPU_FEATURE_USABLE (RTM)),
 				     __strrchr_avx2_rtm)
 	      /* ISA V2 wrapper for SSE2 implementation because the SSE2
@@ -585,10 +607,12 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 				      && CPU_FEATURE_USABLE (BMI2)),
 				     __strcmp_evex)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, strcmp,
-				     CPU_FEATURE_USABLE (AVX2),
+				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)),
 				     __strcmp_avx2)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, strcmp,
 				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)
 				      && CPU_FEATURE_USABLE (RTM)),
 				     __strcmp_avx2_rtm)
 	      X86_IFUNC_IMPL_ADD_V2 (array, i, strcmp,
@@ -638,13 +662,16 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
   IFUNC_IMPL (i, name, strncasecmp,
 	      X86_IFUNC_IMPL_ADD_V4 (array, i, strncasecmp,
 				     (CPU_FEATURE_USABLE (AVX512VL)
-				      && CPU_FEATURE_USABLE (AVX512BW)),
+				      && CPU_FEATURE_USABLE (AVX512BW)
+				      && CPU_FEATURE_USABLE (BMI2)),
 				     __strncasecmp_evex)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, strncasecmp,
-				     CPU_FEATURE_USABLE (AVX2),
+				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)),
 				     __strncasecmp_avx2)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, strncasecmp,
 				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)
 				      && CPU_FEATURE_USABLE (RTM)),
 				     __strncasecmp_avx2_rtm)
 	      X86_IFUNC_IMPL_ADD_V2 (array, i, strncasecmp,
@@ -660,13 +687,16 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
   IFUNC_IMPL (i, name, strncasecmp_l,
 	      X86_IFUNC_IMPL_ADD_V4 (array, i, strncasecmp,
 				     (CPU_FEATURE_USABLE (AVX512VL)
-				      && CPU_FEATURE_USABLE (AVX512BW)),
+				      & CPU_FEATURE_USABLE (AVX512BW)
+				      && CPU_FEATURE_USABLE (BMI2)),
 				     __strncasecmp_l_evex)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, strncasecmp,
-				     CPU_FEATURE_USABLE (AVX2),
+				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)),
 				     __strncasecmp_l_avx2)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, strncasecmp,
 				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)
 				      && CPU_FEATURE_USABLE (RTM)),
 				     __strncasecmp_l_avx2_rtm)
 	      X86_IFUNC_IMPL_ADD_V2 (array, i, strncasecmp_l,
@@ -773,13 +803,18 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 	      X86_IFUNC_IMPL_ADD_V4 (array, i, wcsrchr,
 				     (CPU_FEATURE_USABLE (AVX512VL)
 				      && CPU_FEATURE_USABLE (AVX512BW)
+				      && CPU_FEATURE_USABLE (BMI1)
 				      && CPU_FEATURE_USABLE (BMI2)),
 				     __wcsrchr_evex)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, wcsrchr,
-				     CPU_FEATURE_USABLE (AVX2),
+				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI1)
+				      && CPU_FEATURE_USABLE (BMI2)),
 				     __wcsrchr_avx2)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, wcsrchr,
 				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI1)
+				      && CPU_FEATURE_USABLE (BMI2)
 				      && CPU_FEATURE_USABLE (RTM)),
 				     __wcsrchr_avx2_rtm)
 	      /* ISA V2 wrapper for SSE2 implementation because the SSE2
@@ -796,10 +831,12 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 				      && CPU_FEATURE_USABLE (BMI2)),
 				     __wcscmp_evex)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, wcscmp,
-				     CPU_FEATURE_USABLE (AVX2),
+				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)),
 				     __wcscmp_avx2)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, wcscmp,
 				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)
 				      && CPU_FEATURE_USABLE (RTM)),
 				     __wcscmp_avx2_rtm)
 	      /* ISA V2 wrapper for SSE2 implementation because the SSE2
@@ -816,10 +853,12 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 				      && CPU_FEATURE_USABLE (BMI2)),
 				     __wcsncmp_evex)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, wcsncmp,
-				     CPU_FEATURE_USABLE (AVX2),
+				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)),
 				     __wcsncmp_avx2)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, wcsncmp,
 				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)
 				      && CPU_FEATURE_USABLE (RTM)),
 				     __wcsncmp_avx2_rtm)
 	      /* ISA V2 wrapper for GENERIC implementation because the
@@ -909,10 +948,12 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
 				      && CPU_FEATURE_USABLE (BMI2)),
 				     __wmemchr_evex_rtm)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, wmemchr,
-				     CPU_FEATURE_USABLE (AVX2),
+				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)),
 				     __wmemchr_avx2)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, wmemchr,
 				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)
 				      && CPU_FEATURE_USABLE (RTM)),
 				     __wmemchr_avx2_rtm)
 	      /* ISA V2 wrapper for SSE2 implementation because the SSE2
@@ -1162,13 +1203,16 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
   IFUNC_IMPL (i, name, strncmp,
 	      X86_IFUNC_IMPL_ADD_V4 (array, i, strncmp,
 				     (CPU_FEATURE_USABLE (AVX512VL)
-				      && CPU_FEATURE_USABLE (AVX512BW)),
+				      && CPU_FEATURE_USABLE (AVX512BW)
+				      && CPU_FEATURE_USABLE (BMI2)),
 				     __strncmp_evex)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, strncmp,
-				     CPU_FEATURE_USABLE (AVX2),
+				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)),
 				     __strncmp_avx2)
 	      X86_IFUNC_IMPL_ADD_V3 (array, i, strncmp,
 				     (CPU_FEATURE_USABLE (AVX2)
+				      && CPU_FEATURE_USABLE (BMI2)
 				      && CPU_FEATURE_USABLE (RTM)),
 				     __strncmp_avx2_rtm)
 	      X86_IFUNC_IMPL_ADD_V2 (array, i, strncmp,
