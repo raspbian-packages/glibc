@@ -1,5 +1,6 @@
-/* Regularize <asm/unistd.h> definitions.  X32 version.
-   Copyright (C) 2020-2024 Free Software Foundation, Inc.
+/* mremap failure handling.  Generic version.
+   Copyright (C) 2024 Free Software Foundation, Inc.
+   This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -13,13 +14,12 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <https://www.gnu.org/licenses/>.  */
 
-#ifndef __NR_map_shadow_stack
-# define __NR_map_shadow_stack 1073742277
-#endif
+/* Return exit value on mremap failure with errno ERR.  */
 
-/* X32 uses the same 64-bit syscall interface for set_thread_area.   */
-#ifndef __NR_set_thread_area
-# define __NR_set_thread_area 1073742029
-#endif
+static int
+mremap_failure_exit (int err)
+{
+  return EXIT_FAILURE;
+}
