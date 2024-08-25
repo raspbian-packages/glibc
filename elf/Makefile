@@ -2833,9 +2833,8 @@ $(objpfx)tst-ro-dynamic-mod.so: $(objpfx)tst-ro-dynamic-mod.os \
 		$(objpfx)tst-ro-dynamic-mod.os
 
 $(objpfx)tst-rtld-list-diagnostics.out: tst-rtld-list-diagnostics.py \
-  $(..)manual/dynlink.texi $(objpfx)$(rtld-installed-name)
+  $(objpfx)$(rtld-installed-name)
 	$(PYTHON) tst-rtld-list-diagnostics.py \
-	  --manual=$(..)manual/dynlink.texi \
 	  "$(test-wrapper-env) $(objpfx)$(rtld-installed-name) --list-diagnostics" \
 	  > $@; \
 	$(evaluate-test)
