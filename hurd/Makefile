@@ -49,8 +49,10 @@ user-interfaces := \
   hurd/auth_request \
   hurd/crash \
   hurd/exec \
+  hurd/exec_experimental \
   hurd/exec_startup \
   hurd/fs \
+  hurd/fs_experimental \
   hurd/fsys \
   hurd/ifsock \
   hurd/interrupt \
