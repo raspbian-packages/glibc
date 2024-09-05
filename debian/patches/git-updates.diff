@@ -22,6 +22,79 @@ index 242cb06f91..b487e18634 100644
  
  '--disable-werror'
       By default, the GNU C Library is built with '-Werror'.  If you wish
+diff --git a/Makeconfig b/Makeconfig
+index f252842979..3ce38059f4 100644
+--- a/Makeconfig
++++ b/Makeconfig
+@@ -42,6 +42,22 @@ else
+ objdir must be defined by the build-directory Makefile.
+ endif
+ 
++# Did we request 'make -s' run? "yes" or "no".
++# Starting from make-4.4 MAKEFLAGS now contains long
++# options like '--shuffle'. To detect presence of 's'
++# we pick first word with short options. Long options
++# are guaranteed to come after whitespace. We use '-'
++# prefix to always have a word before long options
++# even if no short options were passed.
++# Typical MAKEFLAGS values to watch for:
++#   "rs --shuffle=42" (silent)
++#   " --shuffle" (not silent)
++ifeq ($(findstring s, $(firstword -$(MAKEFLAGS))),)
++silent-make := no
++else
++silent-make := yes
++endif
++
+ # Root of the sysdeps tree.
+ sysdep_dir := $(..)sysdeps
+ export sysdep_dir := $(sysdep_dir)
+@@ -557,9 +573,12 @@ link-libc-rpath-link = -Wl,-rpath-link=$(rpath-link)
+ # before the expansion of LDLIBS-* variables).
+ 
+ # Tests use -Wl,-rpath instead of -Wl,-rpath-link for
+-# build-hardcoded-path-in-tests.
++# build-hardcoded-path-in-tests.  Add -Wl,--disable-new-dtags to force
++# DT_RPATH instead of DT_RUNPATH which only applies to DT_NEEDED entries
++# in the executable and doesn't applies to DT_NEEDED entries in shared
++# libraries which are loaded via DT_NEEDED entries in the executable.
+ ifeq (yes,$(build-hardcoded-path-in-tests))
+-link-libc-tests-rpath-link = $(link-libc-rpath)
++link-libc-tests-rpath-link = $(link-libc-rpath) -Wl,--disable-new-dtags
+ else
+ link-libc-tests-rpath-link = $(link-libc-rpath-link)
+ endif  # build-hardcoded-path-in-tests
+@@ -892,7 +911,7 @@ endif
+ # umpteen zillion filenames along with it (we use `...' instead)
+ # but we don't want this echoing done when the user has said
+ # he doesn't want to see commands echoed by using -s.
+-ifneq	"$(findstring s,$(MAKEFLAGS))" ""	# if -s
++ifeq ($(silent-make),yes)			# if -s
+ +cmdecho	:= echo >/dev/null
+ else						# not -s
+ +cmdecho	:= echo
+diff --git a/Makerules b/Makerules
+index 1e9c18f0d8..e07a42e20c 100644
+--- a/Makerules
++++ b/Makerules
+@@ -805,7 +805,7 @@ endif
+ # Maximize efficiency by minimizing the number of rules.
+ .SUFFIXES:	# Clear the suffix list.  We don't use suffix rules.
+ # Don't define any builtin rules.
+-MAKEFLAGS := $(MAKEFLAGS)r
++MAKEFLAGS := $(MAKEFLAGS) -r
+ 
+ # Generic rule for making directories.
+ %/:
+@@ -822,7 +822,7 @@ MAKEFLAGS := $(MAKEFLAGS)r
+ .PRECIOUS: $(foreach l,$(libtypes),$(patsubst %,$(common-objpfx)$l,c))
+ 
+ # Use the verbose option of ar and tar when not running silently.
+-ifeq	"$(findstring s,$(MAKEFLAGS))" ""	# if not -s
++ifeq ($(silent-make),no)			# if not -s
+ verbose := v
+ else	   					# -s
+ verbose	:=
 diff --git a/NEWS b/NEWS
 index 292fbc595a..8a20d3c4e3 100644
 --- a/NEWS
@@ -231,6 +304,19 @@ index 49b900c1ed..e20034f301 100644
      libc_cv_ld_gnu_indirect_function=yes
    }
  fi
+diff --git a/debug/Makefile b/debug/Makefile
+index c62b2154bc..3a6b442238 100644
+--- a/debug/Makefile
++++ b/debug/Makefile
+@@ -168,6 +168,8 @@ extra-libs-others = $(extra-libs)
+ 
+ libSegFault-routines = segfault
+ libSegFault-inhibit-o = $(filter-out .os,$(object-suffixes))
++# libSegFault.so installs a signal handler in its ELF constructor.
++LDFLAGS-SegFault.so = -Wl,--enable-new-dtags,-z,nodelete
+ 
+ libpcprofile-routines = pcprofile
+ libpcprofile-inhibit-o = $(filter-out .os,$(object-suffixes))
 diff --git a/debug/backtrace.c b/debug/backtrace.c
 index cc4b9a5c90..69cf4c23c8 100644
 --- a/debug/backtrace.c
@@ -367,6 +453,89 @@ index 44d06665b4..2296ad3870 100644
  	p += len + 1;
      }
  }
+diff --git a/elf/ifuncmain1.c b/elf/ifuncmain1.c
+index 747fc02648..6effce3d77 100644
+--- a/elf/ifuncmain1.c
++++ b/elf/ifuncmain1.c
+@@ -19,7 +19,14 @@ typedef int (*foo_p) (void);
+ #endif
+ 
+ foo_p foo_ptr = foo;
++
++/* Address-significant access to protected symbols is not supported in
++   position-dependent mode on several architectures because GCC
++   generates relocations that assume that the address is local to the
++   main program.  */
++#ifdef __PIE__
+ foo_p foo_procted_ptr = foo_protected;
++#endif
+ 
+ extern foo_p get_foo_p (void);
+ extern foo_p get_foo_hidden_p (void);
+@@ -37,12 +44,16 @@ main (void)
+   if ((*foo_ptr) () != -1)
+     abort ();
+ 
++#ifdef __PIE__
+   if (foo_procted_ptr != foo_protected)
+     abort ();
++#endif
+   if (foo_protected () != 0)
+     abort ();
++#ifdef __PIE__
+   if ((*foo_procted_ptr) () != 0)
+     abort ();
++#endif
+ 
+   p = get_foo_p ();
+   if (p != foo)
+@@ -55,8 +66,10 @@ main (void)
+     abort ();
+ 
+   p = get_foo_protected_p ();
++#ifdef __PIE__
+   if (p != foo_protected)
+     abort ();
++#endif
+   if (ret_foo_protected != 0 || (*p) () != ret_foo_protected)
+     abort ();
+ 
+diff --git a/elf/ifuncmain5.c b/elf/ifuncmain5.c
+index f398085cb4..6fda768fb6 100644
+--- a/elf/ifuncmain5.c
++++ b/elf/ifuncmain5.c
+@@ -14,12 +14,19 @@ get_foo (void)
+   return foo;
+ }
+ 
++
++/* Address-significant access to protected symbols is not supported in
++   position-dependent mode on several architectures because GCC
++   generates relocations that assume that the address is local to the
++   main program.  */
++#ifdef __PIE__
+ foo_p
+ __attribute__ ((noinline))
+ get_foo_protected (void)
+ {
+   return foo_protected;
+ }
++#endif
+ 
+ int
+ main (void)
+@@ -30,9 +37,11 @@ main (void)
+   if ((*p) () != -1)
+     abort ();
+ 
++#ifdef __PIE__
+   p = get_foo_protected ();
+   if ((*p) () != 0)
+     abort ();
++#endif
+ 
+   return 0;
+ }
 diff --git a/elf/ifuncmain6pie.c b/elf/ifuncmain6pie.c
 index 04faeb86ef..4a01906836 100644
 --- a/elf/ifuncmain6pie.c
@@ -441,6 +610,19 @@ index 2e16c1d06d..2f6d0715e6 100644
 -  return foo;
 +  return foo ();
  }
+diff --git a/elf/rtld-Rules b/elf/rtld-Rules
+index 7e0254cc41..3b73937d4d 100644
+--- a/elf/rtld-Rules
++++ b/elf/rtld-Rules
+@@ -52,7 +52,7 @@ $(objpfx)rtld-libc.a: $(foreach dir,$(rtld-subdirs),\
+ 	mv -f $@T $@
+ 
+ # Use the verbose option of ar and tar when not running silently.
+-ifeq	"$(findstring s,$(MAKEFLAGS))" ""	# if not -s
++ifeq ($(silent-make),no)			# if not -s
+ verbose := v
+ else						# -s
+ verbose	:=
 diff --git a/elf/tst-env-setuid-tunables.c b/elf/tst-env-setuid-tunables.c
 index 971d5892b1..ca0c8c245c 100644
 --- a/elf/tst-env-setuid-tunables.c
@@ -2267,7 +2449,7 @@ index 0000000000..d8db7b335c
 +  check_errtest_result
 +done
 diff --git a/iconvdata/Makefile b/iconvdata/Makefile
-index c83962f351..8fbb67a52b 100644
+index c83962f351..31b1cf8a9f 100644
 --- a/iconvdata/Makefile
 +++ b/iconvdata/Makefile
 @@ -1,4 +1,5 @@
@@ -2276,17 +2458,18 @@ index c83962f351..8fbb67a52b 100644
  # This file is part of the GNU C Library.
  
  # The GNU C Library is free software; you can redistribute it and/or
-@@ -73,7 +74,8 @@ modules.so := $(addsuffix .so, $(modules))
+@@ -73,7 +74,9 @@ modules.so := $(addsuffix .so, $(modules))
  ifeq (yes,$(build-shared))
  tests = bug-iconv1 bug-iconv2 tst-loading tst-e2big tst-iconv4 bug-iconv4 \
  	tst-iconv6 bug-iconv5 bug-iconv6 tst-iconv7 bug-iconv8 bug-iconv9 \
 -	bug-iconv10 bug-iconv11 bug-iconv12
 +	bug-iconv10 bug-iconv11 bug-iconv12 bug-iconv13 bug-iconv14 \
-+	bug-iconv15
++	bug-iconv15 \
++	tst-iconv-iso-2022-cn-ext
  ifeq ($(have-thread-library),yes)
  tests += bug-iconv3
  endif
-@@ -316,6 +318,10 @@ $(objpfx)bug-iconv10.out: $(objpfx)gconv-modules \
+@@ -316,6 +319,12 @@ $(objpfx)bug-iconv10.out: $(objpfx)gconv-modules \
  			  $(addprefix $(objpfx),$(modules.so))
  $(objpfx)bug-iconv12.out: $(objpfx)gconv-modules \
  			  $(addprefix $(objpfx),$(modules.so))
@@ -2294,6 +2477,8 @@ index c83962f351..8fbb67a52b 100644
 +			  $(addprefix $(objpfx),$(modules.so))
 +$(objpfx)bug-iconv15.out: $(addprefix $(objpfx), $(gconv-modules)) \
 +			  $(addprefix $(objpfx),$(modules.so))
++$(objpfx)tst-iconv-iso-2022-cn-ext.out: $(addprefix $(objpfx), $(gconv-modules)) \
++					$(addprefix $(objpfx),$(modules.so))
  
  $(objpfx)iconv-test.out: run-iconv-test.sh $(objpfx)gconv-modules \
  			 $(addprefix $(objpfx),$(modules.so)) \
@@ -2603,6 +2788,36 @@ index 49e7267ab4..521f0825b7 100644
  	curcs = sb;							      \
  	++inptr;							      \
  	continue;							      \
+diff --git a/iconvdata/iso-2022-cn-ext.c b/iconvdata/iso-2022-cn-ext.c
+index 947b807421..34e1010bed 100644
+--- a/iconvdata/iso-2022-cn-ext.c
++++ b/iconvdata/iso-2022-cn-ext.c
+@@ -575,6 +575,12 @@ DIAG_IGNORE_Os_NEEDS_COMMENT (5, "-Wmaybe-uninitialized");
+ 	      {								      \
+ 		const char *escseq;					      \
+ 									      \
++		if (outptr + 4 > outend)				      \
++		  {							      \
++		    result = __GCONV_FULL_OUTPUT;			      \
++		    break;						      \
++		  }							      \
++									      \
+ 		assert (used == CNS11643_2_set); /* XXX */		      \
+ 		escseq = "*H";						      \
+ 		*outptr++ = ESC;					      \
+@@ -588,6 +594,12 @@ DIAG_IGNORE_Os_NEEDS_COMMENT (5, "-Wmaybe-uninitialized");
+ 	      {								      \
+ 		const char *escseq;					      \
+ 									      \
++		if (outptr + 4 > outend)				      \
++		  {							      \
++		    result = __GCONV_FULL_OUTPUT;			      \
++		    break;						      \
++		  }							      \
++									      \
+ 		assert ((used >> 5) >= 3 && (used >> 5) <= 7);		      \
+ 		escseq = "+I+J+K+L+M" + ((used >> 5) - 3) * 2;		      \
+ 		*outptr++ = ESC;					      \
 diff --git a/iconvdata/iso-2022-jp-3.c b/iconvdata/iso-2022-jp-3.c
 index 8c3b7e627e..c7b470db61 100644
 --- a/iconvdata/iso-2022-jp-3.c
@@ -2747,6 +2962,140 @@ index d3eb3a4ff8..f5cdc72797 100644
    ch2 = (*s)[1];
    if (ch2 < offset || (ch2 - offset) <= 0x20 || (ch2 - offset) >= 0x7f)
      return __UNKNOWN_10646_CHAR;
+diff --git a/iconvdata/tst-iconv-iso-2022-cn-ext.c b/iconvdata/tst-iconv-iso-2022-cn-ext.c
+new file mode 100644
+index 0000000000..96a8765fd5
+--- /dev/null
++++ b/iconvdata/tst-iconv-iso-2022-cn-ext.c
+@@ -0,0 +1,128 @@
++/* Verify ISO-2022-CN-EXT does not write out of the bounds.
++   Copyright (C) 2024 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <https://www.gnu.org/licenses/>.  */
++
++#include <stdio.h>
++#include <string.h>
++
++#include <errno.h>
++#include <iconv.h>
++#include <sys/mman.h>
++
++#include <support/xunistd.h>
++#include <support/check.h>
++#include <support/support.h>
++
++/* The test sets up a two memory page buffer with the second page marked
++   PROT_NONE to trigger a fault if the conversion writes beyond the exact
++   expected amount.  Then we carry out various conversions and precisely
++   place the start of the output buffer in order to trigger a SIGSEGV if the
++   process writes anywhere between 1 and page sized bytes more (only one
++   PROT_NONE page is setup as a canary) than expected.  These tests exercise
++   all three of the cases in ISO-2022-CN-EXT where the converter must switch
++   character sets and may run out of buffer space while doing the
++   operation.  */
++
++static int
++do_test (void)
++{
++  iconv_t cd = iconv_open ("ISO-2022-CN-EXT", "UTF-8");
++  TEST_VERIFY_EXIT (cd != (iconv_t) -1);
++
++  char *ntf;
++  size_t ntfsize;
++  char *outbufbase;
++  {
++    int pgz = getpagesize ();
++    TEST_VERIFY_EXIT (pgz > 0);
++    ntfsize = 2 * pgz;
++
++    ntf = xmmap (NULL, ntfsize, PROT_READ | PROT_WRITE, MAP_PRIVATE
++		 | MAP_ANONYMOUS, -1);
++    xmprotect (ntf + pgz, pgz, PROT_NONE);
++
++    outbufbase = ntf + pgz;
++  }
++
++  /* Check if SOdesignation escape sequence does not trigger an OOB write.  */
++  {
++    char inbuf[] = "\xe4\xba\xa4\xe6\x8d\xa2";
++
++    for (int i = 0; i < 9; i++)
++      {
++	char *inp = inbuf;
++	size_t inleft = sizeof (inbuf) - 1;
++
++	char *outp = outbufbase - i;
++	size_t outleft = i;
++
++	TEST_VERIFY_EXIT (iconv (cd, &inp, &inleft, &outp, &outleft)
++			  == (size_t) -1);
++	TEST_COMPARE (errno, E2BIG);
++
++	TEST_VERIFY_EXIT (iconv (cd, NULL, NULL, NULL, NULL) == 0);
++      }
++  }
++
++  /* Same as before for SS2designation.  */
++  {
++    char inbuf[] = "㴽 \xe3\xb4\xbd";
++
++    for (int i = 0; i < 14; i++)
++      {
++	char *inp = inbuf;
++	size_t inleft = sizeof (inbuf) - 1;
++
++	char *outp = outbufbase - i;
++	size_t outleft = i;
++
++	TEST_VERIFY_EXIT (iconv (cd, &inp, &inleft, &outp, &outleft)
++			  == (size_t) -1);
++	TEST_COMPARE (errno, E2BIG);
++
++	TEST_VERIFY_EXIT (iconv (cd, NULL, NULL, NULL, NULL) == 0);
++      }
++  }
++
++  /* Same as before for SS3designation.  */
++  {
++    char inbuf[] = "劄 \xe5\x8a\x84";
++
++    for (int i = 0; i < 14; i++)
++      {
++	char *inp = inbuf;
++	size_t inleft = sizeof (inbuf) - 1;
++
++	char *outp = outbufbase - i;
++	size_t outleft = i;
++
++	TEST_VERIFY_EXIT (iconv (cd, &inp, &inleft, &outp, &outleft)
++			  == (size_t) -1);
++	TEST_COMPARE (errno, E2BIG);
++
++	TEST_VERIFY_EXIT (iconv (cd, NULL, NULL, NULL, NULL) == 0);
++      }
++  }
++
++  TEST_VERIFY_EXIT (iconv_close (cd) != -1);
++
++  xmunmap (ntf, ntfsize);
++
++  return 0;
++}
++
++#include <support/test-driver.c>
 diff --git a/include/libc-symbols.h b/include/libc-symbols.h
 index 685e20fdc0..68fc798051 100644
 --- a/include/libc-symbols.h
@@ -3536,27 +3885,440 @@ index 0000000000..ae3c1b1ba0
 +
 +#include <support/test-driver.c>
 diff --git a/nscd/netgroupcache.c b/nscd/netgroupcache.c
-index 88c69d1e9c..381aa721ef 100644
+index 88c69d1e9c..799298ad84 100644
 --- a/nscd/netgroupcache.c
 +++ b/nscd/netgroupcache.c
-@@ -248,7 +248,7 @@ addgetnetgrentX (struct database_dyn *db, int fd, request_header *req,
- 					     : NULL);
- 				    ndomain = (ndomain ? newbuf + ndomaindiff
- 					       : NULL);
--				    buffer = newbuf;
-+				    *tofreep = buffer = newbuf;
- 				  }
+@@ -24,6 +24,7 @@
+ #include <stdlib.h>
+ #include <unistd.h>
+ #include <sys/mman.h>
++#include <scratch_buffer.h>
  
- 				nhost = memcpy (buffer + bufused,
-@@ -319,7 +319,7 @@ addgetnetgrentX (struct database_dyn *db, int fd, request_header *req,
+ #include "../inet/netgroup.h"
+ #include "nscd.h"
+@@ -66,6 +67,16 @@ struct dataset
+   char strdata[0];
+ };
+ 
++/* Send a notfound response to FD.  Always returns -1 to indicate an
++   ephemeral error.  */
++static time_t
++send_notfound (int fd)
++{
++  if (fd != -1)
++    TEMP_FAILURE_RETRY (send (fd, &notfound, sizeof (notfound), MSG_NOSIGNAL));
++  return -1;
++}
++
+ /* Sends a notfound message and prepares a notfound dataset to write to the
+    cache.  Returns true if there was enough memory to allocate the dataset and
+    returns the dataset in DATASETP, total bytes to write in TOTALP and the
+@@ -84,8 +95,7 @@ do_notfound (struct database_dyn *db, int fd, request_header *req,
+   total = sizeof (notfound);
+   timeout = time (NULL) + db->negtimeout;
+ 
+-  if (fd != -1)
+-    TEMP_FAILURE_RETRY (send (fd, &notfound, total, MSG_NOSIGNAL));
++  send_notfound (fd);
+ 
+   dataset = mempool_alloc (db, sizeof (struct dataset) + req->key_len, 1);
+   /* If we cannot permanently store the result, so be it.  */
+@@ -110,11 +120,78 @@ do_notfound (struct database_dyn *db, int fd, request_header *req,
+   return cacheable;
+ }
+ 
++struct addgetnetgrentX_scratch
++{
++  /* This is the result that the caller should use.  It can be NULL,
++     point into buffer, or it can be in the cache.  */
++  struct dataset *dataset;
++
++  struct scratch_buffer buffer;
++
++  /* Used internally in addgetnetgrentX as a staging area.  */
++  struct scratch_buffer tmp;
++
++  /* Number of bytes in buffer that are actually used.  */
++  size_t buffer_used;
++};
++
++static void
++addgetnetgrentX_scratch_init (struct addgetnetgrentX_scratch *scratch)
++{
++  scratch->dataset = NULL;
++  scratch_buffer_init (&scratch->buffer);
++  scratch_buffer_init (&scratch->tmp);
++
++  /* Reserve space for the header.  */
++  scratch->buffer_used = sizeof (struct dataset);
++  static_assert (sizeof (struct dataset) < sizeof (scratch->tmp.__space),
++		 "initial buffer space");
++  memset (scratch->tmp.data, 0, sizeof (struct dataset));
++}
++
++static void
++addgetnetgrentX_scratch_free (struct addgetnetgrentX_scratch *scratch)
++{
++  scratch_buffer_free (&scratch->buffer);
++  scratch_buffer_free (&scratch->tmp);
++}
++
++/* Copy LENGTH bytes from S into SCRATCH.  Returns NULL if SCRATCH
++   could not be resized, otherwise a pointer to the copy.  */
++static char *
++addgetnetgrentX_append_n (struct addgetnetgrentX_scratch *scratch,
++			  const char *s, size_t length)
++{
++  while (true)
++    {
++      size_t remaining = scratch->buffer.length - scratch->buffer_used;
++      if (remaining >= length)
++	break;
++      if (!scratch_buffer_grow_preserve (&scratch->buffer))
++	return NULL;
++    }
++  char *copy = scratch->buffer.data + scratch->buffer_used;
++  memcpy (copy, s, length);
++  scratch->buffer_used += length;
++  return copy;
++}
++
++/* Copy S into SCRATCH, including its null terminator.  Returns false
++   if SCRATCH could not be resized.  */
++static bool
++addgetnetgrentX_append (struct addgetnetgrentX_scratch *scratch, const char *s)
++{
++  if (s == NULL)
++    s = "";
++  return addgetnetgrentX_append_n (scratch, s, strlen (s) + 1) != NULL;
++}
++
++/* Caller must initialize and free *SCRATCH.  If the return value is
++   negative, this function has sent a notfound response.  */
+ static time_t
+ addgetnetgrentX (struct database_dyn *db, int fd, request_header *req,
+ 		 const char *key, uid_t uid, struct hashentry *he,
+-		 struct datahead *dh, struct dataset **resultp,
+-		 void **tofreep)
++		 struct datahead *dh, struct addgetnetgrentX_scratch *scratch)
+ {
+   if (__glibc_unlikely (debug_level > 0))
+     {
+@@ -133,14 +210,10 @@ addgetnetgrentX (struct database_dyn *db, int fd, request_header *req,
+ 
+   char *key_copy = NULL;
+   struct __netgrent data;
+-  size_t buflen = MAX (1024, sizeof (*dataset) + req->key_len);
+-  size_t buffilled = sizeof (*dataset);
+-  char *buffer = NULL;
+   size_t nentries = 0;
+   size_t group_len = strlen (key) + 1;
+   struct name_list *first_needed
+     = alloca (sizeof (struct name_list) + group_len);
+-  *tofreep = NULL;
+ 
+   if (netgroup_database == NULL
+       && __nss_database_lookup2 ("netgroup", NULL, NULL, &netgroup_database))
+@@ -148,12 +221,10 @@ addgetnetgrentX (struct database_dyn *db, int fd, request_header *req,
+       /* No such service.  */
+       cacheable = do_notfound (db, fd, req, key, &dataset, &total, &timeout,
+ 			       &key_copy);
+-      goto writeout;
++      goto maybe_cache_add;
+     }
+ 
+   memset (&data, '\0', sizeof (data));
+-  buffer = xmalloc (buflen);
+-  *tofreep = buffer;
+   first_needed->next = first_needed;
+   memcpy (first_needed->name, key, group_len);
+   data.needed_groups = first_needed;
+@@ -196,8 +267,8 @@ addgetnetgrentX (struct database_dyn *db, int fd, request_header *req,
+ 		while (1)
+ 		  {
+ 		    int e;
+-		    status = getfct.f (&data, buffer + buffilled,
+-				       buflen - buffilled - req->key_len, &e);
++		    status = getfct.f (&data, scratch->tmp.data,
++				       scratch->tmp.length, &e);
+ 		    if (status == NSS_STATUS_SUCCESS)
+ 		      {
+ 			if (data.type == triple_val)
+@@ -205,68 +276,10 @@ addgetnetgrentX (struct database_dyn *db, int fd, request_header *req,
+ 			    const char *nhost = data.val.triple.host;
+ 			    const char *nuser = data.val.triple.user;
+ 			    const char *ndomain = data.val.triple.domain;
+-
+-			    size_t hostlen = strlen (nhost ?: "") + 1;
+-			    size_t userlen = strlen (nuser ?: "") + 1;
+-			    size_t domainlen = strlen (ndomain ?: "") + 1;
+-
+-			    if (nhost == NULL || nuser == NULL || ndomain == NULL
+-				|| nhost > nuser || nuser > ndomain)
+-			      {
+-				const char *last = nhost;
+-				if (last == NULL
+-				    || (nuser != NULL && nuser > last))
+-				  last = nuser;
+-				if (last == NULL
+-				    || (ndomain != NULL && ndomain > last))
+-				  last = ndomain;
+-
+-				size_t bufused
+-				  = (last == NULL
+-				     ? buffilled
+-				     : last + strlen (last) + 1 - buffer);
+-
+-				/* We have to make temporary copies.  */
+-				size_t needed = hostlen + userlen + domainlen;
+-
+-				if (buflen - req->key_len - bufused < needed)
+-				  {
+-				    buflen += MAX (buflen, 2 * needed);
+-				    /* Save offset in the old buffer.  We don't
+-				       bother with the NULL check here since
+-				       we'll do that later anyway.  */
+-				    size_t nhostdiff = nhost - buffer;
+-				    size_t nuserdiff = nuser - buffer;
+-				    size_t ndomaindiff = ndomain - buffer;
+-
+-				    char *newbuf = xrealloc (buffer, buflen);
+-				    /* Fix up the triplet pointers into the new
+-				       buffer.  */
+-				    nhost = (nhost ? newbuf + nhostdiff
+-					     : NULL);
+-				    nuser = (nuser ? newbuf + nuserdiff
+-					     : NULL);
+-				    ndomain = (ndomain ? newbuf + ndomaindiff
+-					       : NULL);
+-				    buffer = newbuf;
+-				  }
+-
+-				nhost = memcpy (buffer + bufused,
+-						nhost ?: "", hostlen);
+-				nuser = memcpy ((char *) nhost + hostlen,
+-						nuser ?: "", userlen);
+-				ndomain = memcpy ((char *) nuser + userlen,
+-						  ndomain ?: "", domainlen);
+-			      }
+-
+-			    char *wp = buffer + buffilled;
+-			    wp = memmove (wp, nhost ?: "", hostlen);
+-			    wp += hostlen;
+-			    wp = memmove (wp, nuser ?: "", userlen);
+-			    wp += userlen;
+-			    wp = memmove (wp, ndomain ?: "", domainlen);
+-			    wp += domainlen;
+-			    buffilled = wp - buffer;
++			    if (!(addgetnetgrentX_append (scratch, nhost)
++				  && addgetnetgrentX_append (scratch, nuser)
++				  && addgetnetgrentX_append (scratch, ndomain)))
++			      return send_notfound (fd);
+ 			    ++nentries;
+ 			  }
+ 			else
+@@ -318,8 +331,8 @@ addgetnetgrentX (struct database_dyn *db, int fd, request_header *req,
+ 		      }
  		    else if (status == NSS_STATUS_TRYAGAIN && e == ERANGE)
  		      {
- 			buflen *= 2;
+-			buflen *= 2;
 -			buffer = xrealloc (buffer, buflen);
-+			*tofreep = buffer = xrealloc (buffer, buflen);
++			if (!scratch_buffer_grow (&scratch->tmp))
++			  return send_notfound (fd);
  		      }
  		    else if (status == NSS_STATUS_RETURN
  			     || status == NSS_STATUS_NOTFOUND
+@@ -349,13 +362,20 @@ addgetnetgrentX (struct database_dyn *db, int fd, request_header *req,
+     {
+       cacheable = do_notfound (db, fd, req, key, &dataset, &total, &timeout,
+ 			       &key_copy);
+-      goto writeout;
++      goto maybe_cache_add;
+     }
+ 
+-  total = buffilled;
++  /* Capture the result size without the key appended.   */
++  total = scratch->buffer_used;
++
++  /* Make a copy of the key.  The scratch buffer must not move after
++     this point.  */
++  key_copy = addgetnetgrentX_append_n (scratch, key, req->key_len);
++  if (key_copy == NULL)
++    return send_notfound (fd);
+ 
+   /* Fill in the dataset.  */
+-  dataset = (struct dataset *) buffer;
++  dataset = scratch->buffer.data;
+   timeout = datahead_init_pos (&dataset->head, total + req->key_len,
+ 			       total - offsetof (struct dataset, resp),
+ 			       he == NULL ? 0 : dh->nreloads + 1,
+@@ -364,11 +384,7 @@ addgetnetgrentX (struct database_dyn *db, int fd, request_header *req,
+   dataset->resp.version = NSCD_VERSION;
+   dataset->resp.found = 1;
+   dataset->resp.nresults = nentries;
+-  dataset->resp.result_len = buffilled - sizeof (*dataset);
+-
+-  assert (buflen - buffilled >= req->key_len);
+-  key_copy = memcpy (buffer + buffilled, key, req->key_len);
+-  buffilled += req->key_len;
++  dataset->resp.result_len = total - sizeof (*dataset);
+ 
+   /* Now we can determine whether on refill we have to create a new
+      record or not.  */
+@@ -399,7 +415,7 @@ addgetnetgrentX (struct database_dyn *db, int fd, request_header *req,
+     if (__glibc_likely (newp != NULL))
+       {
+ 	/* Adjust pointer into the memory block.  */
+-	key_copy = (char *) newp + (key_copy - buffer);
++	key_copy = (char *) newp + (key_copy - (char *) dataset);
+ 
+ 	dataset = memcpy (newp, dataset, total + req->key_len);
+ 	cacheable = true;
+@@ -411,14 +427,12 @@ addgetnetgrentX (struct database_dyn *db, int fd, request_header *req,
+   }
+ 
+   if (he == NULL && fd != -1)
+-    {
+-      /* We write the dataset before inserting it to the database
+-	 since while inserting this thread might block and so would
+-	 unnecessarily let the receiver wait.  */
+-    writeout:
++    /* We write the dataset before inserting it to the database since
++       while inserting this thread might block and so would
++       unnecessarily let the receiver wait.  */
+       writeall (fd, &dataset->resp, dataset->head.recsize);
+-    }
+ 
++ maybe_cache_add:
+   if (cacheable)
+     {
+       /* If necessary, we also propagate the data to disk.  */
+@@ -442,7 +456,7 @@ addgetnetgrentX (struct database_dyn *db, int fd, request_header *req,
+     }
+ 
+  out:
+-  *resultp = dataset;
++  scratch->dataset = dataset;
+ 
+   return timeout;
+ }
+@@ -463,6 +477,9 @@ addinnetgrX (struct database_dyn *db, int fd, request_header *req,
+   if (user != NULL)
+     key = (char *) rawmemchr (key, '\0') + 1;
+   const char *domain = *key++ ? key : NULL;
++  struct addgetnetgrentX_scratch scratch;
++
++  addgetnetgrentX_scratch_init (&scratch);
+ 
+   if (__glibc_unlikely (debug_level > 0))
+     {
+@@ -478,12 +495,8 @@ addinnetgrX (struct database_dyn *db, int fd, request_header *req,
+ 							    group, group_len,
+ 							    db, uid);
+   time_t timeout;
+-  void *tofree;
+   if (result != NULL)
+-    {
+-      timeout = result->head.timeout;
+-      tofree = NULL;
+-    }
++    timeout = result->head.timeout;
+   else
+     {
+       request_header req_get =
+@@ -492,7 +505,10 @@ addinnetgrX (struct database_dyn *db, int fd, request_header *req,
+ 	  .key_len = group_len
+ 	};
+       timeout = addgetnetgrentX (db, -1, &req_get, group, uid, NULL, NULL,
+-				 &result, &tofree);
++				 &scratch);
++      result = scratch.dataset;
++      if (timeout < 0)
++	goto out;
+     }
+ 
+   struct indataset
+@@ -503,24 +519,26 @@ addinnetgrX (struct database_dyn *db, int fd, request_header *req,
+       = (struct indataset *) mempool_alloc (db,
+ 					    sizeof (*dataset) + req->key_len,
+ 					    1);
+-  struct indataset dataset_mem;
+   bool cacheable = true;
+   if (__glibc_unlikely (dataset == NULL))
+     {
+       cacheable = false;
+-      dataset = &dataset_mem;
++      /* The alloca is safe because nscd_run_worker verfies that
++	 key_len is not larger than MAXKEYLEN.  */
++      dataset = alloca (sizeof (*dataset) + req->key_len);
+     }
+ 
+   datahead_init_pos (&dataset->head, sizeof (*dataset) + req->key_len,
+ 		     sizeof (innetgroup_response_header),
+-		     he == NULL ? 0 : dh->nreloads + 1, result->head.ttl);
++		     he == NULL ? 0 : dh->nreloads + 1,
++		     result == NULL ? db->negtimeout : result->head.ttl);
+   /* Set the notfound status and timeout based on the result from
+      getnetgrent.  */
+-  dataset->head.notfound = result->head.notfound;
++  dataset->head.notfound = result == NULL || result->head.notfound;
+   dataset->head.timeout = timeout;
+ 
+   dataset->resp.version = NSCD_VERSION;
+-  dataset->resp.found = result->resp.found;
++  dataset->resp.found = result != NULL && result->resp.found;
+   /* Until we find a matching entry the result is 0.  */
+   dataset->resp.result = 0;
+ 
+@@ -568,7 +586,9 @@ addinnetgrX (struct database_dyn *db, int fd, request_header *req,
+       goto out;
+     }
+ 
+-  if (he == NULL)
++  /* addgetnetgrentX may have already sent a notfound response.  Do
++     not send another one.  */
++  if (he == NULL && dataset->resp.found)
+     {
+       /* We write the dataset before inserting it to the database
+ 	 since while inserting this thread might block and so would
+@@ -602,7 +622,7 @@ addinnetgrX (struct database_dyn *db, int fd, request_header *req,
+     }
+ 
+  out:
+-  free (tofree);
++  addgetnetgrentX_scratch_free (&scratch);
+   return timeout;
+ }
+ 
+@@ -612,11 +632,12 @@ addgetnetgrentX_ignore (struct database_dyn *db, int fd, request_header *req,
+ 			const char *key, uid_t uid, struct hashentry *he,
+ 			struct datahead *dh)
+ {
+-  struct dataset *ignore;
+-  void *tofree;
+-  time_t timeout = addgetnetgrentX (db, fd, req, key, uid, he, dh,
+-				    &ignore, &tofree);
+-  free (tofree);
++  struct addgetnetgrentX_scratch scratch;
++  addgetnetgrentX_scratch_init (&scratch);
++  time_t timeout = addgetnetgrentX (db, fd, req, key, uid, he, dh, &scratch);
++  addgetnetgrentX_scratch_free (&scratch);
++  if (timeout < 0)
++    timeout = 0;
+   return timeout;
+ }
+ 
+@@ -660,5 +681,9 @@ readdinnetgr (struct database_dyn *db, struct hashentry *he,
+       .key_len = he->len
+     };
+ 
+-  return addinnetgrX (db, -1, &req, db->data + he->key, he->owner, he, dh);
++  time_t timeout = addinnetgrX (db, -1, &req, db->data + he->key, he->owner,
++				he, dh);
++  if (timeout < 0)
++    timeout = 0;
++  return timeout;
+ }
 diff --git a/nscd/selinux.c b/nscd/selinux.c
 index a4ea8008e2..1ebf924826 100644
 --- a/nscd/selinux.c
@@ -6653,10 +7415,26 @@ index db3335e5ad..8ffa0d1c51 100644
    else if (__builtin_expect (r_type == AARCH64_R(TLSDESC), 1))
      {
 diff --git a/sysdeps/aarch64/memcpy.S b/sysdeps/aarch64/memcpy.S
-index d0d47e90b8..e0b4c4502f 100644
+index d0d47e90b8..d8eb5e7583 100644
 --- a/sysdeps/aarch64/memcpy.S
 +++ b/sysdeps/aarch64/memcpy.S
-@@ -33,11 +33,11 @@
+@@ -1,4 +1,5 @@
+-/* Copyright (C) 2012-2020 Free Software Foundation, Inc.
++/* Generic optimized memcpy using SIMD.
++   Copyright (C) 2012-2022 Free Software Foundation, Inc.
+ 
+    This file is part of the GNU C Library.
+ 
+@@ -20,7 +21,7 @@
+ 
+ /* Assumptions:
+  *
+- * ARMv8-a, AArch64, unaligned accesses.
++ * ARMv8-a, AArch64, Advanced SIMD, unaligned accesses.
+  *
+  */
+ 
+@@ -33,33 +34,20 @@
  #define A_l	x6
  #define A_lw	w6
  #define A_h	x7
@@ -6664,13 +7442,19 @@ index d0d47e90b8..e0b4c4502f 100644
  #define B_l	x8
  #define B_lw	w8
  #define B_h	x9
- #define C_l	x10
+-#define C_l	x10
+-#define C_h	x11
+-#define D_l	x12
+-#define D_h	x13
+-#define E_l	x14
+-#define E_h	x15
+-#define F_l	x16
+-#define F_h	x17
+-#define G_l	count
+-#define G_h	dst
+-#define H_l	src
+-#define H_h	srcend
 +#define C_lw	w10
- #define C_h	x11
- #define D_l	x12
- #define D_h	x13
-@@ -51,16 +51,6 @@
- #define H_h	srcend
  #define tmp1	x14
  
 -/* Copies are split into 3 main cases: small copies of up to 32 bytes,
@@ -6682,11 +7466,18 @@ index d0d47e90b8..e0b4c4502f 100644
 -   and large backwards memmoves are handled by falling through into memcpy.
 -   Overlapping large forward memmoves use a loop that copies backwards.
 -*/
--
++#define A_q	q0
++#define B_q	q1
++#define C_q	q2
++#define D_q	q3
++#define E_q	q4
++#define F_q	q5
++#define G_q	q6
++#define H_q	q7
+ 
  #ifndef MEMMOVE
  # define MEMMOVE memmove
- #endif
-@@ -68,118 +58,115 @@
+@@ -68,212 +56,198 @@
  # define MEMCPY memcpy
  #endif
  
@@ -6714,8 +7505,7 @@ index d0d47e90b8..e0b4c4502f 100644
 +   Large copies use a software pipelined loop processing 64 bytes per
 +   iteration.  The destination pointer is 16-byte aligned to minimize
 +   unaligned accesses.  The loop tail is handled by always copying 64 bytes
-+   from the end.
-+*/
++   from the end.  */
  
 +ENTRY_ALIGN (MEMCPY, 6)
  	DELOUSE (0)
@@ -6733,36 +7523,39 @@ index d0d47e90b8..e0b4c4502f 100644
 +	b.hi	L(copy32_128)
  
 -	/* Medium copies: 33..128 bytes.  */
-+	/* Small copies: 0..32 bytes.  */
-+	cmp	count, 16
-+	b.lo	L(copy16)
- 	ldp	A_l, A_h, [src]
+-	ldp	A_l, A_h, [src]
 -	ldp	B_l, B_h, [src, 16]
 -	ldp	C_l, C_h, [srcend, -32]
- 	ldp	D_l, D_h, [srcend, -16]
+-	ldp	D_l, D_h, [srcend, -16]
 -	cmp	count, 64
 -	b.hi	L(copy128)
- 	stp	A_l, A_h, [dstin]
+-	stp	A_l, A_h, [dstin]
 -	stp	B_l, B_h, [dstin, 16]
 -	stp	C_l, C_h, [dstend, -32]
- 	stp	D_l, D_h, [dstend, -16]
- 	ret
- 
+-	stp	D_l, D_h, [dstend, -16]
+-	ret
+-
 -	.p2align 4
--	/* Small copies: 0..32 bytes.  */
+ 	/* Small copies: 0..32 bytes.  */
 -L(copy32):
 -	/* 16-32 bytes.  */
--	cmp	count, 16
+ 	cmp	count, 16
 -	b.lo	1f
 -	ldp	A_l, A_h, [src]
 -	ldp	B_l, B_h, [srcend, -16]
 -	stp	A_l, A_h, [dstin]
 -	stp	B_l, B_h, [dstend, -16]
--	ret
++	b.lo	L(copy16)
++	ldr	A_q, [src]
++	ldr	B_q, [srcend, -16]
++	str	A_q, [dstin]
++	str	B_q, [dstend, -16]
+ 	ret
 -	.p2align 4
 -1:
 -	/* 8-15 bytes.  */
 -	tbz	count, 3, 1f
++
 +	/* Copy 8-15 bytes.  */
 +L(copy16):
 +	tbz	count, 3, L(copy8)
@@ -6776,7 +7569,6 @@ index d0d47e90b8..e0b4c4502f 100644
 -	/* 4-7 bytes.  */
 -	tbz	count, 2, 1f
 +
-+	.p2align 3
 +	/* Copy 4-7 bytes.  */
 +L(copy8):
 +	tbz	count, 2, L(copy4)
@@ -6811,16 +7603,12 @@ index d0d47e90b8..e0b4c4502f 100644
 +	.p2align 4
 +	/* Medium copies: 33..128 bytes.  */
 +L(copy32_128):
-+	ldp	A_l, A_h, [src]
-+	ldp	B_l, B_h, [src, 16]
-+	ldp	C_l, C_h, [srcend, -32]
-+	ldp	D_l, D_h, [srcend, -16]
++	ldp	A_q, B_q, [src]
++	ldp	C_q, D_q, [srcend, -32]
 +	cmp	count, 64
 +	b.hi	L(copy128)
-+	stp	A_l, A_h, [dstin]
-+	stp	B_l, B_h, [dstin, 16]
-+	stp	C_l, C_h, [dstend, -32]
-+	stp	D_l, D_h, [dstend, -16]
++	stp	A_q, B_q, [dstin]
++	stp	C_q, D_q, [dstend, -32]
 +	ret
  
  	.p2align 4
@@ -6828,52 +7616,75 @@ index d0d47e90b8..e0b4c4502f 100644
 -	   64 bytes from the end.  */
 +	/* Copy 65..128 bytes.  */
  L(copy128):
- 	ldp	E_l, E_h, [src, 32]
- 	ldp	F_l, F_h, [src, 48]
-+	cmp	count, 96
-+	b.ls	L(copy96)
- 	ldp	G_l, G_h, [srcend, -64]
- 	ldp	H_l, H_h, [srcend, -48]
-+	stp	G_l, G_h, [dstend, -64]
-+	stp	H_l, H_h, [dstend, -48]
-+L(copy96):
- 	stp	A_l, A_h, [dstin]
- 	stp	B_l, B_h, [dstin, 16]
- 	stp	E_l, E_h, [dstin, 32]
- 	stp	F_l, F_h, [dstin, 48]
+-	ldp	E_l, E_h, [src, 32]
+-	ldp	F_l, F_h, [src, 48]
+-	ldp	G_l, G_h, [srcend, -64]
+-	ldp	H_l, H_h, [srcend, -48]
+-	stp	A_l, A_h, [dstin]
+-	stp	B_l, B_h, [dstin, 16]
+-	stp	E_l, E_h, [dstin, 32]
+-	stp	F_l, F_h, [dstin, 48]
 -	stp	G_l, G_h, [dstend, -64]
 -	stp	H_l, H_h, [dstend, -48]
- 	stp	C_l, C_h, [dstend, -32]
- 	stp	D_l, D_h, [dstend, -16]
+-	stp	C_l, C_h, [dstend, -32]
+-	stp	D_l, D_h, [dstend, -16]
++	ldp	E_q, F_q, [src, 32]
++	cmp	count, 96
++	b.ls	L(copy96)
++	ldp	G_q, H_q, [srcend, -64]
++	stp	G_q, H_q, [dstend, -64]
++L(copy96):
++	stp	A_q, B_q, [dstin]
++	stp	E_q, F_q, [dstin, 32]
++	stp	C_q, D_q, [dstend, -32]
  	ret
  
 -	/* Align DST to 16 byte alignment so that we don't cross cache line
 -	   boundaries on both loads and stores.  There are at least 128 bytes
 -	   to copy, so copy 16 bytes unaligned and then align.  The loop
 -	   copies 64 bytes per iteration and prefetches one iteration ahead.  */
--
- 	.p2align 4
++	/* Align loop64 below to 16 bytes.  */
++	nop
+ 
+-	.p2align 4
 +	/* Copy more than 128 bytes.  */
  L(copy_long):
-+	/* Copy 16 bytes and then align dst to 16-byte alignment.  */
-+	ldp	D_l, D_h, [src]
- 	and	tmp1, dstin, 15
- 	bic	dst, dstin, 15
+-	and	tmp1, dstin, 15
+-	bic	dst, dstin, 15
 -	ldp	D_l, D_h, [src]
- 	sub	src, src, tmp1
+-	sub	src, src, tmp1
++	/* Copy 16 bytes and then align src to 16-byte alignment.  */
++	ldr	D_q, [src]
++	and	tmp1, src, 15
++	bic	src, src, 15
++	sub	dst, dstin, tmp1
  	add	count, count, tmp1	/* Count is now 16 too large.  */
- 	ldp	A_l, A_h, [src, 16]
-@@ -188,7 +175,8 @@ L(copy_long):
- 	ldp	C_l, C_h, [src, 48]
- 	ldp	D_l, D_h, [src, 64]!
+-	ldp	A_l, A_h, [src, 16]
+-	stp	D_l, D_h, [dstin]
+-	ldp	B_l, B_h, [src, 32]
+-	ldp	C_l, C_h, [src, 48]
+-	ldp	D_l, D_h, [src, 64]!
++	ldp	A_q, B_q, [src, 16]
++	str	D_q, [dstin]
++	ldp	C_q, D_q, [src, 48]
  	subs	count, count, 128 + 16	/* Test and readjust count.  */
 -	b.ls	L(last64)
 +	b.ls	L(copy64_from_end)
-+
  L(loop64):
- 	stp	A_l, A_h, [dst, 16]
- 	ldp	A_l, A_h, [src, 16]
-@@ -201,10 +189,8 @@ L(loop64):
+-	stp	A_l, A_h, [dst, 16]
+-	ldp	A_l, A_h, [src, 16]
+-	stp	B_l, B_h, [dst, 32]
+-	ldp	B_l, B_h, [src, 32]
+-	stp	C_l, C_h, [dst, 48]
+-	ldp	C_l, C_h, [src, 48]
+-	stp	D_l, D_h, [dst, 64]!
+-	ldp	D_l, D_h, [src, 64]!
++	stp	A_q, B_q, [dst, 16]
++	ldp	A_q, B_q, [src, 80]
++	stp	C_q, D_q, [dst, 48]
++	ldp	C_q, D_q, [src, 112]
++	add	src, src, 64
++	add	dst, dst, 64
  	subs	count, count, 64
  	b.hi	L(loop64)
  
@@ -6881,13 +7692,26 @@ index d0d47e90b8..e0b4c4502f 100644
 -	   bytes, so it is safe to always copy 64 bytes from the end even if
 -	   there is just 1 byte left.  */
 -L(last64):
+-	ldp	E_l, E_h, [srcend, -64]
+-	stp	A_l, A_h, [dst, 16]
+-	ldp	A_l, A_h, [srcend, -48]
+-	stp	B_l, B_h, [dst, 32]
+-	ldp	B_l, B_h, [srcend, -32]
+-	stp	C_l, C_h, [dst, 48]
+-	ldp	C_l, C_h, [srcend, -16]
+-	stp	D_l, D_h, [dst, 64]
+-	stp	E_l, E_h, [dstend, -64]
+-	stp	A_l, A_h, [dstend, -48]
+-	stp	B_l, B_h, [dstend, -32]
+-	stp	C_l, C_h, [dstend, -16]
 +	/* Write the last iteration and copy 64 bytes from the end.  */
 +L(copy64_from_end):
- 	ldp	E_l, E_h, [srcend, -64]
- 	stp	A_l, A_h, [dst, 16]
- 	ldp	A_l, A_h, [srcend, -48]
-@@ -219,20 +205,42 @@ L(last64):
- 	stp	C_l, C_h, [dstend, -16]
++	ldp	E_q, F_q, [srcend, -64]
++	stp	A_q, B_q, [dst, 16]
++	ldp	A_q, B_q, [srcend, -32]
++	stp	C_q, D_q, [dst, 48]
++	stp	E_q, F_q, [dstend, -64]
++	stp	A_q, B_q, [dstend, -32]
  	ret
  
 -	.p2align 4
@@ -6912,329 +7736,6 @@ index d0d47e90b8..e0b4c4502f 100644
 -	   boundaries on both loads and stores.  There are at least 128 bytes
 -	   to copy, so copy 16 bytes unaligned and then align.  The loop
 -	   copies 64 bytes per iteration and prefetches one iteration ahead.  */
-+	/* Small copies: 0..32 bytes.  */
-+	cmp	count, 16
-+	b.lo	L(copy16)
-+	ldp	A_l, A_h, [src]
-+	ldp	D_l, D_h, [srcend, -16]
-+	stp	A_l, A_h, [dstin]
-+	stp	D_l, D_h, [dstend, -16]
-+	ret
- 
--	and	tmp1, dstend, 15
-+	.p2align 4
-+L(move_long):
-+	/* Only use backward copy if there is an overlap.  */
-+	sub	tmp1, dstin, src
-+	cbz	tmp1, L(copy0)
-+	cmp	tmp1, count
-+	b.hs	L(copy_long)
-+
-+	/* Large backwards copy for overlapping copies.
-+	   Copy 16 bytes and then align dst to 16-byte alignment.  */
- 	ldp	D_l, D_h, [srcend, -16]
-+	and	tmp1, dstend, 15
- 	sub	srcend, srcend, tmp1
- 	sub	count, count, tmp1
- 	ldp	A_l, A_h, [srcend, -16]
-@@ -242,10 +250,9 @@ L(move_long):
- 	ldp	D_l, D_h, [srcend, -64]!
- 	sub	dstend, dstend, tmp1
- 	subs	count, count, 128
--	b.ls	2f
-+	b.ls	L(copy64_from_start)
- 
--	nop
--1:
-+L(loop64_backwards):
- 	stp	A_l, A_h, [dstend, -16]
- 	ldp	A_l, A_h, [srcend, -16]
- 	stp	B_l, B_h, [dstend, -32]
-@@ -255,12 +262,10 @@ L(move_long):
- 	stp	D_l, D_h, [dstend, -64]!
- 	ldp	D_l, D_h, [srcend, -64]!
- 	subs	count, count, 64
--	b.hi	1b
-+	b.hi	L(loop64_backwards)
- 
--	/* Write the last full set of 64 bytes.  The remainder is at most 64
--	   bytes, so it is safe to always copy 64 bytes from the start even if
--	   there is just 1 byte left.  */
--2:
-+	/* Write the last iteration and copy 64 bytes from the start.  */
-+L(copy64_from_start):
- 	ldp	G_l, G_h, [src, 48]
- 	stp	A_l, A_h, [dstend, -16]
- 	ldp	A_l, A_h, [src, 32]
-@@ -273,7 +278,7 @@ L(move_long):
- 	stp	A_l, A_h, [dstin, 32]
- 	stp	B_l, B_h, [dstin, 16]
- 	stp	C_l, C_h, [dstin]
--3:	ret
-+	ret
- 
--END (MEMCPY)
--libc_hidden_builtin_def (MEMCPY)
-+END (MEMMOVE)
-+libc_hidden_builtin_def (MEMMOVE)
-diff --git a/sysdeps/aarch64/multiarch/Makefile b/sysdeps/aarch64/multiarch/Makefile
-index 8378107c78..3c5292d1a3 100644
---- a/sysdeps/aarch64/multiarch/Makefile
-+++ b/sysdeps/aarch64/multiarch/Makefile
-@@ -1,5 +1,5 @@
- ifeq ($(subdir),string)
--sysdep_routines += memcpy_generic memcpy_thunderx memcpy_thunderx2 \
-+sysdep_routines += memcpy_generic memcpy_advsimd memcpy_thunderx memcpy_thunderx2 \
- 		   memcpy_falkor memmove_falkor \
- 		   memset_generic memset_falkor memset_emag memset_kunpeng \
- 		   memchr_generic memchr_nosimd \
-diff --git a/sysdeps/aarch64/multiarch/ifunc-impl-list.c b/sysdeps/aarch64/multiarch/ifunc-impl-list.c
-index b7da62c3b0..4b004ac47f 100644
---- a/sysdeps/aarch64/multiarch/ifunc-impl-list.c
-+++ b/sysdeps/aarch64/multiarch/ifunc-impl-list.c
-@@ -42,11 +42,13 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
- 	      IFUNC_IMPL_ADD (array, i, memcpy, 1, __memcpy_thunderx)
- 	      IFUNC_IMPL_ADD (array, i, memcpy, 1, __memcpy_thunderx2)
- 	      IFUNC_IMPL_ADD (array, i, memcpy, 1, __memcpy_falkor)
-+	      IFUNC_IMPL_ADD (array, i, memcpy, 1, __memcpy_simd)
- 	      IFUNC_IMPL_ADD (array, i, memcpy, 1, __memcpy_generic))
-   IFUNC_IMPL (i, name, memmove,
- 	      IFUNC_IMPL_ADD (array, i, memmove, 1, __memmove_thunderx)
- 	      IFUNC_IMPL_ADD (array, i, memmove, 1, __memmove_thunderx2)
- 	      IFUNC_IMPL_ADD (array, i, memmove, 1, __memmove_falkor)
-+	      IFUNC_IMPL_ADD (array, i, memmove, 1, __memmove_simd)
- 	      IFUNC_IMPL_ADD (array, i, memmove, 1, __memmove_generic))
-   IFUNC_IMPL (i, name, memset,
- 	      /* Enable this on non-falkor processors too so that other cores
-diff --git a/sysdeps/aarch64/multiarch/memcpy.c b/sysdeps/aarch64/multiarch/memcpy.c
-index 2fafefd5d2..799d60c98c 100644
---- a/sysdeps/aarch64/multiarch/memcpy.c
-+++ b/sysdeps/aarch64/multiarch/memcpy.c
-@@ -29,6 +29,7 @@
- extern __typeof (__redirect_memcpy) __libc_memcpy;
- 
- extern __typeof (__redirect_memcpy) __memcpy_generic attribute_hidden;
-+extern __typeof (__redirect_memcpy) __memcpy_simd attribute_hidden;
- extern __typeof (__redirect_memcpy) __memcpy_thunderx attribute_hidden;
- extern __typeof (__redirect_memcpy) __memcpy_thunderx2 attribute_hidden;
- extern __typeof (__redirect_memcpy) __memcpy_falkor attribute_hidden;
-@@ -36,11 +37,14 @@ extern __typeof (__redirect_memcpy) __memcpy_falkor attribute_hidden;
- libc_ifunc (__libc_memcpy,
-             (IS_THUNDERX (midr)
- 	     ? __memcpy_thunderx
--	     : (IS_FALKOR (midr) || IS_PHECDA (midr) || IS_ARES (midr) || IS_KUNPENG920 (midr)
-+	     : (IS_FALKOR (midr) || IS_PHECDA (midr) || IS_KUNPENG920 (midr)
- 		? __memcpy_falkor
- 		: (IS_THUNDERX2 (midr) || IS_THUNDERX2PA (midr)
- 		  ? __memcpy_thunderx2
--		  : __memcpy_generic))));
-+		  : (IS_NEOVERSE_N1 (midr) || IS_NEOVERSE_N2 (midr)
-+		     || IS_NEOVERSE_V1 (midr)
-+		     ? __memcpy_simd
-+		     : __memcpy_generic)))));
- 
- # undef memcpy
- strong_alias (__libc_memcpy, memcpy);
-diff --git a/sysdeps/aarch64/multiarch/memcpy_advsimd.S b/sysdeps/aarch64/multiarch/memcpy_advsimd.S
-new file mode 100644
-index 0000000000..48bb6d7ca4
---- /dev/null
-+++ b/sysdeps/aarch64/multiarch/memcpy_advsimd.S
-@@ -0,0 +1,248 @@
-+/* Generic optimized memcpy using SIMD.
-+   Copyright (C) 2020 Free Software Foundation, Inc.
-+
-+   This file is part of the GNU C Library.
-+
-+   The GNU C Library is free software; you can redistribute it and/or
-+   modify it under the terms of the GNU Lesser General Public
-+   License as published by the Free Software Foundation; either
-+   version 2.1 of the License, or (at your option) any later version.
-+
-+   The GNU C Library is distributed in the hope that it will be useful,
-+   but WITHOUT ANY WARRANTY; without even the implied warranty of
-+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+   Lesser General Public License for more details.
-+
-+   You should have received a copy of the GNU Lesser General Public
-+   License along with the GNU C Library.  If not, see
-+   <https://www.gnu.org/licenses/>.  */
-+
-+#include <sysdep.h>
-+
-+/* Assumptions:
-+ *
-+ * ARMv8-a, AArch64, Advanced SIMD, unaligned accesses.
-+ *
-+ */
-+
-+#define dstin	x0
-+#define src	x1
-+#define count	x2
-+#define dst	x3
-+#define srcend	x4
-+#define dstend	x5
-+#define A_l	x6
-+#define A_lw	w6
-+#define A_h	x7
-+#define B_l	x8
-+#define B_lw	w8
-+#define B_h	x9
-+#define C_lw	w10
-+#define tmp1	x14
-+
-+#define A_q	q0
-+#define B_q	q1
-+#define C_q	q2
-+#define D_q	q3
-+#define E_q	q4
-+#define F_q	q5
-+#define G_q	q6
-+#define H_q	q7
-+
-+
-+/* This implementation supports both memcpy and memmove and shares most code.
-+   It uses unaligned accesses and branchless sequences to keep the code small,
-+   simple and improve performance.
-+
-+   Copies are split into 3 main cases: small copies of up to 32 bytes, medium
-+   copies of up to 128 bytes, and large copies.  The overhead of the overlap
-+   check in memmove is negligible since it is only required for large copies.
-+
-+   Large copies use a software pipelined loop processing 64 bytes per
-+   iteration.  The destination pointer is 16-byte aligned to minimize
-+   unaligned accesses.  The loop tail is handled by always copying 64 bytes
-+   from the end.  */
-+
-+ENTRY (__memcpy_simd)
-+	DELOUSE (0)
-+	DELOUSE (1)
-+	DELOUSE (2)
-+
-+	add	srcend, src, count
-+	add	dstend, dstin, count
-+	cmp	count, 128
-+	b.hi	L(copy_long)
-+	cmp	count, 32
-+	b.hi	L(copy32_128)
-+
-+	/* Small copies: 0..32 bytes.  */
-+	cmp	count, 16
-+	b.lo	L(copy16)
-+	ldr	A_q, [src]
-+	ldr	B_q, [srcend, -16]
-+	str	A_q, [dstin]
-+	str	B_q, [dstend, -16]
-+	ret
-+
-+	/* Copy 8-15 bytes.  */
-+L(copy16):
-+	tbz	count, 3, L(copy8)
-+	ldr	A_l, [src]
-+	ldr	A_h, [srcend, -8]
-+	str	A_l, [dstin]
-+	str	A_h, [dstend, -8]
-+	ret
-+
-+	/* Copy 4-7 bytes.  */
-+L(copy8):
-+	tbz	count, 2, L(copy4)
-+	ldr	A_lw, [src]
-+	ldr	B_lw, [srcend, -4]
-+	str	A_lw, [dstin]
-+	str	B_lw, [dstend, -4]
-+	ret
-+
-+	/* Copy 0..3 bytes using a branchless sequence.  */
-+L(copy4):
-+	cbz	count, L(copy0)
-+	lsr	tmp1, count, 1
-+	ldrb	A_lw, [src]
-+	ldrb	C_lw, [srcend, -1]
-+	ldrb	B_lw, [src, tmp1]
-+	strb	A_lw, [dstin]
-+	strb	B_lw, [dstin, tmp1]
-+	strb	C_lw, [dstend, -1]
-+L(copy0):
-+	ret
-+
-+	.p2align 4
-+	/* Medium copies: 33..128 bytes.  */
-+L(copy32_128):
-+	ldp	A_q, B_q, [src]
-+	ldp	C_q, D_q, [srcend, -32]
-+	cmp	count, 64
-+	b.hi	L(copy128)
-+	stp	A_q, B_q, [dstin]
-+	stp	C_q, D_q, [dstend, -32]
-+	ret
-+
-+	.p2align 4
-+	/* Copy 65..128 bytes.  */
-+L(copy128):
-+	ldp	E_q, F_q, [src, 32]
-+	cmp	count, 96
-+	b.ls	L(copy96)
-+	ldp	G_q, H_q, [srcend, -64]
-+	stp	G_q, H_q, [dstend, -64]
-+L(copy96):
-+	stp	A_q, B_q, [dstin]
-+	stp	E_q, F_q, [dstin, 32]
-+	stp	C_q, D_q, [dstend, -32]
-+	ret
-+
-+	/* Align loop64 below to 16 bytes.  */
-+	nop
-+
-+	/* Copy more than 128 bytes.  */
-+L(copy_long):
-+	/* Copy 16 bytes and then align src to 16-byte alignment.  */
-+	ldr	D_q, [src]
-+	and	tmp1, src, 15
-+	bic	src, src, 15
-+	sub	dst, dstin, tmp1
-+	add	count, count, tmp1	/* Count is now 16 too large.  */
-+	ldp	A_q, B_q, [src, 16]
-+	str	D_q, [dstin]
-+	ldp	C_q, D_q, [src, 48]
-+	subs	count, count, 128 + 16	/* Test and readjust count.  */
-+	b.ls	L(copy64_from_end)
-+L(loop64):
-+	stp	A_q, B_q, [dst, 16]
-+	ldp	A_q, B_q, [src, 80]
-+	stp	C_q, D_q, [dst, 48]
-+	ldp	C_q, D_q, [src, 112]
-+	add	src, src, 64
-+	add	dst, dst, 64
-+	subs	count, count, 64
-+	b.hi	L(loop64)
-+
-+	/* Write the last iteration and copy 64 bytes from the end.  */
-+L(copy64_from_end):
-+	ldp	E_q, F_q, [srcend, -64]
-+	stp	A_q, B_q, [dst, 16]
-+	ldp	A_q, B_q, [srcend, -32]
-+	stp	C_q, D_q, [dst, 48]
-+	stp	E_q, F_q, [dstend, -64]
-+	stp	A_q, B_q, [dstend, -32]
-+	ret
-+
-+END (__memcpy_simd)
-+libc_hidden_builtin_def (__memcpy_simd)
-+
-+
-+ENTRY (__memmove_simd)
-+	DELOUSE (0)
-+	DELOUSE (1)
-+	DELOUSE (2)
-+
-+	add	srcend, src, count
-+	add	dstend, dstin, count
-+	cmp	count, 128
-+	b.hi	L(move_long)
-+	cmp	count, 32
-+	b.hi	L(copy32_128)
-+
 +	/* Small moves: 0..32 bytes.  */
 +	cmp	count, 16
 +	b.lo	L(copy16)
@@ -7243,7 +7744,10 @@ index 0000000000..48bb6d7ca4
 +	str	A_q, [dstin]
 +	str	B_q, [dstend, -16]
 +	ret
-+
+ 
+-	and	tmp1, dstend, 15
+-	ldp	D_l, D_h, [srcend, -16]
+-	sub	srcend, srcend, tmp1
 +L(move_long):
 +	/* Only use backward copy if there is an overlap.  */
 +	sub	tmp1, dstin, src
@@ -7257,12 +7761,29 @@ index 0000000000..48bb6d7ca4
 +	ldr	D_q, [srcend, -16]
 +	and	tmp1, srcend, 15
 +	bic	srcend, srcend, 15
-+	sub	count, count, tmp1
+ 	sub	count, count, tmp1
+-	ldp	A_l, A_h, [srcend, -16]
+-	stp	D_l, D_h, [dstend, -16]
+-	ldp	B_l, B_h, [srcend, -32]
+-	ldp	C_l, C_h, [srcend, -48]
+-	ldp	D_l, D_h, [srcend, -64]!
 +	ldp	A_q, B_q, [srcend, -32]
 +	str	D_q, [dstend, -16]
 +	ldp	C_q, D_q, [srcend, -64]
-+	sub	dstend, dstend, tmp1
-+	subs	count, count, 128
+ 	sub	dstend, dstend, tmp1
+ 	subs	count, count, 128
+-	b.ls	2f
+-
+-	nop
+-1:
+-	stp	A_l, A_h, [dstend, -16]
+-	ldp	A_l, A_h, [srcend, -16]
+-	stp	B_l, B_h, [dstend, -32]
+-	ldp	B_l, B_h, [srcend, -32]
+-	stp	C_l, C_h, [dstend, -48]
+-	ldp	C_l, C_h, [srcend, -48]
+-	stp	D_l, D_h, [dstend, -64]!
+-	ldp	D_l, D_h, [srcend, -64]!
 +	b.ls	L(copy64_from_start)
 +
 +L(loop64_backwards):
@@ -7273,7 +7794,26 @@ index 0000000000..48bb6d7ca4
 +	str	C_q, [dstend, -64]!
 +	ldp	C_q, D_q, [srcend, -128]
 +	sub	srcend, srcend, 64
-+	subs	count, count, 64
+ 	subs	count, count, 64
+-	b.hi	1b
+-
+-	/* Write the last full set of 64 bytes.  The remainder is at most 64
+-	   bytes, so it is safe to always copy 64 bytes from the start even if
+-	   there is just 1 byte left.  */
+-2:
+-	ldp	G_l, G_h, [src, 48]
+-	stp	A_l, A_h, [dstend, -16]
+-	ldp	A_l, A_h, [src, 32]
+-	stp	B_l, B_h, [dstend, -32]
+-	ldp	B_l, B_h, [src, 16]
+-	stp	C_l, C_h, [dstend, -48]
+-	ldp	C_l, C_h, [src]
+-	stp	D_l, D_h, [dstend, -64]
+-	stp	G_l, G_h, [dstin, 48]
+-	stp	A_l, A_h, [dstin, 32]
+-	stp	B_l, B_h, [dstin, 16]
+-	stp	C_l, C_h, [dstin]
+-3:	ret
 +	b.hi	L(loop64_backwards)
 +
 +	/* Write the last iteration and copy 64 bytes from the start.  */
@@ -7286,33 +7826,24 @@ index 0000000000..48bb6d7ca4
 +	stp	A_q, B_q, [dstin]
 +L(move0):
 +	ret
-+
-+END (__memmove_simd)
-+libc_hidden_builtin_def (__memmove_simd)
-diff --git a/sysdeps/aarch64/multiarch/memmove.c b/sysdeps/aarch64/multiarch/memmove.c
-index ed5a47f6f8..46a4cb3a54 100644
---- a/sysdeps/aarch64/multiarch/memmove.c
-+++ b/sysdeps/aarch64/multiarch/memmove.c
-@@ -29,6 +29,7 @@
- extern __typeof (__redirect_memmove) __libc_memmove;
  
- extern __typeof (__redirect_memmove) __memmove_generic attribute_hidden;
-+extern __typeof (__redirect_memmove) __memmove_simd attribute_hidden;
- extern __typeof (__redirect_memmove) __memmove_thunderx attribute_hidden;
- extern __typeof (__redirect_memmove) __memmove_thunderx2 attribute_hidden;
- extern __typeof (__redirect_memmove) __memmove_falkor attribute_hidden;
-@@ -40,7 +41,10 @@ libc_ifunc (__libc_memmove,
- 		? __memmove_falkor
+-END (MEMCPY)
+-libc_hidden_builtin_def (MEMCPY)
++END (MEMMOVE)
++libc_hidden_builtin_def (MEMMOVE)
+diff --git a/sysdeps/aarch64/multiarch/memcpy.c b/sysdeps/aarch64/multiarch/memcpy.c
+index 2fafefd5d2..eb6e94a005 100644
+--- a/sysdeps/aarch64/multiarch/memcpy.c
++++ b/sysdeps/aarch64/multiarch/memcpy.c
+@@ -36,7 +36,7 @@ extern __typeof (__redirect_memcpy) __memcpy_falkor attribute_hidden;
+ libc_ifunc (__libc_memcpy,
+             (IS_THUNDERX (midr)
+ 	     ? __memcpy_thunderx
+-	     : (IS_FALKOR (midr) || IS_PHECDA (midr) || IS_ARES (midr) || IS_KUNPENG920 (midr)
++	     : (IS_FALKOR (midr) || IS_PHECDA (midr) || IS_KUNPENG920 (midr)
+ 		? __memcpy_falkor
  		: (IS_THUNDERX2 (midr) || IS_THUNDERX2PA (midr)
- 		  ? __memmove_thunderx2
--		  : __memmove_generic))));
-+		  : (IS_NEOVERSE_N1 (midr) || IS_NEOVERSE_N2 (midr)
-+		     || IS_NEOVERSE_V1 (midr)
-+		     ? __memmove_simd
-+		     : __memmove_generic)))));
- 
- # undef memmove
- strong_alias (__libc_memmove, memmove);
+ 		  ? __memcpy_thunderx2
 diff --git a/sysdeps/aarch64/strcpy.S b/sysdeps/aarch64/strcpy.S
 index 548130e413..a8ff52c072 100644
 --- a/sysdeps/aarch64/strcpy.S
@@ -7675,6 +8206,20 @@ index 0000000000..d712e5e11d
 +}
 +
 +#endif
+diff --git a/sysdeps/gnu/Makefile b/sysdeps/gnu/Makefile
+index 97fcb6fb90..26dc91d90a 100644
+--- a/sysdeps/gnu/Makefile
++++ b/sysdeps/gnu/Makefile
+@@ -54,8 +54,7 @@ $(objpfx)errlist-compat.h: $(objpfx)errlist-compat.c
+ generated += errlist-compat.c errlist-compat.h
+ 
+ # This will force the generation above to happy if need be.
+-$(foreach o,$(object-suffixes) $(object-suffixes:=.d),\
+-	  $(objpfx)errlist$o): $(objpfx)errlist-compat.h
++$(foreach o,$(object-suffixes),$(objpfx)errlist$o): $(objpfx)errlist-compat.h
+ endif
+ 
+ ifeq ($(subdir),login)
 diff --git a/sysdeps/hppa/dl-fptr.c b/sysdeps/hppa/dl-fptr.c
 index 0a37397284..25ca8f8463 100644
 --- a/sysdeps/hppa/dl-fptr.c
@@ -11456,10 +12001,75 @@ index 95182a508c..b7aec5df2b 100644
  
  ifeq ($(enable-cet),yes)
 diff --git a/sysdeps/x86/cacheinfo.c b/sysdeps/x86/cacheinfo.c
-index e3e8ef27bb..39c13b7195 100644
+index e3e8ef27bb..17db517830 100644
 --- a/sysdeps/x86/cacheinfo.c
 +++ b/sysdeps/x86/cacheinfo.c
-@@ -722,7 +722,7 @@ intel_bug_no_cache_info:
+@@ -494,6 +494,7 @@ init_cacheinfo (void)
+   int max_cpuid_ex;
+   long int data = -1;
+   long int shared = -1;
++  long int shared_per_thread = -1;
+   unsigned int level;
+   unsigned int threads = 0;
+   const struct cpu_features *cpu_features = __get_cpu_features ();
+@@ -509,7 +510,7 @@ init_cacheinfo (void)
+       /* Try L3 first.  */
+       level  = 3;
+       shared = handle_intel (_SC_LEVEL3_CACHE_SIZE, cpu_features);
+-
++      shared_per_thread = shared;
+       /* Number of logical processors sharing L2 cache.  */
+       int threads_l2;
+ 
+@@ -521,6 +522,7 @@ init_cacheinfo (void)
+ 	  /* Try L2 otherwise.  */
+ 	  level  = 2;
+ 	  shared = core;
++      shared_per_thread = core;
+ 	  threads_l2 = 0;
+ 	  threads_l3 = -1;
+ 	}
+@@ -688,15 +690,15 @@ intel_bug_no_cache_info:
+ 
+ 	  /* Cap usage of highest cache level to the number of supported
+ 	     threads.  */
+-	  if (shared > 0 && threads > 0)
+-	    shared /= threads;
++	  if (shared_per_thread > 0 && threads > 0)
++	    shared_per_thread /= threads;
+ 	}
+ 
+       /* Account for non-inclusive L2 and L3 caches.  */
+       if (!inclusive_cache)
+ 	{
+-	  if (threads_l2 > 0)
+-	    core /= threads_l2;
++      long int core_per_thread = threads_l2 > 0 ? (core / threads_l2) : core;
++      shared_per_thread += core_per_thread;
+ 	  shared += core;
+ 	}
+     }
+@@ -705,13 +707,17 @@ intel_bug_no_cache_info:
+       data   = handle_amd (_SC_LEVEL1_DCACHE_SIZE);
+       long int core = handle_amd (_SC_LEVEL2_CACHE_SIZE);
+       shared = handle_amd (_SC_LEVEL3_CACHE_SIZE);
++      shared_per_thread = shared;
+ 
+       /* Get maximum extended function. */
+       __cpuid (0x80000000, max_cpuid_ex, ebx, ecx, edx);
+ 
+       if (shared <= 0)
+-	/* No shared L3 cache.  All we have is the L2 cache.  */
+-	shared = core;
++	{
++	  /* No shared L3 cache.  All we have is the L2 cache.  */
++	  shared = core;
++	  shared_per_thread = core;
++	}
+       else
+ 	{
+ 	  /* Figure out the number of logical threads that share L3.  */
+@@ -722,7 +728,7 @@ intel_bug_no_cache_info:
  	      threads = 1 << ((ecx >> 12) & 0x0f);
  	    }
  
@@ -11468,9 +12078,12 @@ index e3e8ef27bb..39c13b7195 100644
  	    {
  	      /* If APIC ID width is not available, use logical
  		 processor count.  */
-@@ -737,8 +737,22 @@ intel_bug_no_cache_info:
+@@ -735,10 +741,25 @@ intel_bug_no_cache_info:
+ 	  /* Cap usage of highest cache level to the number of
+ 	     supported threads.  */
  	  if (threads > 0)
- 	    shared /= threads;
+-	    shared /= threads;
++	    shared_per_thread /= threads;
  
 -	  /* Account for exclusive L2 and L3 caches.  */
 -	  shared += core;
@@ -11483,39 +12096,78 @@ index e3e8ef27bb..39c13b7195 100644
 +	      __cpuid_count (0x8000001D, 0x3, eax, ebx, ecx, edx);
 +
 +	      unsigned int threads_per_ccx = ((eax >> 14) & 0xfff) + 1;
-+	      shared *= threads_per_ccx;
++	      shared_per_thread *= threads_per_ccx;
 +	    }
 +	  else
 +	    {
 +	      /* Account for exclusive L2 and L3 caches.  */
 +	      shared += core;
++          shared_per_thread += core;
 +            }
  	}
  
  #ifndef DISABLE_PREFETCHW
-@@ -778,14 +792,20 @@ intel_bug_no_cache_info:
-       __x86_shared_cache_size = shared;
+@@ -766,26 +787,51 @@ intel_bug_no_cache_info:
+     }
+ 
+   if (cpu_features->shared_cache_size != 0)
+-    shared = cpu_features->shared_cache_size;
++    shared_per_thread = cpu_features->shared_cache_size;
+ 
+-  if (shared > 0)
++  if (shared_per_thread > 0)
+     {
+-      __x86_raw_shared_cache_size_half = shared / 2;
+-      __x86_raw_shared_cache_size = shared;
++      __x86_raw_shared_cache_size_half = shared_per_thread / 2;
++      __x86_raw_shared_cache_size = shared_per_thread;
+       /* Round shared cache size to multiple of 256 bytes.  */
+-      shared = shared & ~255L;
+-      __x86_shared_cache_size_half = shared / 2;
+-      __x86_shared_cache_size = shared;
++      shared_per_thread = shared_per_thread & ~255L;
++      __x86_shared_cache_size_half = shared_per_thread / 2;
++      __x86_shared_cache_size = shared_per_thread;
      }
  
 -  /* The large memcpy micro benchmark in glibc shows that 6 times of
 -     shared cache size is the approximate value above which non-temporal
 -     store becomes faster on a 8-core processor.  This is the 3/4 of the
 -     total shared cache size.  */
-+  /* The default setting for the non_temporal threshold is 3/4 of one
-+     thread's share of the chip's cache. For most Intel and AMD processors
-+     with an initial release date between 2017 and 2020, a thread's typical
-+     share of the cache is from 500 KBytes to 2 MBytes. Using the 3/4
-+     threshold leaves 125 KBytes to 500 KBytes of the thread's data
-+     in cache after a maximum temporal copy, which will maintain
-+     in cache a reasonable portion of the thread's stack and other
-+     active data. If the threshold is set higher than one thread's
-+     share of the cache, it has a substantial risk of negatively
-+     impacting the performance of other threads running on the chip. */
++  /* The default setting for the non_temporal threshold is [1/8, 1/2] of size
++     of the chip's cache (depending on `cachesize_non_temporal_divisor` which
++     is microarch specific. The default is 1/4). For most Intel processors
++     with an initial release date between 2017 and 2023, a thread's
++     typical share of the cache is from 18-64MB. Using a reasonable size
++     fraction of L3 is meant to estimate the point where non-temporal stores
++     begin out-competing REP MOVSB. As well the point where the fact that
++     non-temporal stores are forced back to main memory would already occurred
++     to the majority of the lines in the copy. Note, concerns about the entire
++     L3 cache being evicted by the copy are mostly alleviated by the fact that
++     modern HW detects streaming patterns and provides proper LRU hints so that
++     the maximum thrashing capped at 1/associativity. */
++  unsigned long int non_temporal_threshold = shared / 4;
++
++  /* If the computed non_temporal_threshold <= 3/4 * per-thread L3, we most
++     likely have incorrect/incomplete cache info in which case, default to
++     3/4 * per-thread L3 to avoid regressions.  */
++  unsigned long int non_temporal_threshold_lowbound
++      = shared_per_thread * 3 / 4;
++  if (non_temporal_threshold < non_temporal_threshold_lowbound)
++    non_temporal_threshold = non_temporal_threshold_lowbound;
++
++  /* If no ERMS, we use the per-thread L3 chunking. Normal cacheable stores run
++     a higher risk of actually thrashing the cache as they don't have a HW LRU
++     hint. As well, their performance in highly parallel situations is
++     noticeably worse.  */
++  if (!CPU_FEATURES_CPU_P (cpu_features, ERMS))
++    non_temporal_threshold = non_temporal_threshold_lowbound;
++
    __x86_shared_non_temporal_threshold
      = (cpu_features->non_temporal_threshold != 0
         ? cpu_features->non_temporal_threshold
 -       : __x86_shared_cache_size * threads * 3 / 4);
-+       : __x86_shared_cache_size * 3 / 4);
++       : non_temporal_threshold);
  }
  
  #endif
@@ -12554,6 +13206,29 @@ index 8e9baffeb4..74029871d8 100644
  	    }
  # endif
  	  value = ((ElfW(Addr) (*) (void)) value) ();
+diff --git a/sysdeps/x86_64/ffsll.c b/sysdeps/x86_64/ffsll.c
+index 594ee5c681..e056ac4b4f 100644
+--- a/sysdeps/x86_64/ffsll.c
++++ b/sysdeps/x86_64/ffsll.c
+@@ -27,13 +27,13 @@ int
+ ffsll (long long int x)
+ {
+   long long int cnt;
+-  long long int tmp;
+ 
+-  asm ("bsfq %2,%0\n"		/* Count low bits in X and store in %1.  */
+-       "cmoveq %1,%0\n"		/* If number was zero, use -1 as result.  */
+-       : "=&r" (cnt), "=r" (tmp) : "rm" (x), "1" (-1));
++  asm ("mov $-1,%k0\n"	/* Initialize cnt to -1.  */
++       "bsf %1,%0\n"	/* Count low bits in x and store in cnt.  */
++       "inc %k0\n"	/* Increment cnt by 1.  */
++       : "=&r" (cnt) : "r" (x));
+ 
+-  return cnt + 1;
++  return cnt;
+ }
+ 
+ #ifndef __ILP32__
 diff --git a/sysdeps/x86_64/memchr.S b/sysdeps/x86_64/memchr.S
 index a5c879d2af..070e5ef90b 100644
 --- a/sysdeps/x86_64/memchr.S

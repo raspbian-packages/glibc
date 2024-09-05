@@ -1,4 +1,4 @@
-glibc (2.31-13+rpi1+deb11u8) bullseye-staging; urgency=medium
+glibc (2.31-13+rpi1+deb11u11) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -13,7 +13,45 @@ glibc (2.31-13+rpi1+deb11u8) bullseye-staging; urgency=medium
   * Change mode on sysdeps/x86_64/configure to 644, same dgit issue
     as above.
  
- -- Raspbian forward porter <root@raspbian.org>  Thu, 15 Feb 2024 22:29:51 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 05 Sep 2024 20:20:00 +0000
+
+glibc (2.31-13+deb11u11) bullseye; urgency=medium
+
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - debian/patches/any/local-CVE-2024-2961-iso-2022-cn-ext.patch: upstreamed.
+    - debian/patches/any/local-CVE-2024-33599-nscd.patch: upstreamed.
+    - debian/patches/any/local-CVE-2024-33600-nscd.patch: upstreamed.
+    - debian/patches/any/local-CVE-2024-33601-33602-nscd.diff: upstreamed.
+    - Fixes ffsll() performance issue depending on code alignment.
+    - Performance improvements for memcpy() on arm64.
+    - Fixes y2038 regression in nscd following CVE-2024-33601 and
+      CVE-2024-33602 fix.
+    - Fix compatibility with make 4.4.
+    - Fixes build with --enable-hardcoded-path-in-tests with newer linkers.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Thu, 15 Aug 2024 11:21:36 +0200
+
+glibc (2.31-13+deb11u10) bullseye-security; urgency=medium
+
+  * debian/patches/local-CVE-2024-33599-nscd.patch: Fix a stack-based buffer
+    overflow in nscd netgroup cache (CVE-2024-33599).
+  * debian/patches/local-CVE-2024-33600-nscd.patch: Fix a null pointer
+    dereferences in nscd after failed netgroup cache insertion
+    (CVE-2024-33600).
+  * debian/patches/any/local-CVE-2024-33601-33602-nscd.patch: Fix a DoS in nscd
+    in case of memory allocation failure (CVE-2024-33601) and a memory
+    corruption in nscd when the underlying NSS callback function does not use
+    the buffer space to store all strings (CVE-2024-33602).
+
+ -- Aurelien Jarno <aurel32@debian.org>  Tue, 30 Apr 2024 23:57:11 +0200
+
+glibc (2.31-13+deb11u9) bullseye-security; urgency=medium
+
+  * debian/patches/any/local-CVE-2024-2961-iso-2022-cn-ext.patch: Fix
+    out-of-bound writes when writing escape sequence in iconv ISO-2022-CN-EXT
+    module (CVE-2024-2961).  Closes: #1069191.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Fri, 19 Apr 2024 22:40:26 +0200
 
 glibc (2.31-13+deb11u8) bullseye; urgency=medium
 
