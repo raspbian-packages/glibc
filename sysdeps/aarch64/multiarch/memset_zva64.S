@@ -1,5 +1,5 @@
-/* Memset for aarch64, for the dynamic linker.
-   Copyright (C) 2017-2022 Free Software Foundation, Inc.
+/* Optimized memset for zva size = 64.
+   Copyright (C) 2023 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -19,7 +19,9 @@
 
 #include <sysdep.h>
 
-#if IS_IN (rtld)
-# define MEMSET memset
-# include <sysdeps/aarch64/memset.S>
-#endif
+#define ZVA64_ONLY 1
+#define MEMSET __memset_zva64
+#undef libc_hidden_builtin_def
+#define libc_hidden_builtin_def(X)
+
+#include "../memset.S"

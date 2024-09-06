@@ -1,4 +1,4 @@
-glibc (2.36-9+rpi1+deb12u4) bookworm-staging; urgency=medium
+glibc (2.36-9+rpi1+deb12u8) bookworm-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -6,7 +6,80 @@ glibc (2.36-9+rpi1+deb12u4) bookworm-staging; urgency=medium
   [changes brought forward from 2.35-1+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Sun, 02 Oct 2022 17:46:25 +0000]
   * Remove valgrind breaks.
 
- -- Raspbian forward porter <root@raspbian.org>  Tue, 06 Feb 2024 22:41:45 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Fri, 06 Sep 2024 01:39:01 +0000
+
+glibc (2.36-9+deb12u8) bookworm; urgency=medium
+
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - debian/patches/kfreebsd/submitted-auxv.diff: refreshed.
+    - debian/patches/any/local-CVE-2024-2961-iso-2022-cn-ext.diff: upstreamed.
+    - debian/patches/any/local-CVE-2024-33599-nscd.diff: upstreamed.
+    - debian/patches/any/local-CVE-2024-33600-nscd.diff: upstreamed.
+    - debian/patches/any/local-CVE-2024-33601-33602-nscd.diff: upstreamed.
+    - Fixes ffsll() performance issue depending on code alignment.
+    - Fixes memmove/memset on sparc32.
+    - Fixes pthread_cancel on sparc32.
+    - Fixes a possible crash in _dl_start_user on arm32.
+    - Fixes poor malloc/free performance due to lock contentions between
+      threads when using core pinning.
+    - Uses 64-bit time_t in testsuite on 32-bit systems.
+    - Fixes rseq support when built against newer kernel headers.
+    - Performance improvements for string functions on arm64.
+    - Disables arm64 SVE functions on kernel <= 6.2.0 due to performance
+      issues.
+    - Fixes ld.so crash on powerpc64* when built with GCC 14.
+    - Fixes ld.so crash on amd64 when built with APX enabled.
+    - Fixes __WORDSIZE definition on sparc32 with sparcv9.
+    - Fixes getutxent() on 32-bit architecture with _TIME_BITS=64.
+    - Fixes y2038 regression in nscd following CVE-2024-33601 and
+      CVE-2024-33602 fix.
+    - Fixes build with --enable-hardcoded-path-in-tests with newer linkers.
+    - Fixes crash in wcsncmp() in z13/vector-optimized s390 implementation.
+    - Fixes rseq extension mechanism.
+    - Fixes misc/tst-preadvwritev2 and misc/tst-preadvwritev64v2 with kernel
+      6.9+.
+    - Fixes freeing uninitialized memory in libc_freeres_fn().  Closes:
+      #1073916.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Thu, 15 Aug 2024 11:10:46 +0200
+
+glibc (2.36-9+deb12u7) bookworm-security; urgency=medium
+
+  * debian/patches/local-CVE-2024-33599-nscd.diff: Fix a stack-based buffer
+    overflow in nscd netgroup cache (CVE-2024-33599).
+  * debian/patches/local-CVE-2024-33600-nscd.diff: Fix a null pointer
+    dereferences in nscd after failed netgroup cache insertion
+    (CVE-2024-33600).
+  * debian/patches/any/local-CVE-2024-33601-33602-nscd.diff: Fix a DoS in nscd
+    in case of memory allocation failure (CVE-2024-33601) and a memory
+    corruption in nscd when the underlying NSS callback function does not use
+    the buffer space to store all strings (CVE-2024-33602).
+
+ -- Aurelien Jarno <aurel32@debian.org>  Tue, 30 Apr 2024 23:07:28 +0200
+
+glibc (2.36-9+deb12u6) bookworm-security; urgency=medium
+
+  * debian/patches/any/local-CVE-2024-2961-iso-2022-cn-ext.diff: Fix
+    out-of-bound writes when writing escape sequence in iconv ISO-2022-CN-EXT
+    module (CVE-2024-2961).  Closes: #1069191.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Fri, 19 Apr 2024 18:34:04 +0200
+
+glibc (2.36-9+deb12u5) bookworm; urgency=medium
+
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - any/local-CVE-2023-4911.patch: upstreamed.
+    - any/local-CVE-2023-6246.patch: upstreamed.
+    - any/local-CVE-2023-6779.patch: upstreamed.
+    - any/local-CVE-2023-6780.patch: upstreamed.
+    - Revert fix to always call destructors in reverse constructor order due
+      to unforeseen application compatibility issues.
+    - Fix a DTV corruption due to a reuse of a TLS module ID following dlclose
+      with unused TLS.
+    - Fix the DTV field load on x32.
+    - Fix the TCB field load on x32.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 24 Mar 2024 13:07:31 +0100
 
 glibc (2.36-9+deb12u4) bookworm-security; urgency=medium
 
