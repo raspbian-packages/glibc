@@ -972,6 +972,11 @@ double: 2
 float: 1
 ldouble: 3
 
+Function: "exp10m1":
+double: 2
+float: 1
+ldouble: 1
+
 Function: "exp2":
 double: 1
 ldouble: 1
@@ -988,6 +993,11 @@ Function: "exp2_upward":
 double: 1
 float: 1
 ldouble: 2
+
+Function: "exp2m1":
+double: 1
+float: 1
+ldouble: 1
 
 Function: "exp_downward":
 double: 1
@@ -1043,6 +1053,7 @@ ldouble: 8
 
 Function: "hypot":
 double: 1
+float: 1
 ldouble: 1
 
 Function: "hypot_downward":
@@ -1160,6 +1171,11 @@ double: 2
 float: 2
 ldouble: 1
 
+Function: "log10p1":
+double: 1
+float: 1
+ldouble: 3
+
 Function: "log1p":
 double: 1
 float: 1
@@ -1197,6 +1213,11 @@ Function: "log2_upward":
 double: 3
 ldouble: 1
 
+Function: "log2p1":
+double: 1
+float: 1
+ldouble: 3
+
 Function: "log_downward":
 ldouble: 1
 
@@ -1206,6 +1227,26 @@ ldouble: 2
 Function: "log_upward":
 double: 1
 ldouble: 1
+
+Function: "logp1":
+double: 1
+float: 1
+ldouble: 3
+
+Function: "logp1_downward":
+double: 1
+float: 2
+ldouble: 3
+
+Function: "logp1_towardzero":
+double: 2
+float: 2
+ldouble: 3
+
+Function: "logp1_upward":
+double: 2
+float: 2
+ldouble: 2
 
 Function: "pow":
 double: 1

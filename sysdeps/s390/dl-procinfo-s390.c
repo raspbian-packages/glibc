@@ -1,5 +1,5 @@
 /* Data for s390 version of processor capability information.
-   Copyright (C) 2006-2023 Free Software Foundation, Inc.
+   Copyright (C) 2006-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -23,10 +23,4 @@ const char _dl_s390_cap_flags[_DL_HWCAP_COUNT][9] =
     "esan3", "zarch", "stfle", "msa", "ldisp", "eimm", "dfp", "edat", "etf3eh",
     "highgprs", "te", "vx", "vxd", "vxe", "gs", "vxe2", "vxp", "sort", "dflt",
     "vxp2", "nnpa", "pcimio", "sie"
-  };
-
-const char _dl_s390_platforms[_DL_PLATFORMS_COUNT][7] =
-  {
-    "g5", "z900", "z990", "z9-109", "z10", "z196", "zEC12", "z13", "z14", "z15",
-    "z16"
   };

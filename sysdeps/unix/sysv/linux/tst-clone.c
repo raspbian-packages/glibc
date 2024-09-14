@@ -1,5 +1,5 @@
 /* Test for proper error/errno handling in clone.
-   Copyright (C) 2006-2023 Free Software Foundation, Inc.
+   Copyright (C) 2006-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -26,11 +26,6 @@
 #include <support/check.h>
 
 volatile unsigned v = 0xdeadbeef;
-
-#ifdef __ia64__
-extern int __clone2 (int (*__fn) (void *__arg), void *__child_stack_base,
-		     size_t __child_stack_size, int __flags, void *__arg, ...);
-#endif
 
 int child_fn(void *arg)
 {
@@ -59,12 +54,7 @@ do_clone (int (*fn)(void *), void *stack)
   unsigned int n = v;
   unsigned int o = v;
 
-#ifdef __ia64__
-  result = __clone2 (fn, stack, stack != NULL ? 128 * 1024 : 0, 0, NULL, NULL,
-		     NULL);
-#else
   result = clone (fn, stack, 0, NULL);
-#endif
 
   /* Check that clone does not clobber call-saved registers.  */
   TEST_VERIFY (a == v && b == v && c == v && d == v && e == v && f == v
@@ -92,10 +82,10 @@ do_test (void)
 {
   char st[128 * 1024] __attribute__ ((aligned));
   void *stack = NULL;
-#if defined __ia64__ || _STACK_GROWS_UP
-  stack = st;
-#elif _STACK_GROWS_DOWN
+#if _STACK_GROWS_DOWN
   stack = st + sizeof (st);
+#elif _STACK_GROWS_UP
+  stack = st;
 #else
 # error "Define either _STACK_GROWS_DOWN or _STACK_GROWS_UP"
 #endif

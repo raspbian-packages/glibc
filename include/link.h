@@ -1,6 +1,6 @@
 /* Data structure for communication from the run-time dynamic linker for
    loaded ELF shared objects.
-   Copyright (C) 1995-2023 Free Software Foundation, Inc.
+   Copyright (C) 1995-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -253,8 +253,6 @@ struct link_map
     /* Start and finish of memory map for this object.  l_map_start
        need not be the same as l_addr.  */
     ElfW(Addr) l_map_start, l_map_end;
-    /* End of the executable part of the mapping.  */
-    ElfW(Addr) l_text_end;
 
     /* Default array for 'l_scope'.  */
     struct r_scope_elem *l_scope_mem[4];
@@ -277,10 +275,6 @@ struct link_map
 
     /* List of object in order of the init and fini calls.  */
     struct link_map **l_initfini;
-
-    /* Linked list of objects in reverse ELF constructor execution
-       order.  Head of list is stored in _dl_init_called_list.  */
-    struct link_map *l_init_called_next;
 
     /* List of the dependencies introduced through symbol binding.  */
     struct link_map_reldeps

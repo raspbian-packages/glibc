@@ -53,8 +53,8 @@ libc_hidden_proto (__isoc23_strtoul_l)
 libc_hidden_proto (__isoc23_strtoll_l)
 libc_hidden_proto (__isoc23_strtoull_l)
 
-#if __GLIBC_USE (C2X_STRTOL)
-/* Redirect internal uses of these functions to the C2X versions; the
+#if __GLIBC_USE (C23_STRTOL)
+/* Redirect internal uses of these functions to the C23 versions; the
    redirection in the installed header does not work with
    libc_hidden_proto.  */
 # undef strtol
@@ -149,8 +149,6 @@ extern int __posix_openpt (int __oflag) attribute_hidden;
 extern int __add_to_environ (const char *name, const char *value,
 			     const char *combines, int replace)
      attribute_hidden;
-extern void _quicksort (void *const pbase, size_t total_elems,
-			size_t size, __compar_d_fn_t cmp, void *arg);
 
 extern int __on_exit (void (*__func) (int __status, void *__arg), void *__arg);
 
@@ -159,11 +157,7 @@ libc_hidden_proto (__cxa_atexit);
 
 extern int __cxa_thread_atexit_impl (void (*func) (void *), void *arg,
 				     void *d);
-extern void __call_tls_dtors (void)
-#ifndef SHARED
-  __attribute__ ((weak))
-#endif
-  ;
+extern void __call_tls_dtors (void);
 libc_hidden_proto (__call_tls_dtors)
 
 extern void __cxa_finalize (void *d);

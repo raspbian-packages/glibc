@@ -1,5 +1,5 @@
 /* Dynamic linker system dependencies for Linux.
-   Copyright (C) 1995-2023 Free Software Foundation, Inc.
+   Copyright (C) 1995-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -40,6 +40,7 @@
 #include <sys/utsname.h>
 #include <tls.h>
 #include <unistd.h>
+#include <dl-symbol-redir-ifunc.h>
 
 #include <dl-machine.h>
 #include <dl-hwcap-check.h>
@@ -197,6 +198,8 @@ _dl_show_auxv (void)
 	  [AT_SYSINFO_EHDR - 2] =	{ "SYSINFO_EHDR:      0x", hex },
 	  [AT_RANDOM - 2] =		{ "RANDOM:            0x", hex },
 	  [AT_HWCAP2 - 2] =		{ "HWCAP2:            0x", hex },
+	  [AT_HWCAP3 - 2] =		{ "HWCAP3:            0x", hex },
+	  [AT_HWCAP4 - 2] =		{ "HWCAP4:            0x", hex },
 	  [AT_MINSIGSTKSZ - 2] =	{ "MINSIGSTKSZ:       ", dec },
 	  [AT_L1I_CACHESIZE - 2] =	{ "L1I_CACHESIZE:     ", dec },
 	  [AT_L1I_CACHEGEOMETRY - 2] =	{ "L1I_CACHEGEOMETRY: 0x", hex },

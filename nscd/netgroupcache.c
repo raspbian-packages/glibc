@@ -1,5 +1,5 @@
 /* Cache handling for netgroup lookup.
-   Copyright (C) 2011-2023 Free Software Foundation, Inc.
+   Copyright (C) 2011-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    This program is free software; you can redistribute it and/or modify
@@ -25,7 +25,7 @@
 #include <sys/mman.h>
 #include <scratch_buffer.h>
 
-#include "../inet/netgroup.h"
+#include "../nss/netgroup.h"
 #include "nscd.h"
 #include "dbg_log.h"
 
@@ -522,7 +522,7 @@ addinnetgrX (struct database_dyn *db, int fd, request_header *req,
   if (__glibc_unlikely (dataset == NULL))
     {
       cacheable = false;
-      /* The alloca is safe because nscd_run_worker verfies that
+      /* The alloca is safe because nscd_run_worker verifies that
 	 key_len is not larger than MAXKEYLEN.  */
       dataset = alloca (sizeof (*dataset) + req->key_len);
     }

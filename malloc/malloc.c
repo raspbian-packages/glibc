@@ -1,5 +1,5 @@
 /* Malloc implementation for multiple threads without lock contention.
-   Copyright (C) 1996-2023 Free Software Foundation, Inc.
+   Copyright (C) 1996-2024 Free Software Foundation, Inc.
    Copyright The GNU Toolchain Authors.
    This file is part of the GNU C Library.
 
@@ -218,6 +218,7 @@
 #include <sys/sysinfo.h>
 
 #include <ldsodefs.h>
+#include <setvmaname.h>
 
 #include <unistd.h>
 #include <stdio.h>    /* needed for malloc_stats */
@@ -2428,6 +2429,8 @@ sysmalloc_mmap (INTERNAL_SIZE_T nb, size_t pagesize, int extra_flags, mstate av)
     madvise_thp (mm, size);
 #endif
 
+  __set_vma_name (mm, size, " glibc: malloc");
+
   /*
     The offset to the start of the mmapped region is stored in the prev_size
     field of the chunk.  This allows us to adjust returned start address to
@@ -2512,6 +2515,8 @@ sysmalloc_mmap_fallback (long int *s, INTERNAL_SIZE_T nb,
   if (!(extra_flags & MAP_HUGETLB))
     madvise_thp (mbrk, size);
 #endif
+
+  __set_vma_name (mbrk, size, " glibc: malloc");
 
   /* Record that we no longer have a contiguous sbrk region.  After the first
      time mmap is used as backup, we do not ever rely on contiguous space
@@ -3134,7 +3139,9 @@ static uintptr_t tcache_key;
 static void
 tcache_key_initialize (void)
 {
-  if (__getrandom_nocancel (&tcache_key, sizeof(tcache_key), GRND_NONBLOCK)
+  /* We need to use the _nostatus version here, see BZ 29624.  */
+  if (__getrandom_nocancel_nostatus (&tcache_key, sizeof(tcache_key),
+				     GRND_NONBLOCK)
       != sizeof (tcache_key))
     {
       tcache_key = random_bits ();

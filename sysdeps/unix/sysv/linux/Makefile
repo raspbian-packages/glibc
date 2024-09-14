@@ -62,6 +62,7 @@ sysdep_routines += \
   clock_adjtime \
   clone \
   clone-internal \
+  clone-pidfd-support \
   clone3 \
   closefrom_fallback \
   convert_scm_timestamps \
@@ -96,6 +97,7 @@ sysdep_routines += \
   readahead \
   setfsgid \
   setfsuid \
+  setvmaname \
   signalfd \
   splice \
   sysctl \
@@ -198,10 +200,13 @@ tests += \
   tst-clone2 \
   tst-clone3 \
   tst-epoll \
+  tst-epoll-ioctls \
   tst-fanotify \
+  tst-fdopendir-o_path \
   tst-getauxval \
   tst-gettid \
   tst-gettid-kill \
+  tst-linux-mremap1 \
   tst-memfd_create \
   tst-misalign-clone \
   tst-mlock2 \
@@ -212,6 +217,7 @@ tests += \
   tst-ofdlocks \
   tst-personality \
   tst-pidfd \
+  tst-pidfd_getpid \
   tst-pkey \
   tst-ppoll \
   tst-prctl \
@@ -492,12 +498,28 @@ sysdep_headers += \
 sysdep_routines += \
   getcpu \
   oldglob \
+  pidfd_getpid \
+  pidfd_spawn \
+  pidfd_spawnp \
+  procutils \
   sched_getcpu \
+  spawnattr_getcgroup_np \
+  spawnattr_setcgroup_np \
   # sysdep_routines
 
 tests += \
   tst-affinity \
   tst-affinity-pid \
+  tst-posix_spawn-setsid-pidfd \
+  tst-spawn-cgroup \
+  tst-spawn-chdir-pidfd \
+  tst-spawn-pidfd \
+  tst-spawn2-pidfd \
+  tst-spawn3-pidfd \
+  tst-spawn4-pidfd \
+  tst-spawn5-pidfd \
+  tst-spawn6-pidfd \
+  tst-spawn7-pidfd \
   # tests
 
 tests-static += \
@@ -511,6 +533,14 @@ tests += \
 CFLAGS-fork.c = $(libio-mtsafe)
 CFLAGS-getpid.o = -fomit-frame-pointer
 CFLAGS-getpid.os = -fomit-frame-pointer
+CFLAGS-tst-spawn3-pidfd.c += -DOBJPFX=\"$(objpfx)\"
+
+tst-spawn-cgroup-ARGS = -- $(host-test-program-cmd)
+tst-spawn-pidfd-ARGS = -- $(host-test-program-cmd)
+tst-spawn5-pidfd-ARGS = -- $(host-test-program-cmd)
+tst-spawn6-pidfd-ARGS = -- $(host-test-program-cmd)
+tst-spawn7-pidfd-ARGS = -- $(host-test-program-cmd)
+tst-posix_spawn-setsid-pidfd-ARGS = -- $(host-test-program-cmd)
 endif
 
 ifeq ($(subdir),inet)
@@ -587,6 +617,10 @@ tests += \
 endif
 
 ifeq ($(subdir),elf)
+dl-routines += \
+  dl-rseq-symbols \
+  # dl-routines
+
 sysdep-rtld-routines += \
   dl-brk \
   dl-getcwd \

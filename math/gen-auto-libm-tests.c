@@ -1,5 +1,5 @@
 /* Generate expected output for libm tests with MPFR and MPC.
-   Copyright (C) 2013-2023 Free Software Foundation, Inc.
+   Copyright (C) 2013-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -96,7 +96,8 @@
    zero and infinite results should be ignored; "xfail" indicates the
    test is disabled as expected to produce incorrect results,
    "xfail-rounding" indicates the test is disabled only in rounding
-   modes other than round-to-nearest.  Otherwise, test flags are of
+   modes other than round-to-nearest; "no-mathvec" indicates the test
+   is disabled in vector math libraries.  Otherwise, test flags are of
    the form "spurious-<exception>" and "missing-<exception>", for any
    exception ("overflow", "underflow", "inexact", "invalid",
    "divbyzero"), "spurious-errno" and "missing-errno", to indicate
@@ -352,6 +353,7 @@ typedef enum
     flag_missing_overflow,
     flag_missing_underflow,
     flag_missing_errno,
+    flag_no_mathvec,
     num_input_flag_types,
     flag_first_flag = 0,
     flag_spurious_first = flag_spurious_divbyzero,
@@ -377,6 +379,7 @@ static const char *const input_flags[num_input_flag_types] =
     "missing-overflow",
     "missing-underflow",
     "missing-errno",
+    "no-mathvec",
   };
 
 /* An input flag, possibly conditional.  */
@@ -563,7 +566,9 @@ static test_function test_functions[] =
     FUNC_mpfr_f_f ("erfc", mpfr_erfc, false),
     FUNC_mpfr_f_f ("exp", mpfr_exp, false),
     FUNC_mpfr_f_f ("exp10", mpfr_exp10, false),
+    FUNC_mpfr_f_f ("exp10m1", mpfr_exp10m1, false),
     FUNC_mpfr_f_f ("exp2", mpfr_exp2, false),
+    FUNC_mpfr_f_f ("exp2m1", mpfr_exp2m1, false),
     FUNC_mpfr_f_f ("expm1", mpfr_expm1, false),
     FUNC ("fma", ARGS3 (type_fp, type_fp, type_fp), RET1 (type_fp),
 	  true, false, true, CALC (mpfr_fff_f, mpfr_fma)),
@@ -575,8 +580,10 @@ static test_function test_functions[] =
 	  false, CALC (mpfr_f_f1, mpfr_lgamma)),
     FUNC_mpfr_f_f ("log", mpfr_log, false),
     FUNC_mpfr_f_f ("log10", mpfr_log10, false),
+    FUNC_mpfr_f_f ("log10p1", mpfr_log10p1, false),
     FUNC_mpfr_f_f ("log1p", mpfr_log1p, false),
     FUNC_mpfr_f_f ("log2", mpfr_log2, false),
+    FUNC_mpfr_f_f ("log2p1", mpfr_log2p1, false),
     FUNC_mpfr_ff_f ("mul", mpfr_mul, true),
     FUNC_mpfr_ff_f ("pow", mpfr_pow, false),
     FUNC_mpfr_f_f ("sin", mpfr_sin, false),
@@ -2049,6 +2056,7 @@ output_for_one_input_case (FILE *fp, const char *filename, test_function *tf,
 		  {
 		  case flag_ignore_zero_inf_sign:
 		  case flag_xfail:
+		  case flag_no_mathvec:
 		    if (fprintf (fp, " %s%s",
 				 input_flags[it->flags[i].type],
 				 (it->flags[i].cond

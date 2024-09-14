@@ -5,12 +5,12 @@
 #
 # Denis Lackovic <delacko@fly.srk.fer.hr>, 2002.
 # Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
-# Božidar Putanec <bozidarp@yahoo.com>, 2018, 2019, 2020, 2021, 2022, 2023.
+# Božidar Putanec <bozidarp@yahoo.com>, 2018, 2019, 2020, 2021, 2022, 2023, 2024.
 msgid ""
 msgstr ""
-"Project-Id-Version: libc-2.37.9000\n"
-"POT-Creation-Date: 2023-07-17 20:35+0200\n"
-"PO-Revision-Date: 2023-07-20 10:13+0200\n"
+"Project-Id-Version: libc-2.39.9000\n"
+"POT-Creation-Date: 2024-07-21 00:32+0200\n"
+"PO-Revision-Date: 2024-06-23 13:39-0700\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: hr\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.3.2\n"
+"X-Generator: Poedit 3.4.2\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 
 #: argp/argp-help.c:229
@@ -65,46 +65,46 @@ msgstr "Pokušajte „%s --help“ ili „%s --usage“ za više informacija.\n"
 msgid "Report bugs to %s.\n"
 msgstr "Prijavite (na engleskom) greške na %s.\n"
 
-#: argp/argp-parse.c:101
+#: argp/argp-parse.c:86
 msgid "Give this help list"
 msgstr "ova pomoć"
 
-#: argp/argp-parse.c:102
+#: argp/argp-parse.c:87
 msgid "Give a short usage message"
 msgstr "kratke upute za uporabu"
 
-#: argp/argp-parse.c:103 catgets/gencat.c:109 catgets/gencat.c:113
+#: argp/argp-parse.c:88 catgets/gencat.c:110 catgets/gencat.c:114
 #: iconv/iconv_prog.c:60 iconv/iconv_prog.c:61 nscd/nscd.c:106 nscd/nscd.c:110
-#: nss/makedb.c:121
+#: nss/makedb.c:122
 msgid "NAME"
 msgstr "IME"
 
-#: argp/argp-parse.c:104
+#: argp/argp-parse.c:89
 msgid "Set the program name"
 msgstr "postavi ime programa"
 
-#: argp/argp-parse.c:105
+#: argp/argp-parse.c:90
 msgid "SECS"
 msgstr "SECS"
 
-#: argp/argp-parse.c:106
+#: argp/argp-parse.c:91
 msgid "Hang for SECS seconds (default 3600)"
 msgstr "pauzira SECS sekundi (zadano 3600)"
 
-#: argp/argp-parse.c:167
+#: argp/argp-parse.c:152
 msgid "Print program version"
 msgstr "inačica ovog programa"
 
-#: argp/argp-parse.c:183
+#: argp/argp-parse.c:168
 msgid "(PROGRAM ERROR) No version known!?"
 msgstr "(**INTERNA GREŠKA PROGRAMA**) Nema poznate inačice!?"
 
-#: argp/argp-parse.c:623
+#: argp/argp-parse.c:608
 #, c-format
 msgid "%s: Too many arguments\n"
 msgstr "%s: Previše argumenata\n"
 
-#: argp/argp-parse.c:766
+#: argp/argp-parse.c:751
 msgid "(PROGRAM ERROR) Option should have been recognized!?"
 msgstr "(**INTERNA GREŠKA PROGRAMA**) Opcije su trebale biti prepoznate!?"
 
@@ -117,7 +117,7 @@ msgstr ""
 "%s%s%s:%u: %s%sneočekivana greška: %s.\n"
 "%n"
 
-#: assert/assert.c:101
+#: assert/assert.c:103
 #, c-format
 msgid ""
 "%s%s%s:%u: %s%sAssertion `%s' failed.\n"
@@ -126,19 +126,19 @@ msgstr ""
 "%s%s%s:%u: %s%sKontrolni test „%s“ nije uspio.\n"
 "%n"
 
-#: catgets/gencat.c:110
+#: catgets/gencat.c:111
 msgid "Create C header file NAME containing symbol definitions"
 msgstr "stvori C header-datoteku IME koja sadrži definicije simbola"
 
-#: catgets/gencat.c:112
+#: catgets/gencat.c:113
 msgid "Do not use existing catalog, force new output file"
 msgstr "ne koristi postojeći katalog; prisilno izradi novu izlaznu datoteku"
 
-#: catgets/gencat.c:113 nss/makedb.c:121
+#: catgets/gencat.c:114 nss/makedb.c:122
 msgid "Write output to file NAME"
 msgstr "izlaz piše u datoteku IME"
 
-#: catgets/gencat.c:118
+#: catgets/gencat.c:119
 msgid ""
 "Generate message catalog.\vIf INPUT-FILE is -, input is read from standard input.  If OUTPUT-FILE\n"
 "is -, output is written to standard output.\n"
@@ -147,7 +147,7 @@ msgstr ""
 "Ako je ULAZNA-DATOTEKA -, čita ulaz iz standardnog ulaza.\n"
 "Ako je IZLAZNA-DATOTEKA -, ispiše izlaz na standardni izlaz.\n"
 
-#: catgets/gencat.c:123
+#: catgets/gencat.c:124
 msgid ""
 "-o OUTPUT-FILE [INPUT-FILE]...\n"
 "[OUTPUT-FILE [INPUT-FILE]...]"
@@ -155,12 +155,12 @@ msgstr ""
 "-o IZLAZNA-DATOTEKA [ULAZNA-DATOTEKA]...\n"
 "[IZLAZNA-DATOTEKA [ULAZNA-DATOTEKA]...]"
 
-#: catgets/gencat.c:229 debug/pcprofiledump.c:208 elf/ldconfig.c:216
+#: catgets/gencat.c:230 debug/pcprofiledump.c:208 elf/ldconfig.c:217
 #: elf/pldd.c:246 elf/sln.c:77 elf/sprof.c:371 iconv/iconv_prog.c:387
 #: iconv/iconvconfig.c:380 locale/programs/locale.c:275
 #: locale/programs/localedef.c:437 login/programs/pt_chown.c:88
-#: malloc/memusagestat.c:564 nss/getent.c:961 nss/makedb.c:370
-#: posix/getconf.c:503
+#: malloc/memusagestat.c:564 nss/getent.c:961 nss/makedb.c:371
+#: posix/getconf.c:505
 #, c-format
 msgid ""
 "For bug reporting instructions, please see:\n"
@@ -169,12 +169,12 @@ msgstr ""
 "Za upute o prijavljivanju grešaka pogledajte:\n"
 "%s.\n"
 
-#: catgets/gencat.c:245 debug/pcprofiledump.c:224 debug/xtrace.sh:63
-#: elf/ldconfig.c:232 elf/ldd.bash.in:38 elf/pldd.c:262 elf/sotruss.sh:75
+#: catgets/gencat.c:246 debug/pcprofiledump.c:224 debug/xtrace.sh:63
+#: elf/ldconfig.c:233 elf/ldd.bash.in:38 elf/pldd.c:262 elf/sotruss.sh:75
 #: elf/sprof.c:388 iconv/iconv_prog.c:404 iconv/iconvconfig.c:397
 #: locale/programs/locale.c:292 locale/programs/localedef.c:459
 #: login/programs/pt_chown.c:62 malloc/memusage.sh:70 malloc/memusagestat.c:582
-#: nscd/nscd.c:521 nss/getent.c:92 nss/makedb.c:386 posix/getconf.c:485
+#: nscd/nscd.c:521 nss/getent.c:92 nss/makedb.c:387 posix/getconf.c:487
 #, c-format
 msgid ""
 "Copyright (C) %s Free Software Foundation, Inc.\n"
@@ -185,96 +185,101 @@ msgstr ""
 "Ovo je slobodan softver, pogledajte izvorni kod za uvjete kopiranja.\n"
 "NEMA jamstava; čak ni za PRODAJU ili UPOTREBU ZA ODREĐENU NAMJENU.\n"
 
-#: catgets/gencat.c:250 debug/pcprofiledump.c:229 debug/xtrace.sh:67
-#: elf/ldconfig.c:237 elf/pldd.c:267 elf/sprof.c:394 iconv/iconv_prog.c:409
+#: catgets/gencat.c:251 debug/pcprofiledump.c:229 debug/xtrace.sh:67
+#: elf/ldconfig.c:238 elf/pldd.c:267 elf/sprof.c:394 iconv/iconv_prog.c:409
 #: iconv/iconvconfig.c:402 locale/programs/locale.c:297
 #: locale/programs/localedef.c:464 malloc/memusage.sh:74
-#: malloc/memusagestat.c:587 nscd/nscd.c:526 nss/getent.c:97 nss/makedb.c:391
-#: posix/getconf.c:490
+#: malloc/memusagestat.c:587 nscd/nscd.c:526 nss/getent.c:97 nss/makedb.c:392
+#: posix/getconf.c:492
 #, c-format
 msgid "Written by %s.\n"
 msgstr "Napisao %s.\n"
 
-#: catgets/gencat.c:281
+#: catgets/gencat.c:282
 msgid "*standard input*"
 msgstr "*standardni ulaz*"
 
-#: catgets/gencat.c:287 iconv/iconv_charmap.c:172 iconv/iconv_prog.c:272
-#: nss/makedb.c:247
+#: catgets/gencat.c:288 iconv/iconv_charmap.c:172 iconv/iconv_prog.c:272
+#: nss/makedb.c:248
 #, c-format
 msgid "cannot open input file `%s'"
 msgstr "nije moguće otvoriti ulaznu datoteku „%s“"
 
-#: catgets/gencat.c:416 catgets/gencat.c:491
+#: catgets/gencat.c:417 catgets/gencat.c:492
 msgid "illegal set number"
 msgstr "nepropisni broj skupa"
 
-#: catgets/gencat.c:443
+#: catgets/gencat.c:444
 msgid "duplicate set definition"
 msgstr "duplikat definicije skupa"
 
-#: catgets/gencat.c:445 catgets/gencat.c:617 catgets/gencat.c:669
+#: catgets/gencat.c:446 catgets/gencat.c:618 catgets/gencat.c:670
 msgid "this is the first definition"
 msgstr "ovo je prva definicija"
 
-#: catgets/gencat.c:516
+#: catgets/gencat.c:517
 #, c-format
 msgid "unknown set `%s'"
 msgstr "nepoznati skup „%s“"
 
-#: catgets/gencat.c:557
+#: catgets/gencat.c:558
 msgid "invalid quote character"
 msgstr "nevaljani znak za citiranje"
 
-#: catgets/gencat.c:570
+#: catgets/gencat.c:571
 #, c-format
 msgid "unknown directive `%s': line ignored"
 msgstr "nepoznata direktiva „%s“: redak je zanemaren"
 
-#: catgets/gencat.c:615
+#: catgets/gencat.c:616
 msgid "duplicated message number"
 msgstr "broj (numeracija) poruke se ponavlja"
 
-#: catgets/gencat.c:666
+#: catgets/gencat.c:667
 msgid "duplicated message identifier"
 msgstr "identifikator poruke se ponavlja"
 
-#: catgets/gencat.c:723
+#: catgets/gencat.c:724
 msgid "invalid character: message ignored"
 msgstr "nevaljani znak: poruka je zanemarena"
 
-#: catgets/gencat.c:766
+#: catgets/gencat.c:767
 msgid "invalid line"
 msgstr "nevaljani redak"
 
-#: catgets/gencat.c:820
+#: catgets/gencat.c:821
 msgid "malformed line ignored"
 msgstr "deformirani redak je zanemaren"
 
-#: catgets/gencat.c:982 catgets/gencat.c:1023
+#: catgets/gencat.c:939 catgets/gencat.c:947
+#, c-format
+msgid "cannot allocate memory"
+msgstr "nije moguće dodijeliti memoriju"
+
+#: catgets/gencat.c:1000 catgets/gencat.c:1045
 #, c-format
 msgid "cannot open output file `%s'"
 msgstr "nije moguće otvoriti izlaznu datoteku „%s“"
 
-#: catgets/gencat.c:1185 locale/programs/linereader.c:588
+#: catgets/gencat.c:1210 locale/programs/linereader.c:588
 msgid "invalid escape sequence"
 msgstr "nevaljana kontrolna sekvencija (escape sequence)"
 
-#: catgets/gencat.c:1209
+#: catgets/gencat.c:1234
 msgid "unterminated message"
 msgstr "poruka nije završila"
 
-#: catgets/gencat.c:1233
+#: catgets/gencat.c:1258
 #, c-format
 msgid "while opening old catalog file"
 msgstr "pri otvaranju starog kataloga"
 
-#: catgets/gencat.c:1324
+#: catgets/gencat.c:1349
 #, c-format
 msgid "conversion modules not available"
 msgstr "moduli pretvorbe nisu dostupni"
 
-#: catgets/gencat.c:1350
+#: catgets/gencat.c:1375
 #, c-format
 msgid "cannot determine escape character"
 msgstr "nije moguće odrediti escape znak (znak za maskiranje)"
@@ -317,7 +322,7 @@ msgstr "Pokušajte „%s --help“ ili „%s --usage“ za više informacija.\\n
 
 #: debug/xtrace.sh:37
 msgid "%s: option '%s' requires an argument.\\n"
-msgstr "%s: opcija „%s“ zahtijeva argument.\\n"
+msgstr "%s: opcija ‘%s’ zahtijeva argument.\\n"
 
 #: debug/xtrace.sh:44
 msgid ""
@@ -387,72 +392,72 @@ msgstr "nevaljani parametar moda"
 msgid "unknown or unsupported flag"
 msgstr "nepoznati ili nepodržani flag"
 
-#: elf/cache.c:276
+#: elf/cache.c:273
 #, c-format
 msgid "Cache file has wrong endianness.\n"
 msgstr "Datoteka predmemorije ima loš endian.\n"
 
-#: elf/cache.c:285
+#: elf/cache.c:282
 msgid "Cache generated by: "
 msgstr "Predmemoriju je generiao: "
 
-#: elf/cache.c:299 elf/ldconfig.c:1223
+#: elf/cache.c:296 elf/ldconfig.c:1239
 #, c-format
 msgid "Can't open cache file %s\n"
 msgstr "Nije moguće otvoriti cache-datoteku %s\n"
 
-#: elf/cache.c:313
+#: elf/cache.c:310
 #, c-format
 msgid "mmap of cache file failed.\n"
 msgstr "mmap (mapiranje) cache-datoteke nije uspjelo.\n"
 
-#: elf/cache.c:317 elf/cache.c:331 elf/cache.c:342
+#: elf/cache.c:314 elf/cache.c:328 elf/cache.c:339
 #, c-format
 msgid "File is not a cache file.\n"
 msgstr "To nije cache-datoteka.\n"
 
-#: elf/cache.c:371 elf/cache.c:386
+#: elf/cache.c:368 elf/cache.c:383
 #, c-format
 msgid "%d libs found in cache `%s'\n"
 msgstr "%d biblioteka je pronađena u predmemoriji (cache) „%s“\n"
 
-#: elf/cache.c:384
+#: elf/cache.c:381
 #, c-format
 msgid "Malformed extension data in cache file %s\n"
 msgstr "Deformirani podaci proširenja u datoteci predmemorije %s\n"
 
-#: elf/cache.c:513
+#: elf/cache.c:510
 #, c-format
 msgid "Writing of cache extension data failed"
 msgstr "Nije uspjelo zapisati podatke proširenja iz predmemorije (cache)"
 
-#: elf/cache.c:524
+#: elf/cache.c:521
 #, c-format
 msgid "%s: ISA level is too high (%d > %d)"
 msgstr "%s: ISA razina je previsoka (%d > %d)"
 
-#: elf/cache.c:688
+#: elf/cache.c:685
 #, c-format
 msgid "Can't create temporary cache file %s"
 msgstr "Nije moguće stvoriti privremenu cache-datoteku %s"
 
-#: elf/cache.c:696 elf/cache.c:706 elf/cache.c:710 elf/cache.c:715
-#: elf/cache.c:734
+#: elf/cache.c:693 elf/cache.c:703 elf/cache.c:707 elf/cache.c:712
+#: elf/cache.c:731
 #, c-format
 msgid "Writing of cache data failed"
 msgstr "Zapisivanje podataka iz predmemorije (cache) nije uspjelo"
 
-#: elf/cache.c:729
+#: elf/cache.c:726
 #, c-format
 msgid "Changing access rights of %s to %#o failed"
 msgstr "Promjena prava pristupa %s u %#o nije uspjela"
 
-#: elf/cache.c:738
+#: elf/cache.c:735
 #, c-format
 msgid "Renaming of %s to %s failed"
 msgstr "Preimenovanje %s u %s nije uspjelo"
 
-#: elf/cache.c:768
+#: elf/cache.c:765
 #, c-format
 msgid "Could not create library path"
 msgstr "Nije bilo moguće stvoriti stazu za biblioteku"
@@ -465,11 +470,11 @@ msgstr "greška pri učitavanju zajedničkih biblioteka"
 msgid "DYNAMIC LINKER BUG!!!"
 msgstr "GREŠKA DINAMIČKOG LINKERA!!!"
 
-#: elf/dl-close.c:346 elf/dl-open.c:298
+#: elf/dl-close.c:357 elf/dl-open.c:298
 msgid "cannot create scope list"
 msgstr "nije moguće stvoriti popis opsega (scope list)"
 
-#: elf/dl-close.c:775
+#: elf/dl-close.c:790
 msgid "shared object not open"
 msgstr "zajednički objekt nije otvoren"
 
@@ -518,143 +523,143 @@ msgstr "nije moguće stvoriti HWCAP prioritete"
 msgid "cannot create capability list"
 msgstr "nije moguće stvoriti popis kvalifikacija"
 
-#: elf/dl-load.c:434
+#: elf/dl-load.c:423
 msgid "cannot allocate name record"
 msgstr "nije moguće dodijeliti memoriju za zapise imena"
 
-#: elf/dl-load.c:536 elf/dl-load.c:649 elf/dl-load.c:743 elf/dl-load.c:840
+#: elf/dl-load.c:525 elf/dl-load.c:638 elf/dl-load.c:732 elf/dl-load.c:829
 msgid "cannot create cache for search path"
 msgstr "nije moguće stvoriti predmemoriju (cache) za pretraživanje staze"
 
-#: elf/dl-load.c:632
+#: elf/dl-load.c:621
 msgid "cannot create RUNPATH/RPATH copy"
 msgstr "nije moguće stvoriti RUNPATH/RPATH kopiju"
 
-#: elf/dl-load.c:729
+#: elf/dl-load.c:718
 msgid "cannot create search path array"
 msgstr "nije moguće stvoriti polje za pretraživanje staza"
 
-#: elf/dl-load.c:968
+#: elf/dl-load.c:957
 msgid "cannot stat shared object"
 msgstr "nije moguće stat zajednički objekt"
 
-#: elf/dl-load.c:1059 elf/dl-load.c:2219
+#: elf/dl-load.c:1048 elf/dl-load.c:2163
 msgid "cannot create shared object descriptor"
 msgstr "nije moguće stvoriti deskriptor zajedničkog objekta"
 
-#: elf/dl-load.c:1078 elf/dl-load.c:1655 elf/dl-load.c:1763
+#: elf/dl-load.c:1067 elf/dl-load.c:1610 elf/dl-load.c:1718
 msgid "cannot read file data"
 msgstr "nije moguće pročitati podatke iz datoteke"
 
-#: elf/dl-load.c:1131 elf/dl-map-segments.h:117
+#: elf/dl-load.c:1120 elf/dl-map-segments.h:117
 msgid "ELF load command address/offset not page-aligned"
-msgstr "adresa/odmak ELF naredbe nije „page-aligned“"
+msgstr "adresa/odmak ELF naredbe nije page-aligned"
 
-#: elf/dl-load.c:1223
+#: elf/dl-load.c:1212
 msgid "object file has no loadable segments"
 msgstr "datoteka objekta nema segmenata koji se mogu učitati"
 
-#: elf/dl-load.c:1240
+#: elf/dl-load.c:1229
 msgid "cannot dynamically load executable"
 msgstr "nije moguće dinamički učitati izvršnu datoteku"
 
-#: elf/dl-load.c:1247
+#: elf/dl-load.c:1236
 msgid "object file has no dynamic section"
 msgstr "datoteka objekta nema dinamičku sekciju"
 
-#: elf/dl-load.c:1282
+#: elf/dl-load.c:1271
 msgid "cannot dynamically load position-independent executable"
 msgstr "nije moguće dinamički učitati izvršnu ovisnu-o-poziciji datoteku"
 
-#: elf/dl-load.c:1284
+#: elf/dl-load.c:1273
 msgid "shared object cannot be dlopen()ed"
 msgstr "zajednički objekt nije moguće otvoriti s dlopen()"
 
-#: elf/dl-load.c:1297
+#: elf/dl-load.c:1286
 msgid "cannot allocate memory for program header"
 msgstr "nije moguće dodijeliti memoriju za zaglavlje programa"
 
-#: elf/dl-load.c:1330 elf/dl-load.h:131
-msgid "cannot change memory protections"
-msgstr "nije moguće promijeniti zaštitu memorije"
-
-#: elf/dl-load.c:1354
+#: elf/dl-load.c:1309
 msgid "cannot enable executable stack as shared object requires"
 msgstr "nije moguće koristiti izvršni stȏg kako to zahtijeva zajednički objekt"
 
-#: elf/dl-load.c:1382
+#: elf/dl-load.c:1337
 msgid "cannot close file descriptor"
 msgstr "nije moguće zatvoriti deskriptor datoteke"
 
-#: elf/dl-load.c:1655
+#: elf/dl-load.c:1610
 msgid "file too short"
 msgstr "datoteka je prekratka"
 
-#: elf/dl-load.c:1691
+#: elf/dl-load.c:1646
 msgid "invalid ELF header"
 msgstr "nevaljano ELF zaglavlje"
 
-#: elf/dl-load.c:1706
+#: elf/dl-load.c:1661
 msgid "ELF file data encoding not big-endian"
 msgstr "Kodiranje podataka ELF datoteke nije big-endian"
 
-#: elf/dl-load.c:1708
+#: elf/dl-load.c:1663
 msgid "ELF file data encoding not little-endian"
 msgstr "Kodiranje podataka ELF datoteke nije little-endian"
 
-#: elf/dl-load.c:1712
+#: elf/dl-load.c:1667
 msgid "ELF file version ident does not match current one"
 msgstr "Identifikacija inačice ELF datoteke ne slaže se s aktualnom"
 
-#: elf/dl-load.c:1716
+#: elf/dl-load.c:1671
 msgid "ELF file OS ABI invalid"
 msgstr "OS ABI od ELF datoteke nije valjani"
 
-#: elf/dl-load.c:1719
+#: elf/dl-load.c:1674
 msgid "ELF file ABI version invalid"
 msgstr "ABI inačica od ELF datoteke nije valjana"
 
-#: elf/dl-load.c:1722
+#: elf/dl-load.c:1677
 msgid "nonzero padding in e_ident"
 msgstr "popuna u e_ident() nisu nule"
 
-#: elf/dl-load.c:1725
+#: elf/dl-load.c:1680
 msgid "internal error"
 msgstr "**interna greška**"
 
-#: elf/dl-load.c:1732
+#: elf/dl-load.c:1687
 msgid "ELF file version does not match current one"
 msgstr "Inačica ELF datoteke ne slaže se s aktualnom"
 
-#: elf/dl-load.c:1744
+#: elf/dl-load.c:1699
 msgid "only ET_DYN and ET_EXEC can be loaded"
 msgstr "mogu se učitati samo ET_DYN i ET_EXEC"
 
-#: elf/dl-load.c:1749
+#: elf/dl-load.c:1704
 msgid "ELF file's phentsize not the expected size"
 msgstr "phentsize ELF datoteke nije očekivane veličine"
 
-#: elf/dl-load.c:2238
+#: elf/dl-load.c:2182
 msgid "wrong ELF class: ELFCLASS64"
 msgstr "nevaljana ELF klasa: ELFCLASS64"
 
-#: elf/dl-load.c:2239
+#: elf/dl-load.c:2183
 msgid "wrong ELF class: ELFCLASS32"
 msgstr "nevaljana ELF klasa: ELFCLASS32"
 
-#: elf/dl-load.c:2242
+#: elf/dl-load.c:2186
 msgid "cannot open shared object file"
 msgstr "nije moguće otvoriti datoteku zajedničkog objekta"
 
-#: elf/dl-load.h:129
+#: elf/dl-load.h:126
 msgid "failed to map segment from shared object"
 msgstr "nije uspjelo mapirati segment iz zajedničkog objekta u memoriju"
 
-#: elf/dl-load.h:133
+#: elf/dl-load.h:128
+msgid "cannot change memory protections"
+msgstr "nije moguće promijeniti zaštitu memorije"
+
+#: elf/dl-load.h:130
 msgid "cannot map zero-fill pages"
 msgstr "nulama ispunjene stranice ne mogu se mapirati u memoriju"
 
-#: elf/dl-lookup.c:814
+#: elf/dl-lookup.c:813
 msgid "symbol lookup error"
 msgstr "greška u potrazi za simbolom"
 
@@ -668,19 +673,19 @@ msgstr ""
 "Brojač TLS generatora ponovno je počeo od nule!\n"
 "Ovo je ** programska pogreška **. Molimo da to prijavite."
 
-#: elf/dl-open.c:739
+#: elf/dl-open.c:758
 msgid "cannot allocate address lookup data"
 msgstr "nije moguće dodijeliti adresu za pretraživanje"
 
-#: elf/dl-open.c:829
+#: elf/dl-open.c:848
 msgid "invalid mode for dlopen()"
 msgstr "nevaljani mȏd za dlopen()"
 
-#: elf/dl-open.c:846
+#: elf/dl-open.c:865
 msgid "no more namespaces available for dlmopen()"
 msgstr "nema više imenskih prostora dostupnih za dlmopen()"
 
-#: elf/dl-open.c:871
+#: elf/dl-open.c:890
 msgid "invalid target namespace in dlmopen()"
 msgstr "nevaljani ciljani imenski prostor u dlopen()"
 
@@ -709,7 +714,7 @@ msgstr "nije moguće primijeniti dodatnu zaštitu memorije nakon premještanja"
 msgid "RTLD_NEXT used in code not dynamically loaded"
 msgstr "RTLD_NEXT korišten u kodu nije dinamički učitan"
 
-#: elf/dl-tls.c:1044
+#: elf/dl-tls.c:1136
 msgid "cannot create TLS data structures"
 msgstr "nije moguće stvoriti TLS podatkovne strukture"
 
@@ -725,218 +730,218 @@ msgstr "nije moguće dodijeliti memoriju za tablicu referencija inačica"
 msgid "DT_RELR without GLIBC_ABI_DT_RELR dependency"
 msgstr "DT_RELR bez GLIBC_ABI_DT_RELR ovisnosti"
 
-#: elf/ldconfig.c:124
+#: elf/ldconfig.c:125
 msgid "Print cache"
 msgstr "pregled sadržaja predmemorije (cache)"
 
-#: elf/ldconfig.c:125
+#: elf/ldconfig.c:126
 msgid "Generate verbose messages"
 msgstr "generira opširne poruke"
 
-#: elf/ldconfig.c:126
+#: elf/ldconfig.c:127
 msgid "Don't build cache"
 msgstr "ne gradi predmemoriju (cache)"
 
-#: elf/ldconfig.c:127
-msgid "Don't update symbolic links"
-msgstr "ne ažurira simboličke poveznice"
-
 #: elf/ldconfig.c:128
+msgid "Don't update symbolic links"
+msgstr "ne ažurira simbolične poveznice"
+
+#: elf/ldconfig.c:129
 msgid "Change to and use ROOT as root directory"
 msgstr "promijeni direktorij u ROOT i koristi ga kao root direktorij"
 
-#: elf/ldconfig.c:128
+#: elf/ldconfig.c:129
 msgid "ROOT"
 msgstr "ROOT"
 
-#: elf/ldconfig.c:129
+#: elf/ldconfig.c:130
 msgid "CACHE"
 msgstr "PREDMEMORIJA"
 
-#: elf/ldconfig.c:129
+#: elf/ldconfig.c:130
 msgid "Use CACHE as cache file"
 msgstr "rabi PREDMEMORIJU kao cache-datoteku"
 
-#: elf/ldconfig.c:130
+#: elf/ldconfig.c:131
 msgid "CONF"
 msgstr "KONFIG"
 
-#: elf/ldconfig.c:130
+#: elf/ldconfig.c:131
 msgid "Use CONF as configuration file"
 msgstr "rabi KONFIG kao konfiguracijsku datoteku"
 
-#: elf/ldconfig.c:131
+#: elf/ldconfig.c:132
 msgid "Only process directories specified on the command line.  Don't build cache."
 msgstr "obradi samo direktorije navedene u naredbenom retku i ne gradi predmemoriju"
 
-#: elf/ldconfig.c:132
+#: elf/ldconfig.c:133
 msgid "Manually link individual libraries."
 msgstr "ručno poveže pojedine biblioteke"
 
-#: elf/ldconfig.c:133
+#: elf/ldconfig.c:134
 msgid "FORMAT"
 msgstr "FORMAT"
 
-#: elf/ldconfig.c:133
+#: elf/ldconfig.c:134
 msgid "Format to use: new (default), old, or compat"
 msgstr "koristi se jedan od formata: new (zadano), old ili compat"
 
-#: elf/ldconfig.c:134
+#: elf/ldconfig.c:135
 msgid "Ignore auxiliary cache file"
 msgstr "zanemari datoteku pomoćne predmemorije"
 
-#: elf/ldconfig.c:142
+#: elf/ldconfig.c:143
 msgid "Configure Dynamic Linker Run Time Bindings."
 msgstr "Konfigurira dinamički linker."
 
-#: elf/ldconfig.c:276
+#: elf/ldconfig.c:277
 #, c-format
 msgid "Path `%s' given more than once"
 msgstr "Staza „%s“ navedena je više puta"
 
-#: elf/ldconfig.c:277
+#: elf/ldconfig.c:278
 #, c-format
 msgid "(from %s:%d and %s:%d)\n"
 msgstr "(od %s:%d i %s:%d)\n"
 
-#: elf/ldconfig.c:309 elf/ldconfig.c:350
+#: elf/ldconfig.c:310 elf/ldconfig.c:351
 #, c-format
 msgid "Could not form glibc-hwcaps path"
 msgstr "Nije moguće formirati glibc-hwcaps stazu"
 
-#: elf/ldconfig.c:323
+#: elf/ldconfig.c:324
 #, c-format
 msgid "Listing directory %s"
 msgstr "Nije moguće pročitati stazu %s"
 
-#: elf/ldconfig.c:405
+#: elf/ldconfig.c:406
 #, c-format
 msgid "Can't stat %s"
 msgstr "Nije moguće dobiti status %s"
 
-#: elf/ldconfig.c:486
+#: elf/ldconfig.c:487
 #, c-format
 msgid "Can't stat %s\n"
 msgstr "Nije moguće dobiti status %s\n"
 
-#: elf/ldconfig.c:496
+#: elf/ldconfig.c:497
 #, c-format
 msgid "%s is not a symbolic link\n"
-msgstr "%s nije simbolička poveznica\n"
+msgstr "%s nije simbolična poveznica\n"
 
-#: elf/ldconfig.c:515
+#: elf/ldconfig.c:516
 #, c-format
 msgid "Can't unlink %s"
 msgstr "Nije moguće ukloniti (unlink) vezu %s"
 
-#: elf/ldconfig.c:521
+#: elf/ldconfig.c:522
 #, c-format
 msgid "Can't link %s to %s"
 msgstr "Nije moguće napraviti vezu (link) %s na %s"
 
-#: elf/ldconfig.c:527
+#: elf/ldconfig.c:528
 msgid " (changed)\n"
 msgstr " (promijenjeno)\n"
 
-#: elf/ldconfig.c:529
+#: elf/ldconfig.c:530
 msgid " (SKIPPED)\n"
 msgstr " (PRESKOČENO)\n"
 
-#: elf/ldconfig.c:584
+#: elf/ldconfig.c:585
 #, c-format
 msgid "Can't find %s"
 msgstr "Nije moguće pronaći %s"
 
-#: elf/ldconfig.c:600 elf/ldconfig.c:744 elf/ldconfig.c:811
+#: elf/ldconfig.c:601 elf/ldconfig.c:760 elf/ldconfig.c:827
 #, c-format
 msgid "Cannot lstat %s"
 msgstr "Nije moguće dobiti status veze %s"
 
-#: elf/ldconfig.c:606
+#: elf/ldconfig.c:607
 #, c-format
 msgid "Ignored file %s since it is not a regular file."
 msgstr "%s datoteka je zanemarena jer nije obična datoteka."
 
-#: elf/ldconfig.c:614
+#: elf/ldconfig.c:615
 #, c-format
 msgid "No link created since soname could not be found for %s"
 msgstr "Nijedna poveznica nije stvorena jer soname nije bilo moguće naći za %s"
 
-#: elf/ldconfig.c:675
+#: elf/ldconfig.c:701
 #, c-format
 msgid " (from %s:%d)\n"
 msgstr " (od %s:%d)\n"
 
-#: elf/ldconfig.c:690
+#: elf/ldconfig.c:716
 #, c-format
 msgid "Can't open directory %s"
 msgstr "Nije moguće otvoriti direktorij %s"
 
-#: elf/ldconfig.c:727 elf/ldconfig.c:732
+#: elf/ldconfig.c:743 elf/ldconfig.c:748
 #, c-format
 msgid "Could not form library path"
 msgstr "Nije bilo moguće formirati stazu biblioteke"
 
-#: elf/ldconfig.c:761 elf/ldconfig.c:799 elf/readlib.c:78
+#: elf/ldconfig.c:777 elf/ldconfig.c:815 elf/readlib.c:81
 #, c-format
 msgid "Input file %s not found.\n"
 msgstr "Ulazna datoteka %s nije pronađena.\n"
 
-#: elf/ldconfig.c:768
+#: elf/ldconfig.c:784
 #, c-format
 msgid "Cannot stat %s"
 msgstr "Nije moguće stat %s"
 
-#: elf/ldconfig.c:887
+#: elf/ldconfig.c:903
 #, c-format
 msgid "libc6 library %s in wrong directory"
 msgstr "libc6 biblioteka %s je u krivom direktoriju"
 
-#: elf/ldconfig.c:906
+#: elf/ldconfig.c:922
 #, c-format
 msgid "libraries %s and %s in directory %s have same soname but different type."
 msgstr "Biblioteke %s i %s u direktoriju %s imaju isti soname ali su različite vrste."
 
-#: elf/ldconfig.c:1035
+#: elf/ldconfig.c:1051
 #, c-format
 msgid "Warning: ignoring configuration file that cannot be opened: %s"
 msgstr ""
 "Upozorenje: zanemarena konfiguracijska datoteka\n"
 "  koju nije moguće otvoriti: %s"
 
-#: elf/ldconfig.c:1083
+#: elf/ldconfig.c:1099
 #, c-format
 msgid "%s:%u: hwcap directive ignored"
 msgstr "%s:%u: hwcap direktiva -- zanemareno"
 
-#: elf/ldconfig.c:1102
+#: elf/ldconfig.c:1118
 #, c-format
 msgid "need absolute file name for configuration file when using -r"
 msgstr "treba apsolutno ime datoteke za konfiguracijsku datoteku kad se koristi -r"
 
-#: elf/ldconfig.c:1109 locale/programs/xasprintf.c:31
+#: elf/ldconfig.c:1125 locale/programs/xasprintf.c:31
 #: locale/programs/xmalloc.c:63 malloc/obstack.c:416 malloc/obstack.c:418
-#: posix/getconf.c:458 posix/getconf.c:697
+#: posix/getconf.c:460 posix/getconf.c:699
 #, c-format
 msgid "memory exhausted"
 msgstr "nema dovoljno memorije"
 
-#: elf/ldconfig.c:1142
+#: elf/ldconfig.c:1158
 #, c-format
 msgid "%s:%u: cannot read directory %s"
 msgstr "%s:%u: nije moguće čitati direktorij %s"
 
-#: elf/ldconfig.c:1180
+#: elf/ldconfig.c:1196
 #, c-format
 msgid "relative path `%s' used to build cache"
 msgstr "relativna staza „%s“ korištena je za izgradnju predmemorije"
 
-#: elf/ldconfig.c:1202
+#: elf/ldconfig.c:1218
 #, c-format
 msgid "Can't chdir to /"
 msgstr "Nije moguće promijeniti direktorij u / (root)"
 
-#: elf/ldconfig.c:1243
+#: elf/ldconfig.c:1259
 #, c-format
 msgid "Can't open cache file directory %s\n"
 msgstr "Nije moguće otvoriti direktorij %s s cache-datotekom\n"
@@ -1064,7 +1069,7 @@ msgstr "Potreban je jedan i samo jedan parametar s ID-om procesa (PID).\n"
 #: elf/pldd.c:102
 #, c-format
 msgid "invalid process ID '%s'"
-msgstr "nevaljani ID procesa „%s“"
+msgstr "nevaljani ID procesa ‘%s’"
 
 #: elf/pldd.c:110
 #, c-format
@@ -1084,7 +1089,7 @@ msgstr "nije moguće pripremiti čitanje %s/task"
 #: elf/pldd.c:157
 #, c-format
 msgid "invalid thread ID '%s'"
-msgstr "nevaljani ID dretve „%s“"
+msgstr "nevaljani ID dretve ‘%s’"
 
 #: elf/pldd.c:168
 #, c-format
@@ -1136,27 +1141,27 @@ msgstr "%s nije datoteka dijeljenog objekta (Vrsta: %d).\n"
 msgid "more than one dynamic segment\n"
 msgstr "više od jedan dinamički segment\n"
 
-#: elf/readlib.c:84
+#: elf/readlib.c:87
 #, c-format
 msgid "Cannot fstat file %s.\n"
 msgstr "Nije moguće dobiti status (fstat) od %s.\n"
 
-#: elf/readlib.c:95
+#: elf/readlib.c:98
 #, c-format
 msgid "File %s is empty, not checked."
 msgstr "Datoteka %s je prazna; nije provjerena."
 
-#: elf/readlib.c:101
+#: elf/readlib.c:104
 #, c-format
 msgid "File %s is too small, not checked."
 msgstr "Datoteka %s je premalena; nije provjerena."
 
-#: elf/readlib.c:111
+#: elf/readlib.c:114
 #, c-format
 msgid "Cannot mmap file %s.\n"
 msgstr "Nije moguće mapirati (mmap) datoteku %s u memoriju.\n"
 
-#: elf/readlib.c:149
+#: elf/readlib.c:152
 #, c-format
 msgid "%s is not an ELF file - it has the wrong magic bytes at the start.\n"
 msgstr "%s nije ELF datoteka -- na početku ima pogrešne magične bajtove.\n"
@@ -1169,7 +1174,7 @@ msgid ""
 msgstr ""
 "Uporaba: sln IZVORNIK ODREDIŠTE\n"
 "    ili: sln POPIS_DATOTEKA\n"
-"Stvara simboličke poveznice. Za detalje pogledajte u „info sln“\n"
+"Stvara simbolične poveznice. Za detalje pogledajte u info sln\n"
 "\n"
 
 #: elf/sln.c:97
@@ -1239,7 +1244,7 @@ msgstr "Obvezni argumenti za duge opcije, obvezni su i za sve korespondentne kra
 
 #: elf/sotruss.sh:55
 msgid "%s: option requires an argument -- '%s'\\n"
-msgstr "%s: opcija zahtijeva argument -- „%s“\\n"
+msgstr "%s: opcija zahtijeva argument -- ‘%s’\\n"
 
 #: elf/sotruss.sh:61
 msgid "%s: option is ambiguous; possibilities:"
@@ -1263,7 +1268,7 @@ msgstr ""
 
 #: elf/sotruss.sh:134
 msgid "%s: unrecognized option '%c%s'\\n"
-msgstr "%s: neprepoznata opcija „%c%s“\\n"
+msgstr "%s: neprepoznata opcija ‘%c%s’\\n"
 
 #: elf/sprof.c:76
 msgid "Output selection:"
@@ -1761,7 +1766,7 @@ msgstr "sintaktička greška u definiciji %s: %s"
 #: locale/programs/charmap.c:503 locale/programs/charmap.c:683
 #: locale/programs/charmap.c:780 locale/programs/repertoire.c:228
 msgid "no symbolic name given"
-msgstr "nije dano simboličko ime"
+msgstr "nije dano simbolično ime"
 
 #: locale/programs/charmap.c:557
 msgid "invalid encoding given"
@@ -1778,7 +1783,7 @@ msgstr "previše bajtova u kodiranju znakova"
 #: locale/programs/charmap.c:590 locale/programs/charmap.c:739
 #: locale/programs/charmap.c:822 locale/programs/repertoire.c:294
 msgid "no symbolic name given for end of range"
-msgstr "nije dano simboličko ime kraja raspona"
+msgstr "nije dano simbolično ime kraja raspona"
 
 #: locale/programs/charmap.c:614 locale/programs/ld-address.c:523
 #: locale/programs/ld-collate.c:2635 locale/programs/ld-collate.c:3799
@@ -2215,7 +2220,7 @@ msgstr "%s: nema ključne riječi „reorder-sections-end“"
 #: locale/programs/ld-collate.c:3954
 #, c-format
 msgid "%s: '%s' without matching 'ifdef' or 'ifndef'"
-msgstr "%s: „%s“ bez odgovarajućega „ifdef“ ili „ifndef“"
+msgstr "%s: ‘%s’ bez odgovarajućega ‘ifdef“ ili „ifndef’"
 
 #: locale/programs/ld-collate.c:3972
 #, c-format
@@ -2244,12 +2249,12 @@ msgstr "**interna greška** u %s, redak %u"
 #: locale/programs/ld-ctype.c:531
 #, c-format
 msgid "character '%s' in class `%s' must be in class `%s'"
-msgstr "znak „%s“ iz klase „%s“ mora biti u klasi „%s“"
+msgstr "znak ‘%s’ iz klase „%s“ mora biti u klasi „%s“"
 
 #: locale/programs/ld-ctype.c:546
 #, c-format
 msgid "character '%s' in class `%s' must not be in class `%s'"
-msgstr "znak „%s“ iz klase „%s“ ne smije biti u klasi „%s“"
+msgstr "znak ‘%s’ iz klase „%s“ ne smije biti u klasi „%s“"
 
 #: locale/programs/ld-ctype.c:575 locale/programs/ld-ctype.c:610
 #, c-format
@@ -2349,7 +2354,7 @@ msgstr "raspon s trotočkom mora sadržavati dva operanda istog tipa"
 #: locale/programs/ld-ctype.c:2372
 msgid "with symbolic name range values the absolute ellipsis `...' must not be used"
 msgstr ""
-"za raspon sa simboličkim imenima kao granicama raspona\n"
+"za raspon sa simboličnim imenima kao granicama raspona\n"
 "  ne smije se koristiti apsolutni simbol (ellipsis) „...“ (trotočka)"
 
 #: locale/programs/ld-ctype.c:2387
@@ -2446,7 +2451,7 @@ msgstr "%s: nema identifikacije za kategoriju „%s“"
 #: locale/programs/ld-identification.c:196
 #, c-format
 msgid "%s: unknown standard `%s' for category `%s'"
-msgstr "%s: nepoznati standard %s za kategoriju „%s“"
+msgstr "%s: nepoznati standard „%s“ za kategoriju „%s“"
 
 #: locale/programs/ld-identification.c:379
 #, c-format
@@ -2615,7 +2620,7 @@ msgstr "smeće pri kraju specifikacije koda znaka"
 
 #: locale/programs/linereader.c:531
 msgid "unterminated symbolic name"
-msgstr "nezavršeno simboličko ime"
+msgstr "nezavršeno simbolično ime"
 
 #: locale/programs/linereader.c:716
 #, c-format
@@ -2714,7 +2719,7 @@ msgstr "Ulazne datoteke:"
 
 #: locale/programs/localedef.c:117
 msgid "Symbolic character names defined in FILE"
-msgstr "simbolička imena znakova definirana u DATOTECI"
+msgstr "simbolična imena znakova definirana u DATOTECI"
 
 #: locale/programs/localedef.c:119
 msgid "Source definitions are found in FILE"
@@ -2722,7 +2727,7 @@ msgstr "DATOTEKA s definicijama izvora"
 
 #: locale/programs/localedef.c:121
 msgid "FILE contains mapping from symbolic names to UCS4 values"
-msgstr "DATOTEKA sadrži mapiranje simboličkih imena na UCS4 vrijednosti"
+msgstr "DATOTEKA sadrži mapiranje simboličnih imena na UCS4 vrijednosti"
 
 #: locale/programs/localedef.c:125
 msgid "Create output even if warning messages were issued"
@@ -2855,12 +2860,12 @@ msgstr ""
 #: locale/programs/localedef.c:545
 #, c-format
 msgid "cannot create output path '%s': %s"
-msgstr "nije moguće napraviti izlaznu stazu „%s“: %s"
+msgstr "nije moguće napraviti izlaznu stazu ‘%s’: %s"
 
 #: locale/programs/localedef.c:553
 #, c-format
 msgid "no write permission to output path '%s': %s"
-msgstr "nema dopuštenja za pisanje izlazne staze „%s“: %s"
+msgstr "nema dopuštenja za pisanje izlazne staze ‘%s’: %s"
 
 #: locale/programs/localedef.c:645
 msgid "circular dependencies between locale definitions"
@@ -2959,7 +2964,7 @@ msgstr "loša kontrolna suma u zaglavlju arhive"
 #: locale/programs/locarchive.c:734
 #, c-format
 msgid "locale '%s' already exists"
-msgstr "locale „%s“ već postoji"
+msgstr "locale ‘%s’ već postoji"
 
 #: locale/programs/locarchive.c:1009 locale/programs/locarchive.c:1024
 #: locale/programs/locarchive.c:1036 locale/programs/locarchive.c:1048
@@ -3116,7 +3121,7 @@ msgstr "neadekvatni mcheck_status -- **programska greška** u biblioteci\n"
 
 #: malloc/memusage.sh:31
 msgid "%s: option '%s' requires an argument\\n"
-msgstr "%s: opcija „%s“ zahtijeva argument\\n"
+msgstr "%s: opcija ‘%s’ zahtijeva argument\\n"
 
 #: malloc/memusage.sh:37
 msgid ""
@@ -3886,271 +3891,271 @@ msgstr " - svi podaci: "
 msgid " - remaining data %p: "
 msgstr " - ostatak podataka %p: "
 
-#: nscd/connections.c:519
+#: nscd/connections.c:530
 #, c-format
 msgid "invalid persistent database file \"%s\": %s"
 msgstr "nevaljana postojana datoteka baze podataka „%s“: %s"
 
-#: nscd/connections.c:527
+#: nscd/connections.c:538
 msgid "uninitialized header"
 msgstr "zaglavlje nije inicirano"
 
-#: nscd/connections.c:532
+#: nscd/connections.c:543
 msgid "header size does not match"
 msgstr "veličina zaglavlja nije točna"
 
-#: nscd/connections.c:542
+#: nscd/connections.c:553
 msgid "file size does not match"
 msgstr "veličina datoteke nije točna"
 
-#: nscd/connections.c:559
+#: nscd/connections.c:570
 msgid "verification failed"
 msgstr "provjera nije uspjela"
 
-#: nscd/connections.c:573
+#: nscd/connections.c:584
 #, c-format
 msgid "suggested size of table for database %s larger than the persistent database's table"
 msgstr ""
 "predložena veličina tablice za bazu podataka %s\n"
 "  je veća od trajne tablice baze podataka"
 
-#: nscd/connections.c:584 nscd/connections.c:668
+#: nscd/connections.c:595 nscd/connections.c:679
 #, c-format
 msgid "cannot create read-only descriptor for \"%s\"; no mmap"
 msgstr "nije moguće stvoriti deskriptor „%s“ samo za čitanje; nema mmap()"
 
-#: nscd/connections.c:600
+#: nscd/connections.c:611
 #, c-format
 msgid "cannot access '%s'"
-msgstr "nije moguće pristupiti k „%s“"
+msgstr "nije moguće pristupiti k ‘%s’"
 
-#: nscd/connections.c:648
+#: nscd/connections.c:659
 #, c-format
 msgid "database for %s corrupted or simultaneously used; remove %s manually if necessary and restart"
 msgstr ""
 "baza podataka za %s je oštećena ili se istovremeno koristi;\n"
 "ručno uklonite %s ako je potrebno i ponovno pokrenite"
 
-#: nscd/connections.c:654
+#: nscd/connections.c:665
 #, c-format
 msgid "cannot create %s; no persistent database used"
 msgstr "nije moguće stvoriti %s; trajna baza podataka se neće koristi"
 
-#: nscd/connections.c:657
+#: nscd/connections.c:668
 #, c-format
 msgid "cannot create %s; no sharing possible"
 msgstr "nije moguće stvoriti %s; dijeljenje (zajednička upotreba datoteke) nije moguće"
 
-#: nscd/connections.c:728
+#: nscd/connections.c:739
 #, c-format
 msgid "cannot write to database file %s: %s"
 msgstr "nije moguće pisati u datoteku baze podataka %s: %s"
 
-#: nscd/connections.c:784
+#: nscd/connections.c:795
 #, c-format
 msgid "cannot open socket: %s"
 msgstr "nije moguće otvoriti utičnicu: %s"
 
-#: nscd/connections.c:803
+#: nscd/connections.c:814
 #, c-format
 msgid "cannot enable socket to accept connections: %s"
 msgstr "nije moguće omogućiti utičnicu za prihvaćanje poveznica: %s"
 
-#: nscd/connections.c:860
+#: nscd/connections.c:871
 #, c-format
 msgid "disabled inotify-based monitoring for file `%s': %s"
 msgstr "onemogućuje se praćenje praćenje datoteke „%s“ s inotify: %s"
 
-#: nscd/connections.c:864
+#: nscd/connections.c:875
 #, c-format
 msgid "monitoring file `%s` (%d)"
 msgstr "prati se datoteka „%s“ (%d)"
 
-#: nscd/connections.c:877
+#: nscd/connections.c:888
 #, c-format
 msgid "disabled inotify-based monitoring for directory `%s': %s"
 msgstr "onemogućuje se praćenje praćenje direktorija „%s“ s inotify: %s"
 
-#: nscd/connections.c:881
+#: nscd/connections.c:892
 #, c-format
 msgid "monitoring directory `%s` (%d)"
 msgstr "prati se direktorij „%s“ (%d)"
 
-#: nscd/connections.c:909
+#: nscd/connections.c:920
 #, c-format
 msgid "monitoring file %s for database %s"
 msgstr "prati se datoteke %s za bazu podataka %s"
 
-#: nscd/connections.c:919
+#: nscd/connections.c:930
 #, c-format
 msgid "stat failed for file `%s'; will try again later: %s"
 msgstr "nije uspjelo dobiti status datoteke „%s“; pokušati će se ponovno: %s"
 
-#: nscd/connections.c:1038
+#: nscd/connections.c:1049
 #, c-format
 msgid "provide access to FD %d, for %s"
 msgstr "omogući pristup deskriptoru datoteke (FD) %d, za %s"
 
-#: nscd/connections.c:1050
+#: nscd/connections.c:1061
 #, c-format
 msgid "cannot handle old request version %d; current version is %d"
 msgstr "nije moguće obraditi zahtjev stare inačice %d; trenutačna inačica je %d"
 
-#: nscd/connections.c:1073
+#: nscd/connections.c:1084
 #, c-format
 msgid "request from %ld not handled due to missing permission"
 msgstr "zahtjev od %ld nije obrađen jer nema prava pristupa"
 
-#: nscd/connections.c:1078
+#: nscd/connections.c:1089
 #, c-format
 msgid "request from '%s' [%ld] not handled due to missing permission"
-msgstr "zahtjev od „%s“ [%ld] nije obrađen jer nema prava pristupa"
+msgstr "zahtjev od ‘%s’ [%ld] nije obrađen jer nema prava pristupa"
 
-#: nscd/connections.c:1083
+#: nscd/connections.c:1094
 msgid "request not handled due to missing permission"
 msgstr "zahtjev nije obrađen jer nema prava pristupa"
 
-#: nscd/connections.c:1121 nscd/connections.c:1147
+#: nscd/connections.c:1132 nscd/connections.c:1158
 #, c-format
 msgid "cannot write result: %s"
 msgstr "nije moguće zapisati rezultat: %s"
 
-#: nscd/connections.c:1238
+#: nscd/connections.c:1249
 #, c-format
 msgid "error getting caller's id: %s"
 msgstr "greška pri dobivanju identiteta pozivatelja: %s"
 
-#: nscd/connections.c:1348
+#: nscd/connections.c:1359
 #, c-format
 msgid "cannot open /proc/self/cmdline: %m; disabling paranoia mode"
 msgstr "nije moguće otvoriti /proc/self/cmdline: %m;onemogućujemo paranoični mȏd"
 
-#: nscd/connections.c:1371
+#: nscd/connections.c:1382
 #, c-format
 msgid "cannot change to old UID: %s; disabling paranoia mode"
 msgstr ""
 "nije moguće promijeniti na stari UID:\n"
 "  %s -- onemogućujemo paranoični mȏd"
 
-#: nscd/connections.c:1382
+#: nscd/connections.c:1393
 #, c-format
 msgid "cannot change to old GID: %s; disabling paranoia mode"
 msgstr ""
 "nije moguće promijeniti na stari GID:\n"
 "  %s -- onemogućujemo paranoični mȏd"
 
-#: nscd/connections.c:1396
+#: nscd/connections.c:1407
 #, c-format
 msgid "cannot change to old working directory: %s; disabling paranoia mode"
 msgstr ""
 "nije moguće promijeniti u stari radni direktorij:\n"
 "  %s -- onemogućujemo paranoični mȏd"
 
-#: nscd/connections.c:1443
+#: nscd/connections.c:1454
 #, c-format
 msgid "re-exec failed: %s; disabling paranoia mode"
 msgstr ""
 "ponovljeno izvršavanje nije uspjelo:\n"
 "  %s -- onemogućujemo paranoični mȏd"
 
-#: nscd/connections.c:1452
+#: nscd/connections.c:1463
 #, c-format
 msgid "cannot change current working directory to \"/\": %s"
 msgstr "nije moguće promijeniti trenutačni radni direktorij u „/“: %s"
 
-#: nscd/connections.c:1636
+#: nscd/connections.c:1647
 #, c-format
 msgid "short read while reading request: %s"
 msgstr "nepotpuno pročitani zahtjev: %s"
 
-#: nscd/connections.c:1669
+#: nscd/connections.c:1680
 #, c-format
 msgid "key length in request too long: %d"
 msgstr "duljina ključa u zahtjevu je prevelika: %d"
 
-#: nscd/connections.c:1682
+#: nscd/connections.c:1693
 #, c-format
 msgid "short read while reading request key: %s"
 msgstr "nepotpuno pročitani ključ zahtjeva: %s"
 
-#: nscd/connections.c:1692
+#: nscd/connections.c:1703
 #, c-format
 msgid "handle_request: request received (Version = %d) from PID %ld"
 msgstr "handle_request: zahtjev je primljen (inačica = %d) od PID-a %ld"
 
-#: nscd/connections.c:1697
+#: nscd/connections.c:1708
 #, c-format
 msgid "handle_request: request received (Version = %d)"
 msgstr "handle_request: zahtjev je primljen (inačica = %d)"
 
-#: nscd/connections.c:1837
+#: nscd/connections.c:1848
 #, c-format
 msgid "ignored inotify event for `%s` (file exists)"
 msgstr "zanemareni inotify događaj za „%s“ (datoteka postoji)"
 
-#: nscd/connections.c:1842
+#: nscd/connections.c:1853
 #, c-format
 msgid "monitored file `%s` was %s, removing watch"
 msgstr "praćena datoteka „%s“ bila je »%s«; motrenje prestaje"
 
-#: nscd/connections.c:1850 nscd/connections.c:1892
+#: nscd/connections.c:1861 nscd/connections.c:1903
 #, c-format
 msgid "failed to remove file watch `%s`: %s"
 msgstr "nije uspjelo ukloniti nadzor nad datotekom „%s“: %s"
 
-#: nscd/connections.c:1865
+#: nscd/connections.c:1876
 #, c-format
 msgid "monitored file `%s` was written to"
 msgstr "praćena datoteka „%s“ je zapisana u"
 
-#: nscd/connections.c:1889
+#: nscd/connections.c:1900
 #, c-format
 msgid "monitored parent directory `%s` was %s, removing watch on `%s`"
 msgstr "praćeni naddirektorij „%s“ je bio »%s«; motrenje „%s“ prestaje"
 
-#: nscd/connections.c:1915
+#: nscd/connections.c:1926
 #, c-format
 msgid "monitored file `%s` was %s, adding watch"
 msgstr "praćena datoteka „%s“ bila je »%s«; motrenje započinje"
 
-#: nscd/connections.c:1927
+#: nscd/connections.c:1938
 #, c-format
 msgid "failed to add file watch `%s`: %s"
 msgstr "nije uspjelo dodati motrenje datoteke „%s“: %s"
 
-#: nscd/connections.c:2105 nscd/connections.c:2270
+#: nscd/connections.c:2116 nscd/connections.c:2281
 #, c-format
 msgid "disabled inotify-based monitoring after read error %d"
 msgstr "nakon greške čitanja %d onemogućuje se praćenje s inotify"
 
-#: nscd/connections.c:2386
+#: nscd/connections.c:2397
 msgid "could not initialize conditional variable"
 msgstr "nije bilo moguće inicirati uvjetnu varijablu"
 
-#: nscd/connections.c:2394
+#: nscd/connections.c:2405
 msgid "could not start clean-up thread; terminating"
 msgstr "nije bilo moguće pokrenuti „čistačica“-dretvu -- završava se"
 
-#: nscd/connections.c:2408
+#: nscd/connections.c:2419
 msgid "could not start any worker thread; terminating"
 msgstr "nije bilo moguće pokrenuti nijednu „radnik“-dretvu -- završava se"
 
-#: nscd/connections.c:2463 nscd/connections.c:2465 nscd/connections.c:2481
-#: nscd/connections.c:2491 nscd/connections.c:2509 nscd/connections.c:2520
-#: nscd/connections.c:2530
+#: nscd/connections.c:2474 nscd/connections.c:2476 nscd/connections.c:2492
+#: nscd/connections.c:2502 nscd/connections.c:2520 nscd/connections.c:2531
+#: nscd/connections.c:2541
 #, c-format
 msgid "Failed to run nscd as user '%s'"
-msgstr "nije uspjelo pokrenuti nscd kao korisnik „%s“"
+msgstr "nije uspjelo pokrenuti nscd kao korisnik ‘%s’"
 
-#: nscd/connections.c:2483
+#: nscd/connections.c:2494
 msgid "initial getgrouplist failed"
 msgstr "neuspješni prvotni getgrouplist()"
 
-#: nscd/connections.c:2492
+#: nscd/connections.c:2503
 msgid "getgrouplist failed"
 msgstr "neuspješni getgrouplist()"
 
-#: nscd/connections.c:2510
+#: nscd/connections.c:2521
 msgid "setgroups failed"
 msgstr "neuspješni setgroups()"
 
@@ -4183,24 +4188,24 @@ msgstr "oslobođeno je %zu bajtova u %s predmemoriji"
 #: nscd/mem.c:563
 #, c-format
 msgid "no more memory for database '%s'"
-msgstr "nema više memorije za bazu podataka „%s“"
+msgstr "nema više memorije za bazu podataka ‘%s’"
 
-#: nscd/netgroupcache.c:121
+#: nscd/netgroupcache.c:198
 #, c-format
 msgid "Haven't found \"%s\" in netgroup cache!"
 msgstr "Nije pronađeno „%s“ u netgroup predmemoriji!"
 
-#: nscd/netgroupcache.c:123
+#: nscd/netgroupcache.c:200
 #, c-format
 msgid "Reloading \"%s\" in netgroup cache!"
 msgstr "Ponovno se učitava „%s“ u netgroup predmemoriju!"
 
-#: nscd/netgroupcache.c:469
+#: nscd/netgroupcache.c:486
 #, c-format
 msgid "Haven't found \"%s (%s,%s,%s)\" in netgroup cache!"
 msgstr "Nije pronađen „%s (%s,%s,%s)“ u netgroup predmemoriji!"
 
-#: nscd/netgroupcache.c:472
+#: nscd/netgroupcache.c:489
 #, c-format
 msgid "Reloading \"%s (%s,%s,%s)\" in netgroup cache!"
 msgstr "Ponovno se učitava „%s (%s,%s,%s)“ u netgroup predmemoriju!"
@@ -4253,7 +4258,7 @@ msgstr "rabi zasebnu predmemoriju za svakog korisnika"
 msgid "Name Service Cache Daemon."
 msgstr "Name Service Cache Daemon (usluge za imena predmemorija)"
 
-#: nscd/nscd.c:158 nss/getent.c:995 nss/makedb.c:207
+#: nscd/nscd.c:158 nss/getent.c:995 nss/makedb.c:208
 #, c-format
 msgid "wrong number of arguments"
 msgstr "nevaljani broj argumenata"
@@ -4309,7 +4314,7 @@ msgstr "Samo root smije koristiti ovu opciju!"
 #: nscd/nscd.c:449
 #, c-format
 msgid "'%s' is not a known database"
-msgstr "„%s“ nije poznata vrsta baze podataka"
+msgstr "‘%s’ nije poznata vrsta baze podataka"
 
 #: nscd/nscd.c:464
 #, c-format
@@ -4695,31 +4700,31 @@ msgstr "Podržane baze podataka:\n"
 msgid "Unknown database: %s\n"
 msgstr "Nepoznata baza podataka: %s\n"
 
-#: nss/makedb.c:120
+#: nss/makedb.c:121
 msgid "Convert key to lower case"
 msgstr "pretvori ključ u mala slova"
 
-#: nss/makedb.c:123
+#: nss/makedb.c:124
 msgid "Do not print messages while building database"
 msgstr "ne ispisivati poruke pri izgradnji baze podataka"
 
-#: nss/makedb.c:125
+#: nss/makedb.c:126
 msgid "Print content of database file, one entry a line"
 msgstr "ispiše sadržaj baze podataka po jednu stavku po retku"
 
-#: nss/makedb.c:126
+#: nss/makedb.c:127
 msgid "CHAR"
 msgstr "ZNAK"
 
-#: nss/makedb.c:127
+#: nss/makedb.c:128
 msgid "Generated line not part of iteration"
 msgstr "generirani redak nije dio iteracije"
 
-#: nss/makedb.c:132
+#: nss/makedb.c:133
 msgid "Create simple database from textual input."
 msgstr "Stvori jednostavnu bazu podataka iz tekstnog unosa."
 
-#: nss/makedb.c:135
+#: nss/makedb.c:136
 msgid ""
 "INPUT-FILE OUTPUT-FILE\n"
 "-o OUTPUT-FILE INPUT-FILE\n"
@@ -4729,91 +4734,96 @@ msgstr ""
 "-o IZLAZNA DATOTEKA ULAZNA-DATOTEKA\n"
 "-u ULAZNA-DATOTEKA"
 
-#: nss/makedb.c:228
+#: nss/makedb.c:229
 #, c-format
 msgid "cannot open database file `%s'"
 msgstr "nije moguće otvoriti datoteku baze podataka „%s“"
 
-#: nss/makedb.c:273
+#: nss/makedb.c:274
 #, c-format
 msgid "no entries to be processed"
 msgstr "nema stavki za obradu"
 
-#: nss/makedb.c:283
+#: nss/makedb.c:284
 #, c-format
 msgid "cannot create temporary file name"
 msgstr "nije moguće stvoriti privremeno ime datoteke"
 
-#: nss/makedb.c:289
+#: nss/makedb.c:290
 #, c-format
 msgid "cannot create temporary file"
 msgstr "nije moguće stvoriti privremenu datoteku"
 
-#: nss/makedb.c:305
+#: nss/makedb.c:306
 #, c-format
 msgid "cannot stat newly created file"
 msgstr "nije moguće stat novo stvorene datoteke"
 
-#: nss/makedb.c:316
+#: nss/makedb.c:317
 #, c-format
 msgid "cannot rename temporary file"
 msgstr "nije moguće promijeniti ime privremene datoteke"
 
-#: nss/makedb.c:528 nss/makedb.c:551
+#: nss/makedb.c:529 nss/makedb.c:552
 #, c-format
 msgid "cannot create search tree"
 msgstr "nije moguće stvoriti stablo pretraživanja"
 
-#: nss/makedb.c:557
+#: nss/makedb.c:558
 msgid "duplicate key"
 msgstr "duplikat ključa"
 
-#: nss/makedb.c:569
+#: nss/makedb.c:570
 #, c-format
 msgid "problems while reading `%s'"
 msgstr "problemi pri čitanju „%s“"
 
-#: nss/makedb.c:805
+#: nss/makedb.c:748
+#, c-format
+msgid "failed to allocate memory"
+msgstr "nije uspjelo dodijeliti memoriju"
+
+#: nss/makedb.c:814
 #, c-format
 msgid "failed to write new database file"
 msgstr "novu datoteku baze podataka nije uspjelo zapisati"
 
-#: nss/makedb.c:822
+#: nss/makedb.c:833
 #, c-format
 msgid "cannot stat database file"
 msgstr "nije moguće stat datoteke baze podataka"
 
-#: nss/makedb.c:827
+#: nss/makedb.c:838
 #, c-format
 msgid "cannot map database file"
 msgstr "nije moguće mapirati bazu podataka u memoriju"
 
-#: nss/makedb.c:830
+#: nss/makedb.c:841
 #, c-format
 msgid "file not a database file"
 msgstr "datoteka nije baza podataka"
 
-#: nss/makedb.c:882
+#: nss/makedb.c:893
 #, c-format
 msgid "cannot initialize SELinux context"
 msgstr "nije moguće inicirati SELinux kontekst"
 
-#: nss/makedb.c:891
+#: nss/makedb.c:902
 #, c-format
 msgid "cannot set file creation context for `%s'"
 msgstr "nije moguće uspostaviti kontekst stvaranja datoteke za „%s“"
 
-#: posix/getconf.c:417
+#: posix/getconf.c:419
 #, c-format
 msgid "Usage: %s [-v specification] variable_name [pathname]\n"
 msgstr "Uporaba: %s [-v specifikacija] ime_varijable_sustava [staza]\n"
 
-#: posix/getconf.c:420
+#: posix/getconf.c:422
 #, c-format
 msgid "       %s -a [pathname]\n"
 msgstr "       %s -a [staza]\n"
 
-#: posix/getconf.c:496
+#: posix/getconf.c:498
 #, c-format
 msgid ""
 "Usage: getconf [-v SPEC] VAR\n"
@@ -4836,21 +4846,21 @@ msgstr ""
 "konfiguracijskih varijabli sustava.\n"
 "\n"
 
-#: posix/getconf.c:572
+#: posix/getconf.c:574
 #, c-format
 msgid "unknown specification \"%s\""
 msgstr "nepoznata specifikacija „%s“"
 
-#: posix/getconf.c:624
+#: posix/getconf.c:626
 #, c-format
 msgid "Couldn't execute %s"
 msgstr "Nije bilo moguće izvršiti %s"
 
-#: posix/getconf.c:669 posix/getconf.c:685
+#: posix/getconf.c:671 posix/getconf.c:687
 msgid "undefined"
 msgstr "nije definirano"
 
-#: posix/getconf.c:707
+#: posix/getconf.c:709
 #, c-format
 msgid "Unrecognized variable `%s'"
 msgstr "Neprepoznata varijabla „%s“"
@@ -4858,37 +4868,37 @@ msgstr "Neprepoznata varijabla „%s“"
 #: posix/getopt.c:278
 #, c-format
 msgid "%s: option '%s%s' is ambiguous\n"
-msgstr "%s: opcija „%s%s“ nije jednoznačna\n"
+msgstr "%s: opcija ‘%s%s’ nije jednoznačna\n"
 
 #: posix/getopt.c:284
 #, c-format
 msgid "%s: option '%s%s' is ambiguous; possibilities:"
-msgstr "%s: opcija „%s%s“ nije jednoznačna; mogućnosti:"
+msgstr "%s: opcija ‘%s%s’ nije jednoznačna; mogućnosti:"
 
 #: posix/getopt.c:319
 #, c-format
 msgid "%s: unrecognized option '%s%s'\n"
-msgstr "%s: neprepoznata opcija „%s%s“\n"
+msgstr "%s: neprepoznata opcija ‘%s%s’\n"
 
 #: posix/getopt.c:345
 #, c-format
 msgid "%s: option '%s%s' doesn't allow an argument\n"
-msgstr "%s: opcija „%s%s“ ne dopušta argument\n"
+msgstr "%s: opcija ‘%s%s’ ne dopušta argument\n"
 
 #: posix/getopt.c:360
 #, c-format
 msgid "%s: option '%s%s' requires an argument\n"
-msgstr "%s: opcija „%s%s“ zahtijeva argument\n"
+msgstr "%s: opcija ‘%s%s’ zahtijeva argument\n"
 
 #: posix/getopt.c:621
 #, c-format
 msgid "%s: invalid option -- '%c'\n"
-msgstr "%s: nevaljana opcija -- „%c“\n"
+msgstr "%s: nevaljana opcija -- ‘%c’\n"
 
 #: posix/getopt.c:636 posix/getopt.c:682
 #, c-format
 msgid "%s: option requires an argument -- '%c'\n"
-msgstr "%s: opcija zahtijeva argument -- „%c“\n"
+msgstr "%s: opcija zahtijeva argument -- ‘%c’\n"
 
 #: posix/regcomp.c:138
 msgid "No match"
@@ -5147,7 +5157,7 @@ msgstr "Dostupni su izlazni međuspremnici"
 msgid "Input message available"
 msgstr "Dostupne su ulazne poruke"
 
-#: stdio-common/psiginfo-data.h:46 timezone/zdump.c:375 timezone/zic.c:564
+#: stdio-common/psiginfo-data.h:46 timezone/zdump.c:445 timezone/zic.c:652
 msgid "I/O error"
 msgstr "U/I greška"
 
@@ -6037,7 +6047,7 @@ msgstr "Veza odbijena"
 #. TRANS This often indicates a cycle of symbolic links.
 #: sysdeps/gnu/errlist.h:428
 msgid "Too many levels of symbolic links"
-msgstr "Previše razina simboličkih poveznica"
+msgstr "Previše razina simboličnih poveznica"
 
 #. TRANS Filename too long (longer than @code{PATH_MAX}; @pxref{Limits for
 #. TRANS Files}) or host name too long (in @code{gethostname} or
@@ -6550,51 +6560,71 @@ msgstr "String parametra nije ispravno kodiran"
 msgid "Result too large for supplied buffer"
 msgstr "Rezultat je prevelik za dani spremnik"
 
-#: sysdeps/unix/sysv/linux/ia64/makecontext.c:57
-#, c-format
-msgid "makecontext: does not know how to handle more than 8 arguments\n"
-msgstr "makecontext(): ne zna kako rukovati s više od 8 argumenata\n"
-
-#: sysdeps/x86/dl-cet.c:154
-msgid "rebuild shared object with IBT support enabled"
-msgstr "ponovna izgradnja zajedničkog objekta s omogućenom IBT podrškom"
-
-#: sysdeps/x86/dl-cet.c:165
-msgid "rebuild shared object with SHSTK support enabled"
-msgstr "ponovna izgradnja zajedničkog objekta s omogućenom podrškom za SHSTK"
-
-# Intel CET (Control-Flow Enforcement Technology)
-#: sysdeps/x86/dl-cet.c:194
-msgid "can't disable CET"
-msgstr "nije moguće onemogućiti CET (Control-Flow Enforcement Technology)"
-
 #: sysdeps/x86/dl-prop.h:61
 msgid "CPU ISA level is lower than required"
 msgstr "ISA razina za CPU je niža od potrebne razine"
 
-#: sysdeps/x86/readelflib.c:62
+#: sysdeps/x86/readelflib.c:49
 #, c-format
 msgid "%s is for unknown machine %d.\n"
 msgstr "%s je za nepoznati stroj %d.\n"
 
-#: timezone/zdump.c:332
+#: sysdeps/x86_64/dl-cet.c:214
+msgid "rebuild shared object with IBT support enabled"
+msgstr "ponovna izgradnja zajedničkog objekta s omogućenom IBT podrškom"
+
+#: sysdeps/x86_64/dl-cet.c:233
+msgid "rebuild shared object with SHSTK support enabled"
+msgstr "ponovna izgradnja zajedničkog objekta s omogućenom podrškom za SHSTK"
+
+# Intel CET (Control-Flow Enforcement Technology)
+#: sysdeps/x86_64/dl-cet.c:251
+msgid "can't disable IBT"
+msgstr "nije moguće onemogućiti IBT"
+
+# Intel CET (Control-Flow Enforcement Technology)
+#: sysdeps/x86_64/dl-cet.c:253
+msgid "can't disable SHSTK"
+msgstr "nije moguće onemogućiti SHSTK"
+
+#: timezone/zdump.c:131
+#, c-format
+msgid "%s: size overflow\n"
+msgstr "%s: prekoračenje veličine\n"
+
+#: timezone/zdump.c:170
+#, c-format
+msgid "%s: Memory exhausted\n"
+msgstr "%s: Nema dovoljno memorije\n"
+
+#: timezone/zdump.c:257
+#, c-format
+msgid "%s: setenv: %s\n"
+msgstr "%s: setenv: %s\n"
+
+#: timezone/zdump.c:337 timezone/zdump.c:604
+#, c-format
+msgid "%s: unknown timezone '%s': %s\n"
+msgstr "%s: nepoznata vremenska zona ‘%s’: %s\n"
+
+#: timezone/zdump.c:402
 msgid "has characters other than ASCII alphanumerics, '-' or '+'"
 msgstr "ima znakove različite od ASCII slova i brojeva i „-“ or „+“"
 
-#: timezone/zdump.c:334
+#: timezone/zdump.c:404
 msgid "has fewer than 3 characters"
 msgstr "ima manje od 3 znaka"
 
-#: timezone/zdump.c:336
+#: timezone/zdump.c:406
 msgid "has more than 6 characters"
 msgstr "ima više od 6 znakova"
 
-#: timezone/zdump.c:341
+#: timezone/zdump.c:411
 #, c-format
 msgid "%s: warning: zone \"%s\" abbreviation \"%s\" %s\n"
 msgstr "%s: upozorenje: zona „%s“ kratica „%s“ %s\n"
 
-#: timezone/zdump.c:387
+#: timezone/zdump.c:457
 #, c-format
 msgid ""
 "%s: usage: %s OPTIONS TIMEZONE ...\n"
@@ -6623,506 +6653,551 @@ msgstr ""
 "\n"
 "Prijavite greške na %s.\n"
 
-#: timezone/zdump.c:473
+#: timezone/zdump.c:543
 #, c-format
 msgid "%s: wild -c argument %s\n"
 msgstr "%s: suvišni argument %s na opciji -c\n"
 
-#: timezone/zdump.c:506
+#: timezone/zdump.c:576
 #, c-format
 msgid "%s: wild -t argument %s\n"
 msgstr "%s: suvišni argument %s na opciji -t\n"
 
-#: timezone/zic.c:432
+#: timezone/zdump.c:857
+#, c-format
+msgid " (gmtime failed)"
+msgstr " (neuspješan gmtime)"
+
+#: timezone/zdump.c:867
+#, c-format
+msgid " (localtime failed)"
+msgstr " (neuspješan localtime)"
+
+#: timezone/zic.c:463
 #, c-format
 msgid "%s: Memory exhausted: %s\n"
 msgstr "%s: Nema dovoljno memorije: %s\n"
 
-#: timezone/zic.c:440
+#: timezone/zic.c:470
 msgid "size overflow"
 msgstr "prekoračenje veličine"
 
-#: timezone/zic.c:450
-msgid "alignment overflow"
-msgstr "prekoračenje poravnanja"
-
-#: timezone/zic.c:498
+#: timezone/zic.c:559
 msgid "integer overflow"
 msgstr "prekoračenje pri operaciji s cijelim brojem"
 
-#: timezone/zic.c:532
+#: timezone/zic.c:585
+msgid "command line"
+msgstr "naredbeni redak"
+
+#: timezone/zic.c:588
+msgid "standard input"
+msgstr "standardni ulaz"
+
+#: timezone/zic.c:616
 #, c-format
 msgid "\"%s\", line %<PRIdMAX>: "
 msgstr "„%s“, redak %<PRIdMAX>: "
 
-#: timezone/zic.c:535
+#: timezone/zic.c:620
 #, c-format
 msgid " (rule from \"%s\", line %<PRIdMAX>)"
 msgstr " (pravilo iz „%s“, redak %<PRIdMAX>)"
 
-#: timezone/zic.c:554
+#: timezone/zic.c:639
 #, c-format
 msgid "warning: "
 msgstr "upozorenje: "
 
-#: timezone/zic.c:579
+#: timezone/zic.c:669
 #, c-format
 msgid ""
 "%s: usage is %s [ --version ] [ --help ] [ -v ] \\\n"
 "\t[ -b {slim|fat} ] [ -d directory ] [ -l localtime ] [ -L leapseconds ] \\\n"
-"\t[ -p posixrules ] [ -r '[@lo][/@hi]' ] [ -t localtime-link ] \\\n"
+"\t[ -p posixrules ] [ -r '[@lo][/@hi]' ] [ -R '@hi' ] \\\n"
+"\t[ -t localtime-link ] \\\n"
 "\t[ filename ... ]\n"
 "\n"
 "Report bugs to %s.\n"
 msgstr ""
 "%s: uporaba: %s [--version] [--help] [-v] \\\n"
 "\t[-b {slim|fat}] [-d direktorij] [-l lokalno_vrijeme] [-L prijestupne_sekunde] \\\n"
-"\t[-p posix_pravila] [-r -r '[@lo][/@hi]'] [-t lokalno_vrijeme_link]\\\n"
+"\t[-p posix_pravila]  -r '[@lo][/@hi]'] [-R '@hi'] \\\n"
+"\t[-t localtime-link] \\\n"
 "\t[datoteka ...]\n"
 "\n"
 "Prijavite (na engleskom) greške na %s.\n"
 
-#: timezone/zic.c:604
+#: timezone/zic.c:695
 #, c-format
 msgid "%s: Can't chdir to %s: %s\n"
 msgstr "%s: Nije moguće promijeniti (chdir) radni direktorij u %s: %s\n"
 
-#: timezone/zic.c:698
+#: timezone/zic.c:786
+#, c-format
+msgid "\"Link %s %s\" is part of a link cycle"
+msgstr "„Link %s %s“ je dio ciklične poveznice"
+
+#: timezone/zic.c:797
+#, c-format
+msgid "link %s targets itself"
+msgstr "poveznica %s cilja samu sebe"
+
+#: timezone/zic.c:817
+#, c-format
+msgid "link %s targeting link %s mishandled by pre-2023 zic"
+msgstr "zic stariji od 2023. zamrsio je poveznicu %s koja cilja poveznicu %s"
+
+#: timezone/zic.c:821
+#, c-format
+msgid "link %s targeting link %s"
+msgstr "poveznica %s cilja poveznicu %s"
+
+#: timezone/zic.c:992
 msgid "wild compilation-time specification of zic_t"
 msgstr "greška u kompilaciji: tip „zic_t“ ima premalo bita; loše specificirani zic_t"
 
-#: timezone/zic.c:716 timezone/zic.c:720
+#: timezone/zic.c:1011 timezone/zic.c:1015
 msgid "incompatible -b options"
 msgstr "nekompatibilne -b opcije"
 
-#: timezone/zic.c:723
+#: timezone/zic.c:1018
 #, c-format
 msgid "invalid option: -b '%s'"
-msgstr "nevaljana opcija: -b „%s“"
+msgstr "nevaljana opcija: -b ‘%s’"
 
-#: timezone/zic.c:730
+#: timezone/zic.c:1025
 #, c-format
 msgid "%s: More than one -d option specified\n"
 msgstr "%s: Navedeno je više od jedne opcije -d\n"
 
-#: timezone/zic.c:740
+#: timezone/zic.c:1036
 #, c-format
 msgid "%s: More than one -l option specified\n"
 msgstr "%s: Navedeno je više od jedne opcije -l\n"
 
-#: timezone/zic.c:750
+#: timezone/zic.c:1047
 #, c-format
 msgid "%s: More than one -p option specified\n"
 msgstr "%s: Navedeno je više od jedne opcije -p\n"
 
-#: timezone/zic.c:758
+#: timezone/zic.c:1056
 #, c-format
 msgid "%s: More than one -t option specified\n"
 msgstr "%s: Navedeno je više od jedne opcije -t\n"
 
-#: timezone/zic.c:767
-msgid "-y is obsolescent"
-msgstr "-y je zastarjela"
+#: timezone/zic.c:1064
+msgid "-y ignored"
+msgstr "-y zanemareno"
 
-#: timezone/zic.c:771
-#, c-format
-msgid "%s: More than one -y option specified\n"
-msgstr "%s: Navedeno je više od jedne opcije -y\n"
-
-#: timezone/zic.c:781
+#: timezone/zic.c:1071
 #, c-format
 msgid "%s: More than one -L option specified\n"
 msgstr "%s: Navedeno je više od jedne opcije -L\n"
 
-#: timezone/zic.c:792
+#: timezone/zic.c:1083
 #, c-format
 msgid "%s: More than one -r option specified\n"
 msgstr "%s: Navedeno je više od jedne -r opcije\n"
 
-#: timezone/zic.c:798
+#: timezone/zic.c:1090
 #, c-format
 msgid "%s: invalid time range: %s\n"
 msgstr "%s: nevaljano vremensko razdoblje: %s\n"
 
-#: timezone/zic.c:805
+#: timezone/zic.c:1098
+#, c-format
+msgid "%s: invalid time: %s\n"
+msgstr "%s: nevaljano vrijeme: %s\n"
+
+#: timezone/zic.c:1104
 msgid "-s ignored"
 msgstr "-s zanemareno"
 
-#: timezone/zic.c:848
-msgid "link to link"
-msgstr "poveznica na drugu vezu"
+#: timezone/zic.c:1110
+#, c-format
+msgid "%s: -R time exceeds -r cutoff\n"
+msgstr "%s: vrijeme -R je veće od ograničenja -r\n"
 
-#: timezone/zic.c:851 timezone/zic.c:855
-msgid "command line"
-msgstr "naredbeni redak"
-
-#: timezone/zic.c:871
+#: timezone/zic.c:1171
 msgid "empty file name"
 msgstr "ime datoteke je prazno"
 
-#: timezone/zic.c:874
+#: timezone/zic.c:1174
 #, c-format
 msgid "file name '%s' begins with '/'"
-msgstr "ime datoteke „%s“ počinje s „/“"
+msgstr "ime datoteke ‘%s’ počinje s ‘/’"
 
-#: timezone/zic.c:884
+#: timezone/zic.c:1184
 #, c-format
 msgid "file name '%s' contains '%.*s' component"
-msgstr "ime datoteke „%s“ sadrži komponentu „%.*s“"
+msgstr "ime datoteke ‘%s’ sadrži komponentu ‘%.*s’"
 
-#: timezone/zic.c:890
+#: timezone/zic.c:1190
 #, c-format
 msgid "file name '%s' component contains leading '-'"
-msgstr "ime datoteke „%s“ komponenta sadrži počinje sa „-“"
+msgstr "ime datoteke ‘%s’ komponenta sadrži počinje sa ‘-’"
 
-#: timezone/zic.c:893
+#: timezone/zic.c:1193
 #, c-format
 msgid "file name '%s' contains overlength component '%.*s...'"
-msgstr "ime datoteke „%s“ sadrži predugu komponentu „%.*s“"
+msgstr "ime datoteke ‘%s’ sadrži predugu komponentu ‘%.*s...’"
 
-#: timezone/zic.c:921
+#: timezone/zic.c:1221
 #, c-format
 msgid "file name '%s' contains byte '%c'"
-msgstr "ime datoteke „%s“ sadrži bajt „%c“"
+msgstr "ime datoteke ‘%s’ sadrži bajt ‘%c’"
 
-#: timezone/zic.c:922
+#: timezone/zic.c:1222
 #, c-format
 msgid "file name '%s' contains byte '\\%o'"
-msgstr "ime datoteke „%s“ sadrži bajt „\\%o“"
+msgstr "ime datoteke ‘%s’ sadrži bajt ‘\\%o’"
 
-#: timezone/zic.c:992
-#, c-format
-msgid "%s: link from %s/%s failed: %s\n"
-msgstr "%s: napraviti poveznicu s %s/%s nije uspjelo: %s\n"
-
-#: timezone/zic.c:1002 timezone/zic.c:1992
-#, c-format
-msgid "%s: Can't remove %s/%s: %s\n"
-msgstr "%s: Nije moguće ukloniti %s/%s: %s\n"
-
-#: timezone/zic.c:1026
-#, c-format
-msgid "symbolic link used because hard link failed: %s"
-msgstr "stvorena je simbolička poveznica jer čvrsta poveznica nije uspjela: %s"
-
-#: timezone/zic.c:1034
-#, c-format
-msgid "%s: Can't read %s/%s: %s\n"
-msgstr "%s: Nije moguće pročitati %s/%s: %s\n"
-
-#: timezone/zic.c:1041 timezone/zic.c:2005
+#: timezone/zic.c:1369
 #, c-format
 msgid "%s: Can't create %s/%s: %s\n"
 msgstr "%s: Nije moguće stvoriti %s/%s: %s\n"
 
-#: timezone/zic.c:1050
+#: timezone/zic.c:1388
+#, c-format
+msgid "%s: rename to %s/%s: %s\n"
+msgstr "%s: promijeni ime na %s/%s: %s\n"
+
+#: timezone/zic.c:1463
+#, c-format
+msgid "%s: Can't remove %s/%s: %s\n"
+msgstr "%s: Nije moguće ukloniti %s/%s: %s\n"
+
+#: timezone/zic.c:1507
+#, c-format
+msgid "%s: Can't link %s/%s to %s/%s: %s\n"
+msgstr "%s: Nije moguće povezati %s/%s na %s/%s: %s\n"
+
+#: timezone/zic.c:1536
+#, c-format
+msgid "symbolic link used because hard link failed: %s"
+msgstr "stvorena je simbolična poveznica jer čvrsta poveznica nije uspjela: %s"
+
+#: timezone/zic.c:1544
+#, c-format
+msgid "%s: Can't read %s/%s: %s\n"
+msgstr "%s: Nije moguće pročitati %s/%s: %s\n"
+
+#: timezone/zic.c:1554
 #, c-format
 msgid "copy used because hard link failed: %s"
 msgstr "kopira se jer čvrsta poveznica nije uspjela: %s"
 
-#: timezone/zic.c:1053
+#: timezone/zic.c:1557
 #, c-format
 msgid "copy used because symbolic link failed: %s"
-msgstr "kopira se jer simbolička poveznica nije uspjela: %s"
+msgstr "kopira se jer simbolična poveznica nije uspjela: %s"
 
-#: timezone/zic.c:1122 timezone/zic.c:1124
+#: timezone/zic.c:1608 timezone/zic.c:1610
 msgid "same rule name in multiple files"
 msgstr "isto ime pravila pojavljuje se u nekoliko datoteka"
 
-#: timezone/zic.c:1171
+#: timezone/zic.c:1656
 #, c-format
 msgid "%s in ruleless zone"
 msgstr "%s u „neposlušnoj“ vremenskoj zoni"
 
-#: timezone/zic.c:1191
-msgid "standard input"
-msgstr "standardni ulaz"
+#: timezone/zic.c:1674
+msgid "input error"
+msgstr "ulazna greška"
 
-#: timezone/zic.c:1196
+#: timezone/zic.c:1679
+msgid "unterminated line"
+msgstr "nezavršeni redak"
+
+#: timezone/zic.c:1683
+msgid "NUL input byte"
+msgstr "NUL ulazni bajt"
+
+#: timezone/zic.c:1688
+msgid "line too long"
+msgstr "redak je predugi"
+
+#: timezone/zic.c:1709
 #, c-format
 msgid "%s: Can't open %s: %s\n"
 msgstr "%s: Nije moguće otvoriti %s: %s\n"
 
-#: timezone/zic.c:1207
-msgid "line too long"
-msgstr "redak je predugi"
-
-#: timezone/zic.c:1230
+#: timezone/zic.c:1734
 msgid "input line of unknown type"
 msgstr "ulazni redak je nepoznatog tipa"
 
-#: timezone/zic.c:1253 timezone/zic.c:1699 timezone/zic.c:1721
-#, c-format
-msgid "%s: panic: Invalid l_value %d\n"
-msgstr "%s: **interna greška** -- nevaljani l_value %d\n"
-
-#: timezone/zic.c:1262
+#: timezone/zic.c:1761
 msgid "expected continuation line not found"
 msgstr "očekivao se je naredni continuation-redak"
 
-#: timezone/zic.c:1298
+#: timezone/zic.c:1797
 msgid "fractional seconds rejected by pre-2018 versions of zic"
 msgstr "inačice zic-a starije od 2018. godine ne podržavaju dijelove sekunde"
 
-#: timezone/zic.c:1316 timezone/zic.c:3282
+#: timezone/zic.c:1815 timezone/zic.c:3761
 msgid "time overflow"
 msgstr "prekoračenje vremena"
 
-#: timezone/zic.c:1322
+#: timezone/zic.c:1821
 msgid "values over 24 hours not handled by pre-2007 versions of zic"
 msgstr "inačice starije od 2007. godine ne podržavaju vrijednosti veće od 24 sata"
 
-#: timezone/zic.c:1340
+#: timezone/zic.c:1839
 msgid "invalid saved time"
 msgstr "nevaljano sačuvano vrijeme"
 
-#: timezone/zic.c:1351
+#: timezone/zic.c:1850
 msgid "wrong number of fields on Rule line"
 msgstr "nevaljani broj polja u Rule retku"
 
-#: timezone/zic.c:1360
+#: timezone/zic.c:1859
 #, c-format
 msgid "Invalid rule name \"%s\""
 msgstr "Nevaljano ime za pravilo „%s“!"
 
-#: timezone/zic.c:1382
+#: timezone/zic.c:1883
 msgid "wrong number of fields on Zone line"
 msgstr "nevaljani broj polja u Zone retku"
 
-#: timezone/zic.c:1387
+#: timezone/zic.c:1887
 #, c-format
 msgid "\"Zone %s\" line and -l option are mutually exclusive"
 msgstr "„Zone %s“ redak i opcija -l se međusobno isključuju"
 
-#: timezone/zic.c:1393
+#: timezone/zic.c:1892
 #, c-format
 msgid "\"Zone %s\" line and -p option are mutually exclusive"
 msgstr "„Zone %s“ redak i opcija -p se međusobno isključuju"
 
-#: timezone/zic.c:1400
+#: timezone/zic.c:1899
 #, c-format
 msgid "duplicate zone name %s (file \"%s\", line %<PRIdMAX>)"
 msgstr ""
 "duplikat imena zone\n"
 "  %s (datoteka „%s“, redak %<PRIdMAX>)"
 
-#: timezone/zic.c:1414
+#: timezone/zic.c:1913
 msgid "wrong number of fields on Zone continuation line"
 msgstr "nevaljani broj polja u Zone continuation-retku"
 
-#: timezone/zic.c:1454
+#: timezone/zic.c:1952
 msgid "invalid UT offset"
 msgstr "nevaljani UTC odmak"
 
-#: timezone/zic.c:1458
+#: timezone/zic.c:1956
 msgid "invalid abbreviation format"
 msgstr "nevaljani format kratice"
 
-#: timezone/zic.c:1467
-#, c-format
-msgid "format '%s' not handled by pre-2015 versions of zic"
-msgstr "inačice starije od 2015. godine ne podržavaju format „%s“"
-
-#: timezone/zic.c:1494
+#: timezone/zic.c:1986
 msgid "Zone continuation line end time is not after end time of previous line"
 msgstr ""
 "Zone continuation-redak: UNTIL (do) vrijeme\n"
 "  nije kasnije od UNTIL (do) vremena u prethodnom retku"
 
-#: timezone/zic.c:1526
+#: timezone/zic.c:1997
+#, c-format
+msgid "format '%s' not handled by pre-2015 versions of zic"
+msgstr "zic inačice prije 2015. godine ne podržavaju format ‘%s’"
+
+#: timezone/zic.c:2027
 msgid "invalid leaping year"
 msgstr "nevaljana prijestupna godina"
 
-#: timezone/zic.c:1548 timezone/zic.c:1653
+#: timezone/zic.c:2049 timezone/zic.c:2154
 msgid "invalid month name"
 msgstr "nevaljano ime mjeseca"
 
-#: timezone/zic.c:1561 timezone/zic.c:1769 timezone/zic.c:1783
+#: timezone/zic.c:2062 timezone/zic.c:2252 timezone/zic.c:2266
 msgid "invalid day of month"
 msgstr "nevaljani dan u mjesecu"
 
-#: timezone/zic.c:1566
+#: timezone/zic.c:2067
 msgid "time too small"
 msgstr "premala vrijednost za vrijeme"
 
-#: timezone/zic.c:1570
+#: timezone/zic.c:2071
 msgid "time too large"
 msgstr "prevelika vrijednost za vrijeme"
 
-#: timezone/zic.c:1574 timezone/zic.c:1682
+#: timezone/zic.c:2075 timezone/zic.c:2183
 msgid "invalid time of day"
 msgstr "nevaljano doba (HH:MM:SS) dana"
 
-#: timezone/zic.c:1577
+#: timezone/zic.c:2078
 msgid "leap second precedes Epoch"
 msgstr "prijestupna sekunda prethodi Epohi (Unix Epoch)"
 
-#: timezone/zic.c:1585
+#: timezone/zic.c:2086
 msgid "wrong number of fields on Leap line"
 msgstr "nevaljani broj polja u Leap retku"
 
-#: timezone/zic.c:1591
+#: timezone/zic.c:2092
 msgid "invalid Rolling/Stationary field on Leap line"
 msgstr "nevaljano Rolling/Stationary polje u Leap retku"
 
-#: timezone/zic.c:1599
+#: timezone/zic.c:2100
 msgid "invalid CORRECTION field on Leap line"
 msgstr "nevaljano CORRECTION polje u Leap retku"
 
-#: timezone/zic.c:1611
+#: timezone/zic.c:2112
 msgid "wrong number of fields on Expires line"
 msgstr "nevaljani broj polja u Expires retku"
 
-#: timezone/zic.c:1613
+#: timezone/zic.c:2114
 msgid "multiple Expires lines"
 msgstr "višestruki Expires redci"
 
-#: timezone/zic.c:1624
+#: timezone/zic.c:2125
 msgid "wrong number of fields on Link line"
 msgstr "nevaljani broj polja u Link retku"
 
-#: timezone/zic.c:1628
-msgid "blank FROM field on Link line"
-msgstr "prazno FROM polje u Link retku"
+#: timezone/zic.c:2129
+msgid "blank TARGET field on Link line"
+msgstr "TARGET prazno polje TARGET u retku Link"
 
-#: timezone/zic.c:1703
+#: timezone/zic.c:2192
+#, c-format
+msgid "FROM year \"%s\" is obsolete; treated as %d"
+msgstr "FROM godine „%s“ je zastarjelo; tretira se kao %d"
+
+#: timezone/zic.c:2199
 msgid "invalid starting year"
 msgstr "nevaljana početna godina"
 
-#: timezone/zic.c:1725
+#: timezone/zic.c:2214
 msgid "invalid ending year"
 msgstr "nevaljana konačna godina"
 
-#: timezone/zic.c:1729
+#: timezone/zic.c:2218
 msgid "starting year greater than ending year"
 msgstr "početna godina je veća od konačne godine"
 
-#: timezone/zic.c:1736
-msgid "typed single year"
-msgstr "početna godina i konačna godina su iste"
-
-#: timezone/zic.c:1739
+#: timezone/zic.c:2222
 #, c-format
-msgid "year type \"%s\" is obsolete; use \"-\" instead"
-msgstr "vrsta godine „%s“ je zastarjela -- umjesto toga koristite „-“"
+msgid "year type \"%s\" is unsupported; use \"-\" instead"
+msgstr "vrsta godine „%s“ nije podržano; umjesto toga koristite „-“"
 
-#: timezone/zic.c:1774
+#: timezone/zic.c:2257
 msgid "invalid weekday name"
 msgstr "nevaljani dan u tjednu"
 
-#: timezone/zic.c:1935
+#: timezone/zic.c:2435
 #, c-format
 msgid "reference clients mishandle more than %d transition times"
-msgstr "referentni klijenti griješe u više od %d tranzicijskih vremena"
+msgstr "referirajući klijenti pogriješili su u više od %d tranzicijskih vremena"
 
-#: timezone/zic.c:1939
+#: timezone/zic.c:2439
 msgid "pre-2014 clients may mishandle more than 1200 transition times"
-msgstr "klijenti stariji od 2014. godine griješe u više od 1200 tranzicijskih vremena"
+msgstr "klijenti stariji od 2014 mogu loše obraditi više od 1200 tranzicijskih vremena"
 
-#: timezone/zic.c:2058
+#: timezone/zic.c:2480
+#, c-format
+msgid "%s: pre-2021b clients may mishandle leap second expiry"
+msgstr "%s: klijenti prije 2021b mogu loše obraditi istek upotrebe prijestupne sekunde"
+
+#: timezone/zic.c:2488
+#, c-format
+msgid "%s: pre-2021b clients may mishandle leap second table truncation"
+msgstr "%s: klijenti prije 2021b mogu loše obraditi kraćenje tablice prijestupnih sekunda"
+
+#: timezone/zic.c:2537
 msgid "too many transition times"
 msgstr "previše tranzicijskih vremena"
 
-#: timezone/zic.c:2297
+#: timezone/zic.c:2801
 #, c-format
 msgid "%%z UT offset magnitude exceeds 99:59:59"
 msgstr "%%z UT veličina odmaka premašuje 99:59:59"
 
-#: timezone/zic.c:2673
-msgid "no POSIX environment variable for zone"
-msgstr "nema POSIX varijable okoline za vremensku zonu"
+#: timezone/zic.c:3180
+msgid "no POSIX.1-2017 environment variable for zone"
+msgstr "nema POSIX.1-2017 varijable okoline za vremensku zonu"
 
-#: timezone/zic.c:2679
+#: timezone/zic.c:3187
 #, c-format
 msgid "%s: pre-%d clients may mishandle distant timestamps"
-msgstr ""
-"%s: klijenti stariji od %d. godine mogu zabrljati\n"
-"  u rukovanju s davnim vremenskim oznakama"
+msgstr "%s: klijenti prije verzije %d mogu loše obraditi daleke vremenske oznake"
 
-#: timezone/zic.c:2818
+#: timezone/zic.c:3316
 msgid "two rules for same instant"
 msgstr "dva pravila za isti trenutak (vremenski)"
 
-#: timezone/zic.c:2889
+#: timezone/zic.c:3389
 msgid "can't determine time zone abbreviation to use just after until time"
 msgstr ""
 "nije moguće odrediti kraticu vremenske zone za korištenje\n"
 "  tek nakon UNTIL (do) vremena"
 
-#: timezone/zic.c:2964
+#: timezone/zic.c:3490
 msgid "UT offset out of range"
 msgstr "UTC odmak je izvan granica raspona"
 
-#: timezone/zic.c:2987
+#: timezone/zic.c:3513
 msgid "too many local time types"
 msgstr "previše vrsta lokalnog vremena"
 
-#: timezone/zic.c:3005
+#: timezone/zic.c:3531
 msgid "too many leap seconds"
 msgstr "previše prijestupnih sekundi"
 
-#: timezone/zic.c:3032
+#: timezone/zic.c:3535
+msgid "Rolling leap seconds not supported with -r"
+msgstr "Dodavanje/pomicanje prijestupnih sekundi nije podržano s -r"
+
+#: timezone/zic.c:3562
 msgid "Leap seconds too close together"
 msgstr "Prijestupne sekunde su preblizu jedna drugoj"
 
-#: timezone/zic.c:3043
-msgid "\"#expires\" is obsolescent; use \"Expires\""
-msgstr "„#expires“ je zastarjelo -- umjesto toga koristite „Expires“"
-
-#: timezone/zic.c:3049
+#: timezone/zic.c:3573
 msgid "last Leap time does not precede Expires time"
-msgstr "zadnja vrijednost od Leap (prestupnog) vremena ne prethodi vrijednosti Expires (isteklog) vremena"
+msgstr "zadnja vrijednost od Leap (prijestupnog) vremena ne prethodi vrijednosti Expires (isteklog) vremena"
 
-#: timezone/zic.c:3095
-msgid "Wild result from command execution"
-msgstr "Čudni rezultat od izvršenja naredbe"
-
-#: timezone/zic.c:3096
-#, c-format
-msgid "%s: command was '%s', result was %d\n"
-msgstr "%s: naredba je bila „%s“ a rezultat je bio %d\n"
-
-#: timezone/zic.c:3202
+#: timezone/zic.c:3680
 #, c-format
 msgid "\"%s\" is undocumented; use \"last%s\" instead"
 msgstr "„%s“ nije dokumentirana -- koristite umjesto toga „last%s“"
 
-#: timezone/zic.c:3233
+#: timezone/zic.c:3711
 #, c-format
 msgid "\"%s\" is ambiguous in pre-2017c zic"
 msgstr "„%s“ nije jasno za „zic“  stariji od 2017c"
 
-#: timezone/zic.c:3267
+#: timezone/zic.c:3742
 msgid "Odd number of quotation marks"
 msgstr "Neparan broj znakova citiranja"
 
-#: timezone/zic.c:3361
+#: timezone/zic.c:3750
+msgid "Too many input fields"
+msgstr "Previše ulaznih polja"
+
+#: timezone/zic.c:3839
 msgid "use of 2/29 in non leap-year"
 msgstr "korištenje 29. veljače u godini koja nije prijestupna"
 
-#: timezone/zic.c:3396
+#: timezone/zic.c:3865
 msgid "rule goes past start/end of month; will not work with pre-2004 versions of zic"
 msgstr ""
 "pravilo obuhvaća promjenu mjeseca (IN i ON nisu u istom mjesecu);\n"
 "  inačice starije od 2004. godine to ne podržavaju"
 
-#: timezone/zic.c:3423
+#: timezone/zic.c:3892
 msgid "time zone abbreviation has fewer than 3 characters"
 msgstr "kratica za vremensku zonu ima manje od 3 slova"
 
-#: timezone/zic.c:3425
+#: timezone/zic.c:3894
 msgid "time zone abbreviation has too many characters"
 msgstr "kratica za vremensku zonu ima previše slova"
 
-#: timezone/zic.c:3427
+#: timezone/zic.c:3896
 msgid "time zone abbreviation differs from POSIX standard"
 msgstr "kratica za vremensku zonu se razlikuje od POSIX standarda"
 
-#: timezone/zic.c:3433
+#: timezone/zic.c:3902
 msgid "too many, or too long, time zone abbreviations"
 msgstr "kratice vremenskih zona su preduge ili ih ima previše"
 
-#: timezone/zic.c:3479
+#: timezone/zic.c:3953
 #, c-format
 msgid "%s: Can't create directory %s: %s"
 msgstr "%s: Nije moguće stvoriti direktorij %s: %s"

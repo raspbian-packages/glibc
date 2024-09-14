@@ -46,7 +46,7 @@ __getifaddrs (struct ifaddrs **ifap)
 
   file_t node;
   char *argz = 0, *cur;
-  size_t argz_len = 0;
+  mach_msg_type_number_t argz_len = 0;
   unsigned naddrs;
   const char *ifa_name = NULL;
   char *addr, *cidr_a;

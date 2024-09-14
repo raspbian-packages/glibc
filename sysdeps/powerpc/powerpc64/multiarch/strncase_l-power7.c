@@ -1,4 +1,4 @@
-/* Copyright (C) 2013-2023 Free Software Foundation, Inc.
+/* Copyright (C) 2013-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -18,6 +18,9 @@
 #include <string.h>
 
 #define __strncasecmp_l __strncasecmp_l_power7
+
+#undef weak_alias
+#define weak_alias(a,b)
 
 #undef libc_hidden_def
 #define libc_hidden_def(name)

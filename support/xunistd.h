@@ -1,5 +1,5 @@
 /* POSIX-specific extra functions.
-   Copyright (C) 2016-2023 Free Software Foundation, Inc.
+   Copyright (C) 2016-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -36,7 +36,7 @@ pid_t xwaitpid (pid_t, int *status, int flags);
 void xpipe (int[2]);
 void xdup2 (int, int);
 int xopen (const char *path, int flags, mode_t);
-#ifndef __USE_TIME_BITS64
+#ifndef __USE_TIME64_REDIRECTS
 # ifdef __USE_FILE_OFFSET64
 void xstat (const char *path, struct stat *);
 void xlstat (const char *path, struct stat *);

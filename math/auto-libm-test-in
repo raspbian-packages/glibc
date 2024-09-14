@@ -1,5 +1,5 @@
 # libm test inputs for gen-auto-libm-tests.c.
-# Copyright (C) 1997-2023 Free Software Foundation, Inc.
+# Copyright (C) 1997-2024 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 #
 # The GNU C Library is free software; you can redistribute it and/or
@@ -5249,6 +5249,106 @@ exp10 0xe.8b349p+4
 exp10 0x3.495c78p+0
 exp10 0xf.f33f6p+0
 
+exp10m1 0
+exp10m1 -0
+exp10m1 1
+exp10m1 0.75
+exp10m1 2
+exp10m1 3
+exp10m1 4
+exp10m1 5
+exp10m1 10
+exp10m1 15
+exp10m1 20
+exp10m1 25
+exp10m1 30
+exp10m1 35
+exp10m1 40
+exp10m1 50.0
+exp10m1 60
+exp10m1 70
+exp10m1 80
+exp10m1 90
+exp10m1 100
+exp10m1 127.0
+exp10m1 500.0
+exp10m1 11356.25
+exp10m1 -10.0
+exp10m1 -16.0
+exp10m1 -17.0
+exp10m1 -18.0
+exp10m1 -36.0
+exp10m1 -37.0
+exp10m1 -38.0
+exp10m1 -44.0
+exp10m1 -45.0
+exp10m1 -46.0
+exp10m1 -73.0
+exp10m1 -74.0
+exp10m1 -75.0
+exp10m1 -78.0
+exp10m1 -79.0
+exp10m1 -80.0
+exp10m1 -100.0
+exp10m1 -1000.0
+exp10m1 -10000.0
+exp10m1 -100000.0
+exp10m1 100000.0
+exp10m1 max
+exp10m1 -max
+exp10m1 0x1p-2
+exp10m1 -0x1p-2
+exp10m1 0x1p-10
+exp10m1 -0x1p-10
+exp10m1 0x1p-20
+exp10m1 -0x1p-20
+exp10m1 0x1p-29
+exp10m1 -0x1p-29
+exp10m1 0x1p-32
+exp10m1 -0x1p-32
+exp10m1 0x1p-50
+exp10m1 -0x1p-50
+exp10m1 0x1p-64
+exp10m1 -0x1p-64
+exp10m1 0x1p-100
+exp10m1 -0x1p-100
+exp10m1 0x1p-600
+exp10m1 -0x1p-600
+exp10m1 0x1p-10000
+exp10m1 -0x1p-10000
+exp10m1 0xe.4152ac57cd1ea7ap-60
+exp10m1 0x6.660247486aed8p-4
+exp10m1 0x6.289a78p-4
+exp10m1 0x6.1b4d318238d4a2a8p-4
+exp10m1 0x5.fb8dc64e91a74p-4
+exp10m1 0x3.735f497c4e67535cp-4
+exp10m1 -0x7.d6c50b469d404p+0
+exp10m1 0x4.857de8p+4
+exp10m1 0x5.dfeb68p-4
+exp10m1 0x4.0000000000000028p-16384
+exp10m1 0x5.8b911eb6733469c8p-4
+exp10m1 0x5.a343df0d680099a7a1a873a751a8p-4
+exp10m1 min
+exp10m1 -min
+exp10m1 min_subnorm
+exp10m1 -min_subnorm
+exp10m1 0x2.688268p+4
+exp10m1 0x2.68826cp+4
+exp10m1 0x1.34413509f79fep+8
+exp10m1 0x1.34413509f79ffp+8
+exp10m1 0x1.34413509f79fef2f625b0205a88p+8 xfail:ibm128-libgcc
+exp10m1 0x1.34413509f79fef2f625b0205a9p+8 xfail:ibm128-libgcc
+exp10m1 0x1.34413509f79fef3p+12
+exp10m1 0x1.34413509f79fef32p+12
+exp10m1 0x1.34413509f79fef311f12b35816f9p+12
+exp10m1 0x1.34413509f79fef311f12b35816fap+12
+exp10m1 0x1p-128
+exp10m1 0x1p-1024
+exp10m1 0x1p-16384
+exp10m1 -0x1p-128
+exp10m1 -0x1p-1024
+exp10m1 -0x1p-16384
+
 exp2 0
 exp2 -0
 exp2 10
@@ -5353,8 +5453,109 @@ exp2 -0xc.1bf12p-16
 exp2 -0x4.8ce878p-4
 exp2 0xf.93d18bf7be8d272p-4
 
+exp2m1 0
+exp2m1 -0
+exp2m1 1
+exp2m1 0.75
+exp2m1 2
+exp2m1 3
+exp2m1 4
+exp2m1 5
+exp2m1 10
+exp2m1 15
+exp2m1 20
+exp2m1 25
+exp2m1 30
+exp2m1 35
+exp2m1 40
+exp2m1 50.0
+exp2m1 60
+exp2m1 70
+exp2m1 80
+exp2m1 90
+exp2m1 100
+exp2m1 127.0
+exp2m1 500.0
+exp2m1 11356.25
+exp2m1 -10.0
+exp2m1 -16.0
+exp2m1 -17.0
+exp2m1 -18.0
+exp2m1 -36.0
+exp2m1 -37.0
+exp2m1 -38.0
+exp2m1 -44.0
+exp2m1 -45.0
+exp2m1 -46.0
+exp2m1 -73.0
+exp2m1 -74.0
+exp2m1 -75.0
+exp2m1 -78.0
+exp2m1 -79.0
+exp2m1 -80.0
+exp2m1 -100.0
+exp2m1 -1000.0
+exp2m1 -10000.0
+exp2m1 -100000.0
+exp2m1 100000.0
+exp2m1 max
+exp2m1 -max
+exp2m1 0x1p-2
+exp2m1 -0x1p-2
+exp2m1 0x1p-10
+exp2m1 -0x1p-10
+exp2m1 0x1p-20
+exp2m1 -0x1p-20
+exp2m1 0x1p-29
+exp2m1 -0x1p-29
+exp2m1 0x1p-32
+exp2m1 -0x1p-32
+exp2m1 0x1p-50
+exp2m1 -0x1p-50
+exp2m1 0x1p-64
+exp2m1 -0x1p-64
+exp2m1 0x1p-100
+exp2m1 -0x1p-100
+exp2m1 0x1p-600
+exp2m1 -0x1p-600
+exp2m1 0x1p-10000
+exp2m1 -0x1p-10000
+exp2m1 0xe.4152ac57cd1ea7ap-60
+exp2m1 0x6.660247486aed8p-4
+exp2m1 0x6.289a78p-4
+exp2m1 0x6.1b4d318238d4a2a8p-4
+exp2m1 0x5.fb8dc64e91a74p-4
+exp2m1 0x3.735f497c4e67535cp-4
+exp2m1 -0x7.d6c50b469d404p+0
+exp2m1 0x4.857de8p+4
+exp2m1 0x5.dfeb68p-4
+exp2m1 0x4.0000000000000028p-16384
+exp2m1 0x5.8b911eb6733469c8p-4
+exp2m1 0x5.a343df0d680099a7a1a873a751a8p-4
+exp2m1 min
+exp2m1 -min
+exp2m1 min_subnorm
+exp2m1 -min_subnorm
+exp2m1 128
+exp2m1 0x7.fffff8p+4
+exp2m1 0x8.00001p+4
+exp2m1 0x3.ffffffffffffep+8
+exp2m1 0x4.0000000000004p+8
+exp2m1 0x3.fffffffffffffffa3aae26b51fp+8 xfail-rounding:ibm128-libgcc
+exp2m1 0x3.fffffffffffffffa3aae26b52p+8 xfail-rounding:ibm128-libgcc
+exp2m1 0x3.fffffffffffffffcp+12
+exp2m1 0x4.0000000000000008p+12
+exp2m1 0x3.fffffffffffffffffffffffffffep+12
+exp2m1 0x4.0000000000000000000000000004p+12
+exp2m1 0x1p-125
+exp2m1 0x1p-1021
+exp2m1 0x1p-16381
+exp2m1 -0x1p-125
+exp2m1 -0x1p-1021
+exp2m1 -0x1p-16381
+
 expm1 0
-expm1 -0
+expm1 -0 no-mathvec
 expm1 1
 expm1 0.75
 expm1 2
@@ -5419,7 +5620,7 @@ expm1 -0x1p-100
 expm1 0x1p-600
 expm1 -0x1p-600
 expm1 0x1p-10000
-expm1 -0x1p-10000
+expm1 -0x1p-10000 no-mathvec
 expm1 0xe.4152ac57cd1ea7ap-60
 expm1 0x6.660247486aed8p-4
 expm1 0x6.289a78p-4
@@ -6576,8 +6777,65 @@ log10 0x9.b3727e3feb538p-4
 log10 0xf.bf1b2p-4
 log10 0x1.6b5f7ap+96
 
+log10p1 0
+log10p1 -0
+log10p1 e-1
+log10p1 -0.25
+log10p1 -0.875
+log10p1 0x1p-5
+log10p1 0x1p-10
+log10p1 0x1p-15
+log10p1 0x1p-20
+log10p1 0x1p-25
+log10p1 0x1p-30
+log10p1 0x1p-35
+log10p1 0x1p-40
+log10p1 0x1p-45
+log10p1 0x1p-50
+log10p1 0x1p-55
+log10p1 0x1p-60
+log10p1 0x1p-100
+log10p1 0x1p-600
+log10p1 0x1p-10000
+log10p1 min
+log10p1 min_subnorm
+log10p1 -min
+log10p1 -min_subnorm
+log10p1 0x1p10
+log10p1 0x1p20
+log10p1 0x1p30
+log10p1 0x1p50
+log10p1 0x1p60
+log10p1 0x1p100
+log10p1 0x1p1000
+log10p1 0x6.a0cf42befce9ed4085ef59254b48p-4
+log10p1 max
+log10p1 0x1p-125
+log10p1 0x1p-1021
+log10p1 0x1p-16381
+log10p1 -0x1p-125
+log10p1 -0x1p-1021
+log10p1 -0x1p-16381
+
+log10p1 0x7.2a4368p-4
+log10p1 0x6.d3a118p-4
+log10p1 0x5.03f228p+0
+log10p1 0x7.264963888ac9p-4
+log10p1 0x8.786bdp-4
+log10p1 0x7.89dc17790eeb4p-4
+log10p1 0x9.81ccf8887c24a7bp-4
+log10p1 0xa.5028608bd65f38dp-4
+log10p1 0x5.bf78873e20a2d468p-4
+log10p1 0x7.aa5198p-4
+log10p1 0x2.564fap+0
+log10p1 0x7.fc242a2235222ef8p-4
+log10p1 -0x4.f37d3c9ce0b14bdd86eb157df5d4p-4
+log10p1 0x7.2eca50c4d93196362b4f37f6e8dcp-4
+log10p1 -0x6.3fef3067427e43dfcde9e48f74bcp-4
+log10p1 0x6.af53d00fd2845d4772260ef5adc4p-4
+
 log1p 0
-log1p -0
+log1p -0 no-mathvec
 log1p e-1
 log1p -0.25
 log1p -0.875
@@ -6663,6 +6921,57 @@ log2 0xb.54170d5cfa8fd72a47d6bda19068p-4
 log2 min
 log2 min_subnorm
 log2 max
+
+log2p1 0
+log2p1 -0
+log2p1 e-1
+log2p1 -0.25
+log2p1 -0.875
+log2p1 0x1p-5
+log2p1 0x1p-10
+log2p1 0x1p-15
+log2p1 0x1p-20
+log2p1 0x1p-25
+log2p1 0x1p-30
+log2p1 0x1p-35
+log2p1 0x1p-40
+log2p1 0x1p-45
+log2p1 0x1p-50
+log2p1 0x1p-55
+log2p1 0x1p-60
+log2p1 0x1p-100
+log2p1 0x1p-600
+log2p1 0x1p-10000
+log2p1 min
+log2p1 min_subnorm
+log2p1 -min
+log2p1 -min_subnorm
+log2p1 0x1p10
+log2p1 0x1p20
+log2p1 0x1p30
+log2p1 0x1p50
+log2p1 0x1p60
+log2p1 0x1p100
+log2p1 0x1p1000
+log2p1 0x6.a0cf42befce9ed4085ef59254b48p-4
+log2p1 max
+
+log2p1 0x7.2a4368p-4
+log2p1 0x6.d3a118p-4
+log2p1 0x5.03f228p+0
+log2p1 0x7.264963888ac9p-4
+log2p1 0x8.786bdp-4
+log2p1 0x7.89dc17790eeb4p-4
+log2p1 0x9.81ccf8887c24a7bp-4
+log2p1 0xa.5028608bd65f38dp-4
+log2p1 0x5.bf78873e20a2d468p-4
+log2p1 0x7.aa5198p-4
+log2p1 0x2.564fap+0
+log2p1 0x7.fc242a2235222ef8p-4
+log2p1 -0x4.f37d3c9ce0b14bdd86eb157df5d4p-4
+log2p1 0x7.2eca50c4d93196362b4f37f6e8dcp-4
+log2p1 -0x6.3fef3067427e43dfcde9e48f74bcp-4
+log2p1 0x6.af53d00fd2845d4772260ef5adc4p-4
 
 mul 0 0
 mul 0 -0
@@ -7318,7 +7627,7 @@ pow 0x1.7ac7cp+5 23
 pow -0x1.7ac7cp+5 23
 
 sin 0
-sin -0
+sin -0 no-mathvec
 sin pi/6
 sin -pi/6
 sin pi/2
@@ -7655,7 +7964,7 @@ sqrt min
 sqrt min_subnorm
 
 tan 0
-tan -0
+tan -0 no-mathvec
 tan pi/4
 tan pi/2
 tan -pi/2
@@ -7747,7 +8056,7 @@ tan min_subnorm
 tan -min_subnorm
 
 tanh 0
-tanh -0
+tanh -0 no-mathvec
 tanh 0.75
 tanh -0.75
 tanh 1.0

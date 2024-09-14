@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2023 Free Software Foundation, Inc.
+# Copyright (C) 1991-2024 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -92,6 +92,7 @@ routines := \
   sscanf \
   tempnam \
   tempname \
+  tmpdir \
   tmpfile \
   tmpfile64 \
   tmpnam \
@@ -228,10 +229,6 @@ tests := \
   tst-popen \
   tst-popen2 \
   tst-printf-binary \
-  tst-printf-bz18872 \
-  tst-printf-bz25691 \
-  tst-printf-fp-free \
-  tst-printf-fp-leak \
   tst-printf-intn \
   tst-printf-oct \
   tst-printf-round \
@@ -240,9 +237,10 @@ tests := \
   tst-renameat2 \
   tst-rndseek \
   tst-scanf-binary-c11 \
-  tst-scanf-binary-c2x \
+  tst-scanf-binary-c23 \
   tst-scanf-binary-gnu11 \
   tst-scanf-binary-gnu89 \
+  tst-scanf-intn \
   tst-scanf-round \
   tst-scanf-to_inpunct \
   tst-setvbuf1 \
@@ -259,7 +257,6 @@ tests := \
   tst-vfprintf-mbs-prec \
   tst-vfprintf-user-type \
   tst-vfprintf-width-i18n \
-  tst-vfprintf-width-prec \
   tst-vfprintf-width-prec-alloc \
   tst-wc-printf \
   tstdiomisc \
@@ -267,6 +264,20 @@ tests := \
   tstscanf \
   xbug \
   # tests
+
+ifeq ($(run-built-tests),yes)
+ifeq (yes,$(build-shared))
+ifneq ($(PERL),no)
+tests += \
+  tst-printf-bz18872 \
+  tst-printf-bz25691 \
+  tst-printf-fp-free \
+  tst-printf-fp-leak \
+  tst-vfprintf-width-prec \
+  # tests
+endif
+endif
+endif
 
 tests-container += \
   tst-popen3
@@ -291,14 +302,19 @@ test-srcs = \
 
 ifeq ($(run-built-tests),yes)
 tests-special += \
-  $(objpfx)tst-printf-bz18872-mem.out \
-  $(objpfx)tst-printf-bz25691-mem.out \
-  $(objpfx)tst-printf-fp-free-mem.out \
-  $(objpfx)tst-printf-fp-leak-mem.out \
   $(objpfx)tst-printf.out \
   $(objpfx)tst-printfsz-islongdouble.out \
   $(objpfx)tst-setvbuf1-cmp.out \
   $(objpfx)tst-unbputc.out \
+  # tests-special
+
+ifeq (yes,$(build-shared))
+ifneq ($(PERL),no)
+tests-special += \
+  $(objpfx)tst-printf-bz18872-mem.out \
+  $(objpfx)tst-printf-bz25691-mem.out \
+  $(objpfx)tst-printf-fp-free-mem.out \
+  $(objpfx)tst-printf-fp-leak-mem.out \
   $(objpfx)tst-vfprintf-width-prec-mem.out \
   # tests-special
 
@@ -315,6 +331,8 @@ generated += \
   tst-vfprintf-width-prec-mem.out \
   tst-vfprintf-width-prec.mtrace \
   # generated
+endif
+endif
 endif # $(run-built-tests)
 
 # tests-special += $(objpfx)tst-errno-manual.out
@@ -358,6 +376,7 @@ $(addprefix $(objpfx)siglist, $(object-suffixes-noshared)): \
 
 ifeq ($(run-built-tests),yes)
 LOCALES := \
+  bn_BD.UTF-8 \
   de_DE.ISO-8859-1 \
   de_DE.UTF-8 \
   en_US.ISO-8859-1 \
@@ -365,7 +384,9 @@ LOCALES := \
   hi_IN.UTF-8 \
   ja_JP.EUC-JP \
   ps_AF.UTF-8 \
+  rw_RW.UTF-8 \
   tg_TJ.UTF-8 \
+  unm_US.UTF-8 \
   # LOCALES
 include ../gen-locales.mk
 
@@ -459,6 +480,11 @@ CFLAGS-isoc23_scanf.c += -fexceptions
 
 CFLAGS-dprintf.c += $(config-cflags-wno-ignored-attributes)
 
+# Called during static library initialization, so turn stack-protection
+# off for non-shared builds.
+CFLAGS-_itoa.o = $(no-stack-protector)
+CFLAGS-_itoa.op = $(no-stack-protector)
+
 # scanf18.c and scanf19.c test a deprecated extension which is no
 # longer visible under most conformance levels; see the source files
 # for more detail.
@@ -481,11 +507,12 @@ CFLAGS-tst-bz11319-fortify2.c += $(no-fortify-source),-D_FORTIFY_SOURCE=2
 
 CFLAGS-tst-memstream-string.c += -fno-builtin-fprintf
 
-# Some versions of GCC supported for building glibc do not support -std=c2x, so
-# the test for that version uses -std=c11 and then _ISOC2X_SOURCE is defined in
+# Some versions of GCC supported for building glibc do not support -std=c23
+# (added in GCC 14), or the older name -std=c2x (added in GCC 9), so
+# the test for that version uses -std=c11 and then _ISOC23_SOURCE is defined in
 # the test as needed.
 CFLAGS-tst-scanf-binary-c11.c += -std=c11 -DOBJPFX=\"$(objpfx)\"
-CFLAGS-tst-scanf-binary-c2x.c += -std=c11 -DOBJPFX=\"$(objpfx)\"
+CFLAGS-tst-scanf-binary-c23.c += -std=c11 -DOBJPFX=\"$(objpfx)\"
 CFLAGS-tst-scanf-binary-gnu11.c += -std=gnu11 -DOBJPFX=\"$(objpfx)\"
 CFLAGS-tst-scanf-binary-gnu89.c += -std=gnu89 -DOBJPFX=\"$(objpfx)\"
 

@@ -11,47 +11,242 @@ libm-routines += s_nexttowardfd
 routines += nldbl-compat
 
 extra-libs += libnldbl
-libnldbl-calls = asprintf dprintf fprintf fscanf fwprintf fwscanf iovfscanf \
-		 obstack_printf obstack_vprintf printf scanf snprintf \
-		 sprintf sscanf swprintf swscanf vasprintf vdprintf vfprintf \
-		 vfscanf vfwprintf vfwscanf vprintf vscanf vsnprintf \
-		 vsprintf vsscanf vswprintf vswscanf vwprintf vwscanf \
-		 wprintf wscanf printf_fp printf_size \
-		 fprintf_chk fwprintf_chk printf_chk snprintf_chk sprintf_chk \
-		 swprintf_chk vfprintf_chk vfwprintf_chk vprintf_chk \
-		 vsnprintf_chk vsprintf_chk vswprintf_chk vwprintf_chk \
-		 wprintf_chk asprintf_chk vasprintf_chk dprintf_chk \
-		 vdprintf_chk obstack_printf_chk obstack_vprintf_chk \
-		 syslog syslog_chk vsyslog vsyslog_chk \
-		 strfmon strfmon_l \
-		 strfroml \
-		 strtold strtold_l strtoldint wcstold wcstold_l wcstoldint \
-		 qecvt qfcvt qgcvt qecvt_r qfcvt_r \
-		 isinf isnan finite signbit scalb log2 lgamma_r ceil \
-		 significand acos asin atan atan2 cos sin tan cosh sinh \
-		 tanh acosh asinh atanh exp log log10 exp10 expm1 \
-		 log1p logb exp2 sqrt cbrt fabs floor j0 j1 y0 y1 erf erfc \
-		 lgamma tgamma gamma rint nearbyint round trunc \
-		 copysign fdim fmax fmin nextafter pow hypot fmod \
-		 remainder ldexp scalbn frexp modf scalbln fma nan sincos \
-		 jn yn ilogb remquo lrint lround llrint llround nexttowardf \
-		 nexttoward conj cacos cacosh casin catan catanh ccos ccosh \
-		 casinh cexp clog cproj csin csinh csqrt ctan ctanh cpow \
-		 cabs carg cimag creal clog10 \
-		 isoc99_scanf isoc99_fscanf isoc99_sscanf \
-		 isoc99_vscanf isoc99_vfscanf isoc99_vsscanf \
-		 isoc99_wscanf isoc99_fwscanf isoc99_swscanf \
-		 isoc99_vwscanf isoc99_vfwscanf isoc99_vswscanf \
-		 isoc23_scanf isoc23_fscanf isoc23_sscanf \
-		 isoc23_vscanf isoc23_vfscanf isoc23_vsscanf \
-		 isoc23_wscanf isoc23_fwscanf isoc23_swscanf \
-		 isoc23_vwscanf isoc23_vfwscanf isoc23_vswscanf \
-		 nextup nextdown totalorder totalordermag getpayload \
-		 canonicalize setpayload setpayloadsig llogb fmaxmag fminmag \
-		 roundeven fromfp ufromfp fromfpx ufromfpx fadd dadd \
-		 fdiv ddiv ffma dfma fmul dmul fsqrt dsqrt fsub dsub \
-		 fmaximum fmaximum_mag fmaximum_num fmaximum_mag_num \
-		 fminimum fminimum_mag fminimum_num fminimum_mag_num
+libnldbl-calls = \
+  acos \
+  acosh \
+  asin \
+  asinh \
+  asprintf \
+  asprintf_chk \
+  atan \
+  atan2 \
+  atanh \
+  cabs \
+  cacos \
+  cacosh \
+  canonicalize \
+  carg \
+  casin \
+  casinh \
+  catan \
+  catanh \
+  cbrt \
+  ccos \
+  ccosh \
+  ceil \
+  cexp \
+  cimag \
+  clog \
+  clog10 \
+  conj \
+  copysign \
+  cos \
+  cosh \
+  cpow \
+  cproj \
+  creal \
+  csin \
+  csinh \
+  csqrt \
+  ctan \
+  ctanh \
+  dadd \
+  ddiv \
+  dfma \
+  dmul \
+  dprintf \
+  dprintf_chk \
+  dsqrt \
+  dsub \
+  erf \
+  erfc \
+  exp \
+  exp10m1 \
+  exp2 \
+  exp10 \
+  exp2m1 \
+  expm1 \
+  fabs \
+  fadd \
+  fdim \
+  fdiv \
+  ffma \
+  finite \
+  floor \
+  fma \
+  fmax \
+  fmaximum \
+  fmaximum_mag \
+  fmaximum_mag_num \
+  fmaximum_num \
+  fmaxmag \
+  fmin \
+  fminimum \
+  fminimum_mag \
+  fminimum_mag_num \
+  fminimum_num \
+  fminmag \
+  fmod \
+  fmul \
+  fprintf \
+  fprintf_chk \
+  frexp \
+  fromfp \
+  fromfpx \
+  fscanf \
+  fsqrt \
+  fsub \
+  fwprintf \
+  fwprintf_chk \
+  fwscanf \
+  gamma \
+  getpayload \
+  hypot \
+  ilogb \
+  iovfscanf \
+  isinf \
+  isnan \
+  isoc23_fscanf \
+  isoc23_fwscanf \
+  isoc23_scanf \
+  isoc23_sscanf \
+  isoc23_swscanf \
+  isoc23_vfscanf \
+  isoc23_vfwscanf \
+  isoc23_vscanf \
+  isoc23_vsscanf \
+  isoc23_vswscanf \
+  isoc23_vwscanf \
+  isoc23_wscanf \
+  isoc99_fscanf \
+  isoc99_fwscanf \
+  isoc99_scanf \
+  isoc99_sscanf \
+  isoc99_swscanf \
+  isoc99_vfscanf \
+  isoc99_vfwscanf \
+  isoc99_vscanf \
+  isoc99_vsscanf \
+  isoc99_vswscanf \
+  isoc99_vwscanf \
+  isoc99_wscanf \
+  j0 \
+  j1 \
+  jn \
+  ldexp \
+  lgamma \
+  lgamma_r \
+  llogb \
+  llrint \
+  llround \
+  log \
+  log2 \
+  log10 \
+  log10p1 \
+  log1p \
+  log2p1 \
+  logb \
+  lrint \
+  lround \
+  modf \
+  nan \
+  nearbyint \
+  nextafter \
+  nextdown \
+  nexttoward \
+  nexttowardf \
+  nextup \
+  obstack_printf \
+  obstack_printf_chk \
+  obstack_vprintf \
+  obstack_vprintf_chk \
+  pow \
+  printf \
+  printf_chk \
+  printf_fp \
+  printf_size \
+  qecvt \
+  qecvt_r \
+  qfcvt \
+  qfcvt_r \
+  qgcvt \
+  remainder \
+  remquo \
+  rint \
+  round \
+  roundeven \
+  scalb \
+  scalbln \
+  scalbn \
+  scanf \
+  setpayload \
+  setpayloadsig \
+  signbit \
+  significand \
+  sin \
+  sincos \
+  sinh \
+  snprintf \
+  snprintf_chk \
+  sprintf \
+  sprintf_chk \
+  sqrt \
+  sscanf \
+  strfmon \
+  strfmon_l \
+  strfroml \
+  strtold \
+  strtold_l \
+  strtoldint \
+  swprintf \
+  swprintf_chk \
+  swscanf \
+  syslog \
+  syslog_chk \
+  tan \
+  tanh \
+  tgamma \
+  totalorder \
+  totalordermag \
+  trunc \
+  ufromfp \
+  ufromfpx \
+  vasprintf \
+  vasprintf_chk \
+  vdprintf \
+  vdprintf_chk \
+  vfprintf \
+  vfprintf_chk \
+  vfscanf \
+  vfwprintf \
+  vfwprintf_chk \
+  vfwscanf \
+  vprintf \
+  vprintf_chk \
+  vscanf \
+  vsnprintf \
+  vsnprintf_chk \
+  vsprintf \
+  vsprintf_chk \
+  vsscanf \
+  vswprintf \
+  vswprintf_chk \
+  vswscanf \
+  vsyslog \
+  vsyslog_chk \
+  vwprintf \
+  vwprintf_chk \
+  vwscanf \
+  wcstold \
+  wcstold_l \
+  wcstoldint \
+  wprintf \
+  wprintf_chk \
+  wscanf \
+  y0 \
+  y1 \
+  yn \
+# libnldbl-calls
 libnldbl-routines = $(libnldbl-calls:%=nldbl-%)
 libnldbl-inhibit-o = $(object-suffixes)
 libnldbl-static-only-routines = $(libnldbl-routines)
@@ -103,7 +298,9 @@ CFLAGS-nldbl-erf.c = -fno-builtin-erfl
 CFLAGS-nldbl-erfc.c = -fno-builtin-erfcl
 CFLAGS-nldbl-exp.c = -fno-builtin-expl
 CFLAGS-nldbl-exp10.c = -fno-builtin-exp10l
+CFLAGS-nldbl-exp10m1.c = -fno-builtin-exp10m1l
 CFLAGS-nldbl-exp2.c = -fno-builtin-exp2l
+CFLAGS-nldbl-exp2m1.c = -fno-builtin-exp2m1l
 CFLAGS-nldbl-expm1.c = -fno-builtin-expm1l
 CFLAGS-nldbl-fabs.c = -fno-builtin-fabsl
 CFLAGS-nldbl-fadd.c = -fno-builtin-faddl
@@ -149,8 +346,10 @@ CFLAGS-nldbl-llrint.c = -fno-builtin-llrintl
 CFLAGS-nldbl-llround.c = -fno-builtin-llroundl
 CFLAGS-nldbl-log.c = -fno-builtin-logl
 CFLAGS-nldbl-log10.c = -fno-builtin-log10l
-CFLAGS-nldbl-log1p.c = -fno-builtin-log1pl
+CFLAGS-nldbl-log10p1.c = -fno-builtin-log10p1l
+CFLAGS-nldbl-log1p.c = -fno-builtin-log1pl -fno-builtin-logp1l
 CFLAGS-nldbl-log2.c = -fno-builtin-log2l
+CFLAGS-nldbl-log2p1.c = -fno-builtin-log2p1l
 CFLAGS-nldbl-logb.c = -fno-builtin-logbl
 CFLAGS-nldbl-lrint.c = -fno-builtin-lrintl
 CFLAGS-nldbl-lround.c = -fno-builtin-lroundl
@@ -190,8 +389,11 @@ CFLAGS-nldbl-y0.c = -fno-builtin-y0l
 CFLAGS-nldbl-y1.c = -fno-builtin-y1l
 CFLAGS-nldbl-yn.c = -fno-builtin-ynl
 
-tests += test-narrow-macros-ldbl-64 test-nldbl-redirect \
-	 test-redirection-ldbl-64
+tests += \
+  test-narrow-macros-ldbl-64 \
+  test-nldbl-redirect \
+  test-redirection-ldbl-64 \
+# tests
 CFLAGS-test-narrow-macros-ldbl-64.c += -mlong-double-64
 CFLAGS-test-nldbl-redirect.c += -mlong-double-64
 CFLAGS-test-redirection-ldbl-64.c += -mlong-double-64
@@ -231,17 +433,20 @@ CFLAGS-tst-nldbl-errorfptr.c += -mlong-double-64
 endif
 
 ifeq ($(subdir), stdio-common)
-tests += tst-nldbl-scanf-binary-c11 \
-	 tst-nldbl-scanf-binary-c2x \
-	 tst-nldbl-scanf-binary-gnu11 \
-	 tst-nldbl-scanf-binary-gnu89
+tests += \
+  tst-nldbl-scanf-binary-c11 \
+  tst-nldbl-scanf-binary-c23 \
+  tst-nldbl-scanf-binary-gnu11 \
+  tst-nldbl-scanf-binary-gnu89 \
+# tests
 
-# Some versions of GCC supported for building glibc do not support -std=c2x, so
-# the test for that version uses -std=c11 and then _ISOC2X_SOURCE is defined in
+# Some versions of GCC supported for building glibc do not support -std=c23
+# (added in GCC 14), or the older name -std=c2x (added in GCC 9), so
+# the test for that version uses -std=c11 and then _ISOC23_SOURCE is defined in
 # the test as needed.
 CFLAGS-tst-nldbl-scanf-binary-c11.c += -mlong-double-64 -std=c11 \
 				       -DOBJPFX=\"$(objpfx)\"
-CFLAGS-tst-nldbl-scanf-binary-c2x.c += -mlong-double-64 -std=c11 \
+CFLAGS-tst-nldbl-scanf-binary-c23.c += -mlong-double-64 -std=c11 \
 				       -DOBJPFX=\"$(objpfx)\"
 CFLAGS-tst-nldbl-scanf-binary-gnu11.c += -mlong-double-64 -std=gnu11 \
 					 -DOBJPFX=\"$(objpfx)\"
@@ -251,17 +456,20 @@ CFLAGS-tst-nldbl-scanf-binary-gnu89.c += -mlong-double-64 -std=gnu89 \
 endif
 
 ifeq ($(subdir), wcsmbs)
-tests += tst-nldbl-wscanf-binary-c11 \
-	 tst-nldbl-wscanf-binary-c2x \
-	 tst-nldbl-wscanf-binary-gnu11 \
-	 tst-nldbl-wscanf-binary-gnu89
+tests += \
+  tst-nldbl-wscanf-binary-c11 \
+  tst-nldbl-wscanf-binary-c23 \
+  tst-nldbl-wscanf-binary-gnu11 \
+  tst-nldbl-wscanf-binary-gnu89 \
+# tests
 
-# Some versions of GCC supported for building glibc do not support -std=c2x, so
-# the test for that version uses -std=c11 and then _ISOC2X_SOURCE is defined in
+# Some versions of GCC supported for building glibc do not support -std=c23
+# (added in GCC 14), or the older name -std=c2x (added in GCC 9), so
+# the test for that version uses -std=c11 and then _ISOC23_SOURCE is defined in
 # the test as needed.
 CFLAGS-tst-nldbl-wscanf-binary-c11.c += -mlong-double-64 -std=c11 \
 					-DOBJPFX=\"$(objpfx)\"
-CFLAGS-tst-nldbl-wscanf-binary-c2x.c += -mlong-double-64 -std=c11 \
+CFLAGS-tst-nldbl-wscanf-binary-c23.c += -mlong-double-64 -std=c11 \
 					-DOBJPFX=\"$(objpfx)\"
 CFLAGS-tst-nldbl-wscanf-binary-gnu11.c += -mlong-double-64 -std=gnu11 \
 					  -DOBJPFX=\"$(objpfx)\"

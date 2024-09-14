@@ -292,10 +292,6 @@ test-xfail-tst-sprofil = yes
 test-xfail-tst-timer4 = yes
 test-xfail-tst-timer5 = yes
 
-# Needs LFS support
-#test-xfail-test-lfs = yes
-test-xfail-tst-tzset = yes
-
 # want /proc/self/fd
 # TODO: make them use FD_TO_FILENAME_PREFIX from <arch-fd_to_filename.h>
 test-xfail-tst-if_index-long = yes
@@ -307,6 +303,10 @@ test-xfail-tst-close_range = yes
 test-xfail-tst-support-open-dev-null-range = yes
 test-xfail-tst-spawn5 = yes
 test-xfail-tst-open-tmpfile = yes
+
+# Missing RLIMIT_AS/overcommit enforcement
+tests-unsupported += test-bz22786 tst-strtod-overflow bug18240
+tests-unsupported += test-lfs tst-tzset
 
 # new in 2.22
 test-xfail-tst-prelink = yes
@@ -396,6 +396,27 @@ test-xfail-tst-sprof-basic = yes
 test-xfail-tst-nss-files-hosts-v4mapped = yes
 test-xfail-test-canon = yes
 
+# new in 2.39
+test-xfail-tst-initgroups1 = yes
+test-xfail-tst-initgroups2 = yes
+test-xfail-tst-sprintf-fortify-rdonly = yes
+test-xfail-tst-plt-rewrite1 = yes
+test-xfail-tst-tunables = yes
+test-xfail-tst-cancel11 = yes
+test-xfail-tst-cancelx11 = yes
+test-xfail-tst-mremap1 = yes
+test-xfail-tst-mremap2 = yes
+
+# new in 2.40
+test-xfail-tst-recursive-tls = yes
+test-xfail-tst-malloc-alternate-path = yes
+test-xfail-tst-malloc-alternate-path-malloc-check = yes
+test-xfail-tst-malloc-alternate-path-malloc-hugetlb1 = yes
+test-xfail-tst-malloc-alternate-path-malloc-hugetlb2 = yes
+test-xfail-tst-malloc-alternate-path-mcheck = yes
+test-xfail-tst-malloc-fork-deadlock = yes
+test-xfail-tst-shutdown = yes
+
 # actually never succeded
 test-xfail-tst-create_format1 = yes
 test-xfail-tst-getcwd-abspath = yes
@@ -427,9 +448,6 @@ test-xfail-test-ldouble-log2 = yes
 test-xfail-test-ldouble-y0 = yes
 test-xfail-test-ldouble-y1 = yes
 
-# Bus error
-test-xfail-test-bz22786 = yes
-
 # memory leak
 test-xfail-tst-vfprintf-width-prec-mem = yes
 test-xfail-tst-vfprintf-width-prec = yes
@@ -442,9 +460,6 @@ test-xfail-tst-malloc-too-large = yes
 test-xfail-tst-malloc-too-large-malloc-check = yes
 test-xfail-tst-malloc-too-large-malloc-hugetlb1 = yes
 test-xfail-tst-malloc-too-large-malloc-hugetlb2 = yes
-
-# Bus error
-test-xfail-bug18240 = yes
 
 # cmsg bug
 test-xfail-tst-cmsghdr = yes

@@ -12,6 +12,7 @@
 #define __NR_bind 49
 #define __NR_bpf 321
 #define __NR_brk 12
+#define __NR_cachestat 451
 #define __NR_capget 125
 #define __NR_capset 126
 #define __NR_chdir 80
@@ -58,6 +59,7 @@
 #define __NR_fchdir 81
 #define __NR_fchmod 91
 #define __NR_fchmodat 268
+#define __NR_fchmodat2 452
 #define __NR_fchown 93
 #define __NR_fchownat 260
 #define __NR_fcntl 72
@@ -78,7 +80,10 @@
 #define __NR_fsync 74
 #define __NR_ftruncate 77
 #define __NR_futex 202
+#define __NR_futex_requeue 456
+#define __NR_futex_wait 455
 #define __NR_futex_waitv 449
+#define __NR_futex_wake 454
 #define __NR_futimesat 261
 #define __NR_get_kernel_syms 177
 #define __NR_get_mempolicy 239
@@ -144,14 +149,19 @@
 #define __NR_link 86
 #define __NR_linkat 265
 #define __NR_listen 50
+#define __NR_listmount 458
 #define __NR_listxattr 194
 #define __NR_llistxattr 195
 #define __NR_lookup_dcookie 212
 #define __NR_lremovexattr 198
 #define __NR_lseek 8
 #define __NR_lsetxattr 189
+#define __NR_lsm_get_self_attr 459
+#define __NR_lsm_list_modules 461
+#define __NR_lsm_set_self_attr 460
 #define __NR_lstat 6
 #define __NR_madvise 28
+#define __NR_map_shadow_stack 453
 #define __NR_mbind 237
 #define __NR_membarrier 324
 #define __NR_memfd_create 319
@@ -315,6 +325,7 @@
 #define __NR_splice 275
 #define __NR_stat 4
 #define __NR_statfs 137
+#define __NR_statmount 457
 #define __NR_statx 332
 #define __NR_swapoff 168
 #define __NR_swapon 167

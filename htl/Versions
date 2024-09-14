@@ -3,6 +3,16 @@ libc {
   GLIBC_2.12 {
     pthread_self;
     __pthread_self;
+    pthread_attr_getdetachstate;
+    pthread_attr_getinheritsched;
+    pthread_attr_getschedparam;
+    pthread_attr_getschedpolicy;
+    pthread_attr_setdetachstate;
+    pthread_attr_setinheritsched;
+    pthread_attr_setschedpolicy;
+    pthread_equal;
+    pthread_getschedparam;
+    pthread_setschedparam;
   }
 
   GLIBC_2.21 {
@@ -38,6 +48,7 @@ libc {
     __pthread_cleanup_stack;
     __pthread_total;
     ___pthread_self;
+    __pthread_init_thread;
   }
 }
 
@@ -66,13 +77,12 @@ libpthread {
 
     pthread_atfork;
 
-    pthread_attr_destroy; pthread_attr_getdetachstate;
-    pthread_attr_getguardsize; pthread_attr_getinheritsched;
-    pthread_attr_getschedparam; pthread_attr_getschedpolicy;
+    pthread_attr_destroy;
+    pthread_attr_getguardsize;
     pthread_attr_getscope; pthread_attr_getstack; pthread_attr_getstackaddr;
-    pthread_attr_getstacksize; pthread_attr_init; pthread_attr_setdetachstate;
-    pthread_attr_setguardsize; pthread_attr_setinheritsched;
-    pthread_attr_setschedparam; pthread_attr_setschedpolicy;
+    pthread_attr_getstacksize; pthread_attr_init;
+    pthread_attr_setguardsize;
+    pthread_attr_setschedparam;
     pthread_attr_setscope; pthread_attr_setstack; pthread_attr_setstackaddr;
     pthread_attr_setstacksize;
 
@@ -89,12 +99,12 @@ libpthread {
     pthread_condattr_getpshared; pthread_condattr_init;
     pthread_condattr_setclock; pthread_condattr_setpshared;
 
-    pthread_create; pthread_detach; pthread_equal; pthread_exit;
+    pthread_create; pthread_detach; pthread_exit;
 
     pthread_getattr_np;
 
     pthread_getconcurrency; pthread_getcpuclockid;
-    pthread_getschedparam; pthread_getspecific;
+    pthread_getspecific;
 
     pthread_join;
 
@@ -126,7 +136,7 @@ libpthread {
     pthread_rwlockattr_init; pthread_rwlockattr_setpshared;
 
     pthread_setcancelstate; pthread_setcanceltype;
-    pthread_setconcurrency; pthread_setschedparam;
+    pthread_setconcurrency;
     pthread_setschedprio; pthread_setspecific;
 
     pthread_sigmask;
@@ -168,6 +178,11 @@ libpthread {
     pthread_tryjoin_np; pthread_timedjoin_np; pthread_clockjoin_np;
 
     sem_clockwait;
+  }
+
+  GLIBC_2.40 {
+    pthread_getname_np;
+    pthread_setname_np;
   }
 
   GLIBC_PRIVATE {

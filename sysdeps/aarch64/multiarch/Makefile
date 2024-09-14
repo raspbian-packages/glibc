@@ -5,6 +5,7 @@ sysdep_routines += \
   memcpy_a64fx \
   memcpy_generic \
   memcpy_mops \
+  memcpy_oryon1 \
   memcpy_sve \
   memcpy_thunderx \
   memcpy_thunderx2 \
@@ -14,6 +15,7 @@ sysdep_routines += \
   memset_generic \
   memset_kunpeng \
   memset_mops \
+  memset_oryon1 \
   memset_zva64 \
   strlen_asimd \
   strlen_generic \

@@ -1,5 +1,5 @@
 /* Map in a shared object's segments from the file.
-   Copyright (C) 1995-2023 Free Software Foundation, Inc.
+   Copyright (C) 1995-2024 Free Software Foundation, Inc.
    Copyright The GNU Toolchain Authors.
    This file is part of the GNU C Library.
 
@@ -72,7 +72,6 @@ struct filebuf
 #include <dl-map-segments.h>
 #include <dl-unmap-segments.h>
 #include <dl-machine-reject-phdr.h>
-#include <dl-sysdep-open.h>
 #include <dl-prop.h>
 #include <not-cancel.h>
 
@@ -87,16 +86,6 @@ struct filebuf
 #endif
 
 #define STRING(x) __STRING (x)
-
-
-int __stack_prot attribute_hidden attribute_relro
-#if _STACK_GROWS_DOWN && defined PROT_GROWSDOWN
-  = PROT_GROWSDOWN;
-#elif _STACK_GROWS_UP && defined PROT_GROWSUP
-  = PROT_GROWSUP;
-#else
-  = 0;
-#endif
 
 
 /* This is the decomposed LD_LIBRARY_PATH search path.  */
@@ -1253,7 +1242,7 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 
     /* Now process the load commands and map segments into memory.
        This is responsible for filling in:
-       l_map_start, l_map_end, l_addr, l_contiguous, l_text_end, l_phdr
+       l_map_start, l_map_end, l_addr, l_contiguous, l_phdr
      */
     errstring = _dl_map_segments (l, fd, header, type, loadcmds, nloadcmds,
 				  maplength, has_holes, loader);
@@ -1309,41 +1298,7 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
   if (__glibc_unlikely ((stack_flags &~ GL(dl_stack_flags)) & PF_X))
     {
       /* The stack is presently not executable, but this module
-	 requires that it be executable.  We must change the
-	 protection of the variable which contains the flags used in
-	 the mprotect calls.  */
-#ifdef SHARED
-      if ((mode & (__RTLD_DLOPEN | __RTLD_AUDIT)) == __RTLD_DLOPEN)
-	{
-	  const uintptr_t p = (uintptr_t) &__stack_prot & -GLRO(dl_pagesize);
-	  const size_t s = (uintptr_t) (&__stack_prot + 1) - p;
-
-	  struct link_map *const m = &GL(dl_rtld_map);
-	  const uintptr_t relro_end = ((m->l_addr + m->l_relro_addr
-					+ m->l_relro_size)
-				       & -GLRO(dl_pagesize));
-	  if (__glibc_likely (p + s <= relro_end))
-	    {
-	      /* The variable lies in the region protected by RELRO.  */
-	      if (__mprotect ((void *) p, s, PROT_READ|PROT_WRITE) < 0)
-		{
-		  errstring = N_("cannot change memory protections");
-		  goto lose_errno;
-		}
-	      __stack_prot |= PROT_READ|PROT_WRITE|PROT_EXEC;
-	      __mprotect ((void *) p, s, PROT_READ);
-	    }
-	  else
-	    __stack_prot |= PROT_READ|PROT_WRITE|PROT_EXEC;
-	}
-      else
-#endif
-	__stack_prot |= PROT_READ|PROT_WRITE|PROT_EXEC;
-
-#ifdef check_consistency
-      check_consistency ();
-#endif
-
+	 requires that it be executable.  */
 #if PTHREAD_IN_LIBC
       errval = _dl_make_stacks_executable (stack_endp);
 #else
@@ -1443,11 +1398,6 @@ cannot enable executable stack as shared object requires");
      name by which the DSO is actually known.  Add that as well.  */
   if (__glibc_unlikely (origname != NULL))
     add_name_to_object (l, origname);
-#else
-  /* Audit modules only exist when linking is dynamic so ORIGNAME
-     cannot be non-NULL.  */
-  assert (origname == NULL);
-#endif
 
   /* When we profile the SONAME might be needed for something else but
      loading.  Add it right away.  */
@@ -1455,6 +1405,11 @@ cannot enable executable stack as shared object requires");
       && l->l_info[DT_SONAME] != NULL)
     add_name_to_object (l, ((const char *) D_PTR (l, l_info[DT_STRTAB])
 			    + l->l_info[DT_SONAME]->d_un.d_val));
+#else
+  /* Audit modules only exist when linking is dynamic so ORIGNAME
+     cannot be non-NULL.  */
+  assert (origname == NULL);
+#endif
 
   /* If we have newly loaded libc.so, update the namespace
      description.  */
@@ -1829,7 +1784,6 @@ open_path (const char *name, size_t namelen, int mode,
       size_t cnt;
       char *edp;
       int here_any = 0;
-      int err;
 
       /* If we are debugging the search for libraries print the path
 	 now if it hasn't happened now.  */
@@ -1930,8 +1884,12 @@ open_path (const char *name, size_t namelen, int mode,
 	      return -1;
 	    }
 	}
-      if (here_any && (err = errno) != ENOENT && err != EACCES)
-	/* The file exists and is readable, but something went wrong.  */
+
+      /* Continue the search if the file does not exist (ENOENT), if it can
+	 not be accessed (EACCES), or if the a component in the path is not a
+	 directory (for instance, if the component is a existing file meaning
+	 essentially that the pathname is invalid - ENOTDIR).  */
+      if (here_any && errno != ENOENT && errno != EACCES && errno != ENOTDIR)
 	return -1;
 
       /* Remember whether we found anything.  */
@@ -2106,20 +2064,6 @@ _dl_map_object (struct link_map *loader, const char *name,
 	fd = open_path (name, namelen, mode,
 			&loader->l_runpath_dirs, &realname, &fb, loader,
 			LA_SER_RUNPATH, &found_other_class);
-
-      if (fd == -1)
-        {
-          realname = _dl_sysdep_open_object (name, namelen, &fd);
-          if (realname != NULL)
-            {
-              fd = open_verify (realname, fd,
-                                &fb, loader ?: GL(dl_ns)[nsid]._ns_loaded,
-                                LA_SER_CONFIG, mode, &found_other_class,
-                                false);
-              if (fd == -1)
-                free (realname);
-            }
-        }
 
 #ifdef USE_LDCONFIG
       if (fd == -1

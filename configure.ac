@@ -52,6 +52,22 @@ fi
 AC_SUBST(cross_compiling)
 AC_PROG_CPP
 
+# This will get text that should go into config.make.
+config_vars=
+
+AC_ARG_ENABLE([static-c++-tests],
+	      AS_HELP_STRING([--disable-static-c++-tests],
+			     [disable static C++ tests@<:@default=no@:>@]),
+	      [static_cxx_tests=$enableval],
+	      [static_cxx_tests=yes])
+LIBC_CONFIG_VAR([static-cxx-tests], [$static_cxx_tests])
+
+AC_ARG_ENABLE([static-c++-link-check],
+	      AS_HELP_STRING([--disable-static-c++-link-check],
+			     [disable static C++ link check @<:@default=no@:>@]),
+	      [static_cxx_link_check=$enableval],
+	      [static_cxx_link_check=yes])
+
 # We need the C++ compiler only for testing.
 AC_PROG_CXX
 # It's useless to us if it can't link programs (e.g. missing -lstdc++).
@@ -61,10 +77,11 @@ AC_LANG_PUSH([C++])
 AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])],
 	       [libc_cv_cxx_link_ok=yes],
 	       [libc_cv_cxx_link_ok=no])
-# Static case.
-old_LDFLAGS="$LDFLAGS"
-LDFLAGS="$LDFLAGS -static"
-AC_LINK_IFELSE([AC_LANG_SOURCE([
+if test $static_cxx_link_check$static_cxx_tests = yesyes; then
+  # Static case.
+  old_LDFLAGS="$LDFLAGS"
+  LDFLAGS="$LDFLAGS -static"
+  AC_LINK_IFELSE([AC_LANG_SOURCE([
 #include <iostream>
 
 int
@@ -74,18 +91,16 @@ main()
   return 0;
 }
 ])],
-	       [],
-	       [libc_cv_cxx_link_ok=no])
-LDFLAGS="$old_LDFLAGS"
+		 [],
+		 [libc_cv_cxx_link_ok=no])
+  LDFLAGS="$old_LDFLAGS"
+fi
 AC_LANG_POP([C++])])
 AS_IF([test $libc_cv_cxx_link_ok != yes], [CXX=])
 
 if test "`cd $srcdir; pwd -P`" = "`pwd -P`"; then
   AC_MSG_ERROR([you must configure in a separate build directory])
 fi
-
-# This will get text that should go into config.make.
-config_vars=
 
 # Check for a --with-gd argument and set libgd-LDFLAGS in config.make.
 AC_ARG_WITH([gd],
@@ -167,6 +182,15 @@ AC_ARG_WITH([timeoutfactor],
 	    [timeoutfactor=$withval],
 	    [timeoutfactor=1])
 AC_DEFINE_UNQUOTED(TIMEOUTFACTOR, $timeoutfactor)
+
+man_pages_version=6.9.1
+
+AC_ARG_WITH([man-pages],
+	    AS_HELP_STRING([--with-man-pages=VERSION],
+			   [tie manual to a specific man-pages version]),
+	    [man_pages_version=$withval],
+	    [])
+AC_SUBST(man_pages_version)
 
 AC_ARG_ENABLE([sanity-checks],
 	      AS_HELP_STRING([--disable-sanity-checks],
@@ -277,16 +301,6 @@ else
   fi
 fi
 
-dnl For the development we sometimes want gcc to issue even more warnings.
-dnl This is not the default since many of the extra warnings are not
-dnl appropriate.
-AC_ARG_ENABLE([all-warnings],
-	      AS_HELP_STRING([--enable-all-warnings],
-			     [enable all useful warnings gcc can issue]),
-	      [all_warnings=$enableval],
-	      [])
-AC_SUBST(all_warnings)
-
 AC_ARG_ENABLE([werror],
 	      AS_HELP_STRING([--disable-werror],
 			     [do not build with -Werror]),
@@ -314,71 +328,6 @@ if test "$memory_tagging" = yes; then
   esac
 fi
 AC_SUBST(memory_tagging)
-
-AC_ARG_ENABLE([crypt],
-              AS_HELP_STRING([--enable-crypt],
-                             [build and install the legacy passphrase hashing library, libcrypt]),
-              [build_crypt=$enableval],
-              [build_crypt=no])
-AC_SUBST(build_crypt)
-
-AC_ARG_ENABLE([nss-crypt],
-	      AS_HELP_STRING([--enable-nss-crypt],
-			     [enable libcrypt to use nss]),
-	      [nss_crypt=$enableval],
-	      [nss_crypt=no])
-if test x$build_libcrypt = xno && test x$nss_crypt = xyes; then
-  AC_MSG_WARN([--enable-nss-crypt has no effect when libcrypt is disabled])
-  nss_crypt=no
-fi
-if test x$nss_crypt = xyes; then
-  nss_includes=-I$(nss-config --includedir 2>/dev/null)
-  if test $? -ne 0; then
-    AC_MSG_ERROR([cannot find include directory with nss-config])
-  fi
-  nspr_includes=-I$(nspr-config --includedir 2>/dev/null)
-  if test $? -ne 0; then
-    AC_MSG_ERROR([cannot find include directory with nspr-config])
-  fi
-  old_CFLAGS="$CFLAGS"
-  CFLAGS="$CFLAGS $nss_includes $nspr_includes"
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([typedef int PRBool;
-#include <hasht.h>
-#include <nsslowhash.h>
-void f (void) { NSSLOW_Init (); }])],
-	     libc_cv_nss_crypt=yes,
-	     AC_MSG_ERROR([
-cannot find NSS headers with lowlevel hash function interfaces]))
-  old_LIBS="$LIBS"
-  old_LDFLAGS="$LDFLAGS"
-  LIBS="$LIBS -lfreebl3"
-  AC_LINK_IFELSE([AC_LANG_PROGRAM([typedef int PRBool;
-#include <hasht.h>
-#include <nsslowhash.h>],
-				  [NSSLOW_Init();])],
-		 libc_cv_nss_crypt=yes,
-		 AC_MSG_ERROR([
-cannot link program using lowlevel NSS hash functions]))
-  # Check to see if there is a static NSS cryptographic library.
-  # If there isn't then we can't link anything with libcrypt.a,
-  # and that might mean disabling some static tests.
-  LDFLAGS="$LDFLAGS -static"
-  AC_LINK_IFELSE([AC_LANG_PROGRAM([typedef int PRBool;
-#include <hasht.h>
-#include <nsslowhash.h>],
-				  [NSSLOW_Init();])],
-		 libc_cv_static_nss_crypt=yes,
-		 libc_cv_static_nss_crypt=no)
-  LDFLAGS="$old_LDFLAGS"
-  CFLAGS="$old_CFLAGS"
-  LIBS="$old_LIBS"
-else
-  libc_cv_nss_crypt=no
-  libc_cv_static_nss_crypt=no
-fi
-AC_SUBST(libc_cv_nss_crypt)
-AC_SUBST(libc_cv_static_nss_crypt)
-
 
 AC_ARG_ENABLE([systemtap],
               [AS_HELP_STRING([--enable-systemtap],
@@ -516,6 +465,9 @@ libc_config_ok=no
 # sysdeps directories sets this to a preprocessor conditional for
 # whether to use such directories.
 with_fp_cond=1
+
+# A preconfigure script may define another name to TLS descriptor variant
+mtls_descriptor=gnu2
 
 dnl Let sysdeps/*/preconfigure act here.
 LIBC_PRECONFIGURE([$srcdir], [for sysdeps])
@@ -1362,7 +1314,7 @@ fi
 rm -f conftest*])
 AC_SUBST(libc_cv_has_glob_dat)
 
-AC_CACHE_CHECK([for -mtls-dialect=gnu2], libc_cv_mtls_dialect_gnu2,
+AC_CACHE_CHECK([for tls descriptor support], libc_cv_mtls_descriptor,
 [dnl
 cat > conftest.c <<EOF
 __thread int i;
@@ -1371,16 +1323,16 @@ void foo (void)
   i = 10;
 }
 EOF
-if AC_TRY_COMMAND([${CC-cc} $CFLAGS $CPPFLAGS -fPIC -mtls-dialect=gnu2 -nostdlib -nostartfiles
-		   conftest.c -o conftest 1>&AS_MESSAGE_LOG_FD])
+if AC_TRY_COMMAND([${CC-cc} $CFLAGS $CPPFLAGS -fPIC -mtls-dialect=$mtls_descriptor -nostdlib -nostartfiles
+		   -shared conftest.c -o conftest 1>&AS_MESSAGE_LOG_FD])
 then
-  libc_cv_mtls_dialect_gnu2=yes
+  libc_cv_mtls_descriptor=$mtls_descriptor
 else
-  libc_cv_mtls_dialect_gnu2=no
+  libc_cv_mtls_descriptor=no
 fi
 rm -f conftest*])
-AC_SUBST(libc_cv_mtls_dialect_gnu2)
-LIBC_CONFIG_VAR([have-mtls-dialect-gnu2], [$libc_cv_mtls_dialect_gnu2])
+AC_SUBST(libc_cv_mtls_descriptor)
+LIBC_CONFIG_VAR([have-mtls-descriptor], [$libc_cv_mtls_descriptor])
 
 dnl clang emits an warning for a double alias redirection, to warn the
 dnl original symbol is sed even when weak definition overrides it.

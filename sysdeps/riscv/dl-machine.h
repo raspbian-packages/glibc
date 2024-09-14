@@ -1,5 +1,5 @@
 /* Machine-dependent ELF dynamic relocation inline functions.  RISC-V version.
-   Copyright (C) 2011-2023 Free Software Foundation, Inc.
+   Copyright (C) 2011-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -348,7 +348,7 @@ elf_machine_runtime_setup (struct link_map *l, struct r_scope_elem *scope[],
       gotplt[1] = (ElfW(Addr)) l;
     }
 
-  if (l->l_type == lt_executable)
+  if (l->l_type == lt_executable && l->l_relocated)
     {
       /* The __global_pointer$ may not be defined by the linker if the
 	 $gp register does not be used to access the global variable

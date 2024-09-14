@@ -1,5 +1,5 @@
 /* spawn a new process running an executable.  Hurd version.
-   Copyright (C) 2001-2023 Free Software Foundation, Inc.
+   Copyright (C) 2001-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -805,12 +805,18 @@ retry:
       /* Relative path */
       char *cwd = __getcwd (NULL, 0);
       if (cwd == NULL)
-	goto out;
+	{
+	  err = errno;
+	  goto out;
+	}
 
       res = __asprintf (&concat_name, "%s/%s", cwd, relpath);
       free (cwd);
       if (res == -1)
-	goto out;
+	{
+	  err = errno;
+	  goto out;
+	}
 
       abspath = concat_name;
     }

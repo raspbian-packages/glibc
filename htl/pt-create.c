@@ -1,5 +1,5 @@
 /* Thread creation.
-   Copyright (C) 2000-2023 Free Software Foundation, Inc.
+   Copyright (C) 2000-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -177,7 +177,9 @@ __pthread_create_internal (struct __pthread **thread,
       err = ENOMEM;
       goto failed_thread_tls_alloc;
     }
+#if TLS_TCB_AT_TP
   pthread->tcb->tcb = pthread->tcb;
+#endif
 
   /* And initialize the rest of the machine context.  This may include
      additional machine- and system-specific initializations that

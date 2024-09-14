@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # Build many configurations of glibc.
-# Copyright (C) 2016-2023 Free Software Foundation, Inc.
+# Copyright (C) 2016-2024 Free Software Foundation, Inc.
 # Copyright The GNU Toolchain Authors.
 # This file is part of the GNU C Library.
 #
@@ -55,6 +55,26 @@ import subprocess
 import sys
 import time
 import urllib.request
+
+# This is a list of system utilities that are expected to be available
+# to this script, and, if a non-zero version is included, the minimum
+# version required to work with this sccript.
+def get_list_of_required_tools():
+    global REQUIRED_TOOLS
+    REQUIRED_TOOLS = {
+        'awk'      : (get_version_awk,   (0,0,0)),
+        'bison'    : (get_version,       (0,0)),
+        'flex'     : (get_version,       (0,0,0)),
+        'git'      : (get_version,       (1,8,3)),
+        'make'     : (get_version,       (4,0)),
+        'makeinfo' : (get_version,       (0,0)),
+        'patch'    : (get_version,       (0,0,0)),
+        'sed'      : (get_version,       (0,0)),
+        'tar'      : (get_version,       (0,0,0)),
+        'gzip'     : (get_version,       (0,0)),
+        'bzip2'    : (get_version_bzip2, (0,0,0)),
+        'xz'       : (get_version,       (0,0,0)),
+    }
 
 try:
     subprocess.run
@@ -150,7 +170,7 @@ class Context(object):
             if l.startswith(starttext):
                 l = l[len(starttext):]
                 l = l.rstrip('"\n')
-                m = re.fullmatch('([0-9]+)\.([0-9]+)[.0-9]*', l)
+                m = re.fullmatch(r'([0-9]+)\.([0-9]+)[.0-9]*', l)
                 return '%s.%s' % m.group(1, 2)
         print('error: could not determine glibc version')
         exit(1)
@@ -214,10 +234,6 @@ class Context(object):
                         os_name='linux-gnu')
         self.add_config(arch='i686',
                         os_name='gnu')
-        self.add_config(arch='ia64',
-                        os_name='linux-gnu',
-                        first_gcc_cfg=['--with-system-libunwind'],
-                        binutils_cfg=['--enable-obsolete'])
         self.add_config(arch='loongarch64',
                         os_name='linux-gnu',
                         variant='lp64d',
@@ -342,11 +358,13 @@ class Context(object):
                                 {'variant': 'n64',
                                  'ccopts': '-mabi=64'}])
         self.add_config(arch='nios2',
-                        os_name='linux-gnu')
+                        os_name='linux-gnu',
+                        gcc_cfg=['--enable-obsolete'])
         self.add_config(arch='or1k',
                         os_name='linux-gnu',
-                        variant='soft',
-                        gcc_cfg=['--with-multilib-list=mcmov'])
+                        gcc_cfg=['--with-multilib-list=mcmov,mhard-float'],
+                        glibcs=[{'variant': 'soft'},
+                                {'variant': 'hard', 'ccopts': '-mhard-float'}])
         self.add_config(arch='powerpc',
                         os_name='linux-gnu',
                         gcc_cfg=['--disable-multilib', '--enable-secureplt'],
@@ -401,7 +419,22 @@ class Context(object):
                         glibcs=[{},
                                 {'arch': 's390', 'ccopts': '-m31'}],
                         extra_glibcs=[{'variant': 'O3',
-                                       'cflags': '-O3'}])
+                                       'cflags': '-O3'},
+                                      {'variant': 'zEC12',
+                                       'ccopts': '-march=zEC12'},
+                                      {'variant': 'z13',
+                                       'ccopts': '-march=z13'},
+                                      {'variant': 'z15',
+                                       'ccopts': '-march=z15'},
+                                      {'variant': 'zEC12-disable-multi-arch',
+                                       'ccopts': '-march=zEC12',
+                                       'cfg': ['--disable-multi-arch']},
+                                      {'variant': 'z13-disable-multi-arch',
+                                       'ccopts': '-march=z13',
+                                       'cfg': ['--disable-multi-arch']},
+                                      {'variant': 'z15-disable-multi-arch',
+                                       'ccopts': '-march=z15',
+                                       'cfg': ['--disable-multi-arch']}])
         self.add_config(arch='sh3',
                         os_name='linux-gnu')
         self.add_config(arch='sh3eb',
@@ -420,20 +453,20 @@ class Context(object):
                         gcc_cfg=['--without-fp'])
         self.add_config(arch='sparc64',
                         os_name='linux-gnu',
-                        glibcs=[{},
-                                {'arch': 'sparcv9',
+                        glibcs=[{'cfg' : ['--disable-default-pie']},
+                                {'cfg' : ['--disable-default-pie'],
+                                 'arch': 'sparcv9',
                                  'ccopts': '-m32 -mlong-double-128 -mcpu=v9'}],
                         extra_glibcs=[{'variant': 'leon3',
+                                       'cfg' : ['--disable-default-pie'],
                                        'arch' : 'sparcv8',
                                        'ccopts' : '-m32 -mlong-double-128 -mcpu=leon3'},
                                       {'variant': 'disable-multi-arch',
-                                       'cfg': ['--disable-multi-arch']},
+                                       'cfg': ['--disable-multi-arch', '--disable-default-pie']},
                                       {'variant': 'disable-multi-arch',
                                        'arch': 'sparcv9',
                                        'ccopts': '-m32 -mlong-double-128 -mcpu=v9',
-                                       'cfg': ['--disable-multi-arch']},
-                                      {'variant': 'enable-crypt',
-                                       'cfg': ['--enable-crypt']}])
+                                       'cfg': ['--disable-multi-arch', '--disable-default-pie']}])
         self.add_config(arch='x86_64',
                         os_name='linux-gnu',
                         gcc_cfg=['--with-multilib-list=m64,m32,mx32'],
@@ -447,7 +480,6 @@ class Context(object):
                                                '--disable-profile',
                                                '--disable-timezone-tools',
                                                '--disable-mathvec',
-                                               '--disable-crypt',
                                                '--disable-build-nscd',
                                                '--disable-nscd']},
                                       {'variant': 'no-pie',
@@ -468,9 +500,7 @@ class Context(object):
                                       {'arch': 'i586',
                                        'ccopts': '-m32 -march=i586'},
                                       {'variant': 'enable-fortify-source',
-                                       'cfg': ['--enable-fortify-source']},
-                                      {'variant': 'enable-crypt',
-                                       'cfg': ['--enable-crypt']}])
+                                       'cfg': ['--enable-fortify-source']}])
         self.add_config(arch='x86_64',
                         os_name='gnu',
                         gcc_cfg=['--disable-multilib'])
@@ -552,7 +582,7 @@ class Context(object):
                 print(config.name, config.compiler.name)
             return
         self.clear_last_build_state(action)
-        build_time = datetime.datetime.utcnow()
+        build_time = datetime.datetime.now(datetime.timezone.utc)
         if action == 'host-libraries':
             build_components = ('gmp', 'mpfr', 'mpc')
             old_components = ()
@@ -800,13 +830,13 @@ class Context(object):
 
     def checkout(self, versions):
         """Check out the desired component versions."""
-        default_versions = {'binutils': 'vcs-2.40',
+        default_versions = {'binutils': 'vcs-2.42',
                             'gcc': 'vcs-13',
                             'glibc': 'vcs-mainline',
-                            'gmp': '6.2.1',
-                            'linux': '6.4',
+                            'gmp': '6.3.0',
+                            'linux': '6.9',
                             'mpc': '1.3.1',
-                            'mpfr': '4.2.0',
+                            'mpfr': '4.2.1',
                             'mig': 'vcs-mainline',
                             'gnumach': 'vcs-mainline',
                             'hurd': 'vcs-mainline'}
@@ -1046,7 +1076,8 @@ class Context(object):
     def update_build_state(self, action, build_time, build_versions):
         """Update the build state after a build."""
         build_time = build_time.replace(microsecond=0)
-        self.build_state[action]['build-time'] = str(build_time)
+        self.build_state[action]['build-time'] = build_time.strftime(
+            '%Y-%m-%d %H:%M:%S')
         self.build_state[action]['build-versions'] = build_versions
         build_results = {}
         for log in self.status_log_list:
@@ -1092,15 +1123,17 @@ class Context(object):
         old_time_str = self.build_state[action]['build-time']
         if not old_time_str:
             return True
-        old_time = datetime.datetime.strptime(old_time_str,
-                                              '%Y-%m-%d %H:%M:%S')
-        new_time = datetime.datetime.utcnow()
+        old_time = datetime.datetime.strptime(
+            old_time_str, '%Y-%m-%d %H:%M:%S').replace(
+                tzinfo=datetime.timezone.utc)
+        new_time = datetime.datetime.now(datetime.timezone.utc)
         delta = new_time - old_time
         return delta.total_seconds() >= delay
 
     def bot_cycle(self):
         """Run a single round of checkout and builds."""
-        print('Bot cycle starting %s.' % str(datetime.datetime.utcnow()))
+        print('Bot cycle starting %s.'
+              % str(datetime.datetime.now(datetime.timezone.utc)))
         self.load_bot_config_json()
         actions = ('host-libraries', 'compilers', 'glibcs')
         self.bot_run_self(['--replace-sources'], 'checkout')
@@ -1152,12 +1185,13 @@ class Context(object):
             shutil.copytree(self.logsdir, self.logsdir_old)
         for a in actions:
             if must_build[a]:
-                build_time = datetime.datetime.utcnow()
+                build_time = datetime.datetime.now(datetime.timezone.utc)
                 print('Rebuilding %s at %s.' % (a, str(build_time)))
                 self.bot_run_self([], a)
                 self.load_build_state_json()
                 self.bot_build_mail(a, build_time)
-        print('Bot cycle done at %s.' % str(datetime.datetime.utcnow()))
+        print('Bot cycle done at %s.'
+              % str(datetime.datetime.now(datetime.timezone.utc)))
 
     def bot_build_mail(self, action, build_time):
         """Send email with the results of a build."""
@@ -1173,7 +1207,7 @@ class Context(object):
         build_time = build_time.replace(microsecond=0)
         subject = (self.bot_config['email-subject'] %
                    {'action': action,
-                    'build-time': str(build_time)})
+                    'build-time': build_time.strftime('%Y-%m-%d %H:%M:%S')})
         results = self.build_state[action]['build-results']
         changes = self.build_state[action]['result-changes']
         ever_passed = set(self.build_state[action]['ever-passed'])
@@ -1222,7 +1256,8 @@ class Context(object):
         msg['From'] = self.bot_config['email-from']
         msg['To'] = self.bot_config['email-to']
         msg['Message-ID'] = email.utils.make_msgid()
-        msg['Date'] = email.utils.format_datetime(datetime.datetime.utcnow())
+        msg['Date'] = email.utils.format_datetime(
+            datetime.datetime.now(datetime.timezone.utc))
         with smtplib.SMTP(self.bot_config['email-server']) as s:
             s.send_message(msg)
 
@@ -1285,7 +1320,6 @@ def install_linux_headers(policy, cmdlist):
                 'i586': 'x86',
                 'i686': 'x86',
                 'i786': 'x86',
-                'ia64': 'ia64',
                 'loongarch64': 'loongarch',
                 'm68k': 'm68k',
                 'microblaze': 'microblaze',
@@ -1871,8 +1905,82 @@ def get_parser():
     return parser
 
 
+def get_version_common(progname,line,word,arg1):
+    try:
+        out = subprocess.run([progname, arg1],
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.DEVNULL,
+                             stdin=subprocess.DEVNULL,
+                             check=True, universal_newlines=True)
+        v = out.stdout.splitlines()[line].split()[word]
+        v = re.match(r'[0-9]+(.[0-9]+)*', v).group()
+        return [int(x) for x in v.split('.')]
+    except:
+        return 'missing';
+
+def get_version_common_stderr(progname,line,word,arg1):
+    try:
+        out = subprocess.run([progname, arg1],
+                             stdout=subprocess.DEVNULL,
+                             stderr=subprocess.PIPE,
+                             stdin=subprocess.DEVNULL,
+                             check=True, universal_newlines=True)
+        v = out.stderr.splitlines()[line].split()[word]
+        v = re.match(r'[0-9]+(.[0-9]+)*', v).group()
+        return [int(x) for x in v.split('.')]
+    except:
+        return 'missing';
+
+def get_version(progname):
+    return get_version_common(progname, 0, -1, '--version');
+
+def get_version_awk(progname):
+    return get_version_common(progname, 0, 2, '--version');
+
+def get_version_bzip2(progname):
+    return get_version_common_stderr(progname, 0, 6, '-h');
+
+def check_version(ver, req):
+    for v, r in zip(ver, req):
+        if v > r:
+            return True
+        if v < r:
+            return False
+    return True
+
+def version_str(ver):
+    return '.'.join([str (x) for x in ver])
+
+def check_for_required_tools():
+    get_list_of_required_tools()
+    count_old_tools = 0
+    count_missing_tools = 0
+
+    for k, v in REQUIRED_TOOLS.items():
+        version = v[0](k)
+        if version == 'missing':
+            ok = 'missing'
+        else:
+            ok = 'ok' if check_version (version, v[1]) else 'old'
+        if ok == 'old':
+            if count_old_tools == 0:
+                print("One or more required tools are too old:")
+            count_old_tools = count_old_tools + 1
+            print('{:9}: {:3} (obtained=\"{}\" required=\"{}\")'.format(k, ok,
+                    version_str(version), version_str(v[1])))
+        if ok == 'missing':
+            if count_missing_tools == 0:
+                print("One or more required tools are missing:")
+            count_missing_tools = count_missing_tools + 1
+            print('{:9}: {:3} (required=\"{}\")'.format(k, ok,
+                    version_str(v[1])))
+
+    if count_old_tools > 0 or count_missing_tools > 0:
+        exit (1);
+
 def main(argv):
     """The main entry point."""
+    check_for_required_tools();
     parser = get_parser()
     opts = parser.parse_args(argv)
     topdir = os.path.abspath(opts.topdir)

@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2023 Free Software Foundation, Inc.
+# Copyright (C) 1991-2024 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -594,11 +594,22 @@ $(objpfx)lint-makefiles.out: scripts/lint-makefiles.sh
 	$(SHELL) $< "$(PYTHON)" `pwd` > $@ ; \
 	$(evaluate-test)
 
+# Link libc.a as a whole to verify that it does not contain multiple
+# definitions of any symbols.
+tests-special += $(objpfx)link-static-libc.out
+$(objpfx)link-static-libc.out:
+	$(LINK.o) $(whole-archive) -nostdlib -nostartfiles -r \
+	  $(objpfx)libc.a -o /dev/null > $@ 2>&1; \
+	$(evaluate-test)
+
+# Print test summary for tests in $1 .sum file;
+# $2 is optional test identifier.
+# Fail if there are unexpected failures in the test results.
 define summarize-tests
-@grep -E -v '^(PASS|XFAIL):' $(objpfx)$1 || true
-@echo "Summary of test results$2:"
-@sed 's/:.*//' < $(objpfx)$1 | sort | uniq -c
-@! grep -E -q -v '^(X?PASS|XFAIL|UNSUPPORTED):' $(objpfx)$1
+@grep -E '^[A-Z]+:' $(objpfx)$1 | grep -E -v '^(PASS|XFAIL):' || true
+@echo "		=== Summary of results$2 ==="
+@sed -e '/:.*/!d' -e 's/:.*//' < $(objpfx)$1 | sort | uniq -c
+@! grep -E '^[A-Z]+:' $(objpfx)$1 | grep -E -q -v '^(X?PASS|XFAIL|UNSUPPORTED):'
 endef
 
 # The intention here is to do ONE install of our build into the
@@ -641,7 +652,7 @@ $(objpfx)testroot.pristine/install.stamp :
 ifeq ($(run-built-tests),yes)
 	# Copy these DSOs first so we can overwrite them with our own.
 	for dso in `$(test-wrapper-env) LD_TRACE_LOADED_OBJECTS=1  \
-		$(rtld-prefix) \
+		$(rtld-prefix) --inhibit-cache \
 		$(objpfx)testroot.pristine/bin/sh \
 	        | sed -n '/\//{s@.*=> /@/@;s/^[^/]*//;s/ .*//p;}'` ;\
 	  do \
@@ -650,7 +661,7 @@ ifeq ($(run-built-tests),yes)
 	    $(test-wrapper) cp $$dso $(objpfx)testroot.pristine$$dso ;\
 	  done
 	for dso in `$(test-wrapper-env) LD_TRACE_LOADED_OBJECTS=1  \
-		$(rtld-prefix) \
+		$(rtld-prefix) --inhibit-cache \
 		$(objpfx)support/$(LINKS_DSO_PROGRAM) \
 	        | sed -n '/\//{s@.*=> /@/@;s/^[^/]*//;s/ .*//p;}'` ;\
 	  do \
@@ -751,7 +762,7 @@ endif
 INSTALL: manual/install-plain.texi manual/macros.texi \
 	 $(common-objpfx)manual/pkgvers.texi manual/install.texi
 	makeinfo --no-validate --plaintext --no-number-sections \
-		 -I$(common-objpfx)manual $< -o $@-tmp
+		 --disable-encoding -I$(common-objpfx)manual $< -o $@-tmp
 	$(AWK) 'NF == 0 { ++n; next } \
 		NF != 0 { while (n-- > 0) print ""; n = 0; print }' \
 	  < $@-tmp > $@-tmp2

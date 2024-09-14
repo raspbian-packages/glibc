@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: libc 2.10.1\n"
-"POT-Creation-Date: 2023-07-17 20:35+0200\n"
+"POT-Creation-Date: 2024-07-21 00:32+0200\n"
 "PO-Revision-Date: 2009-06-23 12:30+0700\n"
 "Last-Translator: Arif E. Nugroho <arif_endro@yahoo.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -57,58 +57,58 @@ msgstr "Coba `%s --help' atau `%s --usage' untuk informasi lebih lanjut.\n"
 msgid "Report bugs to %s.\n"
 msgstr "Laporkan bugs ke %s.\n"
 
-#: argp/argp-parse.c:101
+#: argp/argp-parse.c:86
 msgid "Give this help list"
 msgstr "Berikan daftar bantuan ini"
 
-#: argp/argp-parse.c:102
+#: argp/argp-parse.c:87
 msgid "Give a short usage message"
 msgstr "Berikan sebuah pesan penggunaan pendek"
 
-#: argp/argp-parse.c:103 catgets/gencat.c:109 catgets/gencat.c:113
+#: argp/argp-parse.c:88 catgets/gencat.c:110 catgets/gencat.c:114
 #: iconv/iconv_prog.c:60 iconv/iconv_prog.c:61 nscd/nscd.c:106 nscd/nscd.c:110
-#: nss/makedb.c:121
+#: nss/makedb.c:122
 msgid "NAME"
 msgstr "NAMA"
 
-#: argp/argp-parse.c:104
+#: argp/argp-parse.c:89
 msgid "Set the program name"
 msgstr "Set nama aplikasi"
 
-#: argp/argp-parse.c:106
+#: argp/argp-parse.c:91
 msgid "Hang for SECS seconds (default 3600)"
 msgstr "Tahan untuk DET detik (baku 3600)"
 
-#: argp/argp-parse.c:167
+#: argp/argp-parse.c:152
 msgid "Print program version"
 msgstr "Tampilkan versi aplikasi"
 
-#: argp/argp-parse.c:183
+#: argp/argp-parse.c:168
 msgid "(PROGRAM ERROR) No version known!?"
 msgstr "(APLIKASI ERROR) Tidak ada versi yang dikenal!?"
 
-#: argp/argp-parse.c:623
+#: argp/argp-parse.c:608
 #, c-format
 msgid "%s: Too many arguments\n"
 msgstr "%s: Terlalu banyak argumen\n"
 
-#: argp/argp-parse.c:766
+#: argp/argp-parse.c:751
 msgid "(PROGRAM ERROR) Option should have been recognized!?"
 msgstr "(APLIKASI ERROR) Pilihan seharusnya telah dikenal!?"
 
-#: catgets/gencat.c:110
+#: catgets/gencat.c:111
 msgid "Create C header file NAME containing symbol definitions"
 msgstr "Buat berkas header C NAMA berisi definisi simbol"
 
-#: catgets/gencat.c:112
+#: catgets/gencat.c:113
 msgid "Do not use existing catalog, force new output file"
 msgstr "Jangan gunakan katalog yang sudah ada, paksa berkas keluaran baru"
 
-#: catgets/gencat.c:113 nss/makedb.c:121
+#: catgets/gencat.c:114 nss/makedb.c:122
 msgid "Write output to file NAME"
 msgstr "Tulis keluaran ke NAMA berkas"
 
-#: catgets/gencat.c:118
+#: catgets/gencat.c:119
 msgid ""
 "Generate message catalog.\vIf INPUT-FILE is -, input is read from standard input.  If OUTPUT-FILE\n"
 "is -, output is written to standard output.\n"
@@ -117,7 +117,7 @@ msgstr ""
 "Jika BERKAS-MASUKAN adalah -, masukan dibaca dari masukan baku. Jika BERKAS-KELUARAN\n"
 "adalah -, keluaran ditulis ke keluaran baku.\n"
 
-#: catgets/gencat.c:123
+#: catgets/gencat.c:124
 msgid ""
 "-o OUTPUT-FILE [INPUT-FILE]...\n"
 "[OUTPUT-FILE [INPUT-FILE]...]"
@@ -125,12 +125,12 @@ msgstr ""
 "-o BERKAS-KELUARAN [BERKAS-MASUKAN]...\n"
 "[BERKAS-KELUARAN [BERKAS-MASUKAN]...]"
 
-#: catgets/gencat.c:245 debug/pcprofiledump.c:224 debug/xtrace.sh:63
-#: elf/ldconfig.c:232 elf/ldd.bash.in:38 elf/pldd.c:262 elf/sotruss.sh:75
+#: catgets/gencat.c:246 debug/pcprofiledump.c:224 debug/xtrace.sh:63
+#: elf/ldconfig.c:233 elf/ldd.bash.in:38 elf/pldd.c:262 elf/sotruss.sh:75
 #: elf/sprof.c:388 iconv/iconv_prog.c:404 iconv/iconvconfig.c:397
 #: locale/programs/locale.c:292 locale/programs/localedef.c:459
 #: login/programs/pt_chown.c:62 malloc/memusage.sh:70 malloc/memusagestat.c:582
-#: nscd/nscd.c:521 nss/getent.c:92 nss/makedb.c:386 posix/getconf.c:485
+#: nscd/nscd.c:521 nss/getent.c:92 nss/makedb.c:387 posix/getconf.c:487
 #, c-format
 msgid ""
 "Copyright (C) %s Free Software Foundation, Inc.\n"
@@ -141,96 +141,96 @@ msgstr ""
 "Ini adalah aplikasi bebas; lihat sumber untuk kondisi penyalinan. Tidak ada\n"
 "garansi; bahkan untuk PERDAGANGAN atau KECOCOKAN UNTUK SEBUAH TUJUAN TERTENTU.\n"
 
-#: catgets/gencat.c:250 debug/pcprofiledump.c:229 debug/xtrace.sh:67
-#: elf/ldconfig.c:237 elf/pldd.c:267 elf/sprof.c:394 iconv/iconv_prog.c:409
+#: catgets/gencat.c:251 debug/pcprofiledump.c:229 debug/xtrace.sh:67
+#: elf/ldconfig.c:238 elf/pldd.c:267 elf/sprof.c:394 iconv/iconv_prog.c:409
 #: iconv/iconvconfig.c:402 locale/programs/locale.c:297
 #: locale/programs/localedef.c:464 malloc/memusage.sh:74
-#: malloc/memusagestat.c:587 nscd/nscd.c:526 nss/getent.c:97 nss/makedb.c:391
-#: posix/getconf.c:490
+#: malloc/memusagestat.c:587 nscd/nscd.c:526 nss/getent.c:97 nss/makedb.c:392
+#: posix/getconf.c:492
 #, c-format
 msgid "Written by %s.\n"
 msgstr "Ditulis oleh %s.\n"
 
-#: catgets/gencat.c:281
+#: catgets/gencat.c:282
 msgid "*standard input*"
 msgstr "*masukan baku*"
 
-#: catgets/gencat.c:287 iconv/iconv_charmap.c:172 iconv/iconv_prog.c:272
-#: nss/makedb.c:247
+#: catgets/gencat.c:288 iconv/iconv_charmap.c:172 iconv/iconv_prog.c:272
+#: nss/makedb.c:248
 #, c-format
 msgid "cannot open input file `%s'"
 msgstr "tidak dapat membuka berkas masukan `%s'"
 
-#: catgets/gencat.c:416 catgets/gencat.c:491
+#: catgets/gencat.c:417 catgets/gencat.c:492
 msgid "illegal set number"
 msgstr "jumlah nomor tidak legal"
 
-#: catgets/gencat.c:443
+#: catgets/gencat.c:444
 msgid "duplicate set definition"
 msgstr "definisi set duplikasi"
 
-#: catgets/gencat.c:445 catgets/gencat.c:617 catgets/gencat.c:669
+#: catgets/gencat.c:446 catgets/gencat.c:618 catgets/gencat.c:670
 msgid "this is the first definition"
 msgstr "ini adalah definisi pertama"
 
-#: catgets/gencat.c:516
+#: catgets/gencat.c:517
 #, c-format
 msgid "unknown set `%s'"
 msgstr "set `%s' tidak diketahui"
 
-#: catgets/gencat.c:557
+#: catgets/gencat.c:558
 msgid "invalid quote character"
 msgstr "karakter quote tidak valid"
 
-#: catgets/gencat.c:570
+#: catgets/gencat.c:571
 #, c-format
 msgid "unknown directive `%s': line ignored"
 msgstr "direktive `%s' tidak diketahui: baris diabaikan"
 
-#: catgets/gencat.c:615
+#: catgets/gencat.c:616
 msgid "duplicated message number"
 msgstr "nomor pesan terduplikasi"
 
-#: catgets/gencat.c:666
+#: catgets/gencat.c:667
 msgid "duplicated message identifier"
 msgstr "identifikasi pesan terduplikasi"
 
-#: catgets/gencat.c:723
+#: catgets/gencat.c:724
 msgid "invalid character: message ignored"
 msgstr "karakter tidak valid: pesan diabaikan"
 
-#: catgets/gencat.c:766
+#: catgets/gencat.c:767
 msgid "invalid line"
 msgstr "baris tidak valid"
 
-#: catgets/gencat.c:820
+#: catgets/gencat.c:821
 msgid "malformed line ignored"
 msgstr "baris tidak dibentuk dengan benar diabaikan"
 
-#: catgets/gencat.c:982 catgets/gencat.c:1023
+#: catgets/gencat.c:1000 catgets/gencat.c:1045
 #, c-format
 msgid "cannot open output file `%s'"
 msgstr "tidak dapat membuka berkas keluaran `%s'"
 
-#: catgets/gencat.c:1185 locale/programs/linereader.c:588
+#: catgets/gencat.c:1210 locale/programs/linereader.c:588
 msgid "invalid escape sequence"
 msgstr "urutan escape tidak valid"
 
-#: catgets/gencat.c:1209
+#: catgets/gencat.c:1234
 msgid "unterminated message"
 msgstr "pesan tidak terselesaikan"
 
-#: catgets/gencat.c:1233
+#: catgets/gencat.c:1258
 #, c-format
 msgid "while opening old catalog file"
 msgstr "ketika membuka berkas katalog lama"
 
-#: catgets/gencat.c:1324
+#: catgets/gencat.c:1349
 #, c-format
 msgid "conversion modules not available"
 msgstr "modul konversi tidak tersedia"
 
-#: catgets/gencat.c:1350
+#: catgets/gencat.c:1375
 #, c-format
 msgid "cannot determine escape character"
 msgstr "tidak dapat menentukan karakter escape"
@@ -326,43 +326,43 @@ msgstr "mode tidak valid"
 msgid "invalid mode parameter"
 msgstr "mode parameter tidak valid"
 
-#: elf/cache.c:299 elf/ldconfig.c:1223
+#: elf/cache.c:296 elf/ldconfig.c:1239
 #, c-format
 msgid "Can't open cache file %s\n"
 msgstr "Tidak dapat membuka berkas cache %s\n"
 
-#: elf/cache.c:313
+#: elf/cache.c:310
 #, c-format
 msgid "mmap of cache file failed.\n"
 msgstr "mmap dari berkas cache gagal.\n"
 
-#: elf/cache.c:317 elf/cache.c:331 elf/cache.c:342
+#: elf/cache.c:314 elf/cache.c:328 elf/cache.c:339
 #, c-format
 msgid "File is not a cache file.\n"
 msgstr "Berkas bukan sebuah berkas cache.\n"
 
-#: elf/cache.c:371 elf/cache.c:386
+#: elf/cache.c:368 elf/cache.c:383
 #, c-format
 msgid "%d libs found in cache `%s'\n"
 msgstr "%d libs ditemukan dalam cache `%s'\n"
 
-#: elf/cache.c:688
+#: elf/cache.c:685
 #, c-format
 msgid "Can't create temporary cache file %s"
 msgstr "Tidak dapat membuat berkas cache %s sementara"
 
-#: elf/cache.c:696 elf/cache.c:706 elf/cache.c:710 elf/cache.c:715
-#: elf/cache.c:734
+#: elf/cache.c:693 elf/cache.c:703 elf/cache.c:707 elf/cache.c:712
+#: elf/cache.c:731
 #, c-format
 msgid "Writing of cache data failed"
 msgstr "Penulisan dari cache data gagal"
 
-#: elf/cache.c:729
+#: elf/cache.c:726
 #, c-format
 msgid "Changing access rights of %s to %#o failed"
 msgstr "Mengubah ijin akses dari %s ke %#o gagal"
 
-#: elf/cache.c:738
+#: elf/cache.c:735
 #, c-format
 msgid "Renaming of %s to %s failed"
 msgstr "Mengubah nama dari %s ke %s gagal"
@@ -375,11 +375,11 @@ msgstr "error ketika melod perpustakaan terbagi"
 msgid "DYNAMIC LINKER BUG!!!"
 msgstr "BUG LINKER DINAMIS!!!"
 
-#: elf/dl-close.c:346 elf/dl-open.c:298
+#: elf/dl-close.c:357 elf/dl-open.c:298
 msgid "cannot create scope list"
 msgstr "tidak dapat membuat daftar scope"
 
-#: elf/dl-close.c:775
+#: elf/dl-close.c:790
 msgid "shared object not open"
 msgstr "shared objek tidak dapat dibuka"
 
@@ -420,131 +420,131 @@ msgstr "internal error: symidx diluar dari jangkauan tabel fptr"
 msgid "cannot create capability list"
 msgstr "tidak dapat membuat daftar kapabilitas"
 
-#: elf/dl-load.c:434
+#: elf/dl-load.c:423
 msgid "cannot allocate name record"
 msgstr "tidak dapat mengalokasikan rekaman nama"
 
-#: elf/dl-load.c:536 elf/dl-load.c:649 elf/dl-load.c:743 elf/dl-load.c:840
+#: elf/dl-load.c:525 elf/dl-load.c:638 elf/dl-load.c:732 elf/dl-load.c:829
 msgid "cannot create cache for search path"
 msgstr "tidak dapat membuat cache untuk jalur pencarian"
 
-#: elf/dl-load.c:632
+#: elf/dl-load.c:621
 msgid "cannot create RUNPATH/RPATH copy"
 msgstr "tidak dapat membuat salinan RUNPATH/RPATH"
 
-#: elf/dl-load.c:729
+#: elf/dl-load.c:718
 msgid "cannot create search path array"
 msgstr "tidak dapat membuah array jalur pencarian"
 
-#: elf/dl-load.c:968
+#: elf/dl-load.c:957
 msgid "cannot stat shared object"
 msgstr "tidak dapat memperoleh statistik objek terbagi"
 
-#: elf/dl-load.c:1059 elf/dl-load.c:2219
+#: elf/dl-load.c:1048 elf/dl-load.c:2163
 msgid "cannot create shared object descriptor"
 msgstr "tidak dapat membuat deskripsi objek terbagi"
 
-#: elf/dl-load.c:1078 elf/dl-load.c:1655 elf/dl-load.c:1763
+#: elf/dl-load.c:1067 elf/dl-load.c:1610 elf/dl-load.c:1718
 msgid "cannot read file data"
 msgstr "tidak dapat membaca berkas data"
 
-#: elf/dl-load.c:1223
+#: elf/dl-load.c:1212
 msgid "object file has no loadable segments"
 msgstr "berkas objek tidak memiliki segmen yang dapat diangkut"
 
-#: elf/dl-load.c:1240
+#: elf/dl-load.c:1229
 msgid "cannot dynamically load executable"
 msgstr "tidak dapat secara dinamis mengangkut aplikasi"
 
-#: elf/dl-load.c:1247
+#: elf/dl-load.c:1236
 msgid "object file has no dynamic section"
 msgstr "berkas objek tidak memiliki bagian dinamis"
 
-#: elf/dl-load.c:1284
+#: elf/dl-load.c:1273
 msgid "shared object cannot be dlopen()ed"
 msgstr "objek terbagi tidak dapat di dlopen()ed"
 
-#: elf/dl-load.c:1297
+#: elf/dl-load.c:1286
 msgid "cannot allocate memory for program header"
 msgstr "tidak dapat mengalokasikan memori untuk aplikasi header"
 
-#: elf/dl-load.c:1330 elf/dl-load.h:131
-msgid "cannot change memory protections"
-msgstr "tidak dapat mengubah proteksi memori"
-
-#: elf/dl-load.c:1354
+#: elf/dl-load.c:1309
 msgid "cannot enable executable stack as shared object requires"
 msgstr "tidak dapat mengaktifkan stack aplikasi sebagai objek terbagi yang dibutuhkan"
 
-#: elf/dl-load.c:1382
+#: elf/dl-load.c:1337
 msgid "cannot close file descriptor"
 msgstr "tidak dapat menutup berkas deskripsi"
 
-#: elf/dl-load.c:1655
+#: elf/dl-load.c:1610
 msgid "file too short"
 msgstr "berkas terlalu pendek"
 
-#: elf/dl-load.c:1691
+#: elf/dl-load.c:1646
 msgid "invalid ELF header"
 msgstr "header ELF tidak valid"
 
-#: elf/dl-load.c:1706
+#: elf/dl-load.c:1661
 msgid "ELF file data encoding not big-endian"
 msgstr "berkas data enkoding ELF bukan big-endian"
 
-#: elf/dl-load.c:1708
+#: elf/dl-load.c:1663
 msgid "ELF file data encoding not little-endian"
 msgstr "berkas data enkoding ELF bukan little-endian"
 
-#: elf/dl-load.c:1712
+#: elf/dl-load.c:1667
 msgid "ELF file version ident does not match current one"
 msgstr "berkas versi ident ELF tidak cocok dengan yang sekarang"
 
-#: elf/dl-load.c:1716
+#: elf/dl-load.c:1671
 msgid "ELF file OS ABI invalid"
 msgstr "berkas OS ABI ELF tidak valid"
 
-#: elf/dl-load.c:1719
+#: elf/dl-load.c:1674
 msgid "ELF file ABI version invalid"
 msgstr "berkas versi ABI ELF tidak valid"
 
-#: elf/dl-load.c:1725
+#: elf/dl-load.c:1680
 msgid "internal error"
 msgstr "internal error"
 
-#: elf/dl-load.c:1732
+#: elf/dl-load.c:1687
 msgid "ELF file version does not match current one"
 msgstr "berkas versi ELF tidak cocok dengan yang sekarang"
 
-#: elf/dl-load.c:1744
+#: elf/dl-load.c:1699
 msgid "only ET_DYN and ET_EXEC can be loaded"
 msgstr "hanya ET_DYN dan ET_EXEC yang dapat diangkut"
 
-#: elf/dl-load.c:1749
+#: elf/dl-load.c:1704
 msgid "ELF file's phentsize not the expected size"
 msgstr "berkas phentsize ELF tidak seperti ukuran yang diduga"
 
-#: elf/dl-load.c:2238
+#: elf/dl-load.c:2182
 msgid "wrong ELF class: ELFCLASS64"
 msgstr "kelas ELF salah: ELFCLASS64"
 
-#: elf/dl-load.c:2239
+#: elf/dl-load.c:2183
 msgid "wrong ELF class: ELFCLASS32"
 msgstr "kelas ELF salah: ELFCLASS32"
 
-#: elf/dl-load.c:2242
+#: elf/dl-load.c:2186
 msgid "cannot open shared object file"
 msgstr "tidak dapat membuka berkas objek terbagi"
 
-#: elf/dl-load.h:129
+#: elf/dl-load.h:126
 msgid "failed to map segment from shared object"
 msgstr "gagal untuk memetakan segmen dari objek terbagi"
 
-#: elf/dl-load.h:133
+#: elf/dl-load.h:128
+msgid "cannot change memory protections"
+msgstr "tidak dapat mengubah proteksi memori"
+
+#: elf/dl-load.h:130
 msgid "cannot map zero-fill pages"
 msgstr "tidak dapat memetakan halaman pengisian-nol"
 
-#: elf/dl-lookup.c:814
+#: elf/dl-lookup.c:813
 msgid "symbol lookup error"
 msgstr "simbol lookup error"
 
@@ -556,15 +556,15 @@ msgstr "tidak dapat mengeksten global scope"
 msgid "TLS generation counter wrapped!  Please report this."
 msgstr "pembuatan TLS penghitung wrapped! Tolong laporkan ini."
 
-#: elf/dl-open.c:829
+#: elf/dl-open.c:848
 msgid "invalid mode for dlopen()"
 msgstr "mode untuk dlopen() tidak valid"
 
-#: elf/dl-open.c:846
+#: elf/dl-open.c:865
 msgid "no more namespaces available for dlmopen()"
 msgstr "tidak ada lagi ruang-nama yang tersedia untuk dlmopen()"
 
-#: elf/dl-open.c:871
+#: elf/dl-open.c:890
 msgid "invalid target namespace in dlmopen()"
 msgstr "target ruang-nama dalam dlmopen() tidak valid"
 
@@ -593,7 +593,7 @@ msgstr "tidak dapat mengaplikasikan proteksi memori tambahan setelah relokasi"
 msgid "RTLD_NEXT used in code not dynamically loaded"
 msgstr "RTLD_NEXT digunakan dalam kode yang tidak secara dinamis diangkut"
 
-#: elf/dl-tls.c:1044
+#: elf/dl-tls.c:1136
 msgid "cannot create TLS data structures"
 msgstr "tidak dapat membuat struktur data TLS"
 
@@ -601,173 +601,173 @@ msgstr "tidak dapat membuat struktur data TLS"
 msgid "cannot allocate version reference table"
 msgstr "tidak dapat mengalokasikan tabel referensi versi"
 
-#: elf/ldconfig.c:124
+#: elf/ldconfig.c:125
 msgid "Print cache"
 msgstr "Menampilkan cache"
 
-#: elf/ldconfig.c:125
+#: elf/ldconfig.c:126
 msgid "Generate verbose messages"
 msgstr "Menghasilkan pesan verbose"
 
-#: elf/ldconfig.c:126
+#: elf/ldconfig.c:127
 msgid "Don't build cache"
 msgstr "Jangan membuat cache"
 
-#: elf/ldconfig.c:128
+#: elf/ldconfig.c:129
 msgid "Change to and use ROOT as root directory"
 msgstr "Ubah ke dan gunakan ROOT sebagai direktori root"
 
-#: elf/ldconfig.c:128
+#: elf/ldconfig.c:129
 msgid "ROOT"
 msgstr "ROOT"
 
-#: elf/ldconfig.c:129
+#: elf/ldconfig.c:130
 msgid "CACHE"
 msgstr "CACHE"
 
-#: elf/ldconfig.c:129
+#: elf/ldconfig.c:130
 msgid "Use CACHE as cache file"
 msgstr "Gunakan CACHE sebagai berkas cache"
 
-#: elf/ldconfig.c:130
+#: elf/ldconfig.c:131
 msgid "CONF"
 msgstr "CONF"
 
-#: elf/ldconfig.c:130
+#: elf/ldconfig.c:131
 msgid "Use CONF as configuration file"
 msgstr "Gunakan CONF sebagai berkas konfigurasi"
 
-#: elf/ldconfig.c:131
+#: elf/ldconfig.c:132
 msgid "Only process directories specified on the command line.  Don't build cache."
 msgstr "Hanya proses direktori yang dispesifikasikan dalam baris perintah. Jangan buat cache."
 
-#: elf/ldconfig.c:132
+#: elf/ldconfig.c:133
 msgid "Manually link individual libraries."
 msgstr "Secara manual hubungkan perpustakaan individu."
 
-#: elf/ldconfig.c:133
+#: elf/ldconfig.c:134
 msgid "FORMAT"
 msgstr "FORMAT"
 
-#: elf/ldconfig.c:134
+#: elf/ldconfig.c:135
 msgid "Ignore auxiliary cache file"
 msgstr "Abaikan berkas cache tambahan"
 
-#: elf/ldconfig.c:142
+#: elf/ldconfig.c:143
 msgid "Configure Dynamic Linker Run Time Bindings."
 msgstr "Konfigurasi Linker Dinamis Ikatan Waktu Jalan."
 
-#: elf/ldconfig.c:276
+#: elf/ldconfig.c:277
 #, c-format
 msgid "Path `%s' given more than once"
 msgstr "Jalur `%s' diberikan lebih dari sekali"
 
-#: elf/ldconfig.c:405
+#: elf/ldconfig.c:406
 #, c-format
 msgid "Can't stat %s"
 msgstr "Tidak dapat memperoleh statistik %s"
 
-#: elf/ldconfig.c:486
+#: elf/ldconfig.c:487
 #, c-format
 msgid "Can't stat %s\n"
 msgstr "Tidak dapat memperoleh statistik %s\n"
 
-#: elf/ldconfig.c:496
+#: elf/ldconfig.c:497
 #, c-format
 msgid "%s is not a symbolic link\n"
 msgstr "%s bukan sebuah link simbolis\n"
 
-#: elf/ldconfig.c:515
+#: elf/ldconfig.c:516
 #, c-format
 msgid "Can't unlink %s"
 msgstr "Tidak dapat memutuskan %s"
 
-#: elf/ldconfig.c:521
+#: elf/ldconfig.c:522
 #, c-format
 msgid "Can't link %s to %s"
 msgstr "Tidak dapat menghubungkan %s ke %s"
 
-#: elf/ldconfig.c:527
+#: elf/ldconfig.c:528
 msgid " (changed)\n"
 msgstr " (berubah)\n"
 
-#: elf/ldconfig.c:529
+#: elf/ldconfig.c:530
 msgid " (SKIPPED)\n"
 msgstr " (DILEWATI)\n"
 
-#: elf/ldconfig.c:584
+#: elf/ldconfig.c:585
 #, c-format
 msgid "Can't find %s"
 msgstr "Tidak dapat menemukan %s"
 
-#: elf/ldconfig.c:600 elf/ldconfig.c:744 elf/ldconfig.c:811
+#: elf/ldconfig.c:601 elf/ldconfig.c:760 elf/ldconfig.c:827
 #, c-format
 msgid "Cannot lstat %s"
 msgstr "Tidak dapat lstat %s"
 
-#: elf/ldconfig.c:606
+#: elf/ldconfig.c:607
 #, c-format
 msgid "Ignored file %s since it is not a regular file."
 msgstr "Mengabaikan berkas %s karena itu bukan sebuah berkas umum."
 
-#: elf/ldconfig.c:614
+#: elf/ldconfig.c:615
 #, c-format
 msgid "No link created since soname could not be found for %s"
 msgstr "Tidak ada hubungan yang dibuat karena soname tidak dapaat ditemukan untuk %s"
 
-#: elf/ldconfig.c:690
+#: elf/ldconfig.c:716
 #, c-format
 msgid "Can't open directory %s"
 msgstr "Tidak dapat membuka direktori %s"
 
-#: elf/ldconfig.c:761 elf/ldconfig.c:799 elf/readlib.c:78
+#: elf/ldconfig.c:777 elf/ldconfig.c:815 elf/readlib.c:81
 #, c-format
 msgid "Input file %s not found.\n"
 msgstr "Berkas masukan %s tidak ditemukan.\n"
 
-#: elf/ldconfig.c:768
+#: elf/ldconfig.c:784
 #, c-format
 msgid "Cannot stat %s"
 msgstr "Tidak dapat memperoleh statistik %s"
 
-#: elf/ldconfig.c:887
+#: elf/ldconfig.c:903
 #, c-format
 msgid "libc6 library %s in wrong directory"
 msgstr "perpustakaan libc6 %s berada dalam direktori salah"
 
-#: elf/ldconfig.c:906
+#: elf/ldconfig.c:922
 #, c-format
 msgid "libraries %s and %s in directory %s have same soname but different type."
 msgstr "perpustakaan %s dan %s berada dalam direktori %s memiliki soname sama tetapi memiliki tipe berbeda."
 
-#: elf/ldconfig.c:1102
+#: elf/ldconfig.c:1118
 #, c-format
 msgid "need absolute file name for configuration file when using -r"
 msgstr "membutuhkan nama berkas absolut untuk berkas konfigurasi ketika menggunakan -r"
 
-#: elf/ldconfig.c:1109 locale/programs/xasprintf.c:31
+#: elf/ldconfig.c:1125 locale/programs/xasprintf.c:31
 #: locale/programs/xmalloc.c:63 malloc/obstack.c:416 malloc/obstack.c:418
-#: posix/getconf.c:458 posix/getconf.c:697
+#: posix/getconf.c:460 posix/getconf.c:699
 #, c-format
 msgid "memory exhausted"
 msgstr "kehabisan memori"
 
-#: elf/ldconfig.c:1142
+#: elf/ldconfig.c:1158
 #, c-format
 msgid "%s:%u: cannot read directory %s"
 msgstr "%s:%u: tidak dapat membaca direktori %s"
 
-#: elf/ldconfig.c:1180
+#: elf/ldconfig.c:1196
 #, c-format
 msgid "relative path `%s' used to build cache"
 msgstr "jalur relatif `%s' digunakan untuk membuat cache"
 
-#: elf/ldconfig.c:1202
+#: elf/ldconfig.c:1218
 #, c-format
 msgid "Can't chdir to /"
 msgstr "Tidak dapat chdir ke /"
 
-#: elf/ldconfig.c:1243
+#: elf/ldconfig.c:1259
 #, c-format
 msgid "Can't open cache file directory %s\n"
 msgstr "Tidak dapat membuat berkas cache direktori %s\n"
@@ -867,27 +867,27 @@ msgstr "%s bukan sebuah berkas objek terbagi (Tipe: %d).\n"
 msgid "more than one dynamic segment\n"
 msgstr "lebih dari satu segmen dinamis\n"
 
-#: elf/readlib.c:84
+#: elf/readlib.c:87
 #, c-format
 msgid "Cannot fstat file %s.\n"
 msgstr "Tidak dapat fstat berkas %s.\n"
 
-#: elf/readlib.c:95
+#: elf/readlib.c:98
 #, c-format
 msgid "File %s is empty, not checked."
 msgstr "Berkas %s kosong, tidak diperiksa."
 
-#: elf/readlib.c:101
+#: elf/readlib.c:104
 #, c-format
 msgid "File %s is too small, not checked."
 msgstr "Berkas %s terlalu kecil, tidak diperiksa."
 
-#: elf/readlib.c:111
+#: elf/readlib.c:114
 #, c-format
 msgid "Cannot mmap file %s.\n"
 msgstr "Tidak dapat mmap berkas %s.\n"
 
-#: elf/readlib.c:149
+#: elf/readlib.c:152
 #, c-format
 msgid "%s is not an ELF file - it has the wrong magic bytes at the start.\n"
 msgstr "%s bukan sebuah berkas ELF - ini memiliki magis bytes salah di awal.\n"
@@ -3241,184 +3241,184 @@ msgstr "pruning %s cache; waktu %ld"
 msgid "considering %s entry \"%s\", timeout %<PRIu64>"
 msgstr "mempertimbangkan %s masukan \"%s\", waktu habis %<PRIu64>"
 
-#: nscd/connections.c:519
+#: nscd/connections.c:530
 #, c-format
 msgid "invalid persistent database file \"%s\": %s"
 msgstr "berkas basis data persisten tidak valid \"%s\": %s"
 
-#: nscd/connections.c:527
+#: nscd/connections.c:538
 msgid "uninitialized header"
 msgstr "header tidak terinisialisasi"
 
-#: nscd/connections.c:532
+#: nscd/connections.c:543
 msgid "header size does not match"
 msgstr "ukuran header tidak cocok"
 
-#: nscd/connections.c:542
+#: nscd/connections.c:553
 msgid "file size does not match"
 msgstr "ukuran berkas tidak cocok"
 
-#: nscd/connections.c:559
+#: nscd/connections.c:570
 msgid "verification failed"
 msgstr "verifikasi gagal"
 
-#: nscd/connections.c:573
+#: nscd/connections.c:584
 #, c-format
 msgid "suggested size of table for database %s larger than the persistent database's table"
 msgstr "ukuran dari tabel untuk basis data yang disarankan %s lebih besar dari persisten tabel basis data"
 
-#: nscd/connections.c:584 nscd/connections.c:668
+#: nscd/connections.c:595 nscd/connections.c:679
 #, c-format
 msgid "cannot create read-only descriptor for \"%s\"; no mmap"
 msgstr "tidak dapat membuat deskripsi baca-saja untuk \"%s\"; tidak ada mmap"
 
-#: nscd/connections.c:600
+#: nscd/connections.c:611
 #, c-format
 msgid "cannot access '%s'"
 msgstr "tidak dapat mengakses '%s'"
 
-#: nscd/connections.c:648
+#: nscd/connections.c:659
 #, c-format
 msgid "database for %s corrupted or simultaneously used; remove %s manually if necessary and restart"
 msgstr "basis data untuk %s terkorupsi atau secara simultan digunakan; hapus %s secara manual jika dibutuhkan dan restart"
 
-#: nscd/connections.c:654
+#: nscd/connections.c:665
 #, c-format
 msgid "cannot create %s; no persistent database used"
 msgstr "tidak dapat membuat %s; tidak ada basis data persisten yang digunakan"
 
-#: nscd/connections.c:657
+#: nscd/connections.c:668
 #, c-format
 msgid "cannot create %s; no sharing possible"
 msgstr "tidak dapat membuat %s; tidak ada kemungkinan pembagian"
 
-#: nscd/connections.c:728
+#: nscd/connections.c:739
 #, c-format
 msgid "cannot write to database file %s: %s"
 msgstr "tidak dapat menulis ke berkas basis data %s: %s"
 
-#: nscd/connections.c:784
+#: nscd/connections.c:795
 #, c-format
 msgid "cannot open socket: %s"
 msgstr "tidak dapat membuka socket: %s"
 
-#: nscd/connections.c:803
+#: nscd/connections.c:814
 #, c-format
 msgid "cannot enable socket to accept connections: %s"
 msgstr "tidak dapat mengaktifkan socket untuk menerima koneksi: %s"
 
-#: nscd/connections.c:1038
+#: nscd/connections.c:1049
 #, c-format
 msgid "provide access to FD %d, for %s"
 msgstr "menyediakan akses ke FD %d, untuk %s"
 
-#: nscd/connections.c:1050
+#: nscd/connections.c:1061
 #, c-format
 msgid "cannot handle old request version %d; current version is %d"
 msgstr "tidak dapat menangani versi permintaan lama %d; versi sekarang adalah %d"
 
-#: nscd/connections.c:1073
+#: nscd/connections.c:1084
 #, c-format
 msgid "request from %ld not handled due to missing permission"
 msgstr "permintaan dari %ld tidak dapat ditangani karena tidak ada ijin"
 
-#: nscd/connections.c:1078
+#: nscd/connections.c:1089
 #, c-format
 msgid "request from '%s' [%ld] not handled due to missing permission"
 msgstr "permintaan dari '%s' [%ld] tidak dapat ditangani karena tidak ada ijin"
 
-#: nscd/connections.c:1083
+#: nscd/connections.c:1094
 msgid "request not handled due to missing permission"
 msgstr "permintaan tidak dapat ditangani karena tidak ada ijin"
 
-#: nscd/connections.c:1121 nscd/connections.c:1147
+#: nscd/connections.c:1132 nscd/connections.c:1158
 #, c-format
 msgid "cannot write result: %s"
 msgstr "tidak dapat menulis hasil: %s"
 
-#: nscd/connections.c:1238
+#: nscd/connections.c:1249
 #, c-format
 msgid "error getting caller's id: %s"
 msgstr "error memperoleh id pemanggil: %s"
 
-#: nscd/connections.c:1371
+#: nscd/connections.c:1382
 #, c-format
 msgid "cannot change to old UID: %s; disabling paranoia mode"
 msgstr "tidak dapat mengubah ke UID lama: %s; menonaktifkan mode paranoia"
 
-#: nscd/connections.c:1382
+#: nscd/connections.c:1393
 #, c-format
 msgid "cannot change to old GID: %s; disabling paranoia mode"
 msgstr "tidak dapat mengubah ke GID lama: %s; menonaktifkan mode paranoia"
 
-#: nscd/connections.c:1396
+#: nscd/connections.c:1407
 #, c-format
 msgid "cannot change to old working directory: %s; disabling paranoia mode"
 msgstr "tidak dapat berubah ke direktori kerja lama: %s; menonaktifkan mode paranoia"
 
-#: nscd/connections.c:1443
+#: nscd/connections.c:1454
 #, c-format
 msgid "re-exec failed: %s; disabling paranoia mode"
 msgstr "re-exec gagal: %s; menonaktifkan mode paranoia"
 
-#: nscd/connections.c:1452
+#: nscd/connections.c:1463
 #, c-format
 msgid "cannot change current working directory to \"/\": %s"
 msgstr "tidak dapat mengubah direktori kerja ke \"/\": %s"
 
-#: nscd/connections.c:1636
+#: nscd/connections.c:1647
 #, c-format
 msgid "short read while reading request: %s"
 msgstr "pembacaan singkat ketika membaca permintaan: %s"
 
-#: nscd/connections.c:1669
+#: nscd/connections.c:1680
 #, c-format
 msgid "key length in request too long: %d"
 msgstr "panjang kunci dalam permintaan terlalu panjang: %d"
 
-#: nscd/connections.c:1682
+#: nscd/connections.c:1693
 #, c-format
 msgid "short read while reading request key: %s"
 msgstr "pembacaan singkat ketika membaca permintaan kunci: %s"
 
-#: nscd/connections.c:1692
+#: nscd/connections.c:1703
 #, c-format
 msgid "handle_request: request received (Version = %d) from PID %ld"
 msgstr "handle_request: permintaan diterima (Versi = %d) dari PID %ld"
 
-#: nscd/connections.c:1697
+#: nscd/connections.c:1708
 #, c-format
 msgid "handle_request: request received (Version = %d)"
 msgstr "handle_request: permintaan diterima (Versi = %d)"
 
-#: nscd/connections.c:2386
+#: nscd/connections.c:2397
 msgid "could not initialize conditional variable"
 msgstr "tidak dapat menginisialisasi variabel kondisional"
 
-#: nscd/connections.c:2394
+#: nscd/connections.c:2405
 msgid "could not start clean-up thread; terminating"
 msgstr "tidak dapat memulai threads pembersihan; mengakhiri"
 
-#: nscd/connections.c:2408
+#: nscd/connections.c:2419
 msgid "could not start any worker thread; terminating"
 msgstr "tidak dapat memulai threads pekerja apapun; mengakhiri"
 
-#: nscd/connections.c:2463 nscd/connections.c:2465 nscd/connections.c:2481
-#: nscd/connections.c:2491 nscd/connections.c:2509 nscd/connections.c:2520
-#: nscd/connections.c:2530
+#: nscd/connections.c:2474 nscd/connections.c:2476 nscd/connections.c:2492
+#: nscd/connections.c:2502 nscd/connections.c:2520 nscd/connections.c:2531
+#: nscd/connections.c:2541
 #, c-format
 msgid "Failed to run nscd as user '%s'"
 msgstr "Gagal untuk menjalankan nscd sebagai pengguna '%s'"
 
-#: nscd/connections.c:2483
+#: nscd/connections.c:2494
 msgid "initial getgrouplist failed"
 msgstr "inisial getgrouplist gagal"
 
-#: nscd/connections.c:2492
+#: nscd/connections.c:2503
 msgid "getgrouplist failed"
 msgstr "getgrouplist gagal"
 
-#: nscd/connections.c:2510
+#: nscd/connections.c:2521
 msgid "setgroups failed"
 msgstr "setgroups gagal"
 
@@ -3493,7 +3493,7 @@ msgstr "Gunakan pemisah cache untuk setiap pengguna"
 msgid "Name Service Cache Daemon."
 msgstr "Cache Layanan Pengguna Daemon."
 
-#: nscd/nscd.c:158 nss/getent.c:995 nss/makedb.c:207
+#: nscd/nscd.c:158 nss/getent.c:995 nss/makedb.c:208
 #, c-format
 msgid "wrong number of arguments"
 msgstr "jumlah salah dari argumen"
@@ -3839,19 +3839,19 @@ msgstr "Basis data yang didukung:\n"
 msgid "Unknown database: %s\n"
 msgstr "Basis data tidak dikenal: %s\n"
 
-#: nss/makedb.c:120
+#: nss/makedb.c:121
 msgid "Convert key to lower case"
 msgstr "Ubah kunci ke huruf kecil"
 
-#: nss/makedb.c:123
+#: nss/makedb.c:124
 msgid "Do not print messages while building database"
 msgstr "Jangan tampilkan pesan ketika membuat basis data"
 
-#: nss/makedb.c:125
+#: nss/makedb.c:126
 msgid "Print content of database file, one entry a line"
 msgstr "Tampilkan isi dari berkas basis data, satu masukan per baris"
 
-#: nss/makedb.c:135
+#: nss/makedb.c:136
 msgid ""
 "INPUT-FILE OUTPUT-FILE\n"
 "-o OUTPUT-FILE INPUT-FILE\n"
@@ -3861,31 +3861,31 @@ msgstr ""
 "-o BERKAS-KELUARAN BERKAS-MASUKAN\n"
 "-u BERKAS-MASUKAN"
 
-#: nss/makedb.c:289
+#: nss/makedb.c:290
 #, c-format
 msgid "cannot create temporary file"
 msgstr "tidak dapat membuat berkas sementara"
 
-#: nss/makedb.c:557
+#: nss/makedb.c:558
 msgid "duplicate key"
 msgstr "kunci terduplikasi"
 
-#: nss/makedb.c:569
+#: nss/makedb.c:570
 #, c-format
 msgid "problems while reading `%s'"
 msgstr "masalah ketika membaca `%s'"
 
-#: posix/getconf.c:417
+#: posix/getconf.c:419
 #, c-format
 msgid "Usage: %s [-v specification] variable_name [pathname]\n"
 msgstr "Penggunaan: %s [-v spesifikasi] nama_variabel [nama-jalur]\n"
 
-#: posix/getconf.c:420
+#: posix/getconf.c:422
 #, c-format
 msgid "       %s -a [pathname]\n"
 msgstr "       %s -a [nama-jalur]\n"
 
-#: posix/getconf.c:496
+#: posix/getconf.c:498
 #, c-format
 msgid ""
 "Usage: getconf [-v SPEC] VAR\n"
@@ -3904,21 +3904,21 @@ msgstr ""
 "lingkungan SPEK.\n"
 "\n"
 
-#: posix/getconf.c:572
+#: posix/getconf.c:574
 #, c-format
 msgid "unknown specification \"%s\""
 msgstr "spesifikasi tidak dikenal \"%s\""
 
-#: posix/getconf.c:624
+#: posix/getconf.c:626
 #, c-format
 msgid "Couldn't execute %s"
 msgstr "Tidak dapat menjalankan %s"
 
-#: posix/getconf.c:669 posix/getconf.c:685
+#: posix/getconf.c:671 posix/getconf.c:687
 msgid "undefined"
 msgstr "tidak terdefinisi"
 
-#: posix/getconf.c:707
+#: posix/getconf.c:709
 #, c-format
 msgid "Unrecognized variable `%s'"
 msgstr "Variabel `%s' tidak dikenal"
@@ -5374,239 +5374,199 @@ msgstr "Interupsi oleh sebuah sinyal"
 msgid "Parameter string not correctly encoded"
 msgstr "String parameter tidak secara benar terkode"
 
-#: sysdeps/unix/sysv/linux/ia64/makecontext.c:57
-#, c-format
-msgid "makecontext: does not know how to handle more than 8 arguments\n"
-msgstr "makecontext: tidak tahu bagaimana menangani lebih dari 8 argumen\n"
-
-#: sysdeps/x86/readelflib.c:62
+#: sysdeps/x86/readelflib.c:49
 #, c-format
 msgid "%s is for unknown machine %d.\n"
 msgstr "%s adalah untuk mesin tidak dikenal %d.\n"
 
-#: timezone/zdump.c:341
+#: timezone/zdump.c:411
 #, c-format
 msgid "%s: warning: zone \"%s\" abbreviation \"%s\" %s\n"
 msgstr "%s: peringatan: daerah \"%s\" kependekan \"%s\" %s\n"
 
-#: timezone/zdump.c:473
+#: timezone/zdump.c:543
 #, c-format
 msgid "%s: wild -c argument %s\n"
 msgstr "%s: argumen -c ganas %s\n"
 
-#: timezone/zic.c:432
+#: timezone/zic.c:463
 #, c-format
 msgid "%s: Memory exhausted: %s\n"
 msgstr "%s: Kehabisan memori: %s\n"
 
-#: timezone/zic.c:554
+#: timezone/zic.c:588
+msgid "standard input"
+msgstr "masukan standar"
+
+#: timezone/zic.c:639
 #, c-format
 msgid "warning: "
 msgstr "peringatan: "
 
-#: timezone/zic.c:698
+#: timezone/zic.c:992
 msgid "wild compilation-time specification of zic_t"
 msgstr "spesifikasi waktu-kompilasi ganas dari zic_t"
 
-#: timezone/zic.c:730
+#: timezone/zic.c:1025
 #, c-format
 msgid "%s: More than one -d option specified\n"
 msgstr "%s: Lebih dari satu pilihan -d dispesifikasikan\n"
 
-#: timezone/zic.c:740
+#: timezone/zic.c:1036
 #, c-format
 msgid "%s: More than one -l option specified\n"
 msgstr "%s: Lebih dari satu pilihan -l dispesifikasikan\n"
 
-#: timezone/zic.c:750
+#: timezone/zic.c:1047
 #, c-format
 msgid "%s: More than one -p option specified\n"
 msgstr "%s: Lebih dari satu pilihan -p dispesifikasikan\n"
 
-#: timezone/zic.c:771
-#, c-format
-msgid "%s: More than one -y option specified\n"
-msgstr "%s: Lebih dari satu pilihan -y dispesifikasikan\n"
-
-#: timezone/zic.c:781
+#: timezone/zic.c:1071
 #, c-format
 msgid "%s: More than one -L option specified\n"
 msgstr "%s: Lebih dari satu pilihan -L dispesifikasikan\n"
 
-#: timezone/zic.c:848
-msgid "link to link"
-msgstr "link ke link"
-
-#: timezone/zic.c:1122 timezone/zic.c:1124
+#: timezone/zic.c:1608 timezone/zic.c:1610
 msgid "same rule name in multiple files"
 msgstr "nama aturan sama dalam beberapa berkas"
 
-#: timezone/zic.c:1171
+#: timezone/zic.c:1656
 #, c-format
 msgid "%s in ruleless zone"
 msgstr "%s dalam daerah tidak beraturan"
 
-#: timezone/zic.c:1191
-msgid "standard input"
-msgstr "masukan standar"
+#: timezone/zic.c:1688
+msgid "line too long"
+msgstr "baris terlalu panjang"
 
-#: timezone/zic.c:1196
+#: timezone/zic.c:1709
 #, c-format
 msgid "%s: Can't open %s: %s\n"
 msgstr "%s: Tidak dapat membuka %s: %s\n"
 
-#: timezone/zic.c:1207
-msgid "line too long"
-msgstr "baris terlalu panjang"
-
-#: timezone/zic.c:1230
+#: timezone/zic.c:1734
 msgid "input line of unknown type"
 msgstr "baris masukan dari tipe yang tidak dikenal"
 
-#: timezone/zic.c:1253 timezone/zic.c:1699 timezone/zic.c:1721
-#, c-format
-msgid "%s: panic: Invalid l_value %d\n"
-msgstr "%s: panic: l_value %d tidak valid\n"
-
-#: timezone/zic.c:1262
+#: timezone/zic.c:1761
 msgid "expected continuation line not found"
 msgstr "diduga baris kelanjutan tidak ditemukan"
 
-#: timezone/zic.c:1316 timezone/zic.c:3282
+#: timezone/zic.c:1815 timezone/zic.c:3761
 msgid "time overflow"
 msgstr "waktu overflow"
 
-#: timezone/zic.c:1322
+#: timezone/zic.c:1821
 msgid "values over 24 hours not handled by pre-2007 versions of zic"
 msgstr "nilai lebih 24 jam tidak ditangani oleh versi sebelum 2007 dari zic"
 
-#: timezone/zic.c:1340
+#: timezone/zic.c:1839
 msgid "invalid saved time"
 msgstr "waktu disimpan tidak valid"
 
-#: timezone/zic.c:1351
+#: timezone/zic.c:1850
 msgid "wrong number of fields on Rule line"
 msgstr "jumlah dari daerah salah dalam baris Aturan"
 
-#: timezone/zic.c:1382
+#: timezone/zic.c:1883
 msgid "wrong number of fields on Zone line"
 msgstr "jumlah dari daerah dalam baris daerah salah"
 
-#: timezone/zic.c:1387
+#: timezone/zic.c:1887
 #, c-format
 msgid "\"Zone %s\" line and -l option are mutually exclusive"
 msgstr "\"Daerah %s\" baris dan pilihan -l secara mutual ekslusif"
 
-#: timezone/zic.c:1393
+#: timezone/zic.c:1892
 #, c-format
 msgid "\"Zone %s\" line and -p option are mutually exclusive"
 msgstr "\"Daerah %s\" baris dan pilihan -p secara mutual ekslusif"
 
-#: timezone/zic.c:1414
+#: timezone/zic.c:1913
 msgid "wrong number of fields on Zone continuation line"
 msgstr "jumlah dari daerah salah di baris kelanjutan Daerah"
 
-#: timezone/zic.c:1458
+#: timezone/zic.c:1956
 msgid "invalid abbreviation format"
 msgstr "format kependekan tidak valid"
 
-#: timezone/zic.c:1494
+#: timezone/zic.c:1986
 msgid "Zone continuation line end time is not after end time of previous line"
 msgstr "baris kelanjutan Daerah akhir waktu tidak setelah akhir waktu dari baris sebelumnya"
 
-#: timezone/zic.c:1526
+#: timezone/zic.c:2027
 msgid "invalid leaping year"
 msgstr "tahun leapin tidak valid"
 
-#: timezone/zic.c:1548 timezone/zic.c:1653
+#: timezone/zic.c:2049 timezone/zic.c:2154
 msgid "invalid month name"
 msgstr "nama bulan tidak valid"
 
-#: timezone/zic.c:1561 timezone/zic.c:1769 timezone/zic.c:1783
+#: timezone/zic.c:2062 timezone/zic.c:2252 timezone/zic.c:2266
 msgid "invalid day of month"
 msgstr "hari dari bulan tidak valid"
 
-#: timezone/zic.c:1566
+#: timezone/zic.c:2067
 msgid "time too small"
 msgstr "waktu terlalu kecil"
 
-#: timezone/zic.c:1570
+#: timezone/zic.c:2071
 msgid "time too large"
 msgstr "waktu terlalu besar"
 
-#: timezone/zic.c:1574 timezone/zic.c:1682
+#: timezone/zic.c:2075 timezone/zic.c:2183
 msgid "invalid time of day"
 msgstr "waktu dari hari tidak valid"
 
-#: timezone/zic.c:1585
+#: timezone/zic.c:2086
 msgid "wrong number of fields on Leap line"
 msgstr "jumlah dari daerah salah di baris Leap"
 
-#: timezone/zic.c:1624
+#: timezone/zic.c:2125
 msgid "wrong number of fields on Link line"
 msgstr "jumlah dari daerah salah di baris sambungan"
 
-#: timezone/zic.c:1628
-msgid "blank FROM field on Link line"
-msgstr "daerah FROM kosong di baris Link"
-
-#: timezone/zic.c:1703
+#: timezone/zic.c:2199
 msgid "invalid starting year"
 msgstr "awal tahun tidak valid"
 
-#: timezone/zic.c:1725
+#: timezone/zic.c:2214
 msgid "invalid ending year"
 msgstr "akhir tahun tidak valid"
 
-#: timezone/zic.c:1729
+#: timezone/zic.c:2218
 msgid "starting year greater than ending year"
 msgstr "awal tahun lebih besar dari akhir tahun"
 
-#: timezone/zic.c:1736
-msgid "typed single year"
-msgstr "tipe tahun tunggal"
-
-#: timezone/zic.c:1774
+#: timezone/zic.c:2257
 msgid "invalid weekday name"
 msgstr "nama hari-minggu tidak valid"
 
-#: timezone/zic.c:2673
-msgid "no POSIX environment variable for zone"
-msgstr "tidak ada variabel lingkungan POSIX untuk daerah"
-
-#: timezone/zic.c:2889
+#: timezone/zic.c:3389
 msgid "can't determine time zone abbreviation to use just after until time"
 msgstr "tidak dapat menentukan kependekan daerah waktu untuk digunakan setelah waktu"
 
-#: timezone/zic.c:2987
+#: timezone/zic.c:3513
 msgid "too many local time types"
 msgstr "terlalu banyak tipe waktu lokal"
 
-#: timezone/zic.c:3005
+#: timezone/zic.c:3531
 msgid "too many leap seconds"
 msgstr "terlalu banyak leap detik"
 
-#: timezone/zic.c:3095
-msgid "Wild result from command execution"
-msgstr "Hasil ganas dari eksekusi perintah"
-
-#: timezone/zic.c:3096
-#, c-format
-msgid "%s: command was '%s', result was %d\n"
-msgstr "%s: perintah adalah '%s', hasil adalah %d\n"
-
-#: timezone/zic.c:3267
+#: timezone/zic.c:3742
 msgid "Odd number of quotation marks"
 msgstr "Jumlah dari tanda kuotasi ganjil"
 
-#: timezone/zic.c:3361
+#: timezone/zic.c:3839
 msgid "use of 2/29 in non leap-year"
 msgstr "penggunaan dari 2/29 dalam bukan leap-year"
 
-#: timezone/zic.c:3427
+#: timezone/zic.c:3896
 msgid "time zone abbreviation differs from POSIX standard"
 msgstr "kependekan daerah waktu berbeda dari standar POSIX"
 
-#: timezone/zic.c:3433
+#: timezone/zic.c:3902
 msgid "too many, or too long, time zone abbreviations"
 msgstr "terlalu banyak, atau terlalu panjang, kependekan daerah waktu"

@@ -4,7 +4,8 @@
 #include <link.h>		/* For ElfW.  */
 #include <stdbool.h>
 
-rtld_hidden_proto (_dl_find_object)
+extern __typeof (_dl_find_object) __dl_find_object;
+hidden_proto (__dl_find_object)
 
 /* Internally used flag.  */
 #define __RTLD_DLOPEN	0x80000000
@@ -134,6 +135,11 @@ extern int __dladdr1 (const void *address, Dl_info *info,
 		      void **extra_info, int flags);
 extern int __dlinfo (void *handle, int request, void *arg);
 extern char *__dlerror (void);
+
+#ifndef SHARED
+# undef DL_CALL_FCT
+# define DL_CALL_FCT(fctp, args) ((fctp) args)
+#endif
 
 #endif
 #endif

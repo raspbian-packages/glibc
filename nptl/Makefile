@@ -1,4 +1,4 @@
-# Copyright (C) 2002-2023 Free Software Foundation, Inc.
+# Copyright (C) 2002-2024 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -315,6 +315,7 @@ tests = \
   tst-pthread-defaultattr-free \
   tst-pthread-gdb-attach \
   tst-pthread-gdb-attach-static \
+  tst-pthread-key1-static \
   tst-pthread-timedlock-lockloop \
   tst-pthread_exit-nothreads \
   tst-pthread_exit-nothreads-static \
@@ -466,7 +467,7 @@ tests-internal += \
   tst-tls5 \
   # tests-internal
 ifeq ($(have-z-execstack),yes)
-tests += tst-execstack
+tests += tst-execstack-threads
 endif
 endif
 
@@ -474,7 +475,7 @@ modules-names = \
   tst-audit-threads-mod1 \
   tst-audit-threads-mod2 \
   tst-compat-forwarder-mod \
-  tst-execstack-mod \
+  tst-execstack-threads-mod \
   tst-stack4mod \
   tst-tls3mod \
   tst-tls5mod \
@@ -536,6 +537,7 @@ tests-static += \
   tst-mutex8-static \
   tst-mutexpi8-static \
   tst-pthread-gdb-attach-static \
+  tst-pthread-key1-static \
   tst-pthread_exit-nothreads-static \
   tst-sem11-static \
   tst-sem12-static tst-cond11-static \
@@ -543,6 +545,9 @@ tests-static += \
   # tests-static
 
 tests += tst-cancel24-static
+ifeq ($(static-cxx-tests),no)
+tests-unsupported += tst-cancel24-static
+endif
 
 tests-internal += \
   tst-sem11-static \
@@ -554,10 +559,12 @@ xtests-static += tst-setuid1-static
 ifeq ($(run-built-tests),yes)
 tests-special += \
   $(objpfx)tst-oddstacklimit.out \
-  $(objpfx)tst-stack3-mem.out \
   # tests-special
 ifeq ($(build-shared),yes)
 tests-special += $(objpfx)tst-tls6.out
+ifneq ($(PERL),no)
+tests-special += $(objpfx)tst-stack3-mem.out
+endif
 endif
 endif
 
@@ -615,10 +622,17 @@ tst-stack3-ENV = MALLOC_TRACE=$(objpfx)tst-stack3.mtrace \
 $(objpfx)tst-stack3-mem.out: $(objpfx)tst-stack3.out
 	$(common-objpfx)malloc/mtrace $(objpfx)tst-stack3.mtrace > $@; \
 	$(evaluate-test)
+
+ifeq ($(run-built-tests),yes)
+ifeq (yes,$(build-shared))
+ifneq ($(PERL),no)
 generated += \
   tst-stack3-mem.out \
   tst-stack3.mtrace \
   # generated
+endif
+endif
+endif
 
 tst-stack4mod.sos=$(shell for i in 0 1 2 3 4 5 6 7 8 9 10 \
 				   11 12 13 14 15 16 17 18 19; do \
@@ -669,9 +683,10 @@ endif
 
 tst-exec4-ARGS = $(host-test-program-cmd)
 
-$(objpfx)tst-execstack.out: $(objpfx)tst-execstack-mod.so
-LDFLAGS-tst-execstack = -Wl,-z,noexecstack
-CFLAGS-tst-execstack-mod.c += -Wno-trampolines
+$(objpfx)tst-execstack-threads.out: $(objpfx)tst-execstack-threads-mod.so
+LDFLAGS-tst-execstack-threads = -Wl,-z,noexecstack
+LDFLAGS-tst-execstack-threads-mod.so = -Wl,-z,execstack
+CFLAGS-tst-execstack-threads-mod.c += -Wno-trampolines
 
 tst-stackguard1-ARGS = --command "$(host-test-program-cmd) --child"
 tst-stackguard1-static-ARGS = --command "$(objpfx)tst-stackguard1-static --child"
@@ -698,6 +713,10 @@ tst-audit-threads-ENV = LD_AUDIT=$(objpfx)tst-audit-threads-mod1.so
 # objects.
 tst-setuid1-static-ENV = \
   LD_LIBRARY_PATH=$(ld-library-path):$(common-objpfx)elf:$(common-objpfx)nss
+
+tst-pthread-proc-maps-ENV = \
+  GLIBC_TUNABLES=glibc.malloc.arena_max=8:glibc.malloc.mmap_threshold=1024
+tst-pthread-proc-maps-ARGS = 8
 
 # The tests here better do not run in parallel.
 ifeq ($(run-built-tests),yes)

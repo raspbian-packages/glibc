@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2023 Free Software Foundation, Inc.
+/* Copyright (C) 2001-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -55,8 +55,8 @@ check_auth (mach_port_t rendezvous,
 		    int ngroups, __gid_t groups[ngroups])
 {
   error_t err;
-  size_t neuids = CMGROUP_MAX, nauids = CMGROUP_MAX;
-  size_t negids = CMGROUP_MAX, nagids = CMGROUP_MAX;
+  mach_msg_type_number_t neuids = CMGROUP_MAX, nauids = CMGROUP_MAX;
+  mach_msg_type_number_t negids = CMGROUP_MAX, nagids = CMGROUP_MAX;
   __uid_t euids_buf[neuids], auids_buf[nauids];
   __gid_t egids_buf[negids], agids_buf[nagids];
   __uid_t *euids = euids_buf, *auids = auids_buf;
@@ -66,7 +66,7 @@ check_auth (mach_port_t rendezvous,
   mach_msg_type_number_t pi_size = 0;
   int flags = PI_FETCH_TASKINFO;
   char *tw = NULL;
-  size_t tw_size = 0;
+  mach_msg_type_number_t tw_size = 0;
   unsigned i;
 
   err = __mach_port_mod_refs (mach_task_self (), rendezvous,

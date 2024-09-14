@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2023 Free Software Foundation, Inc.
+# Copyright (C) 1991-2024 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -24,9 +24,18 @@ include ../Makeconfig
 
 headers	:= ctype.h
 
-routines	:= ctype ctype-c99 ctype-extn ctype-c99_l ctype_l isctype
-aux		:= ctype-info
+routines := \
+  ctype \
+  ctype-c99 \
+  ctype-c99_l \
+  ctype-extn \
+  ctype_l \
+  isctype \
+  # routines
+aux := ctype-info
 
-tests	:= test_ctype
+tests := \
+  test_ctype \
+  # tests
 
 include ../Rules

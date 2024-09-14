@@ -1,5 +1,5 @@
 /* Test compilation of tgmath macros.
-   Copyright (C) 2001-2023 Free Software Foundation, Inc.
+   Copyright (C) 2001-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -48,7 +48,7 @@ volatile int count_cdouble;
 volatile int count_cfloat;
 volatile int count_cldouble;
 
-#define NCALLS     158
+#define NCALLS     168
 #define NCALLS_INT 4
 #define NCCALLS    47
 
@@ -250,11 +250,16 @@ F(compile_test) (void)
   b = ldexp (ldexp (a, 1), 5);
   a = frexp (frexp (x, &i), &i);
   b = expm1 (expm1 (a));
+  a = exp2m1 (exp2m1 (b));
+  b = exp10m1 (exp10m1 (a));
   a = log1p (log1p (x));
   b = logb (logb (a));
   a = exp2 (exp2 (x));
   a = exp10 (exp10 (x));
   b = log2 (log2 (a));
+  a = log2p1 (log2p1 (x));
+  a = log10p1 (log10p1 (x));
+  a = logp1 (logp1 (x));
   a = pow (pow (x, a), pow (c, b));
   b = sqrt (sqrt (a));
   a = hypot (hypot (x, b), hypot (c, a));
@@ -363,11 +368,16 @@ F(compile_test) (void)
       a = ldexp (y, 5);
       a = frexp (y, &i);
       a = expm1 (y);
+      a = exp2m1 (y);
+      a = exp10m1 (y);
       a = log1p (y);
       a = logb (y);
       a = exp2 (y);
       a = exp10 (y);
       a = log2 (y);
+      a = log2p1 (y);
+      a = log10p1 (y);
+      a = logp1 (y);
       a = pow (y, y);
       a = sqrt (y);
       a = hypot (y, y);
@@ -602,6 +612,22 @@ TYPE
 }
 
 TYPE
+(F(exp2m1)) (TYPE x)
+{
+  ++count;
+  P ();
+  return x;
+}
+
+TYPE
+(F(exp10m1)) (TYPE x)
+{
+  ++count;
+  P ();
+  return x;
+}
+
+TYPE
 (F(log1p)) (TYPE x)
 {
   ++count;
@@ -635,6 +661,30 @@ TYPE
 
 TYPE
 (F(log2)) (TYPE x)
+{
+  ++count;
+  P ();
+  return x;
+}
+
+TYPE
+(F(log2p1)) (TYPE x)
+{
+  ++count;
+  P ();
+  return x;
+}
+
+TYPE
+(F(log10p1)) (TYPE x)
+{
+  ++count;
+  P ();
+  return x;
+}
+
+TYPE
+(F(logp1)) (TYPE x)
 {
   ++count;
   P ();

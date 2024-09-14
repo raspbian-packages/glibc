@@ -1,5 +1,5 @@
 /* Data for processor capability information.  PowerPC version.
-   Copyright (C) 2005-2023 Free Software Foundation, Inc.
+   Copyright (C) 2005-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -38,6 +38,10 @@
        needed.
   */
 
+/* The total number of available bits (including those prior to
+   _DL_HWCAP_FIRST).  Some of these bits might not be used.  */
+#define _DL_HWCAP_COUNT         128
+
 #ifndef PROCINFO_CLASS
 # define PROCINFO_CLASS
 #endif
@@ -61,7 +65,7 @@ PROCINFO_CLASS struct cpu_features _dl_powerpc_cpu_features
 #if !defined PROCINFO_DECL && defined SHARED
   ._dl_powerpc_cap_flags
 #else
-PROCINFO_CLASS const char _dl_powerpc_cap_flags[64][15]
+PROCINFO_CLASS const char _dl_powerpc_cap_flags[_DL_HWCAP_COUNT][15]
 #endif
 #ifndef PROCINFO_DECL
 = {

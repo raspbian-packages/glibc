@@ -141,10 +141,11 @@
 /* LOONGARCH floating-point ABI for ld.so.  */
 #undef LOONGARCH_ABI_FRLEN
 
-/* Assembler support LoongArch LASX/LSX vector instructions.
-   This macro becomes obsolete when glibc increased the minimum
-   required version of GNU 'binutils' to 2.41 or later. */
-#define HAVE_LOONGARCH_VEC_ASM 0
+/* Define whether compiler support vector.  */
+#undef HAVE_LOONGARCH_VEC_COM
+
+/* Define whether ARM used hard-float and support VFPvX-D32.  */
+#undef HAVE_ARM_PCS_VFP_D32
 
 /* Linux specific: minimum supported kernel version.  */
 #undef	__LINUX_KERNEL_VERSION
@@ -157,6 +158,12 @@
 
 /* Mach specific: define if the `host_page_size' RPC is available.  */
 #undef	HAVE_HOST_PAGE_SIZE
+
+/* Mach specific: define if the `thread_set_name' RPC is available.  */
+#undef  HAVE_MACH_THREAD_SET_NAME
+
+/* Mach specific: define if the `thread_get_name' RPC is available.  */
+#undef  HAVE_MACH_THREAD_GET_NAME
 
 /* Mach/i386 specific: define if the `i386_io_perm_*' RPCs are available.  */
 #undef	HAVE_I386_IO_PERM_MODIFY
@@ -242,10 +249,6 @@
 
 #ifdef	_LIBC
 
-/* The zic and zdump programs need these definitions.  */
-
-#define	HAVE_STRERROR	1
-
 /* The locale code needs these definitions.  */
 
 #define HAVE_REGEX 1
@@ -291,10 +294,16 @@
 /* Define if x86 ISA level should be included in shared libraries.  */
 #undef INCLUDE_X86_ISA_LEVEL
 
+/* The x86 ISA level.  1 for baseline.  Undefined on non-x86.  */
+#undef MINIMUM_X86_ISA_LEVEL
+
 /* Define if -msahf is enabled by default on x86.  */
 #undef HAVE_X86_LAHF_SAHF
 
 /* Define if -mmovbe is enabled by default on x86.  */
 #undef HAVE_X86_MOVBE
+
+/* Define if -mapxf is enabled by default on x86.  */
+#undef HAVE_X86_APX
 
 #endif

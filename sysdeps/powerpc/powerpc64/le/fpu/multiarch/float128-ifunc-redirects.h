@@ -1,5 +1,5 @@
 /* _Float128 redirects for ppc64le multiarch env.
-   Copyright (C) 2020-2023 Free Software Foundation, Inc.
+   Copyright (C) 2020-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -32,6 +32,10 @@ F128_REDIR_PFX_R (fabsf128, __,);
 extern __typeof (ldexpf128) F128_SFX_APPEND (__ldexpf128);
 
 #define __ldexpf128 F128_SFX_APPEND (__ldexpf128)
+
+extern __typeof (log1pf128) F128_SFX_APPEND (__w_log1pf128);
+
+#define __w_log1pf128 F128_SFX_APPEND (__w_log1pf128)
 
 /* libm_hidden_proto is disabled by the time we reach here.
    Ensure some internally called functions are still called

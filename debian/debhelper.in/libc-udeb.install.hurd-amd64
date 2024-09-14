@@ -10,3 +10,4 @@ SLIBDIR/libpthread.so.* /usrSLIBDIR
 SLIBDIR/libnss_dns.so.* /usrSLIBDIR
 SLIBDIR/libnss_files.so.* /usrSLIBDIR
 SLIBDIR/libmachuser.so.* /usrSLIBDIR
+SLIBDIR/libhurduser.so.* /usrSLIBDIR

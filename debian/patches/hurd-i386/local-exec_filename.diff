@@ -1,33 +1,30 @@
 Keep compatibility with experimental implementation
 
 ---
- hurd/Makefile                       |    4 ++--
- hurd/Versions                       |    4 ++++
- hurd/hurdexec.c                     |   29 +++++++++++++++++++++++++++++
- sysdeps/mach/hurd/i386/libc.abilist |    1 +
- sysdeps/mach/hurd/spawni.c          |   13 +++++++++++++
- 5 files changed, 49 insertions(+), 2 deletions(-)
+ hurd/Makefile                         |    2 ++
+ hurd/Versions                         |    4 ++++
+ hurd/hurdexec.c                       |   28 ++++++++++++++++++++++++++++
+ sysdeps/mach/hurd/i386/libc.abilist   |    1 +
+ sysdeps/mach/hurd/spawni.c            |   13 +++++++++++++
+ sysdeps/mach/hurd/x86_64/libc.abilist |    1 +
+ 6 files changed, 49 insertions(+)
 
-Index: glibc-2.33/hurd/Makefile
-===================================================================
---- glibc-2.33.orig/hurd/Makefile
-+++ glibc-2.33/hurd/Makefile
-@@ -32,8 +32,8 @@ user-interfaces		:= $(addprefix hurd/,\
- 				       auth auth_request auth_reply startup \
- 				       process process_request \
- 				       msg msg_reply msg_request \
--				       exec exec_startup crash interrupt \
--				       fs fsys io io_reply io_request \
-+				       exec exec_experimental exec_startup crash interrupt \
-+				       fs fs_experimental fsys io io_reply io_request \
- 				       term tioctl socket ifsock \
- 				       login password pfinet pci \
- 				       )
-Index: glibc-2.33/hurd/Versions
-===================================================================
---- glibc-2.33.orig/hurd/Versions
-+++ glibc-2.33/hurd/Versions
-@@ -120,6 +120,10 @@ libc {
+--- a/hurd/Makefile
++++ b/hurd/Makefile
+@@ -49,8 +49,10 @@
+   hurd/auth_request \
+   hurd/crash \
+   hurd/exec \
++  hurd/exec_experimental \
+   hurd/exec_startup \
+   hurd/fs \
++  hurd/fs_experimental \
+   hurd/fsys \
+   hurd/ifsock \
+   hurd/interrupt \
+--- a/hurd/Versions
++++ b/hurd/Versions
+@@ -117,6 +117,10 @@
      # functions used in macros & inline functions
      __errno_location;
    }
@@ -38,10 +35,8 @@ Index: glibc-2.33/hurd/Versions
    GLIBC_2.26 {
      # "quasi-internal" functions
      _hurd_exec_paths;
-Index: glibc-2.33/hurd/hurdexec.c
-===================================================================
---- glibc-2.33.orig/hurd/hurdexec.c
-+++ glibc-2.33/hurd/hurdexec.c
+--- a/hurd/hurdexec.c
++++ b/hurd/hurdexec.c
 @@ -25,9 +25,12 @@
  #include <hurd/fd.h>
  #include <hurd/signal.h>
@@ -55,7 +50,7 @@ Index: glibc-2.33/hurd/hurdexec.c
  /* Overlay TASK, executing FILE with arguments ARGV and environment ENVP.
     If TASK == mach_task_self (), some ports are dealloc'd by the exec server.
     ARGV and ENVP are terminated by NULL pointers.
-@@ -39,6 +42,13 @@ _hurd_exec (task_t task, file_t file,
+@@ -39,6 +42,13 @@
    return _hurd_exec_paths (task, file, NULL, NULL, argv, envp);
  }
  
@@ -69,7 +64,7 @@ Index: glibc-2.33/hurd/hurdexec.c
  link_warning (_hurd_exec,
  	      "_hurd_exec is deprecated, use _hurd_exec_paths instead");
  
-@@ -430,6 +440,18 @@ retry:
+@@ -442,6 +452,18 @@
        /* Fall back for backwards compatibility.  This can just be removed
           when __file_exec goes away.  */
        if (err == MIG_BAD_ID)
@@ -88,7 +83,7 @@ Index: glibc-2.33/hurd/hurdexec.c
  	err = __file_exec (file, task, flags,
  			   args, argslen, env, envlen,
  			   dtable, MACH_MSG_TYPE_COPY_SEND, dtablesize,
-@@ -475,3 +498,9 @@ retry:
+@@ -489,3 +511,9 @@
    return err;
  }
  libc_hidden_def (_hurd_exec_paths)
@@ -98,10 +93,8 @@ Index: glibc-2.33/hurd/hurdexec.c
 +				     char *const argv[],
 +				     char *const envp[]);
 +versioned_symbol (libc, __hurd_exec_file_name, _hurd_exec_file_name, GLIBC_2_21);
-Index: glibc-2.33/sysdeps/mach/hurd/spawni.c
-===================================================================
---- glibc-2.33.orig/sysdeps/mach/hurd/spawni.c
-+++ glibc-2.33/sysdeps/mach/hurd/spawni.c
+--- a/sysdeps/mach/hurd/spawni.c
++++ b/sysdeps/mach/hurd/spawni.c
 @@ -30,6 +30,7 @@
  #include <hurd/id.h>
  #include <hurd/lookup.h>
@@ -110,7 +103,7 @@ Index: glibc-2.33/sysdeps/mach/hurd/spawni.c
  #include <assert.h>
  #include <argz.h>
  #include "spawn_int.h"
-@@ -784,6 +785,18 @@ retry:
+@@ -830,6 +831,18 @@
  	   dtable, MACH_MSG_TYPE_COPY_SEND, dtablesize,
  	   ports, MACH_MSG_TYPE_COPY_SEND, _hurd_nports,
  	   ints, INIT_INT_MAX,
@@ -129,11 +122,9 @@ Index: glibc-2.33/sysdeps/mach/hurd/spawni.c
  	   NULL, 0, NULL, 0);
  
  	/* Fallback for backwards compatibility.  This can just be removed
-Index: glibc-2.33/sysdeps/mach/hurd/i386/libc.abilist
-===================================================================
---- glibc-2.33.orig/sysdeps/mach/hurd/i386/libc.abilist
-+++ glibc-2.33/sysdeps/mach/hurd/i386/libc.abilist
-@@ -1946,6 +1946,7 @@ GLIBC_2.2.6 xprt_register F
+--- a/sysdeps/mach/hurd/i386/libc.abilist
++++ b/sysdeps/mach/hurd/i386/libc.abilist
+@@ -1975,6 +1975,7 @@
  GLIBC_2.2.6 xprt_unregister F
  GLIBC_2.21 __mach_host_self_ D 0x4
  GLIBC_2.21 __pthread_get_cleanup_stack F
@@ -141,11 +132,9 @@ Index: glibc-2.33/sysdeps/mach/hurd/i386/libc.abilist
  GLIBC_2.21 pthread_attr_destroy F
  GLIBC_2.21 pthread_attr_getdetachstate F
  GLIBC_2.21 pthread_attr_getinheritsched F
-Index: glibc-2.38/sysdeps/mach/hurd/x86_64/libc.abilist
-===================================================================
---- glibc-2.38/sysdeps/mach/hurd/x86_64/libc.abilist.original	2024-02-19 00:36:33.000000000 +0000
-+++ glibc-2.38/sysdeps/mach/hurd/x86_64/libc.abilist	2024-02-19 00:36:43.000000000 +0000
-@@ -573,6 +573,7 @@
+--- a/sysdeps/mach/hurd/x86_64/libc.abilist
++++ b/sysdeps/mach/hurd/x86_64/libc.abilist
+@@ -572,6 +572,7 @@
  GLIBC_2.38 _hurd_dtablesize D 0x4
  GLIBC_2.38 _hurd_exception2signal F
  GLIBC_2.38 _hurd_exec F

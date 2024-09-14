@@ -1,5 +1,5 @@
 /* C-SKY version of processor capability information handling macros.
-   Copyright (C) 2018-2023 Free Software Foundation, Inc.
+   Copyright (C) 2018-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -22,34 +22,11 @@
 
 #include <ldsodefs.h>
 
-/* Mask to filter out platforms.  */
-#define _DL_HWCAP_PLATFORM    (-1ULL)
-
-#define _DL_PLATFORMS_COUNT   4
-
-static inline int
-__attribute__ ((unused, always_inline))
-_dl_string_platform (const char *str)
-{
-  int i;
-
-  if (str != NULL)
-    for (i = 0; i < _DL_PLATFORMS_COUNT; ++i)
-      {
-        if (strcmp (str, GLRO(dl_csky_platforms)[i]) == 0)
-          return i;
-      }
-  return -1;
-};
-
 /* We cannot provide a general printing function.  */
 #define _dl_procinfo(word, val) -1
 
 /* There are no hardware capabilities defined.  */
 #define _dl_hwcap_string(idx) ""
-
-/* By default there is no important hardware capability.  */
-#define HWCAP_IMPORTANT (0)
 
 /* We don't have any hardware capabilities.  */
 #define _DL_HWCAP_COUNT	0

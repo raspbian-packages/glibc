@@ -1,5 +1,5 @@
 /* Linux/ARM version of processor capability information handling macros.
-   Copyright (C) 2001-2023 Free Software Foundation, Inc.
+   Copyright (C) 2001-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -29,9 +29,6 @@
 
 /* Low 7 bits are allocated in HWCAP2.  */
 #define _DL_HWCAP2_LAST		6
-
-/* The kernel provides platform data but it is not interesting.  */
-#define _DL_HWCAP_PLATFORM	0
 
 
 static inline const char *
@@ -72,9 +69,5 @@ _dl_procinfo (unsigned int type, unsigned long int word)
   _dl_printf ("\n");
   return 0;
 }
-
-#define HWCAP_IMPORTANT		(HWCAP_ARM_VFP | HWCAP_ARM_NEON)
-
-#define _dl_string_platform(str) (-1)
 
 #endif /* dl-procinfo.h */

@@ -1,5 +1,5 @@
 /* Capture output from a subprocess.
-   Copyright (C) 2017-2023 Free Software Foundation, Inc.
+   Copyright (C) 2017-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -93,13 +93,14 @@ support_capture_subprocess (void (*callback) (void *), void *closure)
 }
 
 struct support_capture_subprocess
-support_capture_subprogram (const char *file, char *const argv[])
+support_capture_subprogram (const char *file, char *const argv[],
+			    char *const envp[])
 {
   struct support_capture_subprocess result;
   xopen_memstream (&result.out);
   xopen_memstream (&result.err);
 
-  struct support_subprocess proc = support_subprogram (file, argv);
+  struct support_subprocess proc = support_subprogram (file, argv, envp);
 
   support_capture_poll (&result, &proc);
   return result;

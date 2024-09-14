@@ -1,5 +1,5 @@
 /* s390 version of processor capability information handling macros.
-   Copyright (C) 2006-2023 Free Software Foundation, Inc.
+   Copyright (C) 2006-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -22,15 +22,6 @@
 
 #define _DL_HWCAP_COUNT 23
 extern const char _dl_s390_cap_flags[_DL_HWCAP_COUNT][9] attribute_hidden;
-
-#define _DL_PLATFORMS_COUNT	11
-extern const char _dl_s390_platforms[_DL_PLATFORMS_COUNT][7] attribute_hidden;
-
-/* The kernel provides up to 32 capability bits with elf_hwcap.  */
-#define _DL_FIRST_PLATFORM	32
-/* Mask to filter out platforms.  */
-#define _DL_HWCAP_PLATFORM	(((1ULL << _DL_PLATFORMS_COUNT) - 1) \
-				 << _DL_FIRST_PLATFORM)
 
 /* Hardware capability bit numbers are derived directly from the
    facility indications as stored by the "store facility list" (STFL)
@@ -68,11 +59,6 @@ enum
   HWCAP_S390_SIE = 1 << 22,
 };
 
-#define HWCAP_IMPORTANT (HWCAP_S390_ZARCH | HWCAP_S390_LDISP \
-			 | HWCAP_S390_EIMM | HWCAP_S390_DFP  \
-			 | HWCAP_S390_VX | HWCAP_S390_VXE    \
-			 | HWCAP_S390_VXRS_EXT2)
-
 /* We cannot provide a general printing function.  */
 #define _dl_procinfo(type, word) -1
 
@@ -81,21 +67,6 @@ __attribute__ ((unused))
 _dl_hwcap_string (int idx)
 {
   return _dl_s390_cap_flags[idx];
-};
-
-static inline int
-__attribute__ ((unused, always_inline))
-_dl_string_platform (const char *str)
-{
-  int i;
-
-  if (str != NULL)
-    for (i = 0; i < _DL_PLATFORMS_COUNT; ++i)
-      {
-	if (strcmp (str, _dl_s390_platforms[i]) == 0)
-	  return _DL_FIRST_PLATFORM + i;
-      }
-  return -1;
 };
 
 #endif /* dl-procinfo.h */

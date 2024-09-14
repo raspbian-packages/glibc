@@ -1,4 +1,4 @@
-glibc (2.38-13+rpi1) trixie-staging; urgency=medium
+glibc (2.40-2+rpi1) trixie-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -6,7 +6,132 @@ glibc (2.38-13+rpi1) trixie-staging; urgency=medium
   [changes brought forward from 2.37-12+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Tue, 17 Oct 2023 12:00:24 +0000]
   * Remove valgrind conflicts.
 
- -- Raspbian forward porter <root@raspbian.org>  Fri, 14 Jun 2024 12:29:52 +0000
+ -- Peter Michael Green <plugwash@raspbian.org>  Sat, 14 Sep 2024 03:53:53 +0000
+
+glibc (2.40-2) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/debhelper.in/libc-dev.install.hurd-amd64: Add missing libm-2.39.a.
+  * debian/patches/hurd-i386/git-tst-aligned-alloc-random-thread{,-mcheck}.diff:
+    Link threading tests with $(shared-thread-library).
+  * debian/testsuite-xfail-debian.mk: Avoid tests overflowing memory.
+  * debian/testsuite-xfail-debian.mk: Update hurd xfails.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 25 Aug 2024 20:16:17 +0200
+
+glibc (2.40-1) experimental; urgency=medium
+
+  [ Aurelien Jarno ]
+  * New upstream release.
+    - debian/symbols.wildcards: add 2.40.
+    - debian/patches/hurd-i386/git-context.diff: upstreamed.
+    - debian/patches/hurd-i386/git-xattr.diff: upstreamed.
+    - debian/patches/hurd-i386/git-proc_getchildren_rusage.diff: upstreamed.
+    - debian/patches/hurd-i386/git-AT_NO_AUTOMOUNT.diff: upstreamed.
+    - debian/patches/hurd-i386/git-intr-msg-clobber.diff: upstreamed.
+    - debian/patches/hurd-i386/git-pthread_self.diff: upstreamed.
+    - debian/patches/hurd-i386/git-pthread_self.2.diff: upstreamed.
+    - debian/patches/hurd-i386/tg-sysvshm.diff: rebased.
+    - debian/patches/hurd-i386/tg-sendmsg-SCM_CREDS.diff: rebased.
+    - debian/patches/hurd-i386/local-exec_filename.diff: rebased.
+    - debian/patches/all/local-remove-manual.diff: refreshed.
+    - debian/patches/any/local-cross.patch: refreshed.
+    - debian/patches/any/git-test-epoll.diff: upstreamed.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Mon, 22 Jul 2024 07:14:59 +0200
+
+glibc (2.39-7) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/git-fault-64bit.diff: Fix receiving exceptions.
+  * debian/patches/hurd-i386/{tg-sendmsg-SCM_CREDS.diff,tg-ifaddrs_v6.diff}:
+    Fix build with gcc-14.
+  * debian/sysdeps/hurd-amd64.mk: Enable mvec.
+  * debian/libc0.3.symbols.hurd-amd64: Add symbols for libmvec.
+  * debian/patches/hurd-i386/git-pthread_symbols.diff: Fix missing symbols.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix build with libaudit 4.0.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Wed, 14 Aug 2024 16:06:39 +0200
+
+glibc (2.39-6) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fixes elf/check-localplt test on power* with recent binutils.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Tue, 23 Jul 2024 19:09:58 +0200
+
+glibc (2.39-5) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/git-pthread_self{,.2}.diff: Fix pthread_self()
+    without libpthread.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fixes stdlib/tst-swapcontext2 test on hppa.  Closes: #1076512.
+  * debian/rules.d/tarball.mk: remove useless code.
+  * debian/sysdeps/arm64.mk: compile with -mbranch-protection=standard on
+    arm64 to enable PAC/BTI support.  Closes: #1063515.
+  * debian/control.in/main: build-depends on g++13-for-host (>= 13.3.0-3) on
+    arm64 to ensure PAC/BTI support in GCC.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Mon, 22 Jul 2024 22:58:49 +0200
+
+glibc (2.39-4) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - debian/patches/any/submitted-static-copysignf128.diff: upstreamed.
+    - debian/patches/any/submitted-static-fmod-fmodf.diff: upstreamed.
+    - debian/patches/any/submitted-static-frexpf128.diff: upstreamed.
+    - debian/patches/any/submitted-static-isnanf128.diff: upstreamed.
+    - debian/patches/any/submitted-static-modf128.diff: upstreamed.
+    - debian/patches/any/submitted-static-exp10.diff: upstreamed.
+
+  [ Samuel Thibault ]
+  * debian/testsuite-xfail-debian.mk: Update for upcoming 2.40.
+  * debian/debhelper.in/libc-udeb.install.hurd-amd64: Fix missing libhurduser.
+  * debian/debhelper.in/libc-udeb.install.hurd-i386: Fix missing libhurduser.
+  * debian/patches/hurd-i386/git-intr-msg-clobber.diff: Fix restoring message to be retried.
+  * debian/patches/hurd-i386/local-intr-msg-clobber.diff: Fix message-retry overwrite.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Mon, 15 Jul 2024 21:20:54 +0200
+
+glibc (2.39-3.1) experimental; urgency=medium
+
+  * Non-maintainer upload acked by Aurelien Jarno.
+  * Same diff as the 2.38-12.1 upload to unstable.
+  * Move all aliased files including the dynamic loader to /usr. (DEP17,
+    Closes: #1061248)
+    + Install a protective diversion for the dynamic loader to avoid accidental
+      deletion (DEP17 P1 M8).
+    + Manage the dynamic loader symlink via maintainer scripts and triggers
+      in multilib packages to avoid interaction of Replaces and /usr-move.
+    + Avoid a versioned dependency on base-files.
+      - Continue managing toplevel multilib aliasing links for the time being.
+      - Install protective diversions for aliasing symlinks that base-files
+        would also install in case libc is upgraded first. (DEP17 P9 M4)
+
+ -- Helmut Grohne <helmut@subdivi.de>  Thu, 06 Jun 2024 09:18:03 +0200
+
+glibc (2.38-14) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/debhelper.in/libc.postinst: drop code to restart init systems.
+    Closes: #1074607.
+  * debian/control.in/libc: add breaks against systemd and sysvinit versions
+    not using the libc-upgrade trigger.
+  * debian/control.in/libc: add breaks against base-files version not
+    providing /usr-merge aliasing symlinks.  Closes: #1074368.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Thu, 04 Jul 2024 21:53:20 +0200
 
 glibc (2.38-13) unstable; urgency=medium
 
@@ -30,7 +155,75 @@ glibc (2.38-12.1) unstable; urgency=medium
       - Install protective diversions for aliasing symlinks that base-files
         would also install in case libc is upgraded first. (DEP17 P9 M4)
 
- -- Helmut Grohne <helmut@subdivi.de>  Wed, 05 Jun 2024 17:31:36 +0200
+ -- Helmut Grohne <helmut@subdivi.de>  Thu, 06 Jun 2024 09:18:03 +0200
+
+glibc (2.39-3) experimental; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/patches/arm64/local-remove-aarch64-bits-math-vector-h.diff: drop,
+    buggy packages should be fixed instead.
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sat, 01 Jun 2024 23:26:50 +0200
+
+glibc (2.39-2) experimental; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/patches/any/submitted-static-exp10.diff: add proposed patch to fix
+    missing exp10 math function in libm.a on i386 and m68k.
+  * debian/control.in/libc, debian/rules.d/control.mk, debian/sysdeps/ia64.mk:
+    remove support for ia64, it is not supported upstream anymore.
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 12 May 2024 00:54:31 +0200
+
+glibc (2.39-1) experimental; urgency=medium
+
+  [ Aurelien Jarno ]
+  * New upstream release.
+    - Add support for fchmodat with flags != 0, using the fchmodat2 syscall.
+      Closes: #1041415.
+    - debian/symbols.wildcard: add 2.39.
+    - debian/patches/git-updates.diff: update from upstream stable branch.
+    - debian/patches/localedata/sort-UTF8-first.diff: rebased.
+    - debian/patches/localedata/locale-ku_TR.diff: rebased.
+    - debian/patches/localedata/locale-en_DK.diff: rebased.
+    - debian/patches/localedata/locale-zh_TW.diff: rebased.
+    - debian/patches/localedata/submitted-es_MX-decimal_point.diff.
+    - debian/patches/hurd-i386/git-realpath_NULL.diff: upstreamed.
+    - debian/patches/hurd-i386/git-tst-realpath-toolong.diff: upstreamed.
+    - debian/patches/hurd-i386/git-hidden_chk.diff: upstreamed.
+    - debian/patches/hurd-i386/git-glob_dirent.diff: upstreamed.
+    - debian/patches/hurd-i386/git-powerpc-longjmp.diff: upstreamed.
+    - debian/patches/hurd-i386/git-jemalloc.diff: upstreamed.
+    - debian/patches/hurd-i386/git-jemalloc2.diff: upstreamed.
+    - debian/patches/hurd-i386/git-error_t.diff: upstreamed.
+    - debian/patches/hurd-i386/git-tls_dtors.diff: upstreamed.
+    - debian/patches/hurd-i386/git-main_stack.diff: upstreamed.
+    - debian/patches/hurd-i386/git-ucontext.diff: upstreamed.
+    - debian/patches/hurd-i386/git-clean_ports.diff: upstreamed.
+    - debian/patches/hurd-i386/git-statfs_f_ffree.patch: upstreamed.
+    - debian/patches/hurd-i386/git-send_interrupt.diff: upstreamed.
+    - debian/patches/hurd-i386/git-exec-intr.diff: upstreamed.
+    - debian/patches/hurd-i386/git-ioctls-bsd.diff: upstreamed.
+    - debian/patches/hurd-i386/git-dtable_reauth.diff: upstreamed.
+    - debian/patches/hurd-i386/git-64bit-abi.diff: upstreamed.
+    - debian/patches/i386/unsubmitted-quiet-ldconfig.diff: rebased.
+    - debian/patches/i386/local-setcontext-revert-eax-ecx-edx.patch: rebased.
+    - debian/patches/riscv64/git-risc-v-add-support-for-dl_runtime_profile.diff:
+      upstreamed.
+    - debian/patches/all/local-remove-manual.diff: rebased.
+    - debian/patches/any/git-c-utf-8-language.diff: upstreamed.
+    - debian/patches/any/local-qsort-memory-corruption.patch: removed, obsolete.
+  * debian/rules.d/tarball.mk: make tarball creation reproducible.
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/local-no-bootstrap-fs-access.2.diff: Now useless.
+  * debian/patches/hurd-i386/local-fix-nss.diff: Refresh.
+  * debian/patches/hurd-i386/submitted-net.diff: Refresh.
+  * debian/testsuite-xfail-debian.mk: Update hurd results.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sat, 04 May 2024 00:35:25 +0200
 
 glibc (2.38-12) unstable; urgency=medium
 

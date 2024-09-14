@@ -1,6 +1,6 @@
 /* Single-precision vector (Advanced SIMD) cos function.
 
-   Copyright (C) 2023 Free Software Foundation, Inc.
+   Copyright (C) 2023-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -48,7 +48,7 @@ special_case (float32x4_t x, float32x4_t y, uint32x4_t odd, uint32x4_t cmp)
   return v_call_f32 (cosf, x, y, cmp);
 }
 
-float32x4_t VPCS_ATTR V_NAME_F1 (cos) (float32x4_t x)
+float32x4_t VPCS_ATTR NOINLINE V_NAME_F1 (cos) (float32x4_t x)
 {
   const struct data *d = ptr_barrier (&data);
   float32x4_t n, r, r2, r3, y;
@@ -64,8 +64,7 @@ float32x4_t VPCS_ATTR V_NAME_F1 (cos) (float32x4_t x)
        special-case handler later.  */
     r = vbslq_f32 (cmp, v_f32 (1.0f), r);
 #else
-  cmp = vcageq_f32 (d->range_val, x);
-  cmp = vceqzq_u32 (cmp); /* cmp = ~cmp.  */
+  cmp = vcageq_f32 (x, d->range_val);
   r = x;
 #endif
 
@@ -92,3 +91,5 @@ float32x4_t VPCS_ATTR V_NAME_F1 (cos) (float32x4_t x)
     return special_case (x, y, odd, cmp);
   return vreinterpretq_f32_u32 (veorq_u32 (vreinterpretq_u32_f32 (y), odd));
 }
+libmvec_hidden_def (V_NAME_F1 (cos))
+HALF_WIDTH_ALIAS_F1 (cos)

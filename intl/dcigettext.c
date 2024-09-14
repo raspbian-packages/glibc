@@ -1,5 +1,5 @@
 /* Implementation of the internal dcigettext function.
-   Copyright (C) 1995-2023 Free Software Foundation, Inc.
+   Copyright (C) 1995-2024 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published by
@@ -691,9 +691,10 @@ DCIGETTEXT (const char *domainname, const char *msgid1, const char *msgid2,
 	    continue;
 	}
 
-      /* If the current locale value is C (or POSIX) we don't load a
-	 domain.  Return the MSGID.  */
-      if (strcmp (single_locale, "C") == 0
+      /* If the current locale value is "C" or "C.<encoding>" or "POSIX",
+	 we don't load a domain.  Return the MSGID.  */
+      if ((single_locale[0] == 'C'
+	   && (single_locale[1] == '\0' || single_locale[1] == '.'))
 	  || strcmp (single_locale, "POSIX") == 0)
 	break;
 

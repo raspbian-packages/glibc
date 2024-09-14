@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2023 Free Software Foundation, Inc.
+# Copyright (C) 1991-2024 Free Software Foundation, Inc.
 # Copyright The GNU Toolchain Authors.
 # This file is part of the GNU C Library.
 
@@ -365,6 +365,8 @@ whole-archive = -Wl,--whole-archive
 # Installed name of the startup code.
 # The ELF convention is that the startfile is called crt1.o
 start-installed-name = crt1.o
+# Similar to crt1.o, but without _IO_stdin_used.
+start-name-2.0 = crt1-2.0.o
 # On systems that do not need a special startfile for statically linked
 # binaries, simply set it to the normal name.
 ifndef static-start-installed-name
@@ -542,6 +544,25 @@ else  # build-static
 endif  # build-shared
 endif  # +link
 
+# Command for linking test programs with crt1.o from glibc 2.0.
++link-2.0-before-inputs = -nostdlib -nostartfiles $(no-pie-ldflag) \
+	      $(sysdep-LDFLAGS) $(LDFLAGS) $(LDFLAGS-$(@F)) \
+	      $(relro-LDFLAGS) $(hashstyle-LDFLAGS) \
+	      $(firstword $(CRT-$(@F)) $(csu-objpfx)$(start-name-2.0)) \
+	      $(+preinit) $(+prector)
++link-2.0-before-libc = -o $@ $(+link-2.0-before-inputs) \
+	      $(filter-out $(addprefix $(csu-objpfx),start.o \
+						     $(start-name-2.0))\
+			   $(+preinit) $(link-extra-libs) \
+			   $(common-objpfx)libc% $(+postinit),$^) \
+	      $(link-extra-libs)
++link-after-libc = $(+postctor) $(+postinit)
+define +link-2.0-tests
+$(CC) $(+link-2.0-before-libc) $(rtld-tests-LDFLAGS) $(link-libc-tests) \
+  $(+link-after-libc)
+$(call after-link,$@)
+endef
+
 # The pretty printer test programs need to be compiled without optimizations
 # so they won't confuse gdb.  We could use either the 'GCC optimize' pragma
 # or the 'optimize' function attribute to achieve this; however, at least on
@@ -717,13 +738,15 @@ endif
 +prectorS = `$(CC) $(sysdep-LDFLAGS) --print-file-name=crtbeginS.o`
 +postctorS = `$(CC) $(sysdep-LDFLAGS) --print-file-name=crtendS.o`
 # Variants of the two previous definitions for statically linking programs.
+static-prector = `$(CC) $(sysdep-LDFLAGS) --print-file-name=crtbeginT.o`
+static-postctor = `$(CC) $(sysdep-LDFLAGS) --print-file-name=crtend.o`
 ifeq (yes,$(enable-static-pie))
 # Static PIE must use PIE variants.
-+prectorT = $(+prectorS)
-+postctorT = $(+postctorS)
++prectorT = $(if $($(@F)-no-pie),$(static-prector),$(+prectorS))
++postctorT = $(if $($(@F)-no-pie),$(static-postctor),$(+postctorS))
 else
-+prectorT = `$(CC) $(sysdep-LDFLAGS) --print-file-name=crtbeginT.o`
-+postctorT = `$(CC) $(sysdep-LDFLAGS) --print-file-name=crtend.o`
++prectorT = $(static-prector)
++postctorT =$(static-postctor)
 endif
 csu-objpfx = $(common-objpfx)csu/
 elf-objpfx = $(common-objpfx)elf/
@@ -752,6 +775,11 @@ run-built-tests = no
 else
 run-built-tests = yes
 endif
+endif
+
+# Whether to build the static math tests
+ifndef build-math-static-tests
+build-math-static-tests = no
 endif
 
 # Whether to stop immediately when a test fails.  Nonempty means to
@@ -869,12 +897,7 @@ host-test-program-cmd = $(host-built-program-cmd)
 endif
 
 # Extra flags to pass to GCC.
-ifeq ($(all-warnings),yes)
-+gccwarn := -Wall -Wwrite-strings -Wcast-qual -Wbad-function-cast -Wmissing-noreturn -Wmissing-prototypes -Wmissing-declarations -Wcomment -Wcomments -Wtrigraphs -Wsign-compare -Wfloat-equal -Wmultichar
-else
-+gccwarn := -Wall -Wwrite-strings
-endif
-+gccwarn += -Wundef
++gccwarn := -Wall -Wwrite-strings -Wundef
 ifeq ($(enable-werror),yes)
 +gccwarn += -Werror
 endif
@@ -890,9 +913,10 @@ endif
 +math-flags = -frounding-math
 
 # Logically only "libnldbl", "nonlib" and "testsuite" should be using
-# -fno-math-errno. However due to GCC bug #88576, only "libm" can use
-# -fno-math-errno.
-+extra-math-flags = $(if $(filter libm,$(in-module)),-fno-math-errno,-fmath-errno)
+# -fno-math-errno. However due to GCC bug #88576, only "libm" and
+# "libmvec" can use -fno-math-errno.
++extra-math-flags = $(if $(filter libmvec libm,$(in-module)),\
+                      -fno-math-errno,-fmath-errno)
 
 # Use 64 bit time_t support for installed programs
 installed-modules = nonlib nscd ldconfig locale_programs \
@@ -1250,7 +1274,7 @@ $(common-objpfx)dl-tunable-list.stmp: \
 		$(..)elf/dl-tunables.list \
 		$(wildcard $(subdirs:%=$(..)%/dl-tunables.list)) \
 		$(wildcard $(sysdirs:%=%/dl-tunables.list))
-	$(AWK) -f $^ > ${@:stmp=T}
+	LC_ALL=C $(AWK) -f $^ > ${@:stmp=T}
 	$(move-if-change) ${@:stmp=T} ${@:stmp=h}
 	touch $@
 
@@ -1369,15 +1393,10 @@ endif
 # dependencies and generate sorted-subdirs dynamically.
 all-subdirs = csu assert ctype locale intl catgets math setjmp signal	    \
 	      stdlib stdio-common libio malloc string wcsmbs time dirent    \
-	      grp pwd posix io termios resource misc socket sysvipc gmon    \
-	      gnulib iconv iconvdata wctype manual shadow gshadow po argp   \
+	      posix io termios resource misc socket sysvipc gmon            \
+	      gnulib iconv iconvdata wctype manual po argp                  \
 	      localedata timezone rt conform debug mathvec support	    \
 	      dlfcn elf
-
-ifeq ($(build-crypt),yes)
-all-subdirs += crypt
-rpath-dirs += crypt
-endif
 
 ifndef avoid-generated
 # sysd-sorted itself will contain rules making the sysd-sorted target

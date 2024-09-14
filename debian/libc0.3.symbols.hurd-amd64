@@ -21,6 +21,8 @@ libmemusage.so #PACKAGE# #MINVER#
  munmap@Base 2.38
  realloc@Base 2.38
 #include "symbols.wildcards"
+libmvec.so.1 #PACKAGE# #MINVER#
+#include "symbols.wildcards"
 libnss_compat.so.2 #PACKAGE# #MINVER#
 #include "symbols.wildcards"
 libnss_dns.so.2 #PACKAGE# #MINVER#

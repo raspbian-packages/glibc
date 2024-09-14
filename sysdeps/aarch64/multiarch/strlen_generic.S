@@ -1,5 +1,5 @@
 /* A Generic Optimized strlen implementation for AARCH64.
-   Copyright (C) 2018-2023 Free Software Foundation, Inc.
+   Copyright (C) 2018-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -29,6 +29,9 @@
 /* Do not hide the generic version of strlen, we use it internally.  */
 # undef libc_hidden_builtin_def
 # define libc_hidden_builtin_def(name)
+
+# undef weak_alias
+# define weak_alias(a, b)
 
 # ifdef SHARED
 /* It doesn't make sense to send libc-internal strlen calls through a PLT. */

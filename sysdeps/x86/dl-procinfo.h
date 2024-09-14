@@ -1,5 +1,5 @@
 /* x86 version of processor capability information handling macros.
-   Copyright (C) 2017-2023 Free Software Foundation, Inc.
+   Copyright (C) 2017-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -22,27 +22,5 @@
 #include <dl-hwcap.h>
 
 #define _DL_HWCAP_COUNT		HWCAP_COUNT
-#define _DL_PLATFORMS_COUNT	HWCAP_PLATFORMS_COUNT
-
-/* Start at 48 to reserve spaces for hardware capabilities.  */
-#define _DL_FIRST_PLATFORM	48
-/* Mask to filter out platforms.  */
-#define _DL_HWCAP_PLATFORM	(((1ULL << _DL_PLATFORMS_COUNT) - 1) \
-				 << _DL_FIRST_PLATFORM)
-
-static inline int
-__attribute__ ((unused, always_inline))
-_dl_string_platform (const char *str)
-{
-  int i;
-
-  if (str != NULL)
-    for (i = HWCAP_PLATFORMS_START; i < HWCAP_PLATFORMS_COUNT; ++i)
-      {
-	if (strcmp (str, GLRO(dl_x86_platforms)[i]) == 0)
-	  return _DL_FIRST_PLATFORM + i;
-      }
-  return -1;
-};
 
 #endif /* dl-procinfo.h */

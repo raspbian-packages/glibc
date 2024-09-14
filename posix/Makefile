@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2023 Free Software Foundation, Inc.
+# Copyright (C) 1991-2024 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -37,6 +37,7 @@ headers := \
   bits/pthreadtypes-arch.h \
   bits/pthreadtypes.h \
   bits/sched.h \
+  bits/spawn_ext.h \
   bits/thread-shared-types.h \
   bits/types.h \
   bits/types/idtype_t.h \
@@ -87,7 +88,6 @@ routines := \
   fpathconf \
   gai_strerror \
   get_child_max \
-  getaddrinfo \
   getegid \
   geteuid \
   getgid \
@@ -136,6 +136,7 @@ routines := \
   sched_sets \
   sched_yield \
   setgid \
+  setgroups \
   setpgid \
   setpgrp \
   setresgid \
@@ -285,9 +286,6 @@ tests := \
   tst-fnmatch7 \
   tst-fork \
   tst-gai_strerror \
-  tst-getaddrinfo \
-  tst-getaddrinfo2 \
-  tst-getaddrinfo3 \
   tst-getopt_long1 \
   tst-glob-tilde \
   tst-glob_symlinks \
@@ -349,9 +347,6 @@ tests-internal := \
   bug-regex5 \
   bug-regex20 \
   bug-regex33 \
-  tst-rfc3484 \
-  tst-rfc3484-2 \
-  tst-rfc3484-3 \
   # tests-internal
 
 tests-container := \
@@ -366,8 +361,6 @@ tests-time64 := \
   # tests-time64
 
 xtests	:= \
-  tst-getaddrinfo4 \
-  tst-getaddrinfo5 \
   tst-sched_rr_get_interval \
   # xtests
 
@@ -425,6 +418,17 @@ generated += \
   $(addprefix wordexp-test-result, 1 2 3 4 5 6 7 8 9 10) \
   annexc \
   annexc.out \
+  getconf.speclist \
+  ptestcases.h \
+  testcases.h \
+  tst-getconf.out \
+  wordexp-tst.out \
+  # generated
+
+ifeq ($(run-built-tests),yes)
+ifeq (yes,$(build-shared))
+ifneq ($(PERL),no)
+generated += \
   bug-ga2-mem.out \
   bug-ga2.mtrace \
   bug-glob2-mem.out \
@@ -437,23 +441,22 @@ generated += \
   bug-regex21.mtrace \
   bug-regex31-mem.out \
   bug-regex31.mtrace \
+  bug-regex36-mem.out \
   bug-regex36.mtrace \
-  getconf.speclist \
-  ptestcases.h \
-  testcases.h \
   tst-boost-mem.out \
   tst-boost.mtrace \
   tst-fnmatch-mem.out \
   tst-fnmatch.mtrace \
-  tst-getconf.out \
   tst-pcre-mem.out \
   tst-pcre.mtrace \
   tst-rxspencer-no-utf8-mem.out \
   tst-rxspencer-no-utf8.mtrace \
   tst-vfork3-mem.out \
   tst-vfork3.mtrace \
-  wordexp-tst.out \
   # generated
+endif
+endif
+endif
 
 ifeq ($(run-built-tests),yes)
 ifeq (yes,$(build-shared))
@@ -468,6 +471,9 @@ endif
 # XXX Please note that for now we ignore the result of this test.
 tests-special += $(objpfx)annexc.out
 ifeq ($(run-built-tests),yes)
+tests-special += $(objpfx)tst-getconf.out
+ifeq (yes,$(build-shared))
+ifneq ($(PERL),no)
 tests-special += \
   $(objpfx)bug-ga2-mem.out \
   $(objpfx)bug-glob2-mem.out \
@@ -478,12 +484,13 @@ tests-special += \
   $(objpfx)bug-regex36-mem.out \
   $(objpfx)tst-boost-mem.out \
   $(objpfx)tst-fnmatch-mem.out \
-  $(objpfx)tst-getconf.out \
   $(objpfx)tst-glob-tilde-mem.out \
   $(objpfx)tst-pcre-mem.out \
   $(objpfx)tst-rxspencer-no-utf8-mem.out \
   $(objpfx)tst-vfork3-mem.out \
   # tests-special
+endif
+endif
 endif
 
 include ../Rules
@@ -554,7 +561,6 @@ $(objpfx)config-name.h: $(..)scripts/config-uname.sh $(common-objpfx)config.make
 	   '$(config-machine)-$(config-vendor)' > $@.new
 	mv -f $@.new $@
 
-CFLAGS-getaddrinfo.c += -DRESOLVER -fexceptions
 CFLAGS-pause.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-pread.c += -fexceptions -fasynchronous-unwind-tables
 CFLAGS-pread64.c += -fexceptions -fasynchronous-unwind-tables $(config-cflags-wno-ignored-attributes)
@@ -601,6 +607,7 @@ tst-spawn-static-ARGS = $(tst-spawn-ARGS)
 tst-spawn5-ARGS = -- $(host-test-program-cmd)
 tst-spawn6-ARGS = -- $(host-test-program-cmd)
 tst-spawn7-ARGS = -- $(host-test-program-cmd)
+tst-posix_spawn-setsid-ARGS = -- $(host-test-program-cmd)
 tst-dir-ARGS = `pwd` `cd $(common-objdir)/$(subdir); pwd` `cd $(common-objdir); pwd` $(objpfx)tst-dir
 tst-chmod-ARGS = $(objdir)
 tst-vfork3-ARGS = --test-dir=$(objpfx)

@@ -1,4 +1,4 @@
-/* Copyright (C) 1996-2023 Free Software Foundation, Inc.
+/* Copyright (C) 1996-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -378,6 +378,7 @@ _nss_dns_gethostbyname4_r (const char *name, struct gaih_addrtuple **pat,
 			   int *herrnop, int32_t *ttlp)
 {
   enum nss_status status = check_name (name, herrnop);
+  char tmp[NS_MAXDNAME];
   if (status != NSS_STATUS_SUCCESS)
     return status;
   struct resolv_context *ctx = __resolv_context_get ();
@@ -395,8 +396,7 @@ _nss_dns_gethostbyname4_r (const char *name, struct gaih_addrtuple **pat,
    */
   if (strchr (name, '.') == NULL)
     {
-      char *tmp = alloca (NS_MAXDNAME);
-      const char *cp = __res_context_hostalias (ctx, name, tmp, NS_MAXDNAME);
+      const char *cp = __res_context_hostalias (ctx, name, tmp, sizeof (tmp));
       if (cp != NULL)
 	name = cp;
     }

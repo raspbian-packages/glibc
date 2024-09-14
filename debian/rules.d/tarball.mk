@@ -2,19 +2,20 @@ GLIBC_GIT = https://sourceware.org/git/glibc.git
 GLIBC_BRANCH = release/$(DEB_VERSION_UPSTREAM)/master
 GLIBC_TAG = glibc-$(DEB_VERSION_UPSTREAM)
 GLIBC_CHECKOUT = glibc-checkout
-GLIBC_DIR = glibc-$(DEB_VERSION_UPSTREAM)
-DEB_ORIG = ../glibc_$(DEB_VERSION_UPSTREAM).orig.tar.xz
+DEB_ORIG_UNCOMPRESSED = ../glibc_$(DEB_VERSION_UPSTREAM).orig.tar
+DEB_ORIG = $(DEB_ORIG_UNCOMPRESSED).xz
 GIT_UPDATES_DIFF = debian/patches/git-updates.diff
+
+# Note: 'git archive' doesn't support https remotes, so 'git clone' is used as a first step
 
 get-orig-source: $(DEB_ORIG)
 $(DEB_ORIG):
 	dh_testdir
 	git clone --bare $(GLIBC_GIT) $(GLIBC_CHECKOUT)
-	mkdir -p $(GLIBC_DIR)
-	(cd $(GLIBC_CHECKOUT) && git archive -v --format=tar $(GLIBC_TAG)) | tar -C $(GLIBC_DIR) -xf -
-	rm -fr $(GLIBC_DIR)/manual
-	tar --mode=go=rX,u+rw,a-s --owner=root --group=root --numeric-owner -Jcf $(DEB_ORIG) $(GLIBC_DIR)
-	rm -rf $(GLIBC_DIR) $(GLIBC_CHECKOUT)
+	git archive -v --format=tar --prefix=$(GLIBC_TAG)/ --remote=$(GLIBC_CHECKOUT) -o $(DEB_ORIG_UNCOMPRESSED) $(GLIBC_TAG)
+	rm -rf $(GLIBC_CHECKOUT)
+	tar --delete $(GLIBC_TAG)/manual -f $(DEB_ORIG_UNCOMPRESSED)
+	xz $(DEB_ORIG_UNCOMPRESSED)
 
 update-from-upstream:
 	dh_testdir

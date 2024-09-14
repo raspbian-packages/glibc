@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2023 Free Software Foundation, Inc.
+# Copyright (C) 2013-2024 Free Software Foundation, Inc.
 # Copyright The GNU Toolchain Authors.
 # This file is part of the GNU C Library.
 
@@ -32,6 +32,8 @@ bench-math := \
   atan2 \
   atanh \
   cbrt \
+  ceil \
+  ceilf \
   cos \
   cosf \
   cosh \
@@ -44,6 +46,8 @@ bench-math := \
   exp2f \
   expf \
   expm1 \
+  floor \
+  floorf \
   fmax \
   fmaxf \
   fmin \
@@ -60,6 +64,8 @@ bench-math := \
   j0 \
   j1 \
   lgamma \
+  llrint \
+  llrintf \
   log \
   log10 \
   log1p \
@@ -68,10 +74,15 @@ bench-math := \
   logb \
   logbf \
   logf \
+  lrint \
+  lrintf \
   modf \
+  nearbyint \
+  nearbyintf \
   pow \
   powf \
   rint \
+  rintf \
   roundeven \
   roundevenf \
   sin \
@@ -128,7 +139,6 @@ bench-string := \
 string-benchset := \
   bzero \
   bzero-large \
-  bzero-walk \
   memccpy \
   memchr \
   memcmp \
@@ -136,19 +146,15 @@ string-benchset := \
   memcpy \
   memcpy-large \
   memcpy-random \
-  memcpy-walk \
   memmem \
   memmove \
   memmove-large \
-  memmove-walk \
   mempcpy \
   memrchr \
   memset \
   memset-large \
-  memset-walk \
   memset-zero \
   memset-zero-large \
-  memset-zero-walk \
   rawmemchr \
   stpcpy \
   stpcpy_chk \
@@ -246,8 +252,13 @@ hash-benchset := \
 
 stdlib-benchset := \
   arc4random \
+  random-lock \
   strtod \
   # stdlib-benchset
+
+stdio-benchset := \
+  fclose \
+  # stdio-benchset
 
 stdio-common-benchset := sprintf
 
@@ -257,6 +268,7 @@ ifeq (${BENCHSET},)
 benchset := \
   $(hash-benchset) \
   $(math-benchset) \
+  $(stdio-benchset) \
   $(stdio-common-benchset) \
   $(stdlib-benchset) \
   $(string-benchset-all) \
@@ -407,6 +419,7 @@ VALIDBENCHSETNAMES := \
   malloc-simple \
   malloc-thread \
   math-benchset \
+  stdio-benchset \
   stdio-common-benchset \
   stdlib-benchset \
   string-benchset \

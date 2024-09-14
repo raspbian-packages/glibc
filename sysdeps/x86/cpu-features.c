@@ -1,6 +1,6 @@
 /* Initialize CPU feature data.
    This file is part of the GNU C Library.
-   Copyright (C) 2008-2023 Free Software Foundation, Inc.
+   Copyright (C) 2008-2024 Free Software Foundation, Inc.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -18,6 +18,7 @@
 
 #include <dl-hwcap.h>
 #include <libc-pointer-arith.h>
+#include <isa-level.h>
 #include <get-isa-level.h>
 #include <cacheinfo.h>
 #include <dl-cacheinfo.h>
@@ -26,6 +27,42 @@
 
 extern void TUNABLE_CALLBACK (set_hwcaps) (tunable_val_t *)
   attribute_hidden;
+
+#if defined SHARED
+extern void _dl_tlsdesc_dynamic_fxsave (void) attribute_hidden;
+extern void _dl_tlsdesc_dynamic_xsave (void) attribute_hidden;
+extern void _dl_tlsdesc_dynamic_xsavec (void) attribute_hidden;
+
+# ifdef __x86_64__
+#  include <dl-plt-rewrite.h>
+
+static void
+TUNABLE_CALLBACK (set_plt_rewrite) (tunable_val_t *valp)
+{
+  /* We must be careful about where we put the call to
+     dl_plt_rewrite_supported() since it may generate
+     spurious SELinux log entries.  It should only be
+     attempted if the user requested a PLT rewrite.  */
+  if (valp->numval != 0 && dl_plt_rewrite_supported ())
+    {
+      /* Use JMPABS only on APX processors.  */
+      const struct cpu_features *cpu_features = __get_cpu_features ();
+      GL (dl_x86_feature_control).plt_rewrite
+	  = ((valp->numval > 1 && CPU_FEATURE_PRESENT_P (cpu_features, APX_F))
+		 ? plt_rewrite_jmpabs
+		 : plt_rewrite_jmp);
+    }
+}
+# else
+extern void _dl_tlsdesc_dynamic_fnsave (void) attribute_hidden;
+# endif
+#endif
+
+#ifdef __x86_64__
+extern void _dl_runtime_resolve_fxsave (void) attribute_hidden;
+extern void _dl_runtime_resolve_xsave (void) attribute_hidden;
+extern void _dl_runtime_resolve_xsavec (void) attribute_hidden;
+#endif
 
 #ifdef __LP64__
 static void
@@ -110,16 +147,23 @@ update_active (struct cpu_features *cpu_features)
   if (!CPU_FEATURES_CPU_P (cpu_features, RTM_ALWAYS_ABORT))
     CPU_FEATURE_SET_ACTIVE (cpu_features, RTM);
 
-#if CET_ENABLED
+#if CET_ENABLED && 0
   CPU_FEATURE_SET_ACTIVE (cpu_features, IBT);
   CPU_FEATURE_SET_ACTIVE (cpu_features, SHSTK);
 #endif
 
+  enum
+  {
+    os_xmm = 1,
+    os_ymm = 2,
+    os_zmm = 4
+  } os_vector_size = os_xmm;
   /* Can we call xgetbv?  */
   if (CPU_FEATURES_CPU_P (cpu_features, OSXSAVE))
     {
       unsigned int xcrlow;
       unsigned int xcrhigh;
+      CPU_FEATURE_SET_ACTIVE (cpu_features, AVX10);
       asm ("xgetbv" : "=a" (xcrlow), "=d" (xcrhigh) : "c" (0));
       /* Is YMM and XMM state usable?  */
       if ((xcrlow & (bit_YMM_state | bit_XMM_state))
@@ -128,6 +172,7 @@ update_active (struct cpu_features *cpu_features)
 	  /* Determine if AVX is usable.  */
 	  if (CPU_FEATURES_CPU_P (cpu_features, AVX))
 	    {
+	      os_vector_size |= os_ymm;
 	      CPU_FEATURE_SET (cpu_features, AVX);
 	      /* The following features depend on AVX being usable.  */
 	      /* Determine if AVX2 is usable.  */
@@ -166,6 +211,7 @@ update_active (struct cpu_features *cpu_features)
 			 | bit_ZMM16_31_state))
 	      == (bit_Opmask_state | bit_ZMM0_15_state | bit_ZMM16_31_state))
 	    {
+	      os_vector_size |= os_zmm;
 	      /* Determine if AVX512F is usable.  */
 	      if (CPU_FEATURES_CPU_P (cpu_features, AVX512F))
 		{
@@ -210,6 +256,22 @@ update_active (struct cpu_features *cpu_features)
 	    }
 	}
 
+      if (CPU_FEATURES_CPU_P (cpu_features, AVX10)
+	  && cpu_features->basic.max_cpuid >= 0x24)
+	{
+	  __cpuid_count (
+	      0x24, 0, cpu_features->features[CPUID_INDEX_24_ECX_0].cpuid.eax,
+	      cpu_features->features[CPUID_INDEX_24_ECX_0].cpuid.ebx,
+	      cpu_features->features[CPUID_INDEX_24_ECX_0].cpuid.ecx,
+	      cpu_features->features[CPUID_INDEX_24_ECX_0].cpuid.edx);
+	  if (os_vector_size & os_xmm)
+	    CPU_FEATURE_SET_ACTIVE (cpu_features, AVX10_XMM);
+	  if (os_vector_size & os_ymm)
+	    CPU_FEATURE_SET_ACTIVE (cpu_features, AVX10_YMM);
+	  if (os_vector_size & os_zmm)
+	    CPU_FEATURE_SET_ACTIVE (cpu_features, AVX10_ZMM);
+	}
+
       /* Are XTILECFG and XTILEDATA states usable?  */
       if ((xcrlow & (bit_XTILECFG_state | bit_XTILEDATA_state))
 	  == (bit_XTILECFG_state | bit_XTILEDATA_state))
@@ -246,8 +308,10 @@ update_active (struct cpu_features *cpu_features)
 	  __cpuid_count (0xd, 0, eax, ebx, ecx, edx);
 	  if (ebx != 0)
 	    {
+	      /* NB: On AMX capable processors, ebx always includes AMX
+		 states.  */
 	      unsigned int xsave_state_full_size
-		= ALIGN_UP (ebx + STATE_SAVE_OFFSET, 64);
+		= ALIGN_UP (ebx + TLSDESC_CALL_REGISTER_SAVE_AREA, 64);
 
 	      cpu_features->xsave_state_size
 		= xsave_state_full_size;
@@ -259,6 +323,11 @@ update_active (struct cpu_features *cpu_features)
 		{
 		  unsigned int xstate_comp_offsets[32];
 		  unsigned int xstate_comp_sizes[32];
+#ifdef __x86_64__
+		  unsigned int xstate_amx_comp_offsets[32];
+		  unsigned int xstate_amx_comp_sizes[32];
+		  unsigned int amx_ecx;
+#endif
 		  unsigned int i;
 
 		  xstate_comp_offsets[0] = 0;
@@ -266,16 +335,39 @@ update_active (struct cpu_features *cpu_features)
 		  xstate_comp_offsets[2] = 576;
 		  xstate_comp_sizes[0] = 160;
 		  xstate_comp_sizes[1] = 256;
+#ifdef __x86_64__
+		  xstate_amx_comp_offsets[0] = 0;
+		  xstate_amx_comp_offsets[1] = 160;
+		  xstate_amx_comp_offsets[2] = 576;
+		  xstate_amx_comp_sizes[0] = 160;
+		  xstate_amx_comp_sizes[1] = 256;
+#endif
 
 		  for (i = 2; i < 32; i++)
 		    {
-		      if ((STATE_SAVE_MASK & (1 << i)) != 0)
+		      if ((FULL_STATE_SAVE_MASK & (1 << i)) != 0)
 			{
 			  __cpuid_count (0xd, i, eax, ebx, ecx, edx);
-			  xstate_comp_sizes[i] = eax;
+#ifdef __x86_64__
+			  /* Include this in xsave_state_full_size.  */
+			  amx_ecx = ecx;
+			  xstate_amx_comp_sizes[i] = eax;
+			  if ((AMX_STATE_SAVE_MASK & (1 << i)) != 0)
+			    {
+			      /* Exclude this from xsave_state_size.  */
+			      ecx = 0;
+			      xstate_comp_sizes[i] = 0;
+			    }
+			  else
+#endif
+			    xstate_comp_sizes[i] = eax;
 			}
 		      else
 			{
+#ifdef __x86_64__
+			  amx_ecx = 0;
+			  xstate_amx_comp_sizes[i] = 0;
+#endif
 			  ecx = 0;
 			  xstate_comp_sizes[i] = 0;
 			}
@@ -288,6 +380,15 @@ update_active (struct cpu_features *cpu_features)
 			  if ((ecx & (1 << 1)) != 0)
 			    xstate_comp_offsets[i]
 			      = ALIGN_UP (xstate_comp_offsets[i], 64);
+#ifdef __x86_64__
+			  xstate_amx_comp_offsets[i]
+			    = (xstate_amx_comp_offsets[i - 1]
+			       + xstate_amx_comp_sizes[i - 1]);
+			  if ((amx_ecx & (1 << 1)) != 0)
+			    xstate_amx_comp_offsets[i]
+			      = ALIGN_UP (xstate_amx_comp_offsets[i],
+					  64);
+#endif
 			}
 		    }
 
@@ -296,8 +397,23 @@ update_active (struct cpu_features *cpu_features)
 		    = xstate_comp_offsets[31] + xstate_comp_sizes[31];
 		  if (size)
 		    {
+#ifdef __x86_64__
+		      unsigned int amx_size
+			= (xstate_amx_comp_offsets[31]
+			   + xstate_amx_comp_sizes[31]);
+		      amx_size
+			= ALIGN_UP ((amx_size
+				     + TLSDESC_CALL_REGISTER_SAVE_AREA),
+				    64);
+		      /* Set xsave_state_full_size to the compact AMX
+			 state size for XSAVEC.  NB: xsave_state_full_size
+			 is only used in _dl_tlsdesc_dynamic_xsave and
+			 _dl_tlsdesc_dynamic_xsavec.  */
+		      cpu_features->xsave_state_full_size = amx_size;
+#endif
 		      cpu_features->xsave_state_size
-			= ALIGN_UP (size + STATE_SAVE_OFFSET, 64);
+			= ALIGN_UP (size + TLSDESC_CALL_REGISTER_SAVE_AREA,
+				    64);
 		      CPU_FEATURE_SET (cpu_features, XSAVEC);
 		    }
 		}
@@ -754,11 +870,18 @@ init_cpu_features (struct cpu_features *cpu_features)
 
 	      /* Newer Bigcore microarch (larger non-temporal store
 		 threshold).  */
-	    case INTEL_BIGCORE_SKYLAKE:
-	    case INTEL_BIGCORE_KABYLAKE:
-	    case INTEL_BIGCORE_COMETLAKE:
 	    case INTEL_BIGCORE_SKYLAKE_AVX512:
 	    case INTEL_BIGCORE_CANNONLAKE:
+	      /* Benchmarks indicate non-temporal memset is not
+		     necessarily profitable on SKX (and in some cases much
+		     worse). This is likely unique to SKX due its it unique
+		     mesh interconnect (not present on ICX or BWD). Disable
+		     non-temporal on all Skylake servers. */
+	      cpu_features->preferred[index_arch_Avoid_Non_Temporal_Memset]
+		  |= bit_arch_Avoid_Non_Temporal_Memset;
+	    case INTEL_BIGCORE_COMETLAKE:
+	    case INTEL_BIGCORE_SKYLAKE:
+	    case INTEL_BIGCORE_KABYLAKE:
 	    case INTEL_BIGCORE_ICELAKE:
 	    case INTEL_BIGCORE_TIGERLAKE:
 	    case INTEL_BIGCORE_ROCKETLAKE:
@@ -907,39 +1030,59 @@ https://www.intel.com/content/www/us/en/support/articles/000059422/processors.ht
 
       model += extended_model;
       if (family == 0x6)
-        {
-          if (model == 0xf || model == 0x19)
-            {
-	      CPU_FEATURE_UNSET (cpu_features, AVX);
-	      CPU_FEATURE_UNSET (cpu_features, AVX2);
-
-              cpu_features->preferred[index_arch_Slow_SSE4_2]
-                |= bit_arch_Slow_SSE4_2;
-
-	      cpu_features->preferred[index_arch_AVX_Fast_Unaligned_Load]
-		&= ~bit_arch_AVX_Fast_Unaligned_Load;
-            }
-        }
-      else if (family == 0x7)
-        {
-	  if (model == 0x1b)
+	{
+	  /* Tuning for older Zhaoxin processors.  */
+	  if (model == 0xf || model == 0x19)
 	    {
 	      CPU_FEATURE_UNSET (cpu_features, AVX);
 	      CPU_FEATURE_UNSET (cpu_features, AVX2);
 
 	      cpu_features->preferred[index_arch_Slow_SSE4_2]
-		|= bit_arch_Slow_SSE4_2;
+		  |= bit_arch_Slow_SSE4_2;
+
+	      /*  Unaligned AVX loads are slower.  */
+	      cpu_features->preferred[index_arch_AVX_Fast_Unaligned_Load]
+		  &= ~bit_arch_AVX_Fast_Unaligned_Load;
+	    }
+	}
+      else if (family == 0x7)
+	{
+	  switch (model)
+	    {
+	      /* Wudaokou microarch tuning.  */
+	    case 0x1b:
+	      CPU_FEATURE_UNSET (cpu_features, AVX);
+	      CPU_FEATURE_UNSET (cpu_features, AVX2);
+
+	      cpu_features->preferred[index_arch_Slow_SSE4_2]
+		  |= bit_arch_Slow_SSE4_2;
 
 	      cpu_features->preferred[index_arch_AVX_Fast_Unaligned_Load]
-		&= ~bit_arch_AVX_Fast_Unaligned_Load;
-	    }
-	  else if (model == 0x3b)
-	    {
+		  &= ~bit_arch_AVX_Fast_Unaligned_Load;
+	      break;
+
+	      /* Lujiazui microarch tuning.  */
+	    case 0x3b:
 	      CPU_FEATURE_UNSET (cpu_features, AVX);
 	      CPU_FEATURE_UNSET (cpu_features, AVX2);
 
 	      cpu_features->preferred[index_arch_AVX_Fast_Unaligned_Load]
-		&= ~bit_arch_AVX_Fast_Unaligned_Load;
+		  &= ~bit_arch_AVX_Fast_Unaligned_Load;
+	      break;
+
+	      /* Yongfeng and Shijidadao mircoarch tuning.  */
+	    case 0x5b:
+	      cpu_features->cachesize_non_temporal_divisor = 2;
+	    case 0x6b:
+	      cpu_features->preferred[index_arch_AVX_Fast_Unaligned_Load]
+		  &= ~bit_arch_AVX_Fast_Unaligned_Load;
+
+	      /* To use sse2_unaligned versions of memset, strcpy and strcat.
+	       */
+	      cpu_features->preferred[index_arch_Prefer_No_VZEROUPPER]
+		  |= (bit_arch_Prefer_No_VZEROUPPER
+		      | bit_arch_Fast_Unaligned_Load);
+	      break;
 	    }
 	}
     }
@@ -1081,55 +1224,53 @@ no_cpuid:
 	       TUNABLE_CALLBACK (set_x86_ibt));
   TUNABLE_GET (x86_shstk, tunable_val_t *,
 	       TUNABLE_CALLBACK (set_x86_shstk));
-
-  /* Check CET status.  */
-  unsigned int cet_status = get_cet_status ();
-
-  if ((cet_status & GNU_PROPERTY_X86_FEATURE_1_IBT) == 0)
-    CPU_FEATURE_UNSET (cpu_features, IBT)
-  if ((cet_status & GNU_PROPERTY_X86_FEATURE_1_SHSTK) == 0)
-    CPU_FEATURE_UNSET (cpu_features, SHSTK)
-
-  if (cet_status)
-    {
-      GL(dl_x86_feature_1) = cet_status;
-
-# ifndef SHARED
-      /* Check if IBT and SHSTK are enabled by kernel.  */
-      if ((cet_status & GNU_PROPERTY_X86_FEATURE_1_IBT)
-	  || (cet_status & GNU_PROPERTY_X86_FEATURE_1_SHSTK))
-	{
-	  /* Disable IBT and/or SHSTK if they are enabled by kernel, but
-	     disabled by environment variable:
-
-	     GLIBC_TUNABLES=glibc.cpu.hwcaps=-IBT,-SHSTK
-	   */
-	  unsigned int cet_feature = 0;
-	  if (!CPU_FEATURE_USABLE (IBT))
-	    cet_feature |= GNU_PROPERTY_X86_FEATURE_1_IBT;
-	  if (!CPU_FEATURE_USABLE (SHSTK))
-	    cet_feature |= GNU_PROPERTY_X86_FEATURE_1_SHSTK;
-
-	  if (cet_feature)
-	    {
-	      int res = dl_cet_disable_cet (cet_feature);
-
-	      /* Clear the disabled bits in dl_x86_feature_1.  */
-	      if (res == 0)
-		GL(dl_x86_feature_1) &= ~cet_feature;
-	    }
-
-	  /* Lock CET if IBT or SHSTK is enabled in executable.  Don't
-	     lock CET if IBT or SHSTK is enabled permissively.  */
-	  if (GL(dl_x86_feature_control).ibt != cet_permissive
-	      && GL(dl_x86_feature_control).shstk != cet_permissive)
-	    dl_cet_lock_cet ();
-	}
-# endif
-    }
 #endif
 
-#ifndef SHARED
+  if (MINIMUM_X86_ISA_LEVEL >= AVX_X86_ISA_LEVEL
+      || (GLRO(dl_x86_cpu_features).xsave_state_size != 0))
+    {
+      if (CPU_FEATURE_USABLE_P (cpu_features, XSAVEC))
+	{
+#ifdef __x86_64__
+	  GLRO(dl_x86_64_runtime_resolve) = _dl_runtime_resolve_xsavec;
+#endif
+#ifdef SHARED
+	  GLRO(dl_x86_tlsdesc_dynamic) = _dl_tlsdesc_dynamic_xsavec;
+#endif
+	}
+      else
+	{
+#ifdef __x86_64__
+	  GLRO(dl_x86_64_runtime_resolve) = _dl_runtime_resolve_xsave;
+#endif
+#ifdef SHARED
+	  GLRO(dl_x86_tlsdesc_dynamic) = _dl_tlsdesc_dynamic_xsave;
+#endif
+	}
+    }
+  else
+    {
+#ifdef __x86_64__
+      GLRO(dl_x86_64_runtime_resolve) = _dl_runtime_resolve_fxsave;
+# ifdef SHARED
+      GLRO(dl_x86_tlsdesc_dynamic) = _dl_tlsdesc_dynamic_fxsave;
+# endif
+#else
+# ifdef SHARED
+      if (CPU_FEATURE_USABLE_P (cpu_features, FXSR))
+	GLRO(dl_x86_tlsdesc_dynamic) = _dl_tlsdesc_dynamic_fxsave;
+      else
+	GLRO(dl_x86_tlsdesc_dynamic) = _dl_tlsdesc_dynamic_fnsave;
+# endif
+#endif
+    }
+
+#ifdef SHARED
+# ifdef __x86_64__
+  TUNABLE_GET (plt_rewrite, tunable_val_t *,
+	       TUNABLE_CALLBACK (set_plt_rewrite));
+# endif
+#else
   /* NB: In libc.a, call init_cacheinfo.  */
   init_cacheinfo ();
 #endif

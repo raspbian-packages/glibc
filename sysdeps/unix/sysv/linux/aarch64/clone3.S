@@ -1,5 +1,5 @@
 /* The clone3 syscall wrapper.  Linux/aarch64 version.
-   Copyright (C) 2023 Free Software Foundation, Inc.
+   Copyright (C) 2023-2024 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -82,4 +82,3 @@ thread_start:
 	.size thread_start, .-thread_start
 
 libc_hidden_def (__clone3)
-weak_alias (__clone3, clone3)

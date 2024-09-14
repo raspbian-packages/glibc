@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2023 Free Software Foundation, Inc.
+# Copyright (C) 1991-2024 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -214,12 +214,18 @@ routines_no_fortify += \
   syslog \
   # routines_no_fortify
 
+ifeq ($(run-built-tests),yes)
+ifeq (yes,$(build-shared))
+ifneq ($(PERL),no)
 generated += \
   tst-allocate_once-mem.out \
   tst-allocate_once.mtrace \
   tst-error1-mem.out \
   tst-error1.mtrace \
   # generated
+endif
+endif
+endif
 
 aux := init-misc
 install-lib := libg.a
@@ -251,6 +257,8 @@ tests := \
   tst-mntent-blank-passno \
   tst-mntent-escape \
   tst-mntent2 \
+  tst-mremap1 \
+  tst-mremap2 \
   tst-preadvwritev \
   tst-preadvwritev2 \
   tst-preadvwritev64 \
@@ -285,8 +293,14 @@ tests-internal += tst-fd_to_filename
 tests-static += tst-fd_to_filename
 
 ifeq ($(run-built-tests),yes)
-tests-special += $(objpfx)tst-error1-mem.out \
-  $(objpfx)tst-allocate_once-mem.out
+ifeq (yes,$(build-shared))
+ifneq ($(PERL),no)
+tests-special += \
+  $(objpfx)tst-allocate_once-mem.out \
+  $(objpfx)tst-error1-mem.out \
+  # tests-special
+endif
+endif
 endif
 
 tests-container := \

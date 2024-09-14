@@ -976,6 +976,26 @@ double: 2
 float: 1
 ldouble: 3
 
+Function: "exp10m1":
+double: 2
+float: 1
+ldouble: 1
+
+Function: "exp10m1_downward":
+double: 1
+float: 1
+ldouble: 3
+
+Function: "exp10m1_towardzero":
+double: 1
+float: 1
+ldouble: 3
+
+Function: "exp10m1_upward":
+double: 3
+float: 1
+ldouble: 3
+
 Function: "exp2":
 double: 1
 float: 1
@@ -992,6 +1012,26 @@ float: 1
 ldouble: 1
 
 Function: "exp2_upward":
+double: 1
+float: 1
+ldouble: 2
+
+Function: "exp2m1":
+double: 1
+float: 1
+ldouble: 1
+
+Function: "exp2m1_downward":
+double: 2
+float: 1
+ldouble: 2
+
+Function: "exp2m1_towardzero":
+double: 2
+float: 1
+ldouble: 2
+
+Function: "exp2m1_upward":
 double: 1
 float: 1
 ldouble: 2
@@ -1066,17 +1106,17 @@ double: 1
 ldouble: 1
 
 Function: "j0":
-double: 2
+double: 3
 float: 9
 ldouble: 2
 
 Function: "j0_downward":
-double: 5
+double: 6
 float: 9
 ldouble: 9
 
 Function: "j0_towardzero":
-double: 6
+double: 7
 float: 9
 ldouble: 9
 
@@ -1146,6 +1186,7 @@ float: 6
 ldouble: 8
 
 Function: "log":
+double: 1
 float: 1
 ldouble: 1
 
@@ -1168,6 +1209,26 @@ Function: "log10_upward":
 double: 2
 float: 2
 ldouble: 1
+
+Function: "log10p1":
+double: 1
+float: 1
+ldouble: 3
+
+Function: "log10p1_downward":
+double: 2
+float: 1
+ldouble: 2
+
+Function: "log10p1_towardzero":
+double: 2
+float: 2
+ldouble: 2
+
+Function: "log10p1_upward":
+double: 2
+float: 1
+ldouble: 3
 
 Function: "log1p":
 double: 1
@@ -1209,6 +1270,26 @@ double: 3
 float: 3
 ldouble: 1
 
+Function: "log2p1":
+double: 1
+float: 1
+ldouble: 3
+
+Function: "log2p1_downward":
+double: 2
+float: 2
+ldouble: 3
+
+Function: "log2p1_towardzero":
+double: 2
+float: 2
+ldouble: 2
+
+Function: "log2p1_upward":
+double: 1
+float: 2
+ldouble: 2
+
 Function: "log_downward":
 float: 2
 ldouble: 1
@@ -1221,6 +1302,26 @@ Function: "log_upward":
 double: 1
 float: 2
 ldouble: 1
+
+Function: "logp1":
+double: 1
+float: 1
+ldouble: 3
+
+Function: "logp1_downward":
+double: 2
+float: 2
+ldouble: 3
+
+Function: "logp1_towardzero":
+double: 2
+float: 2
+ldouble: 3
+
+Function: "logp1_upward":
+double: 2
+float: 2
+ldouble: 2
 
 Function: "pow":
 double: 1
