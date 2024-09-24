@@ -67,7 +67,7 @@ _hurd_intr_rpc_mach_msg (mach_msg_header_t *msg,
   mach_msg_bits_t msgh_bits;
   mach_port_t remote_port;
   mach_msg_id_t msgid;
-  struct clobber save_data;
+  volatile struct clobber save_data;
 
   if ((option & (MACH_SEND_MSG|MACH_RCV_MSG)) != (MACH_SEND_MSG|MACH_RCV_MSG)
       || _hurd_msgport_thread == MACH_PORT_NULL)
