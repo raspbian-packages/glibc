@@ -307,6 +307,9 @@ test-xfail-tst-open-tmpfile = yes
 # Missing RLIMIT_AS/overcommit enforcement
 tests-unsupported += test-bz22786 tst-strtod-overflow bug18240
 tests-unsupported += test-lfs tst-tzset
+tests-unsupported += tst-tls-allocation-failure-static-patched
+test-xfail-tst-vfprintf-width-prec-mem = yes
+test-xfail-tst-vfprintf-width-prec = yes
 
 # new in 2.22
 test-xfail-tst-prelink = yes
@@ -369,7 +372,6 @@ test-xfail-tst-itimer = yes
 test-xfail-tst-wait3 = yes
 test-xfail-tst-nss-compat1 = yes
 test-xfail-tst-dlinfo-phdr = yes
-test-xfail-tst-tls-allocation-failure-static-patched = yes
 
 # new in 2.35
 test-xfail-tst-compathooks-on = yes
@@ -386,10 +388,6 @@ test-xfail-tst-nss-gai-actions = yes
 test-xfail-tst-fcntl-lock = yes
 test-xfail-tst-fcntl-lock-lfs = yes
 test-xfail-tst-nss-gai-hv2-canonname = yes
-
-# missing RLIMIT_AS support
-test-xfail-tst-vfprintf-width-prec-mem = yes
-test-xfail-tst-vfprintf-width-prec = yes
 
 # new in 2.38
 test-xfail-tst-sprof-basic = yes
@@ -428,6 +426,9 @@ test-xfail-tst-lockf = yes
 # assumes that all st_mode flags (32bit) can exist in stx_mode flags (16bit)
 test-xfail-tst-statx = yes
 
+# Some issues with FPU flags
+test-xfail-test-fenv = yes
+test-xfail-test-fenv-sse-2 = yes
 endif
 
 
@@ -436,7 +437,6 @@ endif
 ######################################################################
 ifeq ($(config-machine)-$(config-os),x86_64-gnu-gnu)
 # TODO: fix default FPU config
-test-xfail-test-fenv = yes
 test-xfail-test-float64x-acos = yes
 test-xfail-test-float64x-log10 = yes
 test-xfail-test-float64x-log2 = yes

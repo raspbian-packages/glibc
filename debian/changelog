@@ -1,4 +1,4 @@
-glibc (2.40-2+rpi1) trixie-staging; urgency=medium
+glibc (2.40-3+rpi1) trixie-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -6,7 +6,23 @@ glibc (2.40-2+rpi1) trixie-staging; urgency=medium
   [changes brought forward from 2.37-12+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Tue, 17 Oct 2023 12:00:24 +0000]
   * Remove valgrind conflicts.
 
- -- Peter Michael Green <plugwash@raspbian.org>  Sat, 14 Sep 2024 03:53:53 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Fri, 18 Oct 2024 12:21:08 +0000
+
+glibc (2.40-3) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/testsuite-xfail-debian.mk: Avoid tests overflowing memory.
+  * debian/testsuite-xfail-debian.mk: Update hurd xfails.
+
+  [ Aurelien Jarno ]
+  * debian/rules: build with gcc-14.
+  * debian/control.in/main: adjust g++-for-host version on arm64 to ensure
+    PAC/BTI support.
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+  * debian/patches/any/git-iconv-*: backport iconv fixes and improvement from
+    upstream master.  Closes: #328303, #1000652.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Tue, 24 Sep 2024 21:46:16 +0200
 
 glibc (2.40-2) unstable; urgency=medium
 

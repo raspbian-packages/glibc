@@ -79,4 +79,11 @@ any/local-bootstrap-headers.diff
 any/local-cudacc-float128.diff
 any/local-test-install.diff
 any/local-cross.patch
+any/git-iconv-Fix-matching-of-multi-character-transliteratio.patch
+any/git-iconv-Base-tests-for-buffer-management.patch
+any/git-iconv-Do-not-use-mmap-in-iconv-the-program-bug-17703.patch
+any/git-iconv-Preserve-iconv-c-error-exit-on-invalid-inputs-.patch
+any/git-iconv-Support-in-place-conversions-bug-10460-bug-320.patch
+any/git-iconv-Multiple-on-command-line-should-not-fail-bug-3.patch
+any/git-iconv-Input-buffering-for-the-iconv-program-bug-6050.patch
 auto-2.34-7+rpi1-de346af12a6cb5181ed2ab174fb35c88f3b64f4b-1663212931
