@@ -47,7 +47,7 @@ select_memcpy_ifunc (void)
     {
       if (IS_A64FX (midr))
 	return __memcpy_a64fx;
-      return prefer_sve_ifuncs ? __memcpy_sve : __memcpy_generic;
+      return __memcpy_sve;
     }
 
   if (IS_THUNDERX (midr))
