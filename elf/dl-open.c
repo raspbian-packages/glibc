@@ -850,6 +850,7 @@ no more namespaces available for dlmopen()"));
 	  ++GL(dl_nns);
 	}
 
+      GL(dl_ns)[nsid].libc_map = NULL;
       _dl_debug_update (nsid)->r_state = RT_CONSISTENT;
     }
   /* Never allow loading a DSO in a namespace which is empty.  Such

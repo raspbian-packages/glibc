@@ -36,7 +36,9 @@ IFUNC_SELECTOR (void)
   const struct cpu_features *cpu_features = __get_cpu_features ();
 
   if (X86_ISA_CPU_FEATURE_USABLE_P (cpu_features, AVX2)
+      && X86_ISA_CPU_FEATURE_USABLE_P (cpu_features, BMI1)
       && X86_ISA_CPU_FEATURE_USABLE_P (cpu_features, BMI2)
+      && X86_ISA_CPU_FEATURE_USABLE_P (cpu_features, LZCNT)
       && X86_ISA_CPU_FEATURES_ARCH_P (cpu_features,
 				      AVX_Fast_Unaligned_Load, ))
     {

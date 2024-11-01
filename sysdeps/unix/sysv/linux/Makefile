@@ -131,6 +131,7 @@ tests += tst-clone tst-clone2 tst-clone3 tst-fanotify tst-personality \
   tst-pidfd \
   tst-process_mrelease \
   tst-mount \
+  tst-linux-mremap1 \
   # tests
 
 # process_madvise requires CAP_SYS_ADMIN.
@@ -265,6 +266,14 @@ $(objpfx)tst-mount-consts.out: ../sysdeps/unix/sysv/linux/tst-mount-consts.py
 	  < /dev/null > $@ 2>&1; $(evaluate-test)
 $(objpfx)tst-mount-consts.out: $(sysdeps-linux-python-deps)
 
+tests-special += $(objpfx)tst-mount-compile.out
+$(objpfx)tst-mount-compile.out: ../sysdeps/unix/sysv/linux/tst-mount-compile.py
+	$(sysdeps-linux-python) \
+	  ../sysdeps/unix/sysv/linux/tst-mount-compile.py \
+	    $(sysdeps-linux-python-cc) \
+	  < /dev/null > $@ 2>&1; $(evaluate-test)
+$(objpfx)tst-mount-compile.out: $(sysdeps-linux-python-deps)
+
 tst-rseq-disable-ENV = GLIBC_TUNABLES=glibc.pthread.rseq=0
 
 endif # $(subdir) == misc
@@ -354,6 +363,8 @@ sysdep_headers += netinet/if_fddi.h netinet/if_tr.h \
 		  netrom/netrom.h netpacket/packet.h netrose/rose.h \
 		  neteconet/ec.h netiucv/iucv.h
 sysdep_routines += netlink_assert_response
+
+CFLAGS-check_pf.c += -fexceptions
 endif
 
 # Don't compile the ctype glue code, since there is no old non-GNU C library.
@@ -392,6 +403,7 @@ endif
 
 ifeq ($(subdir),elf)
 sysdep-rtld-routines += dl-brk dl-sbrk dl-getcwd dl-openat64 dl-opendir
+dl-routines += dl-rseq-symbols
 
 libof-lddlibc4 = lddlibc4
 
