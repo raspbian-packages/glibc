@@ -13,6 +13,7 @@ localedata/locale-en_DK.diff
 localedata/locale-zh_TW.diff
 localedata/tailor-iso14651_t1.diff
 localedata/submitted-es_MX-decimal_point.diff
+localedata/git-locale-hr_HR-euro.diff
 alpha/local-gcc4.1.diff
 alpha/submitted-dl-support.diff
 alpha/local-string-functions.diff
@@ -22,6 +23,7 @@ arm/local-sigaction.diff
 arm/unsubmitted-ldso-multilib.diff
 arm/local-arm-futex.diff
 arm/git-atomic-compiler-builtins.diff
+arm64/local-revert-aarch64-check-kernel-version-for-sve-ifuncs.diff
 hppa/local-inlining.diff
 # 2.37
 hurd-i386/git-htl-pthread-self-early.diff

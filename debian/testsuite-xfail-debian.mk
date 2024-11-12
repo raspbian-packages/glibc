@@ -11,6 +11,10 @@ test-xfail-tst-timer = yes
 # control, we'll just let it fail
 test-xfail-tst-create-detached = yes
 
+# Due to a bug/limitation in sbuild, this test fails when running unshare
+# chroot mode, see bug #1070003.
+test-xfail-tst-support_descriptors = yes
+
 ######################################################################
 # alpha (including optimized flavours)
 ######################################################################
