@@ -45,6 +45,8 @@ inline-headers = \
 interface-library := libhurduser
 user-interfaces := \
   hurd/auth \
+  hurd/auth_reply \
+  hurd/auth_request \
   hurd/crash \
   hurd/exec \
   hurd/exec_startup \
