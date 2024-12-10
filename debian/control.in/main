@@ -66,7 +66,7 @@ Multi-Arch: foreign
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Breaks: libc-dev-bin (<< 2.31-8)
 Replaces: libc-dev-bin (<< 2.31-8)
-Recommends: manpages, manpages-dev
+Recommends: libc-dev (= ${binary:Version}), manpages, manpages-dev
 Build-Profiles: <!stage1> <!stage2>
 Description: GNU C Library: Development tools
  This package contains development tools shipped by the GNU C

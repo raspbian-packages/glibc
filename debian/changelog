@@ -1,4 +1,4 @@
-glibc (2.40-3+rpi1) trixie-staging; urgency=medium
+glibc (2.40-4+rpi1) trixie-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -6,7 +6,27 @@ glibc (2.40-3+rpi1) trixie-staging; urgency=medium
   [changes brought forward from 2.37-12+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Tue, 17 Oct 2023 12:00:24 +0000]
   * Remove valgrind conflicts.
 
- -- Raspbian forward porter <root@raspbian.org>  Fri, 18 Oct 2024 12:21:08 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Tue, 10 Dec 2024 20:58:13 +0000
+
+glibc (2.40-4) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/testsuite-xfail-debian.mk: Update hurd xfails.
+  * debian/patches/hurd-i386/git-default_pager.h.diff: Ship
+    mach/default_pager.h again.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix memory corruption with ancient i386 binaries using stdio. Closes:
+      #1080244.
+    - Fix FTBFS with gcc-14 on hppa.  Closes: #1084052.
+    - Drop debian/patches/sparc/submitted-sparc-clone.diff (merged).
+  * debian/patches/arm/git-hwcap2-constants.diff: backport for upstream to
+    support HWCAP2 values on arm32.  Closes: #1086502.
+  * debian/control: add Recommends: libc-dev (= ${binary:Version}) to
+    libc-devtools.  Closes: #1087881.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sat, 23 Nov 2024 14:57:03 +0100
 
 glibc (2.40-3) unstable; urgency=medium
 

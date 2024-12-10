@@ -308,6 +308,7 @@ test-xfail-tst-open-tmpfile = yes
 tests-unsupported += test-bz22786 tst-strtod-overflow bug18240
 tests-unsupported += test-lfs tst-tzset
 tests-unsupported += tst-tls-allocation-failure-static-patched
+test-xfail-tst-tls-allocation-failure-static-patched = yes
 test-xfail-tst-vfprintf-width-prec-mem = yes
 test-xfail-tst-vfprintf-width-prec = yes
 
@@ -414,6 +415,9 @@ test-xfail-tst-malloc-alternate-path-malloc-hugetlb2 = yes
 test-xfail-tst-malloc-alternate-path-mcheck = yes
 test-xfail-tst-malloc-fork-deadlock = yes
 test-xfail-tst-shutdown = yes
+test-xfail-tst-dlopen-tlsreinit3 = yes
+test-xfail-tst-dlopen-tlsreinit4 = yes
+test-xfail-tst-truncate64 = yes
 
 # actually never succeded
 test-xfail-tst-create_format1 = yes

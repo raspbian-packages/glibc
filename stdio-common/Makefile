@@ -207,6 +207,7 @@ tests := \
   tst-cookie \
   tst-dprintf-length \
   tst-fdopen \
+  tst-fdopen2 \
   tst-ferror \
   tst-fgets \
   tst-fileno \
@@ -216,6 +217,7 @@ tests := \
   tst-fmemopen4 \
   tst-fphex \
   tst-fphex-wide \
+  tst-fread \
   tst-fseek \
   tst-fwrite \
   tst-gets \
