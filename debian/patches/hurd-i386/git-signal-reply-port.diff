@@ -1,0 +1,264 @@
+commit 7fa9e786b6e8f78675ecc30d7eaa200e1ee259b9
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Thu Dec 26 23:11:28 2024 +0100
+
+    hurd: Avoid asm statements which return
+    
+    They are not supposed to change flow control.
+    
+    This fixes miscompilation with gcc 14.2.0 which then drops code, see
+    https://lists.gnu.org/archive/html/bug-hurd/2024-11/msg00145.html
+
+diff --git a/sysdeps/mach/hurd/dl-sysdep.c b/sysdeps/mach/hurd/dl-sysdep.c
+index 6ba00e413d..6506994d02 100644
+--- a/sysdeps/mach/hurd/dl-sysdep.c
++++ b/sysdeps/mach/hurd/dl-sysdep.c
+@@ -231,6 +231,8 @@ _dl_sysdep_start (void **start_argptr,
+   abort ();
+ }
+ 
++RETURN_TO_TRAMPOLINE();
++
+ void
+ _dl_sysdep_start_cleanup (void)
+ {
+diff --git a/sysdeps/mach/hurd/i386/sigreturn.c b/sysdeps/mach/hurd/i386/sigreturn.c
+index 1333ca5b54..2efabac703 100644
+--- a/sysdeps/mach/hurd/i386/sigreturn.c
++++ b/sysdeps/mach/hurd/i386/sigreturn.c
+@@ -15,8 +15,6 @@
+    License along with the GNU C Library; if not, see
+    <https://www.gnu.org/licenses/>.  */
+ 
+-register int *sp asm ("%esp");
+-
+ #include <hurd.h>
+ #include <hurd/signal.h>
+ #include <hurd/msg.h>
+@@ -54,29 +52,36 @@ __sigreturn2 (int *usp, struct sigcontext *scp)
+                                  MACH_PORT_RIGHT_RECEIVE, -1);
+   THREAD_SETMEM (THREAD_SELF, reply_port, scp->sc_reply_port);
+ 
+-  sp = usp;
+-#define A(line) asm volatile (#line)
+-  /* The members in the sigcontext are arranged in this order
+-     so we can pop them easily.  */
+-
+-  /* Pop the segment registers (except %cs and %ss, done last).  */
+-  A (popl %gs);
+-  A (popl %fs);
+-  A (popl %es);
+-  A (popl %ds);
+-  /* Pop the general registers.  */
+-  A (popa);
+-  /* Pop the processor flags.  */
+-  A (popf);
+-  /* Return to the saved PC.  */
+-  A (ret);
+-
+-  /* Firewall.  */
+-  A (hlt);
+-#undef A
+-  __builtin_unreachable ();
++  void sigreturn2_trampoline (int *usp) __attribute__ ((__noreturn__));
++  sigreturn2_trampoline (usp);
+ }
+ 
++asm("sigreturn2_trampoline:\n"
++
++    /* Restore thread stack */
++    "movl 4(%esp),%esp\n"
++
++    /* The members in the sigcontext are arranged in this order
++       so we can pop them easily.  */
++
++    /* Pop the segment registers (except %cs and %ss, done last).  */
++    "popl %gs\n"
++    "popl %fs\n"
++    "popl %es\n"
++    "popl %ds\n"
++
++    /* Pop the general registers.  */
++    "popa\n"
++
++    /* Pop the processor flags.  */
++    "popf\n"
++
++    /* Return to the saved PC.  */
++    "ret\n"
++
++    /* Firewall.  */
++    "hlt\n");
++
+ int
+ __sigreturn (struct sigcontext *scp)
+ {
+@@ -142,16 +147,21 @@ __sigreturn (struct sigcontext *scp)
+     *--usp = 0;
+     *--usp = (int) __sigreturn2;
+ 
++
++    void sigreturn_trampoline (int *usp) __attribute__ ((__noreturn__));
++    sigreturn_trampoline (usp);
++  }
++}
++
++asm("sigreturn_trampoline:\n"
++
+     /* Restore thread stack */
+-    sp = usp;
++    "movl 4(%esp),%esp\n"
++
+     /* Return into __sigreturn2.  */
+-    asm volatile ("ret");
+-    /* Firewall.  */
+-    asm volatile ("hlt");
+-  }
++    "ret\n"
+ 
+-  /* NOTREACHED */
+-  return -1;
+-}
++    /* Firewall.  */
++    "hlt\n");
+ 
+ weak_alias (__sigreturn, sigreturn)
+diff --git a/sysdeps/mach/hurd/init-first.c b/sysdeps/mach/hurd/init-first.c
+index 5777c44c37..445f679575 100644
+--- a/sysdeps/mach/hurd/init-first.c
++++ b/sysdeps/mach/hurd/init-first.c
+@@ -249,6 +249,8 @@ _hurd_stack_setup (void **argptr)
+   _hurd_startup (argptr, &doinit);
+   __builtin_unreachable ();
+ }
++
++RETURN_TO_TRAMPOLINE();
+ #endif
+ 
+ 
+diff --git a/sysdeps/mach/hurd/x86_64/sigreturn.c b/sysdeps/mach/hurd/x86_64/sigreturn.c
+index 7a0193497d..5206cac44c 100644
+--- a/sysdeps/mach/hurd/x86_64/sigreturn.c
++++ b/sysdeps/mach/hurd/x86_64/sigreturn.c
+@@ -46,31 +46,32 @@ __sigreturn2 (struct hurd_sigstate *ss, uintptr_t *usp,
+                                  MACH_PORT_RIGHT_RECEIVE, -1);
+   THREAD_SETMEM (THREAD_SELF, reply_port, sc_reply_port);
+ 
+-  asm volatile (
++  void sigreturn2_trampoline (uintptr_t *usp) __attribute__ ((__noreturn__));
++  sigreturn2_trampoline (usp);
++}
++
++asm("sigreturn2_trampoline:\n"
+                 /* Point the stack to the register dump.  */
+-                "movq %0, %%rsp\n"
++                "movq %rdi, %rsp\n"
+                 /* Pop off the registers.  */
+-                "popq %%r8\n"
+-                "popq %%r9\n"
+-                "popq %%r10\n"
+-                "popq %%r11\n"
+-                "popq %%r12\n"
+-                "popq %%r13\n"
+-                "popq %%r14\n"
+-                "popq %%r15\n"
+-                "popq %%rdi\n"
+-                "popq %%rsi\n"
+-                "popq %%rbp\n"
+-                "popq %%rbx\n"
+-                "popq %%rdx\n"
+-                "popq %%rcx\n"
+-                "popq %%rax\n"
++                "popq %r8\n"
++                "popq %r9\n"
++                "popq %r10\n"
++                "popq %r11\n"
++                "popq %r12\n"
++                "popq %r13\n"
++                "popq %r14\n"
++                "popq %r15\n"
++                "popq %rdi\n"
++                "popq %rsi\n"
++                "popq %rbp\n"
++                "popq %rbx\n"
++                "popq %rdx\n"
++                "popq %rcx\n"
++                "popq %rax\n"
+                 "popfq\n"
+                 /* Restore %rip and %rsp with a single instruction.  */
+-                "retq $128" :
+-                : "rm" (usp));
+-  __builtin_unreachable ();
+-}
++                "retq $128" );
+ 
+ int
+ __sigreturn (struct sigcontext *scp)
+@@ -152,16 +153,18 @@ __sigreturn (struct sigcontext *scp)
+   *--usp = scp->sc_r9;
+   *--usp = scp->sc_r8;
+ 
++  void sigreturn_trampoline (struct hurd_sigstate *ss, uintptr_t *usp,
++                             mach_port_t sc_reply_port)
++                             __attribute__ ((__noreturn__));
++  sigreturn_trampoline (ss, usp, sc_reply_port);
++}
++
++asm("sigreturn_trampoline:\n"
+   /* Switch to the user's stack that we have just prepared, and call
+-     __sigreturn2.  Clobber "memory" to make sure GCC flushes the stack
+-     setup to actual memory.  We align the stack as per the ABI, but pass
++     __sigreturn2.  We align the stack as per the ABI, but pass
+      the original usp to __sigreturn2 as an argument.  */
+-  asm volatile ("movq %1, %%rsp\n"
+-                "andq $-16, %%rsp\n"
+-                "call __sigreturn2" :
+-                : "D" (ss), "S" (usp), "d" (sc_reply_port)
+-                : "memory");
+-  __builtin_unreachable ();
+-}
++                "movq %rsi, %rsp\n"
++                "andq $-16, %rsp\n"
++                "call __sigreturn2");
+ 
+ weak_alias (__sigreturn, sigreturn)
+diff --git a/sysdeps/mach/x86/sysdep.h b/sysdeps/mach/x86/sysdep.h
+index 63be5638e8..27d5dd60af 100644
+--- a/sysdeps/mach/x86/sysdep.h
++++ b/sysdeps/mach/x86/sysdep.h
+@@ -33,17 +33,29 @@
+ #undef ENTRY
+ #undef ALIGN
+ 
++#ifndef __ASSEMBLER__
++void return_to_trampoline(intptr_t *sp, void *pc, intptr_t retval)
++    __attribute__((__noreturn__));
++#endif
++
++#define RETURN_TO return_to_trampoline
++
+ #ifdef __x86_64__
+-#define RETURN_TO(sp, pc, retval) \
+-  asm volatile ("movq %0, %%rsp; jmp %*%1 # %2" \
+-		: : "g" (sp), "r" (pc), "a" (retval))
++#define RETURN_TO_TRAMPOLINE() \
++  asm ("return_to_trampoline:\n" \
++       "movq %rdx, %rax\n" \
++       "movq %rdi, %rsp\n" \
++       "jmp *%rsi\n");
+ /* This should be rearranged, but at the moment this file provides
+    the most useful definitions for assembler syntax details.  */
+ #include <sysdeps/unix/x86_64/sysdep.h>
+ #else
+-#define RETURN_TO(sp, pc, retval) \
+-  asm volatile ("movl %0, %%esp; jmp %*%1 # %2" \
+-		: : "g" (sp), "r" (pc), "a" (retval))
++#define RETURN_TO_TRAMPOLINE() \
++  asm ("return_to_trampoline:\n" \
++       "movl 12(%esp), %eax\n" \
++       "movl 8(%esp), %edx\n" \
++       "movl 4(%esp), %esp\n" \
++       "jmp *%edx\n");
+ #include <sysdeps/unix/i386/sysdep.h>
+ #endif
+ 

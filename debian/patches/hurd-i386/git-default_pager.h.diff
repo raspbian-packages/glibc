@@ -1,0 +1,38 @@
+commit e5c2738f17602949ac29a2c296cc3555cb06b7c3
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Wed Nov 13 01:33:32 2024 +0100
+
+    Revert "hurd: Stop depending on the default_pager stubs provided by gnumach"
+    
+    This reverts commit f7f7dd8009275504b211c170caf5bce50fa472ac.
+    
+    default_pager is actually also used in e.g. xosview.
+
+diff --git a/sysdeps/mach/configure b/sysdeps/mach/configure
+index cd21b26df4..abfe084fda 100644
+--- a/sysdeps/mach/configure
++++ b/sysdeps/mach/configure
+@@ -279,7 +279,8 @@ mach_interface_list=
+ for ifc in mach mach4 gnumach \
+ 	   clock clock_priv host_priv host_security ledger lock_set \
+ 	   processor processor_set task task_notify thread_act vm_map \
+-	   memory_object memory_object_default i386/mach_i386 x86_64/mach_i386 \
++	   memory_object memory_object_default default_pager \
++	   i386/mach_i386 x86_64/mach_i386 \
+ 	   ; do
+   as_ac_Header=`printf "%s\n" "ac_cv_header_mach/${ifc}.defs" | sed "$as_sed_sh"`
+ ac_fn_c_check_header_preproc "$LINENO" "mach/${ifc}.defs" "$as_ac_Header"
+diff --git a/sysdeps/mach/configure.ac b/sysdeps/mach/configure.ac
+index 648035e832..6dfa2b3518 100644
+--- a/sysdeps/mach/configure.ac
++++ b/sysdeps/mach/configure.ac
+@@ -63,7 +63,8 @@ mach_interface_list=
+ for ifc in mach mach4 gnumach \
+ 	   clock clock_priv host_priv host_security ledger lock_set \
+ 	   processor processor_set task task_notify thread_act vm_map \
+-	   memory_object memory_object_default i386/mach_i386 x86_64/mach_i386 \
++	   memory_object memory_object_default default_pager \
++	   i386/mach_i386 x86_64/mach_i386 \
+ 	   ; do
+   AC_CHECK_HEADER(mach/${ifc}.defs, [dnl
+   mach_interface_list="$mach_interface_list $ifc"],, -)

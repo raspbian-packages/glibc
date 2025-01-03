@@ -1,0 +1,284 @@
+commit 8dc3f4f8adcfbc991b1677464dd7cd485f4e6d85
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Wed Jul 17 02:03:13 2024 +0200
+
+    hurd: Fix missing pthread_ compat symbol in libc
+    
+    5476f8cd2e68 ("htl: move pthread_self info libc.") and
+    9dfa2562162b ("htl: move pthread_equal into libc") to
+    1dc0bc8f0748 ("htl: move pthread_attr_setdetachstate into libc")
+    moved some pthread_ symbols from libpthread.so to libc.so, but missed
+    adding the compat version like 5476f8cd2e68 ("htl: move pthread_self
+    info libc.") did: libc already had these symbols as forwards,
+    but versioned GLIBC_2.21, while the symbols in libpthread.so were
+    versioned GLIBC_2.12.
+    
+    To fix running executables built before this, we thus have to add the
+    GLIBC_2.12 version, otherwise execution fails with e.g.
+    
+    /usr/lib/i386-gnu/libglib-2.0.so: symbol lookup error: /usr/lib/i386-gnu/libglib-2.0.so: undefined symbol: pthread_attr_setinheritsched, version GLIBC_2.12
+
+diff --git a/htl/Versions b/htl/Versions
+index 69b79b4f1b..949c1867fe 100644
+--- a/htl/Versions
++++ b/htl/Versions
+@@ -3,6 +3,16 @@ libc {
+   GLIBC_2.12 {
+     pthread_self;
+     __pthread_self;
++    pthread_attr_getdetachstate;
++    pthread_attr_getinheritsched;
++    pthread_attr_getschedparam;
++    pthread_attr_getschedpolicy;
++    pthread_attr_setdetachstate;
++    pthread_attr_setinheritsched;
++    pthread_attr_setschedpolicy;
++    pthread_equal;
++    pthread_getschedparam;
++    pthread_setschedparam;
+   }
+ 
+   GLIBC_2.21 {
+diff --git a/sysdeps/htl/pt-attr-getdetachstate.c b/sysdeps/htl/pt-attr-getdetachstate.c
+index 8b077e38f3..da27398260 100644
+--- a/sysdeps/htl/pt-attr-getdetachstate.c
++++ b/sysdeps/htl/pt-attr-getdetachstate.c
+@@ -17,6 +17,7 @@
+    <https://www.gnu.org/licenses/>.  */
+ 
+ #include <pthread.h>
++#include <shlib-compat.h>
+ #include <pt-internal.h>
+ 
+ int
+@@ -26,4 +27,8 @@ __pthread_attr_getdetachstate (const pthread_attr_t *attr, int *detachstate)
+   return 0;
+ }
+ 
+-weak_alias (__pthread_attr_getdetachstate, pthread_attr_getdetachstate);
++versioned_symbol (libc, __pthread_attr_getdetachstate, pthread_attr_getdetachstate, GLIBC_2_21);
++
++#if OTHER_SHLIB_COMPAT (libpthread, GLIBC_2_12, GLIBC_2_21)
++compat_symbol (libc, __pthread_attr_getdetachstate, pthread_attr_getdetachstate, GLIBC_2_12);
++#endif
+diff --git a/sysdeps/htl/pt-attr-getinheritsched.c b/sysdeps/htl/pt-attr-getinheritsched.c
+index 078face3eb..ba02e202c3 100644
+--- a/sysdeps/htl/pt-attr-getinheritsched.c
++++ b/sysdeps/htl/pt-attr-getinheritsched.c
+@@ -17,6 +17,7 @@
+    <https://www.gnu.org/licenses/>.  */
+ 
+ #include <pthread.h>
++#include <shlib-compat.h>
+ #include <pt-internal.h>
+ 
+ int
+@@ -26,4 +27,8 @@ __pthread_attr_getinheritsched (const pthread_attr_t *attr, int *inheritsched)
+   return 0;
+ }
+ 
+-weak_alias (__pthread_attr_getinheritsched, pthread_attr_getinheritsched);
++versioned_symbol (libc, __pthread_attr_getinheritsched, pthread_attr_getinheritsched, GLIBC_2_21);
++
++#if OTHER_SHLIB_COMPAT (libpthread, GLIBC_2_12, GLIBC_2_21)
++compat_symbol (libc, __pthread_attr_getinheritsched, pthread_attr_getinheritsched, GLIBC_2_12);
++#endif
+diff --git a/sysdeps/htl/pt-attr-getschedparam.c b/sysdeps/htl/pt-attr-getschedparam.c
+index 3fa001871e..35eeedc442 100644
+--- a/sysdeps/htl/pt-attr-getschedparam.c
++++ b/sysdeps/htl/pt-attr-getschedparam.c
+@@ -19,6 +19,7 @@
+ #include <pthread.h>
+ #include <sched.h>
+ #include <string.h>
++#include <shlib-compat.h>
+ 
+ #include <pt-internal.h>
+ 
+@@ -30,4 +31,8 @@ __pthread_attr_getschedparam (const pthread_attr_t *attr,
+   return 0;
+ }
+ 
+-weak_alias (__pthread_attr_getschedparam, pthread_attr_getschedparam);
++versioned_symbol (libc, __pthread_attr_getschedparam, pthread_attr_getschedparam, GLIBC_2_21);
++
++#if OTHER_SHLIB_COMPAT (libpthread, GLIBC_2_12, GLIBC_2_21)
++compat_symbol (libc, __pthread_attr_getschedparam, pthread_attr_getschedparam, GLIBC_2_12);
++#endif
+diff --git a/sysdeps/htl/pt-attr-getschedpolicy.c b/sysdeps/htl/pt-attr-getschedpolicy.c
+index 8b4cc7ce48..5deaf01c5e 100644
+--- a/sysdeps/htl/pt-attr-getschedpolicy.c
++++ b/sysdeps/htl/pt-attr-getschedpolicy.c
+@@ -17,6 +17,7 @@
+    <https://www.gnu.org/licenses/>.  */
+ 
+ #include <pthread.h>
++#include <shlib-compat.h>
+ #include <pt-internal.h>
+ 
+ int
+@@ -26,4 +27,8 @@ __pthread_attr_getschedpolicy (const pthread_attr_t *attr, int *policy)
+   return 0;
+ }
+ 
+-weak_alias (__pthread_attr_getschedpolicy, pthread_attr_getschedpolicy);
++versioned_symbol (libc, __pthread_attr_getschedpolicy, pthread_attr_getschedpolicy, GLIBC_2_21);
++
++#if OTHER_SHLIB_COMPAT (libpthread, GLIBC_2_12, GLIBC_2_21)
++compat_symbol (libc, __pthread_attr_getschedpolicy, pthread_attr_getschedpolicy, GLIBC_2_12);
++#endif
+diff --git a/sysdeps/htl/pt-attr-setdetachstate.c b/sysdeps/htl/pt-attr-setdetachstate.c
+index b40557f816..26b6f91dc6 100644
+--- a/sysdeps/htl/pt-attr-setdetachstate.c
++++ b/sysdeps/htl/pt-attr-setdetachstate.c
+@@ -17,6 +17,7 @@
+    <https://www.gnu.org/licenses/>.  */
+ 
+ #include <pthread.h>
++#include <shlib-compat.h>
+ #include <pt-internal.h>
+ 
+ int
+@@ -35,4 +36,8 @@ __pthread_attr_setdetachstate (pthread_attr_t *attr, int detachstate)
+   return 0;
+ }
+ 
+-weak_alias (__pthread_attr_setdetachstate, pthread_attr_setdetachstate);
++versioned_symbol (libc, __pthread_attr_setdetachstate, pthread_attr_setdetachstate, GLIBC_2_21);
++
++#if OTHER_SHLIB_COMPAT (libpthread, GLIBC_2_12, GLIBC_2_21)
++compat_symbol (libc, __pthread_attr_setdetachstate, pthread_attr_setdetachstate, GLIBC_2_12);
++#endif
+diff --git a/sysdeps/htl/pt-attr-setinheritsched.c b/sysdeps/htl/pt-attr-setinheritsched.c
+index 533b805b12..4ad0bb1dec 100644
+--- a/sysdeps/htl/pt-attr-setinheritsched.c
++++ b/sysdeps/htl/pt-attr-setinheritsched.c
+@@ -17,6 +17,7 @@
+    <https://www.gnu.org/licenses/>.  */
+ 
+ #include <pthread.h>
++#include <shlib-compat.h>
+ #include <pt-internal.h>
+ 
+ int
+@@ -35,4 +36,8 @@ __pthread_attr_setinheritsched (pthread_attr_t *attr, int inheritsched)
+   return 0;
+ }
+ 
+-weak_alias (__pthread_attr_setinheritsched, pthread_attr_setinheritsched);
++versioned_symbol (libc, __pthread_attr_setinheritsched, pthread_attr_setinheritsched, GLIBC_2_21);
++
++#if OTHER_SHLIB_COMPAT (libpthread, GLIBC_2_12, GLIBC_2_21)
++compat_symbol (libc, __pthread_attr_setinheritsched, pthread_attr_setinheritsched, GLIBC_2_12);
++#endif
+diff --git a/sysdeps/htl/pt-attr-setschedpolicy.c b/sysdeps/htl/pt-attr-setschedpolicy.c
+index d8086e8316..9648c774d0 100644
+--- a/sysdeps/htl/pt-attr-setschedpolicy.c
++++ b/sysdeps/htl/pt-attr-setschedpolicy.c
+@@ -17,6 +17,7 @@
+    <https://www.gnu.org/licenses/>.  */
+ 
+ #include <pthread.h>
++#include <shlib-compat.h>
+ #include <pt-internal.h>
+ 
+ int
+@@ -39,4 +40,8 @@ __pthread_attr_setschedpolicy (pthread_attr_t *attr, int policy)
+   return 0;
+ }
+ 
+-weak_alias (__pthread_attr_setschedpolicy, pthread_attr_setschedpolicy);
++versioned_symbol (libc, __pthread_attr_setschedpolicy, pthread_attr_setschedpolicy, GLIBC_2_21);
++
++#if OTHER_SHLIB_COMPAT (libpthread, GLIBC_2_12, GLIBC_2_21)
++compat_symbol (libc, __pthread_attr_setschedpolicy, pthread_attr_setschedpolicy, GLIBC_2_12);
++#endif
+diff --git a/sysdeps/htl/pt-equal.c b/sysdeps/htl/pt-equal.c
+index 6411110608..7727cca370 100644
+--- a/sysdeps/htl/pt-equal.c
++++ b/sysdeps/htl/pt-equal.c
+@@ -17,6 +17,7 @@
+    <https://www.gnu.org/licenses/>.  */
+ 
+ #include <pthread.h>
++#include <shlib-compat.h>
+ #include <pt-internal.h>
+ 
+ /* Return true if __T1 and __T2 both name the same thread.  Otherwise,
+@@ -27,4 +28,8 @@ __pthread_equal (pthread_t __t1, pthread_t __t2)
+   return __t1 == __t2;
+ }
+ 
+-weak_alias (__pthread_equal, pthread_equal);
++versioned_symbol (libc, __pthread_equal, pthread_equal, GLIBC_2_21);
++
++#if OTHER_SHLIB_COMPAT (libpthread, GLIBC_2_12, GLIBC_2_21)
++compat_symbol (libc, __pthread_equal, pthread_equal, GLIBC_2_12);
++#endif
+diff --git a/sysdeps/htl/pt-getschedparam.c b/sysdeps/htl/pt-getschedparam.c
+index 8ec3d54bd4..0c6a2d0ab3 100644
+--- a/sysdeps/htl/pt-getschedparam.c
++++ b/sysdeps/htl/pt-getschedparam.c
+@@ -17,6 +17,7 @@
+    <https://www.gnu.org/licenses/>.  */
+ 
+ #include <pthread.h>
++#include <shlib-compat.h>
+ #include <pt-internal.h>
+ 
+ int
+@@ -28,4 +29,8 @@ __pthread_getschedparam (pthread_t thread, int *policy,
+   return 0;
+ }
+ 
+-weak_alias (__pthread_getschedparam, pthread_getschedparam);
++versioned_symbol (libc, __pthread_getschedparam, pthread_getschedparam, GLIBC_2_21);
++
++#if OTHER_SHLIB_COMPAT (libpthread, GLIBC_2_12, GLIBC_2_21)
++compat_symbol (libc, __pthread_getschedparam, pthread_getschedparam, GLIBC_2_12);
++#endif
+diff --git a/sysdeps/htl/pt-setschedparam.c b/sysdeps/htl/pt-setschedparam.c
+index aea4e7b0e4..5594c9f390 100644
+--- a/sysdeps/htl/pt-setschedparam.c
++++ b/sysdeps/htl/pt-setschedparam.c
+@@ -17,6 +17,7 @@
+    <https://www.gnu.org/licenses/>.  */
+ 
+ #include <pthread.h>
++#include <shlib-compat.h>
+ #include <pt-internal.h>
+ 
+ int
+@@ -26,5 +27,9 @@ __pthread_setschedparam (pthread_t thread, int policy,
+   return ENOSYS;
+ }
+ 
+-weak_alias (__pthread_setschedparam, pthread_setschedparam);
++versioned_symbol (libc, __pthread_setschedparam, pthread_setschedparam, GLIBC_2_21);
+ stub_warning (pthread_setschedparam)
++
++#if OTHER_SHLIB_COMPAT (libpthread, GLIBC_2_12, GLIBC_2_21)
++compat_symbol (libc, __pthread_setschedparam, pthread_setschedparam, GLIBC_2_12);
++#endif
+diff --git a/sysdeps/mach/hurd/i386/libc.abilist b/sysdeps/mach/hurd/i386/libc.abilist
+index 2adf98e71d..dc2c6b505b 100644
+--- a/sysdeps/mach/hurd/i386/libc.abilist
++++ b/sysdeps/mach/hurd/i386/libc.abilist
+@@ -29,7 +29,17 @@ GLIBC_2.11 mkostemps64 F
+ GLIBC_2.11 mkstemps F
+ GLIBC_2.11 mkstemps64 F
+ GLIBC_2.12 __pthread_self F
++GLIBC_2.12 pthread_attr_getdetachstate F
++GLIBC_2.12 pthread_attr_getinheritsched F
++GLIBC_2.12 pthread_attr_getschedparam F
++GLIBC_2.12 pthread_attr_getschedpolicy F
++GLIBC_2.12 pthread_attr_setdetachstate F
++GLIBC_2.12 pthread_attr_setinheritsched F
++GLIBC_2.12 pthread_attr_setschedpolicy F
++GLIBC_2.12 pthread_equal F
++GLIBC_2.12 pthread_getschedparam F
+ GLIBC_2.12 pthread_self F
++GLIBC_2.12 pthread_setschedparam F
+ GLIBC_2.13 __fentry__ F
+ GLIBC_2.14 syncfs F
+ GLIBC_2.15 __fdelt_chk F
