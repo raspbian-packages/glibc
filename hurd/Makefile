@@ -115,6 +115,7 @@ routines = \
   set-host \
   setauth \
   seteuids \
+  sysvshm \
   task2pid \
   vpprintf \
   xattr \
