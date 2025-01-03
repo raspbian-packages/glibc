@@ -1,0 +1,27 @@
+commit 251843e16fcec4e2b328577be66dcb2f3fa1c1e7
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Tue Aug 20 16:16:25 2024 +0200
+
+    malloc: Link threading tests with $(shared-thread-library)
+    
+    Fixes build failures on Hurd.
+
+diff --git a/malloc/Makefile b/malloc/Makefile
+index ccc96ef6b2..1630aaf6ac 100644
+--- a/malloc/Makefile
++++ b/malloc/Makefile
+@@ -420,8 +420,14 @@ $(objpfx)tst-mallocstate-malloc-check: $(objpfx)libc_malloc_debug.so
+ 
+ $(objpfx)tst-aligned-alloc-random.out: $(objpfx)tst-aligned_alloc-lib.so
+ $(objpfx)tst-aligned-alloc-random-thread: $(shared-thread-library)
++$(objpfx)tst-aligned-alloc-random-thread-malloc-check: $(shared-thread-library)
++$(objpfx)tst-aligned-alloc-random-thread-malloc-hugetlb1: $(shared-thread-library)
++$(objpfx)tst-aligned-alloc-random-thread-malloc-hugetlb2: $(shared-thread-library)
+ $(objpfx)tst-aligned-alloc-random-thread.out: $(objpfx)tst-aligned_alloc-lib.so
+ $(objpfx)tst-aligned-alloc-random-thread-cross: $(shared-thread-library)
++$(objpfx)tst-aligned-alloc-random-thread-cross-malloc-check: $(shared-thread-library)
++$(objpfx)tst-aligned-alloc-random-thread-cross-malloc-hugetlb1: $(shared-thread-library)
++$(objpfx)tst-aligned-alloc-random-thread-cross-malloc-hugetlb2: $(shared-thread-library)
+ $(objpfx)tst-aligned-alloc-random-thread-cross.out: $(objpfx)tst-aligned_alloc-lib.so
+ $(objpfx)tst-malloc-random.out: $(objpfx)tst-aligned_alloc-lib.so
+ 
