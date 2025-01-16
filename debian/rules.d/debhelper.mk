@@ -73,7 +73,7 @@ endif
 	sh ./debian/shlibs-add-udebs $(curpass)
 
 	dh_installdeb -p$(curpass)
-	dh_shlibdeps -p$(curpass)
+	dh_shlibdeps -p$(curpass) $(foreach path,$($(lastword $(subst -, ,$(curpass)))_slibdir),-l/usr$(path))
 	dh_gencontrol -p$(curpass)
 	dh_md5sums -p$(curpass)
 

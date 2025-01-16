@@ -28,6 +28,8 @@ hurd-i386/git-pthread_symbols.diff
 hurd-i386/git-tst-aligned-alloc-random-thread.diff
 hurd-i386/git-tst-aligned-alloc-random-thread-mcheck.diff
 hurd-i386/git-default_pager.h.diff
+hurd-i386/git-MAP_NORESERVE.diff
+hurd-i386/git-signal-reply-port.diff
 hurd-i386/local-intr-msg-clobber.diff
 hurd-i386/local-enable-ldconfig.diff
 hurd-i386/tg-sysvshm.diff
@@ -87,4 +89,6 @@ any/git-iconv-Preserve-iconv-c-error-exit-on-invalid-inputs-.patch
 any/git-iconv-Support-in-place-conversions-bug-10460-bug-320.patch
 any/git-iconv-Multiple-on-command-line-should-not-fail-bug-3.patch
 any/git-iconv-Input-buffering-for-the-iconv-program-bug-6050.patch
+any/git-iconv-do-not-report-error-exit-with-transliteration-.patch
+any/git-posix-fix-system-when-a-child-cannot-be-created-BZ-3.patch
 auto-2.34-7+rpi1-de346af12a6cb5181ed2ab174fb35c88f3b64f4b-1663212931

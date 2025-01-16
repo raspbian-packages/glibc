@@ -1,4 +1,4 @@
-glibc (2.40-4+rpi1) trixie-staging; urgency=medium
+glibc (2.40-5+rpi1) trixie-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -6,7 +6,36 @@ glibc (2.40-4+rpi1) trixie-staging; urgency=medium
   [changes brought forward from 2.37-12+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Tue, 17 Oct 2023 12:00:24 +0000]
   * Remove valgrind conflicts.
 
- -- Raspbian forward porter <root@raspbian.org>  Tue, 10 Dec 2024 20:58:13 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 16 Jan 2025 15:04:05 +0000
+
+glibc (2.40-5) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/git-MAP_NORESERVE.diff: Add MAP_NORESERVE flag.
+  * debian/patches/hurd-i386/git-signal-reply-port.diff: Fix hurd build
+    against gcc 14.
+
+  [ Bjarni Ingi Gislason ]
+  * debian/local/manpages/update-locale.8: fix issues reported by troff.
+    Closes: #1088003.
+
+  [ Aurelien Jarno ]
+  * debian/patches/any/git-iconv-do-not-report-*.patch: backport iconv return
+    code with transliteration fix from upstream.  Closes: #1087670.
+  * debian/debhelper.in/locales.templates: add a note to clarify that the C,
+    C.UTF-8 and POSIX locales do not need to be generated.  Closes: #1091473.
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+  * patches/any/git-posix-fix-system-when-a-child-cannot-be-created-BZ-3.patch:
+    backport patch from upstream to fix return value of system() when a child
+    process cannot be created.  Closes: #1088964.
+  * debian/rules.d/debhelper.mk: explicitly pass the library path to
+    dh_shlibdeps for multilib packages, to fix a FTBFS with rebootstrap which
+    does not install the g++-XX-multilib build-dependency.  Closes: #1088166.
+
+  [ Carles Pina i Estany ]
+  * Update Catalan debconf translation.  Closes: #1091705.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Fri, 03 Jan 2025 11:56:38 +0100
 
 glibc (2.40-4) unstable; urgency=medium
 

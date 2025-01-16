@@ -233,6 +233,8 @@ _dl_sysdep_start (void **start_argptr,
   abort ();
 }
 
+RETURN_TO_TRAMPOLINE();
+
 void
 _dl_sysdep_start_cleanup (void)
 {

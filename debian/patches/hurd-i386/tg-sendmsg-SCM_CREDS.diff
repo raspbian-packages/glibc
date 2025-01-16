@@ -16,6 +16,8 @@ Samuel Thibault  <samuel.thibault@ens-lyon.org>
 	* hurd/Makefile (user-interfaces): Add auth_request and
 	auth_reply.
 
+FIXME: this doesn't actually check uid/gid.
+
 ---
  hurd/Makefile               |    2 
  sysdeps/mach/hurd/recvmsg.c |  137 ++++++++++++++++++++++++++++++++++++++++++++
