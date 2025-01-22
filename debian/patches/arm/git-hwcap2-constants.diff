@@ -1,0 +1,31 @@
+commit 273694cd78a2e12f44f8aacc88ec15853feb759a
+Author: Aurelien Jarno <aurelien@aurel32.net>
+Date:   Sat Nov 2 10:52:54 2024 +0100
+
+    Add Arm HWCAP2_* constants from Linux 3.15 and 6.2 to <bits/hwcap.h>
+    
+    Linux 3.15 and 6.2 added HWCAP2_* values for Arm. These bits have
+    already been added to dl-procinfo.{c,h} in commits 9aea0cb842f02 and
+    8ebe9c0b38a9. Also add them to <bits/hwcap.h> so that they can be used
+    in user code. For example, for checking bits in the value returned by
+    getauxval(AT_HWCAP2).
+    
+    Signed-off-by: Aurelien Jarno <aurelien@aurel32.net>
+    Reviewed-by: Yury Khrustalev <yury.khrustalev@arm.com>
+
+diff --git a/sysdeps/unix/sysv/linux/arm/bits/hwcap.h b/sysdeps/unix/sysv/linux/arm/bits/hwcap.h
+index b104de473c..7b573facb9 100644
+--- a/sysdeps/unix/sysv/linux/arm/bits/hwcap.h
++++ b/sysdeps/unix/sysv/linux/arm/bits/hwcap.h
+@@ -49,3 +49,11 @@
+ #define HWCAP_ASIMDFHM		33554432
+ #define HWCAP_ASIMDBF16		67108864
+ #define HWCAP_I8MM		134217728
++
++#define HWCAP2_AES		1
++#define HWCAP2_PMULL		2
++#define HWCAP2_SHA1		4
++#define HWCAP2_SHA2		8
++#define HWCAP2_CRC32		16
++#define HWCAP2_SB		32
++#define HWCAP2_SSBS		64

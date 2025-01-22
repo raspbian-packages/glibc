@@ -1,0 +1,21 @@
+commit d92a5e1dad39ab0ac09ab1beeb055c1f1d981cd4
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Mon Nov 25 00:54:26 2024 +0100
+
+    hurd: Add MAP_NORESERVE mmap flag
+    
+    This is already the current default behavior, which we will change with
+    overcommit support addition.
+
+diff --git a/sysdeps/mach/hurd/bits/mman_ext.h b/sysdeps/mach/hurd/bits/mman_ext.h
+index d5a371e39e..6baee1ea74 100644
+--- a/sysdeps/mach/hurd/bits/mman_ext.h
++++ b/sysdeps/mach/hurd/bits/mman_ext.h
+@@ -24,6 +24,7 @@
+ # define SHM_ANON	((const char *) 1)
+ 
+ # define MAP_32BIT	0x1000	/* Map in the lower 2 GB.  */
++# define MAP_NORESERVE	0x2000	/* Don't check for reservations.  */
+ # define MAP_EXCL	0x4000	/* With MAP_FIXED, don't replace existing mappings.  */
+ 
+ # define MAP_TRYFIXED		(MAP_FIXED | MAP_EXCL)	/* BSD name.  */
