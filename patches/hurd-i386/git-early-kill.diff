@@ -1,0 +1,38 @@
+commit 0c4856250814d5fe1222a39c6954c4b5d79a829c
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Sun Jan 12 00:09:44 2025 +0100
+
+    hurd: Cope with signals sent to ourself early
+    
+    Typically when aborting during initialization, before signals are set
+    up.
+
+diff --git a/sysdeps/mach/hurd/kill.c b/sysdeps/mach/hurd/kill.c
+index 1e006ee1db..8cba3cc4ea 100644
+--- a/sysdeps/mach/hurd/kill.c
++++ b/sysdeps/mach/hurd/kill.c
+@@ -17,7 +17,9 @@
+ 
+ #include <errno.h>
+ #include <sys/types.h>
++#include <sys/wait.h>
+ #include <signal.h>
++#include <unistd.h>
+ #include <hurd.h>
+ #include <hurd/port.h>
+ #include <hurd/signal.h>
+@@ -34,6 +36,14 @@ __kill (pid_t pid, int sig)
+   mach_port_t proc;
+   struct hurd_userlink ulink;
+ 
++  if (pid == __getpid () && _hurd_msgport == MACH_PORT_NULL)
++    {
++      /* We are trying to kill ourself but we have not even initialized our own
++         msgport yet.  Abort by hand.  */
++      _exit (127);
++      /* NOTREACHED */
++    }
++
+   void kill_pid (pid_t pid) /* Kill one PID.  */
+     {
+       /* SIGKILL is not delivered as a normal signal.

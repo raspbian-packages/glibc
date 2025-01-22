@@ -1,0 +1,85 @@
+From 6fd215d6ae9a4a6e75f7ea18d89db6a10f158eaf Mon Sep 17 00:00:00 2001
+From: Aurelien Jarno <aurelien@aurel32.net>
+Date: Thu, 19 Dec 2024 23:55:15 +0100
+Subject: [PATCH] posix: fix system when a child cannot be created [BZ #32450]
+
+POSIX states that "if a child process cannot be created, or if the
+termination status for the command language interpreter cannot be
+obtained, system() shall return -1 and set errno to indicate the error."
+
+In the glibc implementation it could happen when posix_spawn fails,
+which happens when the underlying fork, vfork, or clone call fails. They
+could fail with EAGAIN and ENOMEM.
+
+Resolves: BZ #32450
+Signed-off-by: Aurelien Jarno <aurelien@aurel32.net>
+Reviewed-by: Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+---
+ stdlib/tst-system.c    | 21 +++++++++++++++++++++
+ sysdeps/posix/system.c | 10 +++++++---
+ 2 files changed, 28 insertions(+), 3 deletions(-)
+
+diff --git a/stdlib/tst-system.c b/stdlib/tst-system.c
+index 1581a06e68..d37902088a 100644
+--- a/stdlib/tst-system.c
++++ b/stdlib/tst-system.c
+@@ -20,6 +20,7 @@
+ #include <string.h>
+ #include <signal.h>
+ #include <paths.h>
++#include <sys/resource.h>
+ 
+ #include <support/capture_subprocess.h>
+ #include <support/check.h>
+@@ -194,6 +195,26 @@ do_test (void)
+     xpthread_join (long_sleep_thread);
+   }
+ 
++  {
++    struct rlimit rlimit_orig, rlimit_new;
++
++    if (getrlimit (RLIMIT_NPROC, &rlimit_orig) != 0)
++      FAIL_EXIT1 ("getrlimit (RLIMIT_NPROC) failed: %m");
++
++    /* Force failure for the system call */
++    rlimit_new.rlim_cur = 0;
++    rlimit_new.rlim_max = rlimit_orig.rlim_max;
++
++    if (setrlimit (RLIMIT_NPROC, &rlimit_new) != 0)
++      FAIL_EXIT1 ("setrlimit (RLIMIT_NPROC) failed: %m");
++
++    TEST_COMPARE (system (""), -1);
++
++    /* Restore NPROC limit */
++    if (setrlimit (RLIMIT_NPROC, &rlimit_orig) != 0)
++      FAIL_EXIT1 ("setrlimit (RLIMIT_NPROC) failed: %m");
++  }
++
+   TEST_COMPARE (system (""), 0);
+ 
+   return 0;
+diff --git a/sysdeps/posix/system.c b/sysdeps/posix/system.c
+index be32704280..f3e173e465 100644
+--- a/sysdeps/posix/system.c
++++ b/sysdeps/posix/system.c
+@@ -175,10 +175,14 @@ do_system (const char *line)
+       __libc_cleanup_region_end (0);
+ #endif
+     }
++  else if (ret == EAGAIN || ret == ENOMEM)
++    /* POSIX states that failure to create a child process should
++       return -1.  */
++    status = -1;
+   else
+-   /* POSIX states that failure to execute the shell should return
+-      as if the shell had terminated using _exit(127).  */
+-   status = W_EXITCODE (127, 0);
++    /* POSIX states that failure to execute the shell should return
++       as if the shell had terminated using _exit(127).  */
++    status = W_EXITCODE (127, 0);
+ 
+   /* sigaction can not fail with SIGINT/SIGQUIT used with old
+      disposition.  Same applies for sigprocmask.  */
+-- 
+2.45.2
+

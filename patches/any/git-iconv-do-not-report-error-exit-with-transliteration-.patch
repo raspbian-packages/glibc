@@ -1,0 +1,115 @@
+From 9a4b0eaf726f5404c6683d5c7c5e86f61c3f3fbc Mon Sep 17 00:00:00 2001
+From: Aurelien Jarno <aurelien@aurel32.net>
+Date: Sat, 14 Dec 2024 11:44:11 +0100
+Subject: [PATCH] iconv: do not report error exit with transliteration [BZ
+ #32448]
+
+Commit 6cbf845fcdc7 ("iconv: Preserve iconv -c error exit on invalid
+inputs (bug 32046)") changed the error exit code to report an error when
+an input character has been transliterated. This looks like a bug as the
+moto in the iconv program is to report an error code in the same
+condition as the iconv() function.
+
+This happens because the STANDARD_TO_LOOP_ERR_HANDLER macro sets a
+default value for result and later updates it if the transliteration
+succeed. With the changes, setting the default value also marks the
+input as illegal.
+
+Fix that by setting up the default value of result only when the
+transliteration is not used. This works because __gconv_transliterate()
+calls __gconv_mark_illegal_input() to return an error. At the same time
+also fix the typo outself -> ourselves.
+
+Fixes: 6cbf845fcdc7
+Resolves: BZ #32448
+Signed-off-by: Aurelien Jarno <aurelien@aurel32.net>
+---
+ iconv/loop.c            | 13 ++++++++-----
+ iconv/tst-iconv_prog.sh | 24 +++++++++++++-----------
+ 2 files changed, 21 insertions(+), 16 deletions(-)
+
+diff --git a/iconv/loop.c b/iconv/loop.c
+index 199fb28326..7149cec9b2 100644
+--- a/iconv/loop.c
++++ b/iconv/loop.c
+@@ -141,12 +141,13 @@
+    points.  */
+ #define STANDARD_TO_LOOP_ERR_HANDLER(Incr) \
+   {									      \
+-    result = __gconv_mark_illegal_input (step_data);			      \
+-									      \
+     if (irreversible == NULL)						      \
+-      /* This means we are in call from __gconv_transliterate.  In this	      \
+-	 case we are not doing any error recovery outself.  */		      \
+-      break;								      \
++      {									      \
++	/* This means we are in call from __gconv_transliterate.  In this     \
++	   case we are not doing any error recovery ourselves.  */	      \
++	result = __gconv_mark_illegal_input (step_data);		      \
++	break;								      \
++      }									      \
+ 									      \
+     /* If needed, flush any conversion state, so that __gconv_transliterate   \
+        starts with current shift state.  */				      \
+@@ -157,6 +158,8 @@
+       result = __gconv_transliterate					      \
+ 	(step, step_data, *inptrp,					      \
+ 	 &inptr, inend, &outptr, irreversible);			      \
++    else								      \
++      result = __gconv_mark_illegal_input (step_data);			      \
+ 									      \
+     REINIT_PARAMS;							      \
+ 									      \
+diff --git a/iconv/tst-iconv_prog.sh b/iconv/tst-iconv_prog.sh
+index ca4dbd4a3a..f3a03ac062 100644
+--- a/iconv/tst-iconv_prog.sh
++++ b/iconv/tst-iconv_prog.sh
+@@ -211,12 +211,13 @@ hangarray=(
+ "\x00\x81;-c;WIN-SAMI-2;UTF-8//TRANSLIT//IGNORE"
+ )
+ 
+-# List of option combinations that *should* lead to an error
+-errorarray=(
++# List of option combinations with their expected return code
++testarray=(
+ # Converting from/to invalid character sets should cause error
+-"\x00\x00;;INVALID;INVALID"
+-"\x00\x00;;INVALID;UTF-8"
+-"\x00\x00;;UTF-8;INVALID"
++"\x00\x00;;INVALID;INVALID;1"
++"\x00\x00;;INVALID;UTF-8;1"
++"\x00\x00;;UTF-8;INVALID;1"
++"\xc3\xa9;;UTF-8;ASCII//TRANSLIT;0"
+ )
+ 
+ # Requires $twobyte input, $c flag, $from, and $to to be set; sets $ret
+@@ -264,7 +265,7 @@ done
+ 
+ check_errtest_result ()
+ {
+-  if [ "$ret" -eq "1" ]; then # we errored out as expected
++  if [ "$ret" -eq "$eret" ]; then # we got the expected return code
+     result="PASS"
+   else
+     result="FAIL"
+@@ -277,11 +278,12 @@ check_errtest_result ()
+   fi
+ }
+ 
+-for errorcommand in "${errorarray[@]}"; do
+-  twobyte="$(echo "$errorcommand" | cut -d";" -f 1)"
+-  c="$(echo "$errorcommand" | cut -d";" -f 2)"
+-  from="$(echo "$errorcommand" | cut -d";" -f 3)"
+-  to="$(echo "$errorcommand" | cut -d";" -f 4)"
++for testcommand in "${testarray[@]}"; do
++  twobyte="$(echo "$testcommand" | cut -d";" -f 1)"
++  c="$(echo "$testcommand" | cut -d";" -f 2)"
++  from="$(echo "$testcommand" | cut -d";" -f 3)"
++  to="$(echo "$testcommand" | cut -d";" -f 4)"
++  eret="$(echo "$testcommand" | cut -d";" -f 5)"
+   execute_test
+   check_errtest_result
+ done
+-- 
+2.45.2
+
