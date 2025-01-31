@@ -25,7 +25,7 @@ include ../Makeconfig
 headers	:= assert.h
 
 routines := assert assert-perr __assert
-tests := test-assert test-assert-perr tst-assert-c++ tst-assert-g++
+tests := test-assert test-assert-perr tst-assert-c++ tst-assert-g++ tst-assert-sa-2025-0001
 
 ifeq ($(have-cxx-thread_local),yes)
 CFLAGS-tst-assert-c++.o = -std=c++11
