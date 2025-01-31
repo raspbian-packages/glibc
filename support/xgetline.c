@@ -1,5 +1,5 @@
-/* Error-checking wrappers for stdio functions.
-   Copyright (C) 2016-2020 Free Software Foundation, Inc.
+/* fopen with error checking.
+   Copyright (C) 2020-2021 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,22 +16,24 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#ifndef SUPPORT_XSTDIO_H
-#define SUPPORT_XSTDIO_H
+#include <support/xstdio.h>
+#include <support/check.h>
 
-#include <stdio.h>
-#include <sys/cdefs.h>
-
-__BEGIN_DECLS
-
-FILE *xfopen (const char *path, const char *mode);
-void xfclose (FILE *);
-
-/* Read a line from FP, using getline.  *BUFFER must be NULL, or a
-   heap-allocated pointer of *LENGTH bytes.  Return the number of
-   bytes in the line if a line was read, or 0 on EOF.  */
-size_t xgetline (char **lineptr, size_t *n, FILE *stream);
-
-__END_DECLS
-
-#endif /* SUPPORT_XSTDIO_H */
+size_t
+xgetline (char **lineptr, size_t *n, FILE *stream)
+{
+  TEST_VERIFY (!ferror (stream));
+  ssize_t ret = getline (lineptr, n, stream);
+  if (ferror (stream))
+    {
+      TEST_VERIFY (ret < 0);
+      FAIL_EXIT1 ("getline: %m");
+    }
+  if (feof (stream))
+    {
+      TEST_VERIFY (ret <= 0);
+      return 0;
+    }
+  TEST_VERIFY (ret > 0);
+  return ret;
+}

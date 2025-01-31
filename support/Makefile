@@ -56,6 +56,7 @@ libsupport-routines = \
   support_format_hostent \
   support_format_netent \
   support_isolate_in_subprocess \
+  support_need_proc \
   support_ptrace \
   support_openpty \
   support_paths \
@@ -98,6 +99,7 @@ libsupport-routines = \
   xfork \
   xftruncate \
   xgetsockname \
+  xgetline \
   xlisten \
   xlseek \
   xmalloc \
