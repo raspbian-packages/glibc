@@ -1,5 +1,5 @@
-/* Error-checking wrappers for stdio functions.
-   Copyright (C) 2016-2020 Free Software Foundation, Inc.
+/* Indicate that a test requires a working /proc.
+   Copyright (C) 2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,22 +16,20 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#ifndef SUPPORT_XSTDIO_H
-#define SUPPORT_XSTDIO_H
+#include <unistd.h>
+#include <support/check.h>
+#include <support/support.h>
 
-#include <stdio.h>
-#include <sys/cdefs.h>
+/* We test for /proc/self/maps since that's one of the files that one
+   of our tests actually uses, but the general idea is if Linux's
+   /proc/ (procfs) filesystem is mounted.  If not, the process exits
+   with an UNSUPPORTED result code.  */
 
-__BEGIN_DECLS
-
-FILE *xfopen (const char *path, const char *mode);
-void xfclose (FILE *);
-
-/* Read a line from FP, using getline.  *BUFFER must be NULL, or a
-   heap-allocated pointer of *LENGTH bytes.  Return the number of
-   bytes in the line if a line was read, or 0 on EOF.  */
-size_t xgetline (char **lineptr, size_t *n, FILE *stream);
-
-__END_DECLS
-
-#endif /* SUPPORT_XSTDIO_H */
+void
+support_need_proc (const char *why_msg)
+{
+#ifdef __linux__
+  if (access ("/proc/self/maps", R_OK))
+    FAIL_UNSUPPORTED ("/proc is not available, %s", why_msg);
+#endif
+}
