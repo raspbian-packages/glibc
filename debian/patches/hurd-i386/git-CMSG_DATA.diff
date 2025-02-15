@@ -1,0 +1,64 @@
+commit cf13f740a91b5bbf6bb60a30b45c2a3933ff1259
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Wed Jan 1 22:07:42 2025 +0100
+
+    bits/socket.h: Update to recent BSD definition
+    
+    The old BSD 4.4 definition (not used by Linux) was not 64b-proof: the
+    cmsg_data field is supposed to CMSG_ALIGN'ed (as can be also seen in the
+    CMSG_LEN macro).
+    
+    Suggested-by: Diego Nieto Cid <dnietoc@gmail.com>
+
+diff --git a/bits/socket.h b/bits/socket.h
+index 62276fb49d..e83ad5bc01 100644
+--- a/bits/socket.h
++++ b/bits/socket.h
+@@ -221,17 +221,13 @@ struct cmsghdr
+ 				   of cmsghdr structure.  */
+     int cmsg_level;		/* Originating protocol.  */
+     int cmsg_type;		/* Protocol specific type.  */
+-#if __glibc_c99_flexarr_available
+-    __extension__ unsigned char __cmsg_data __flexarr; /* Ancillary data.  */
+-#endif
++ /* This field is to be aligned with CMSG_ALIGN */
++ /* __extension__ unsigned char __cmsg_data __flexarr; */ /* Ancillary data.  */
+   };
+ 
+ /* Ancillary data object manipulation macros.  */
+-#if __glibc_c99_flexarr_available
+-# define CMSG_DATA(cmsg) ((cmsg)->__cmsg_data)
+-#else
+-# define CMSG_DATA(cmsg) ((unsigned char *) ((struct cmsghdr *) (cmsg) + 1))
+-#endif
++#define CMSG_DATA(cmsg) \
++  ((unsigned char *) (cmsg) + CMSG_ALIGN (sizeof (struct cmsghdr)))
+ 
+ #define CMSG_NXTHDR(mhdr, cmsg) __cmsg_nxthdr (mhdr, cmsg)
+ 
+diff --git a/sysdeps/mach/hurd/bits/socket.h b/sysdeps/mach/hurd/bits/socket.h
+index 01af80231a..8c18cef579 100644
+--- a/sysdeps/mach/hurd/bits/socket.h
++++ b/sysdeps/mach/hurd/bits/socket.h
+@@ -228,17 +228,13 @@ struct cmsghdr
+ 				   of cmsghdr structure.  */
+     int cmsg_level;		/* Originating protocol.  */
+     int cmsg_type;		/* Protocol specific type.  */
+-#if __glibc_c99_flexarr_available
+-    __extension__ unsigned char __cmsg_data __flexarr; /* Ancillary data.  */
+-#endif
++ /* This field is to be aligned with CMSG_ALIGN */
++ /* __extension__ unsigned char __cmsg_data __flexarr; */ /* Ancillary data.  */
+   };
+ 
+ /* Ancillary data object manipulation macros.  */
+-#if __glibc_c99_flexarr_available
+-# define CMSG_DATA(cmsg) ((cmsg)->__cmsg_data)
+-#else
+-# define CMSG_DATA(cmsg) ((unsigned char *) ((struct cmsghdr *) (cmsg) + 1))
+-#endif
++#define CMSG_DATA(cmsg) \
++  ((unsigned char *) (cmsg) + CMSG_ALIGN (sizeof (struct cmsghdr)))
+ 
+ #define CMSG_NXTHDR(mhdr, cmsg) __cmsg_nxthdr (mhdr, cmsg)
+ 
