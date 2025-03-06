@@ -22,6 +22,9 @@
 #include <libintl.h>
 #include <unistd.h>
 #include <ldsodefs.h>
+#include <fcntl.h>
+#include <sysdep.h>
+#include <not-errno.h>
 
 #include <dl-procinfo.h>
 #include <dl-hwcaps.h>
@@ -203,6 +206,23 @@ _dl_important_hwcaps (const char *glibc_hwcaps_prepend,
 
   /* For TLS enabled builds always add 'tls'.  */
   ++cnt;
+
+#ifdef NEED_LD_SO_NOHWCAP
+  if (__access_noerrno ("/etc/ld.so.nohwcap", F_OK) == 0)
+    {
+      /* If hwcap is disabled, we only have the base directory to search.  */
+      result = (struct r_strlenpair *) malloc (sizeof (*result));
+      if (result == NULL)
+	_dl_signal_error (ENOMEM, NULL, NULL,
+			 N_("cannot create capability list"));
+
+      result[0].str = (char *) result;  /* Does not really matter.  */
+      result[0].len = 0;
+
+      *sz = 1;
+      return result;
+    }
+#endif
 
   /* Create temporary data structure to generate result table.  */
   struct r_strlenpair temp[cnt];
