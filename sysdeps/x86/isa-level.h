@@ -79,7 +79,9 @@
 /* ISA level >= 3 guaranteed includes.  */
 #define AVX_X86_ISA_LEVEL 3
 #define AVX2_X86_ISA_LEVEL 3
+#define BMI1_X86_ISA_LEVEL 3
 #define BMI2_X86_ISA_LEVEL 3
+#define LZCNT_X86_ISA_LEVEL 3
 #define MOVBE_X86_ISA_LEVEL 3
 
 /* ISA level >= 2 guaranteed includes.  */

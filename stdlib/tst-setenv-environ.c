@@ -1,6 +1,5 @@
-/* Memset for aarch64, for the dynamic linker.
-   Copyright (C) 2017-2022 Free Software Foundation, Inc.
-
+/* Test using setenv with updated environ.
+   Copyright (C) 2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -14,12 +13,24 @@
    Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public
-   License along with the GNU C Library.  If not, see
+   License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <sysdep.h>
+#include <stdlib.h>
+#include <support/check.h>
 
-#if IS_IN (rtld)
-# define MEMSET memset
-# include <sysdeps/aarch64/memset.S>
-#endif
+extern char **environ;
+
+int
+do_test (void)
+{
+  char *valp;
+  static char *dummy_environ[] = { NULL };
+  environ = dummy_environ;
+  setenv ("A", "1", 0);
+  valp = getenv ("A");
+  TEST_VERIFY_EXIT (valp[0] == '1' && valp[1] == '\0');
+  return 0;
+}
+
+#include <support/test-driver.c>
