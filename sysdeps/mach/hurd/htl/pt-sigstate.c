@@ -36,7 +36,10 @@ __pthread_sigstate (struct __pthread *thread, int how,
   if (set != NULL)
     new = *set;
 
-  ss = _hurd_thread_sigstate (thread->kernel_thread);
+  if (thread == _pthread_self ())
+    ss = _hurd_self_sigstate ();
+  else
+    ss = _hurd_thread_sigstate (thread->kernel_thread);
   assert (ss);
 
   _hurd_sigstate_lock (ss);
