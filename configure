@@ -659,6 +659,7 @@ libc_cv_has_glob_dat
 libc_cv_fpie
 libc_cv_test_static_pie
 libc_cv_z_execstack
+libc_cv_no_error_execstack
 ASFLAGS_config
 libc_cv_cc_with_libunwind
 libc_cv_insert
@@ -7114,6 +7115,40 @@ if test $libc_cv_as_noexecstack = yes; then
 fi
 
 
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for linker that supports --no-error-execstack" >&5
+printf %s "checking for linker that supports --no-error-execstack... " >&6; }
+libc_linker_feature=no
+cat > conftest.c <<EOF
+int _start (void) { return 42; }
+EOF
+if { ac_try='${CC-cc} $CFLAGS $CPPFLAGS $LDFLAGS $no_ssp
+		  -Wl,--no-error-execstack -nostdlib -nostartfiles
+		  -fPIC -shared -o conftest.so conftest.c
+		  1>&5'
+  { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_try\""; } >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; }
+then
+  if ${CC-cc} $CFLAGS $CPPFLAGS $LDFLAGS $no_ssp -Wl,--no-error-execstack -nostdlib \
+      -nostartfiles -fPIC -shared -o conftest.so conftest.c 2>&1 \
+      | grep "warning: --no-error-execstack ignored" > /dev/null 2>&1; then
+    true
+  else
+    libc_linker_feature=yes
+  fi
+fi
+rm -f conftest*
+if test $libc_linker_feature = yes; then
+  libc_cv_no_error_execstack=yes
+else
+  libc_cv_no_error_execstack=no
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $libc_linker_feature" >&5
+printf "%s\n" "$libc_linker_feature" >&6; }
+
+
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for linker that supports -z execstack" >&5
 printf %s "checking for linker that supports -z execstack... " >&6; }
 libc_linker_feature=no
@@ -8643,6 +8678,35 @@ if test $libc_cv_builtin_trap = yes; then
 
 fi
 
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether the compiler supports __attribute__ ((aligned (65536)))" >&5
+printf %s "checking whether the compiler supports __attribute__ ((aligned (65536)))... " >&6; }
+if test ${libc_cv_aligned_65536+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e)
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+char bss0xb5dce8 __attribute__ ((aligned (65536)));
+
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"
+then :
+  libc_cv_aligned_65536=yes
+else case e in #(
+  e) libc_cv_aligned_65536=no ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
+ ;;
+esac
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $libc_cv_aligned_65536" >&5
+printf "%s\n" "$libc_cv_aligned_65536" >&6; }
+config_vars="$config_vars
+aligned-65536 = $libc_cv_aligned_65536"
+
 ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -8907,6 +8971,104 @@ fi
 printf "%s\n" "$libc_linker_feature" >&6; }
 config_vars="$config_vars
 load-address-ldflag = $libc_cv_load_address_ldflag"
+
+# Check if compilers support GCS in branch protection:
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if compiler supports -mbranch-protection=gcs" >&5
+printf %s "checking if compiler supports -mbranch-protection=gcs... " >&6; }
+if test ${libc_cv_cc_gcs+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) if { ac_try='${CC-cc} -Werror -mbranch-protection=gcs -xc /dev/null -S -o /dev/null'
+  { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_try\""; } >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; }
+then :
+  libc_cv_cc_gcs=yes
+else case e in #(
+  e) libc_cv_cc_gcs=no ;;
+esac
+fi ;;
+esac
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $libc_cv_cc_gcs" >&5
+printf "%s\n" "$libc_cv_cc_gcs" >&6; }
+if test "$TEST_CC" = "$CC"; then
+  libc_cv_test_cc_gcs=$libc_cv_cc_gcs
+else
+
+saved_CC="$CC"
+CC="$TEST_CC"
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if compiler supports -mbranch-protection=gcs in testing" >&5
+printf %s "checking if compiler supports -mbranch-protection=gcs in testing... " >&6; }
+if test ${libc_cv_test_cc_gcs+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) if { ac_try='${CC-cc} -Werror -mbranch-protection=gcs -xc /dev/null -S -o /dev/null'
+  { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_try\""; } >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; }
+then :
+  libc_cv_test_cc_gcs=yes
+else case e in #(
+  e) libc_cv_test_cc_gcs=no ;;
+esac
+fi ;;
+esac
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $libc_cv_test_cc_gcs" >&5
+printf "%s\n" "$libc_cv_test_cc_gcs" >&6; }
+
+CC="$saved_CC"
+
+fi
+
+config_vars="$config_vars
+have-cc-gcs = $libc_cv_cc_gcs"
+config_vars="$config_vars
+have-test-cc-gcs = $libc_cv_test_cc_gcs"
+
+# Check if linker supports GCS marking
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for linker that supports -z gcs=always" >&5
+printf %s "checking for linker that supports -z gcs=always... " >&6; }
+libc_linker_feature=no
+cat > conftest.c <<EOF
+int _start (void) { return 42; }
+EOF
+if { ac_try='${CC-cc} $CFLAGS $CPPFLAGS $LDFLAGS $no_ssp
+		  -Wl,-z,gcs=always -nostdlib -nostartfiles
+		  -fPIC -shared -o conftest.so conftest.c
+		  1>&5'
+  { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_try\""; } >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; }
+then
+  if ${CC-cc} $CFLAGS $CPPFLAGS $LDFLAGS $no_ssp -Wl,-z,gcs=always -nostdlib \
+      -nostartfiles -fPIC -shared -o conftest.so conftest.c 2>&1 \
+      | grep "warning: -z gcs=always ignored" > /dev/null 2>&1; then
+    true
+  else
+    libc_linker_feature=yes
+  fi
+fi
+rm -f conftest*
+if test $libc_linker_feature = yes; then
+  libc_cv_ld_gcs=yes
+else
+  libc_cv_ld_gcs=no
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $libc_linker_feature" >&5
+printf "%s\n" "$libc_linker_feature" >&6; }
+config_vars="$config_vars
+have-ld-gcs = $libc_cv_ld_gcs"
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if we can build programs as PIE" >&5
 printf %s "checking if we can build programs as PIE... " >&6; }
