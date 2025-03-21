@@ -1,4 +1,4 @@
-glibc (2.36-9+rpi1+deb12u9) bookworm-staging; urgency=medium
+glibc (2.36-9+rpi1+deb12u10) bookworm-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -6,7 +6,25 @@ glibc (2.36-9+rpi1+deb12u9) bookworm-staging; urgency=medium
   [changes brought forward from 2.35-1+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Sun, 02 Oct 2022 17:46:25 +0000]
   * Remove valgrind breaks.
 
- -- Raspbian forward porter <root@raspbian.org>  Tue, 12 Nov 2024 13:38:24 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Fri, 21 Mar 2025 04:03:33 +0000
+
+glibc (2.36-9+deb12u10) bookworm; urgency=medium
+
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Change ldconfig auxcache magic number.
+    - Ensure data passed to the rseq syscall are properly initialized.
+    - Avoid integer truncation when parsing CPUID data with large cache sizes,
+      fixing a memcpy/memmove when running under the FreeBSD's bhyve
+      hypervisor.
+    - Optimize log2/expm1/log1p math functions with FMA.
+    - Fix missing cache information when running under Azure TDX hypervisor.
+    - Fix TLS performance degradation after dlopen() usage.
+    - Fix memset performance for unaligned destinations causing additional
+      loop iterations.
+    - Fixes a buffer overflow when printing assertion failure message
+      (GLIBC-SA-2025-0001 / CVE-2025-0395).
+
+ -- Aurelien Jarno <aurel32@debian.org>  Thu, 06 Mar 2025 23:46:53 +0100
 
 glibc (2.36-9+deb12u9) bookworm; urgency=medium
 
