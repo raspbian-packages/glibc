@@ -61,6 +61,7 @@ dl-routines = \
   dl-deps \
   dl-exception \
   dl-execstack \
+  dl-execstack-tunable \
   dl-fini \
   dl-init \
   dl-load \
@@ -567,9 +568,11 @@ tests-execstack-yes = \
   tst-execstack \
   tst-execstack-needed \
   tst-execstack-prog \
+  tst-execstack-tunable \
   # tests-execstack-yes
 tests-execstack-static-yes = \
-  tst-execstack-prog-static
+  tst-execstack-prog-static \
+  tst-execstack-prog-static-tunable \
   # tests-execstack-static-yes
 ifeq (yes,$(run-built-tests))
 tests-execstack-special-yes = \
@@ -1144,6 +1147,10 @@ tests-pie += \
   tst-pie1 \
   tst-pie2 \
   # tests-pie
+ifeq (yes,$(aligned-65536))
+tests += tst-pie-bss
+tests-pie += tst-pie-bss
+endif
 ifneq (,$(load-address-ldflag))
 tests += \
   tst-pie-address \
@@ -1159,6 +1166,10 @@ tests += \
 tests-static += \
   tst-pie-address-static \
   # tests-static
+ifeq (yes,$(aligned-65536))
+tests += tst-pie-bss-static
+tests-static += tst-pie-bss-static
+endif
 LDFLAGS-tst-pie-address-static += \
   $(load-address-ldflag)=$(pde-load-address)
 endif
@@ -1988,6 +1999,9 @@ $(objpfx)tst-execstack.out: $(objpfx)tst-execstack-mod.so
 CPPFLAGS-tst-execstack.c += -DUSE_PTHREADS=0
 LDFLAGS-tst-execstack = -Wl,-z,noexecstack
 LDFLAGS-tst-execstack-mod.so = -Wl,-z,execstack
+ifeq ($(have-no-error-execstack),yes)
+LDFLAGS-tst-execstack-mod.so += -Wl,--no-error-execstack
+endif
 
 $(objpfx)tst-execstack-needed: $(objpfx)tst-execstack-mod.so
 LDFLAGS-tst-execstack-needed = -Wl,-z,noexecstack
@@ -1996,7 +2010,18 @@ LDFLAGS-tst-execstack-prog = -Wl,-z,execstack
 CFLAGS-tst-execstack-prog.c += -Wno-trampolines
 CFLAGS-tst-execstack-mod.c += -Wno-trampolines
 
+# It expects loading a module with executable stack to work.
+CFLAGS-tst-execstack-tunable.c += -DUSE_PTHREADS=0 -DDEFAULT_RWX_STACK=1
+$(objpfx)tst-execstack-tunable.out: $(objpfx)tst-execstack-mod.so
+tst-execstack-tunable-ENV = GLIBC_TUNABLES=glibc.rtld.execstack=2
+
+LDFLAGS-tst-execstack-prog-static-tunable = -Wl,-z,noexecstack
+tst-execstack-prog-static-tunable-ENV = GLIBC_TUNABLES=glibc.rtld.execstack=2
+
 LDFLAGS-tst-execstack-prog-static = -Wl,-z,execstack
+ifeq ($(have-no-error-execstack),yes)
+LDFLAGS-tst-execstack-prog-static += -Wl,--no-error-execstack
+endif
 CFLAGS-tst-execstack-prog-static.c += -Wno-trampolines
 
 ifeq (yes,$(build-hardcoded-path-in-tests))
@@ -2074,6 +2099,7 @@ $(objpfx)tst-array5-static-cmp.out: tst-array5-static.exp \
 
 CFLAGS-tst-pie1.c += $(pie-ccflag)
 CFLAGS-tst-pie2.c += $(pie-ccflag)
+CFLAGS-tst-pie-bss.c += $(pie-ccflag)
 CFLAGS-tst-pie-address.c += $(pie-ccflag)
 
 $(objpfx)tst-piemod1.so: $(libsupport)
