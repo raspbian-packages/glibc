@@ -1119,11 +1119,19 @@ _nl_find_msg (struct loaded_l10nfile *domain_file,
 		      outcharset = encoding;
 
 # ifdef _LIBC
+
+		      struct gconv_spec conv_spec;
+
+                      __gconv_create_spec (&conv_spec, charset, outcharset);
+
 		      /* We always want to use transliteration.  */
-		      outcharset = norm_add_slashes (outcharset, "TRANSLIT");
-		      charset = norm_add_slashes (charset, "");
-		      int r = __gconv_open (outcharset, charset, &convd->conv,
-					    GCONV_AVOID_NOCONV);
+                      conv_spec.translit = true;
+
+		      int r = __gconv_open (&conv_spec, &convd->conv,
+		                            GCONV_AVOID_NOCONV);
+
+                      __gconv_destroy_spec (&conv_spec);
+
 		      if (__builtin_expect (r != __GCONV_OK, 0))
 			{
 			  /* If the output encoding is the same there is
