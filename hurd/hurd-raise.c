@@ -28,6 +28,13 @@ int
 _hurd_raise_signal (struct hurd_sigstate *ss,
 		    int signo, const struct hurd_signal_detail *detail)
 {
+  if (signo <= 0 || signo >= NSIG)
+    {
+      if (ss)
+	__spin_unlock (&ss->lock);
+      return EINVAL;
+    }
+
   if (ss == NULL)
     {
       ss = _hurd_self_sigstate ();
