@@ -1,4 +1,4 @@
-glibc (2.31-13+rpi1+deb11u11) bullseye-staging; urgency=medium
+glibc (2.31-13+rpi1+deb11u12) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -13,7 +13,15 @@ glibc (2.31-13+rpi1+deb11u11) bullseye-staging; urgency=medium
   * Change mode on sysdeps/x86_64/configure to 644, same dgit issue
     as above.
  
- -- Raspbian forward porter <root@raspbian.org>  Thu, 05 Sep 2024 20:20:00 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Wed, 30 Apr 2025 03:49:23 +0000
+
+glibc (2.31-13+deb11u12) bullseye-security; urgency=high
+
+  * Non-maintainer upload by the LTS Security Team.
+  * debian/patches/local-CVE-2025-0395-{1,2}.diff:
+    Fix buffer overflow in assert() function.
+
+ -- Sean Whitton <spwhitton@spwhitton.name>  Wed, 30 Apr 2025 09:01:35 +0800
 
 glibc (2.31-13+deb11u11) bullseye; urgency=medium
 

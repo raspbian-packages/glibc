@@ -171,3 +171,5 @@ any/git-ld.so-cache-endianness-markup.diff
 any/local-CVE-2021-33574-mq_notify-use-after-free.diff
 any/local-CVE-2023-4911.patch
 any/local-qsort-memory-corruption.patch
+any/local-CVE-2025-0395-1.diff
+any/local-CVE-2025-0395-2.diff
