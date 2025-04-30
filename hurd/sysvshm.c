@@ -45,7 +45,7 @@ struct sysvshm_attach
 static struct sysvshm_attach *attach_list;
 
 /* A lock to protect the linked list of shared memory attachments.  */
-static unsigned int sysvshm_lock = LLL_INITIALIZER;
+static unsigned int sysvshm_lock = LLL_LOCK_INITIALIZER;
 
 
 /* Adds a segment attachment.  */
