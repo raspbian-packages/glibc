@@ -152,7 +152,7 @@ $(inst_auditdir)/sotruss-lib.so: $(objpfx)sotruss-lib.so $(+force)
 endif
 
 tests-static-normal := tst-leaks1-static tst-array1-static tst-array5-static \
-	       tst-dl-iter-static \
+	       tst-dl-iter-static tst-dlopen-sgid \
 	       tst-tlsalign-static tst-tlsalign-extern-static \
 	       tst-linkall-static tst-env-setuid tst-env-setuid-tunables
 tests-static-internal := tst-tls1-static tst-tls2-static \
@@ -262,7 +262,7 @@ modules-names = testobj1 testobj2 testobj3 testobj4 testobj5 testobj6 \
 		tst-alignmod tst-alignmod2 \
 		$(modules-execstack-$(have-z-execstack)) \
 		tst-dlopenrpathmod tst-deep1mod1 tst-deep1mod2 tst-deep1mod3 \
-		tst-dlmopen1mod tst-auditmod1 \
+		tst-dlmopen1mod tst-dlopen-sgid-mod tst-auditmod1 \
 		unload3mod1 unload3mod2 unload3mod3 unload3mod4 \
 		unload4mod1 unload4mod2 unload4mod3 unload4mod4 \
 		unload6mod1 unload6mod2 unload6mod3 \
@@ -1724,3 +1724,6 @@ $(objpfx)tst-tls-ie-dlmopen.out: \
   $(objpfx)tst-tls-ie-mod4.so \
   $(objpfx)tst-tls-ie-mod5.so \
   $(objpfx)tst-tls-ie-mod6.so
+
+$(objpfx)tst-dlopen-sgid: $(common-objpfx)dlfcn/libdl.a
+$(objpfx)tst-dlopen-sgid.out: $(objpfx)tst-dlopen-sgid-mod.so
