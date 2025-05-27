@@ -6281,7 +6281,7 @@ msgstr "Vous avez vraiment tout gâcher cette fois-ci"
 #. TRANS @c an idiomatic funny way of saying that the computer died.
 #: sysdeps/gnu/errlist.c:991
 msgid "Computer bought the farm"
-msgstr "L'ordinateur a acheté la ferme"
+msgstr "L'ordinateur a cassé sa pipe"
 
 #. TRANS This error code has no purpose.
 #: sysdeps/gnu/errlist.c:1000
