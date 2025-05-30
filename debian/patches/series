@@ -173,3 +173,7 @@ any/local-CVE-2023-4911.patch
 any/local-qsort-memory-corruption.patch
 any/local-CVE-2025-0395-1.diff
 any/local-CVE-2025-0395-2.diff
+any/local-CVE-2025-4802-1.diff
+any/local-CVE-2025-4802-2.diff
+any/local-CVE-2025-4802-3.diff
+any/local-CVE-2025-4802-4.diff
