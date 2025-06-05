@@ -1,6 +1,6 @@
 /* Scalar wrappers for double-precision SVE vector math functions.
 
-   Copyright (C) 2023-2024 Free Software Foundation, Inc.
+   Copyright (C) 2023-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -52,6 +52,7 @@ SVE_VECTOR_WRAPPER_ff (atan2_sve, _ZGVsMxvv_atan2)
 SVE_VECTOR_WRAPPER (cbrt_sve, _ZGVsMxv_cbrt)
 SVE_VECTOR_WRAPPER (cos_sve, _ZGVsMxv_cos)
 SVE_VECTOR_WRAPPER (cosh_sve, _ZGVsMxv_cosh)
+SVE_VECTOR_WRAPPER (cospi_sve, _ZGVsMxv_cospi)
 SVE_VECTOR_WRAPPER (erf_sve, _ZGVsMxv_erf)
 SVE_VECTOR_WRAPPER (erfc_sve, _ZGVsMxv_erfc)
 SVE_VECTOR_WRAPPER (exp_sve, _ZGVsMxv_exp)
@@ -66,5 +67,7 @@ SVE_VECTOR_WRAPPER (log2_sve, _ZGVsMxv_log2)
 SVE_VECTOR_WRAPPER_ff (pow_sve, _ZGVsMxvv_pow)
 SVE_VECTOR_WRAPPER (sin_sve, _ZGVsMxv_sin)
 SVE_VECTOR_WRAPPER (sinh_sve, _ZGVsMxv_sinh)
+SVE_VECTOR_WRAPPER (sinpi_sve, _ZGVsMxv_sinpi)
 SVE_VECTOR_WRAPPER (tan_sve, _ZGVsMxv_tan)
 SVE_VECTOR_WRAPPER (tanh_sve, _ZGVsMxv_tanh)
+SVE_VECTOR_WRAPPER (tanpi_sve, _ZGVsMxv_tanpi)

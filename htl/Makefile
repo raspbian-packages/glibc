@@ -1,5 +1,5 @@
 #
-#   Copyright (C) 1994-2024 Free Software Foundation, Inc.
+#   Copyright (C) 1994-2025 Free Software Foundation, Inc.
 #
 #   The GNU C Library is free software; you can redistribute it and/or
 #   modify it under the terms of the GNU Lesser General Public
@@ -25,20 +25,6 @@ SYSDEPS := lockfile
 LCLHDRS :=
 
 libpthread-routines := \
-  pt-attr \
-  pt-attr-destroy \
-  pt-attr-getguardsize \
-  pt-attr-getscope \
-  pt-attr-getstack \
-  pt-attr-getstackaddr \
-  pt-attr-getstacksize \
-  pt-attr-init \
-  pt-attr-setguardsize \
-  pt-attr-setschedparam \
-  pt-attr-setscope \
-  pt-attr-setstack \
-  pt-attr-setstackaddr \
-  pt-attr-setstacksize \
   pt-barrier-destroy \
   pt-barrier-init \
   pt-barrier-wait \
@@ -53,7 +39,6 @@ libpthread-routines := \
   pt-key-delete \
   pt-getspecific \
   pt-setspecific \
-  pt-once \
   pt-alloc \
   pt-create \
   pt-getattr \
@@ -62,28 +47,14 @@ libpthread-routines := \
   pt-exit \
   pt-initialize \
   pt-join \
-  pt-sigmask \
   pt-spin-inlines \
   pt-cleanup \
   pt-setcancelstate \
   pt-setcanceltype \
   pt-testcancel \
   pt-cancel \
-  pt-mutexattr-destroy \
-  pt-mutexattr-init \
-  pt-mutexattr-getprioceiling \
-  pt-mutexattr-getprotocol \
-  pt-mutexattr-getpshared \
-  pt-mutexattr-gettype \
-  pt-mutexattr-setprioceiling \
-  pt-mutexattr-setprotocol \
-  pt-mutexattr-setpshared \
-  pt-mutexattr-settype \
-  pt-mutexattr-getrobust \
-  pt-mutexattr-setrobust \
   pt-mutex-init \
   pt-mutex-destroy \
-  pt-mutex-checklocked \
   pt-mutex-lock \
   pt-mutex-trylock \
   pt-mutex-timedlock \
@@ -106,19 +77,6 @@ libpthread-routines := \
   pt-rwlock-timedrdlock \
   pt-rwlock-timedwrlock \
   pt-rwlock-unlock \
-  pt-cond \
-  pt-condattr-init \
-  pt-condattr-destroy \
-  pt-condattr-getclock \
-  pt-condattr-getpshared \
-  pt-condattr-setclock \
-  pt-condattr-setpshared \
-  pt-cond-destroy \
-  pt-cond-init \
-  pt-cond-brdcast \
-  pt-cond-signal \
-  pt-cond-wait \
-  pt-cond-timedwait \
   pt-hurd-cond-wait \
   pt-hurd-cond-timedwait \
   pt-stack-alloc \
@@ -128,19 +86,12 @@ libpthread-routines := \
   pt-startup \
   pt-getconcurrency \
   pt-setconcurrency \
-  pt-block \
-  pt-timedblock \
-  pt-block-intr \
-  pt-timedblock-intr \
-  pt-wakeup \
   pt-docancel \
   pt-sysdep \
   pt-setup \
   pt-machdep \
   pt-spin \
   pt-sigstate-init \
-  pt-sigstate-destroy \
-  pt-sigstate \
   pt-kill \
   pt-getcpuclockid \
   pt-setschedprio \
@@ -199,18 +150,67 @@ routines := \
   forward \
   htlfreeres \
   libc_pthread_init \
+  pt-attr \
+  pt-attr-destroy \
   pt-attr-getdetachstate \
+  pt-attr-getguardsize \
   pt-attr-getinheritsched \
   pt-attr-getschedparam \
   pt-attr-getschedpolicy \
+  pt-attr-getscope \
+  pt-attr-getstack \
+  pt-attr-getstackaddr \
+  pt-attr-getstacksize \
+  pt-attr-init \
   pt-attr-setdetachstate \
+  pt-attr-setguardsize \
   pt-attr-setinheritsched \
+  pt-attr-setschedparam \
   pt-attr-setschedpolicy \
+  pt-attr-setscope \
+  pt-attr-setstack \
+  pt-attr-setstackaddr \
+  pt-attr-setstacksize \
+  pt-block \
+  pt-block-intr \
+  pt-cond \
+  pt-cond-brdcast \
+  pt-cond-destroy \
+  pt-cond-init \
+  pt-cond-signal \
+  pt-cond-timedwait \
+  pt-cond-wait \
+  pt-condattr-destroy \
+  pt-condattr-getclock \
+  pt-condattr-getpshared \
+  pt-condattr-init \
+  pt-condattr-setclock \
+  pt-condattr-setpshared \
   pt-getschedparam \
+  pt-mutex-checklocked \
+  pt-mutexattr-destroy \
+  pt-mutexattr-getprioceiling \
+  pt-mutexattr-getprotocol \
+  pt-mutexattr-getpshared \
+  pt-mutexattr-getrobust \
+  pt-mutexattr-gettype \
+  pt-mutexattr-init \
+  pt-mutexattr-setprioceiling \
+  pt-mutexattr-setprotocol \
+  pt-mutexattr-setpshared \
+  pt-mutexattr-setrobust \
+  pt-mutexattr-settype \
   pt-nthreads \
+  pt-once \
   pt-pthread_self \
   pt-self pt-equal \
   pt-setschedparam \
+  pt-sigmask \
+  pt-sigstate \
+  pt-sigstate-destroy \
+  pt-timedblock \
+  pt-timedblock-intr \
+  pt-wakeup \
   # routines
 shared-only-routines = forward
 

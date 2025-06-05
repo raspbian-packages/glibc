@@ -1,5 +1,5 @@
 /* fxstatat64 used on fstatat64, Linux implementation.
-   Copyright (C) 2005-2024 Free Software Foundation, Inc.
+   Copyright (C) 2005-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -58,7 +58,7 @@ __fxstatat64 (int vers, int fd, const char *file, struct stat64 *st, int flag)
 # endif
 #else
   /* All kABIs with non-LFS support, e.g. arm, csky, i386, hppa, m68k,
-     microblaze, mips32, nios2, sh, powerpc32, and sparc32.  */
+     microblaze, mips32, sh, powerpc32, and sparc32.  */
   if (vers == _STAT_VER_LINUX)
     return INLINE_SYSCALL_CALL (fstatat64, fd, file, st, flag);
 #endif

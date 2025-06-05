@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2024 Free Software Foundation, Inc.
+# Copyright (C) 1991-2025 Free Software Foundation, Inc.
 # Copyright The GNU Toolchain Authors.
 # This file is part of the GNU C Library.
 
@@ -638,7 +638,7 @@ link-libc-printers-tests = $(link-libc-rpath) \
 			   $(link-libc-tests-after-rpath-link)
 
 # This is how to find at build-time things that will be installed there.
-rpath-dirs = math elf dlfcn nss nis rt resolv mathvec support
+rpath-dirs = math elf dlfcn nss nis rt resolv mathvec support misc
 rpath-link = \
 $(common-objdir):$(subst $(empty) ,:,$(patsubst ../$(subdir),.,$(rpath-dirs:%=$(common-objpfx)%)))
 else  # build-static
@@ -897,7 +897,7 @@ host-test-program-cmd = $(host-built-program-cmd)
 endif
 
 # Extra flags to pass to GCC.
-+gccwarn := -Wall -Wwrite-strings -Wundef
++gccwarn := -Wall -Wwrite-strings -Wundef $(cc-option-wimplicit-fallthrough)
 ifeq ($(enable-werror),yes)
 +gccwarn += -Werror
 endif
@@ -1020,6 +1020,12 @@ else
 +cflags += $(no-fortify-source)
 endif
 
+# Filter out LFS flags if compiler defines it by default.
++cflags += $(no-file-offset-bits-source)
+
+# Filter out 64 bit time_t flags if compiler defines it by default.
++cflags += $(no-time-bits-source)
+
 # Each sysdeps directory can contain header files that both will be
 # used to compile and will be installed.  Each can also contain an
 # include/ subdirectory, whose header files will be used to compile
@@ -1034,7 +1040,8 @@ endif
 # current directory.
 +includes = -I$(..)include $(if $(subdir),$(objpfx:%/=-I%)) \
 	    $(+sysdep-includes) $(includes) \
-	    $(patsubst %/,-I%,$(..)) $(libio-include) -I. $(sysincludes)
+	    $(patsubst %/,-I%,$(..)) $(libio-include) \
+	    $(if $($(<F)-no-include-dot),,-I.) $(sysincludes)
 
 # Since libio has several internal header files, we use a -I instead
 # of many little headers in the include directory.
@@ -1168,10 +1175,6 @@ ifndef ASFLAGS
 ASFLAGS := $(filter -g% -fdebug-prefix-map=%,$(CFLAGS))
 endif
 override ASFLAGS += -Werror=undef $(ASFLAGS-config) $(asflags-cpu)
-
-ifndef BUILD_CC
-BUILD_CC = $(CC)
-endif
 
 move-if-change = $(SHELL) $(..)scripts/move-if-change
 

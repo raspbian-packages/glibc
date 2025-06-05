@@ -1,5 +1,5 @@
 /* pthread_mutex_trylock.  Hurd version.
-   Copyright (C) 2016-2024 Free Software Foundation, Inc.
+   Copyright (C) 2016-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -22,6 +22,7 @@
 #include <pt-internal.h>
 #include "pt-mutex.h"
 #include <hurdlock.h>
+#include <unistd.h>
 
 int
 __pthread_mutex_trylock (pthread_mutex_t *mtxp)

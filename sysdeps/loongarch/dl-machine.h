@@ -1,5 +1,5 @@
 /* Machine-dependent ELF dynamic relocation inline functions.
-   Copyright (C) 2022-2024 Free Software Foundation, Inc.
+   Copyright (C) 2022-2025 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -223,6 +223,13 @@ elf_machine_rela (struct link_map *map, struct r_scope_elem *scope[],
 	      {
 		td->arg = _dl_make_tlsdesc_dynamic (sym_map,
 			      sym->st_value + reloc->r_addend);
+# ifndef __loongarch_soft_float
+		if (RTLD_SUPPORT_LASX)
+		  td->entry = _dl_tlsdesc_dynamic_lasx;
+		else if (RTLD_SUPPORT_LSX)
+		  td->entry = _dl_tlsdesc_dynamic_lsx;
+		else
+# endif
 		td->entry = _dl_tlsdesc_dynamic;
 	      }
 	    else

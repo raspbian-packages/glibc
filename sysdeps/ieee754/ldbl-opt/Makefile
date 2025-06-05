@@ -14,13 +14,17 @@ extra-libs += libnldbl
 libnldbl-calls = \
   acos \
   acosh \
+  acospi \
   asin \
   asinh \
+  asinpi \
   asprintf \
   asprintf_chk \
   atan \
   atan2 \
+  atan2pi \
   atanh \
+  atanpi \
   cabs \
   cacos \
   cacosh \
@@ -42,6 +46,7 @@ libnldbl-calls = \
   copysign \
   cos \
   cosh \
+  cospi \
   cpow \
   cproj \
   creal \
@@ -186,6 +191,7 @@ libnldbl-calls = \
   sin \
   sincos \
   sinh \
+  sinpi \
   snprintf \
   snprintf_chk \
   sprintf \
@@ -205,6 +211,7 @@ libnldbl-calls = \
   syslog_chk \
   tan \
   tanh \
+  tanpi \
   tgamma \
   totalorder \
   totalordermag \
@@ -254,11 +261,15 @@ extra-objs += $(addsuffix .oS, $(libnldbl-routines))
 
 CFLAGS-nldbl-acos.c = -fno-builtin-acosl
 CFLAGS-nldbl-acosh.c = -fno-builtin-acoshl
+CFLAGS-nldbl-acospi.c = -fno-builtin-acospi
 CFLAGS-nldbl-asin.c = -fno-builtin-asinl
 CFLAGS-nldbl-asinh.c = -fno-builtin-asinhl
+CFLAGS-nldbl-asinpi.c = -fno-builtin-asinpil
 CFLAGS-nldbl-atan.c = -fno-builtin-atanl
 CFLAGS-nldbl-atan2.c = -fno-builtin-atan2l
+CFLAGS-nldbl-atan2pi.c = -fno-builtin-atan2pil
 CFLAGS-nldbl-atanh.c = -fno-builtin-atanhl
+CFLAGS-nldbl-atanpi.c = -fno-builtin-atanpil
 CFLAGS-nldbl-cabs.c = -fno-builtin-cabsl
 CFLAGS-nldbl-cacos.c = -fno-builtin-cacosl
 CFLAGS-nldbl-cacosh.c = -fno-builtin-cacoshl
@@ -280,6 +291,7 @@ CFLAGS-nldbl-conj.c = -fno-builtin-conjl
 CFLAGS-nldbl-copysign.c = -fno-builtin-copysignl
 CFLAGS-nldbl-cos.c = -fno-builtin-cosl
 CFLAGS-nldbl-cosh.c = -fno-builtin-coshl
+CFLAGS-nldbl-cospi.c = -fno-builtin-cospi
 CFLAGS-nldbl-cpow.c = -fno-builtin-cpowl
 CFLAGS-nldbl-cproj.c = -fno-builtin-cprojl
 CFLAGS-nldbl-creal.c = -fno-builtin-creall
@@ -376,9 +388,11 @@ CFLAGS-nldbl-significand.c = -fno-builtin-significandl
 CFLAGS-nldbl-sin.c = -fno-builtin-sinl
 CFLAGS-nldbl-sincos.c = -fno-builtin-sincosl
 CFLAGS-nldbl-sinh.c = -fno-builtin-sinhl
+CFLAGS-nldbl-sinpi.c = -fno-builtin-sinpi
 CFLAGS-nldbl-sqrt.c = -fno-builtin-sqrtl
 CFLAGS-nldbl-tan.c = -fno-builtin-tanl
 CFLAGS-nldbl-tanh.c = -fno-builtin-tanhl
+CFLAGS-nldbl-tanpi.c = -fno-builtin-tanpi
 CFLAGS-nldbl-tgamma.c = -fno-builtin-tgammal
 CFLAGS-nldbl-totalorder.c = -fno-builtin-totalorderl
 CFLAGS-nldbl-totalordermag.c = -fno-builtin-totalordermagl

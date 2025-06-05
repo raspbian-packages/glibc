@@ -1,5 +1,5 @@
 /* Declaration of libc stubs for pthread functions.  Hurd version.
-   Copyright (C) 2003-2024 Free Software Foundation, Inc.
+   Copyright (C) 2003-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -21,22 +21,6 @@
 
 #include <pthread.h>
 
-int __pthread_attr_destroy (pthread_attr_t *);
-int __pthread_attr_init (pthread_attr_t *);
-int __pthread_attr_setschedparam (pthread_attr_t *,
-				 const struct sched_param *);
-int __pthread_attr_getscope (const pthread_attr_t *, int *);
-int __pthread_attr_setscope (pthread_attr_t *, int);
-int __pthread_condattr_destroy (pthread_condattr_t *);
-int __pthread_condattr_init (pthread_condattr_t *);
-int __pthread_cond_broadcast (pthread_cond_t *);
-int __pthread_cond_destroy (pthread_cond_t *);
-int __pthread_cond_init (pthread_cond_t *,
-		       const pthread_condattr_t *);
-int __pthread_cond_signal (pthread_cond_t *);
-int __pthread_cond_wait (pthread_cond_t *, pthread_mutex_t *);
-int __pthread_cond_timedwait (pthread_cond_t *, pthread_mutex_t *,
-			     const struct timespec *);
 void __pthread_exit (void *) __attribute__ ((__noreturn__));
 int _pthread_mutex_destroy (pthread_mutex_t *);
 int _pthread_mutex_init (pthread_mutex_t *,
@@ -64,22 +48,6 @@ int _cthreads_ftrylockfile (FILE *);
    so if possible avoid breaking it and append new hooks to the end.  */
 struct pthread_functions
 {
-  int (*ptr_pthread_attr_destroy) (pthread_attr_t *);
-  int (*ptr_pthread_attr_init) (pthread_attr_t *);
-  int (*ptr_pthread_attr_setschedparam) (pthread_attr_t *,
-					 const struct sched_param *);
-  int (*ptr_pthread_attr_getscope) (const pthread_attr_t *, int *);
-  int (*ptr_pthread_attr_setscope) (pthread_attr_t *, int);
-  int (*ptr_pthread_condattr_destroy) (pthread_condattr_t *);
-  int (*ptr_pthread_condattr_init) (pthread_condattr_t *);
-  int (*ptr_pthread_cond_broadcast) (pthread_cond_t *);
-  int (*ptr_pthread_cond_destroy) (pthread_cond_t *);
-  int (*ptr_pthread_cond_init) (pthread_cond_t *,
-			       const pthread_condattr_t *);
-  int (*ptr_pthread_cond_signal) (pthread_cond_t *);
-  int (*ptr_pthread_cond_wait) (pthread_cond_t *, pthread_mutex_t *);
-  int (*ptr_pthread_cond_timedwait) (pthread_cond_t *, pthread_mutex_t *,
-				     const struct timespec *);
   void (*ptr___pthread_exit) (void *) __attribute__ ((__noreturn__));
   int (*ptr_pthread_mutex_destroy) (pthread_mutex_t *);
   int (*ptr_pthread_mutex_init) (pthread_mutex_t *,

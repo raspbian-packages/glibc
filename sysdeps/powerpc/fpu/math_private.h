@@ -1,5 +1,5 @@
 /* Private inline math functions for powerpc.
-   Copyright (C) 2006-2024 Free Software Foundation, Inc.
+   Copyright (C) 2006-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -57,6 +57,11 @@ __ieee754_sqrtf128 (_Float128 __x)
 #endif
 #else /* !_ARCH_PWR9 */
 #define _GL_HAS_BUILTIN_ILOGB 0
+#endif
+
+#ifdef _ARCH_PWR6
+/* ISA 2.03 provides frin/round() and cntlzw/ctznll().  */
+# define ROUNDEVEN_INTRINSICS 0
 #endif
 
 #endif /* _PPC_MATH_PRIVATE_H_ */

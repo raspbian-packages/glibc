@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2024 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -261,9 +261,11 @@ libc_hidden_proto (__pthread_unregister_cancel)
 /* Called when a thread reacts on a cancellation request.  */
 static inline void
 __attribute ((noreturn, always_inline))
-__do_cancel (void)
+__do_cancel (void *result)
 {
   struct pthread *self = THREAD_SELF;
+
+  self->result = result;
 
   /* Make sure we get no more cancellations.  */
   atomic_fetch_or_relaxed (&self->cancelhandling, EXITING_BITMASK);
@@ -272,6 +274,13 @@ __do_cancel (void)
 		    THREAD_GETMEM (self, cleanup_jmp_buf));
 }
 
+extern long int __syscall_cancel_arch (volatile int *, __syscall_arg_t nr,
+     __syscall_arg_t arg1, __syscall_arg_t arg2, __syscall_arg_t arg3,
+     __syscall_arg_t arg4, __syscall_arg_t arg5, __syscall_arg_t arg6
+     __SYSCALL_CANCEL7_ARCH_ARG_DEF) attribute_hidden;
+
+extern _Noreturn void __syscall_do_cancel (void) attribute_hidden;
+
 
 /* Internal prototypes.  */
 
@@ -279,12 +288,6 @@ __do_cancel (void)
    descriptor is still valid.  */
 extern void __nptl_free_tcb (struct pthread *pd);
 libc_hidden_proto (__nptl_free_tcb)
-
-/* Change the permissions of a thread stack.  Called from
-   _dl_make_stacks_executable and pthread_create.  */
-int
-__nptl_change_stack_perm (struct pthread *pd);
-rtld_hidden_proto (__nptl_change_stack_perm)
 
 /* longjmp handling.  */
 extern void __pthread_cleanup_upto (__jmp_buf target, char *targetframe);
@@ -508,6 +511,7 @@ libc_hidden_proto (__pthread_kill)
 extern int __pthread_cancel (pthread_t th);
 extern int __pthread_kill_internal (pthread_t threadid, int signo)
   attribute_hidden;
+extern int __pthread_raise_internal (int signo) attribute_hidden;
 extern void __pthread_exit (void *value) __attribute__ ((__noreturn__));
 libc_hidden_proto (__pthread_exit)
 extern int __pthread_join (pthread_t threadid, void **thread_return);

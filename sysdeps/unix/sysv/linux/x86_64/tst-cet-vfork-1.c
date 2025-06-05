@@ -1,6 +1,6 @@
 /* Verify that child of the vfork-calling function can't return when
    shadow stack is in use.
-   Copyright (C) 2020-2024 Free Software Foundation, Inc.
+   Copyright (C) 2020-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -25,7 +25,7 @@
 #include <x86intrin.h>
 #include <support/test-driver.h>
 
-__attribute__ ((noclone, noinline))
+__attribute_optimization_barrier__
 static void
 do_test_1 (void)
 {

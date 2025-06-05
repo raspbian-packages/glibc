@@ -1,5 +1,5 @@
 /* POSIX spawn interface.  Linux version.
-   Copyright (C) 2016-2024 Free Software Foundation, Inc.
+   Copyright (C) 2016-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -115,7 +115,7 @@ __spawni_child (void *arguments)
   memset (&sa, '\0', sizeof (sa));
 
   sigset_t hset;
-  __sigprocmask (SIG_BLOCK, 0, &hset);
+  __sigprocmask (SIG_BLOCK, NULL, &hset);
   for (int sig = 1; sig < _NSIG; ++sig)
     {
       if ((attr->__flags & POSIX_SPAWN_SETSIGDEF)
@@ -129,7 +129,7 @@ __spawni_child (void *arguments)
 	    sa.sa_handler = SIG_IGN;
 	  else
 	    {
-	      __libc_sigaction (sig, 0, &sa);
+	      __libc_sigaction (sig, NULL, &sa);
 	      if (sa.sa_handler == SIG_IGN || sa.sa_handler == SIG_DFL)
 		continue;
 	      sa.sa_handler = SIG_DFL;
@@ -138,7 +138,7 @@ __spawni_child (void *arguments)
       else
 	continue;
 
-      __libc_sigaction (sig, &sa, 0);
+      __libc_sigaction (sig, &sa, NULL);
     }
 
 #ifdef _POSIX_PRIORITY_SCHEDULING
@@ -172,7 +172,7 @@ __spawni_child (void *arguments)
     goto fail;
 
   /* Execute the file actions.  */
-  if (file_actions != 0)
+  if (file_actions != NULL)
     {
       int cnt;
       struct rlimit64 fdlimit;
@@ -383,7 +383,11 @@ __spawnix (int *pid, const char *file,
   args.pidfd = 0;
   args.xflags = xflags;
 
-  internal_signal_block_all (&args.oldmask);
+  /* Avoid the potential issues if caller sets a SIG_IGN for SIGABRT, calls
+     abort, and another thread issues posix_spawn just after the sigaction
+     returns.  With default options (not setting POSIX_SPAWN_SETSIGDEF), the
+     process can still see SIG_DFL for SIGABRT, where it should be SIG_IGN.  */
+  __abort_lock_rdlock (&args.oldmask);
 
   /* The clone flags used will create a new child that will run in the same
      memory space (CLONE_VM) and the execution of calling thread will be
@@ -474,7 +478,7 @@ __spawnix (int *pid, const char *file,
   if ((ec == 0) && (pid != NULL))
     *pid = use_pidfd ? args.pidfd : new_pid;
 
-  internal_signal_restore_set (&args.oldmask);
+  __abort_lock_unlock (&args.oldmask);
 
   __pthread_setcancelstate (state, NULL);
 

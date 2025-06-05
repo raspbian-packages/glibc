@@ -1,7 +1,7 @@
 /* The tunable framework.  See the README.tunables to know how to use the
    tunable in a glibc module.
 
-   Copyright (C) 2016-2024 Free Software Foundation, Inc.
+   Copyright (C) 2016-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -252,7 +252,7 @@ parse_tunable_print_error (const struct tunable_toset_t *toset)
 static void
 parse_tunables (const char *valstring)
 {
-  struct tunable_toset_t tunables[tunables_list_size] = { 0 };
+  struct tunable_toset_t tunables[tunables_list_size] = {};
   if (parse_tunables_string (valstring, tunables) == -1)
     {
       _dl_error_printf (
@@ -301,7 +301,7 @@ __tunables_init (char **envp)
     return;
 
   enum { tunable_num_env_alias = array_length (tunable_env_alias_list) };
-  struct tunable_toset_t tunables_env_alias[tunable_num_env_alias] = { 0 };
+  struct tunable_toset_t tunables_env_alias[tunable_num_env_alias] = {};
 
   while ((envp = get_next_env (envp, &envname, &envval, &prev_envp)) != NULL)
     {

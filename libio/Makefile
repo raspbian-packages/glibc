@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2024 Free Software Foundation, Inc.
+# Copyright (C) 1995-2025 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -86,6 +86,9 @@ tests = \
   bug-wmemstream1 \
   bug-wsetpos \
   test-fmemopen \
+  test-fputs-unbuffered-full \
+  test-fputws-unbuffered-full \
+  tst-asprintf-null \
   tst-atime \
   tst-bz22415 \
   tst-bz24051 \
@@ -95,6 +98,8 @@ tests = \
   tst-eof \
   tst-ext \
   tst-ext2 \
+  tst-fclose-unopened \
+  tst-fclose-unopened2 \
   tst-fdopen-seek-failure \
   tst-fgetc-after-eof \
   tst-fgetwc \
@@ -117,6 +122,7 @@ tests = \
   tst-mmap-offend \
   tst-mmap-setvbuf \
   tst-mmap2-eofsync \
+  tst-popen-fork \
   tst-popen1 \
   tst-setvbuf1 \
   tst-sprintf-chk-ub \
@@ -140,6 +146,8 @@ tests = \
   tst_wprintf2 \
   tst_wscanf \
   # tests
+
+$(objpfx)tst-popen-fork: $(shared-thread-library)
 
 tests-internal = tst-vtables tst-vtables-interposed
 
@@ -243,13 +251,18 @@ CFLAGS-tst-bz24153.c += $(no-fortify-source)
 CFLAGS-tst_putwc.c += -DOBJPFX=\"$(objpfx)\"
 
 # These test cases intentionally use overlapping arguments
-CFLAGS-tst-sprintf-ub.c += -Wno-restrict $(no-fortify-source)
-CFLAGS-tst-sprintf-chk-ub.c += -Wno-restrict $(no-fortify-source)
+CFLAGS-tst-sprintf-ub.c += $(test-config-cflags-wno-restrict) \
+			   $(no-fortify-source)
+CFLAGS-tst-sprintf-chk-ub.c += $(test-config-cflags-wno-restrict) \
+			       $(no-fortify-source)
 
 LDFLAGS-tst-bz24228 = -Wl,--version-script=tst-bz24228.map
 
 tst_wprintf2-ARGS = "Some Text"
 
+tst-fclose-unopened2-ENV = \
+  MALLOC_TRACE=$(objpfx)tst-fclose-unopened2.mtrace \
+  LD_PRELOAD=$(common-objpfx)/malloc/libc_malloc_debug.so
 test-fmemopen-ENV = MALLOC_TRACE=$(objpfx)test-fmemopen.mtrace \
 		    LD_PRELOAD=$(common-objpfx)/malloc/libc_malloc_debug.so
 tst-fdopen-seek-failure-ENV = \
@@ -274,6 +287,8 @@ generated += \
   tst-bz22415.mtrace \
   tst-bz24228.check \
   tst-bz24228.mtrace \
+  tst-fclose-unopened2.check \
+  tst-fclose-unopened2.mtrace \
   tst-fdopen-seek-failure.check \
   tst-fdopen-seek-failure.mtrace \
   tst-fopenloc.check \
@@ -319,6 +334,7 @@ tests-special += \
   $(objpfx)test-fmemopen-mem.out \
   $(objpfx)tst-bz22415-mem.out \
   $(objpfx)tst-bz24228-mem.out \
+  $(objpfx)tst-fclose-unopened2-mem.out \
   $(objpfx)tst-fdopen-seek-failure-mem.out \
   $(objpfx)tst-fopenloc-mem.out \
   # tests-special
@@ -404,6 +420,11 @@ $(objpfx)tst-fopenloc-cmp.out: ../iconvdata/testdata/ISO-8859-1..UTF8 \
 
 $(objpfx)test-fmemopen-mem.out: $(objpfx)test-fmemopen.out
 	$(common-objpfx)malloc/mtrace $(objpfx)test-fmemopen.mtrace > $@; \
+	$(evaluate-test)
+
+$(objpfx)tst-fclose-unopened2-mem.out: $(objpfx)tst-fclose-unopened2.out
+	$(common-objpfx)malloc/mtrace \
+	  $(objpfx)tst-fclose-unopened2.mtrace > $@; \
 	$(evaluate-test)
 
 $(objpfx)tst-fdopen-seek-failure-mem.out: $(objpfx)tst-fdopen-seek-failure.out

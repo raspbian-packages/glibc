@@ -1,6 +1,6 @@
 /* Initialize CPU feature data.  AArch64 version.
    This file is part of the GNU C Library.
-   Copyright (C) 2017-2024 Free Software Foundation, Inc.
+   Copyright (C) 2017-2025 Free Software Foundation, Inc.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -128,7 +128,7 @@ init_cpu_features (struct cpu_features *cpu_features)
   cpu_features->midr_el1 = midr;
 
   /* Check if ZVA is enabled.  */
-  unsigned dczid;
+  uint64_t dczid;
   asm volatile ("mrs %0, dczid_el0" : "=r"(dczid));
 
   if ((dczid & DCZID_DZP_MASK) == 0)
@@ -176,4 +176,8 @@ init_cpu_features (struct cpu_features *cpu_features)
 
   /* Check if MOPS is supported.  */
   cpu_features->mops = GLRO (dl_hwcap2) & HWCAP2_MOPS;
+
+  if (GLRO (dl_hwcap) & HWCAP_GCS)
+    /* GCS status may be updated later by binary compatibility checks.  */
+    GL (dl_aarch64_gcs) = TUNABLE_GET (glibc, cpu, aarch64_gcs, uint64_t, 0);
 }

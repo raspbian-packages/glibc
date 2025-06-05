@@ -1,4 +1,4 @@
-# Copyright (C) 1996-2024 Free Software Foundation, Inc.
+# Copyright (C) 1996-2025 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -22,28 +22,29 @@ subdir		:= math
 include ../Makeconfig
 
 # Installed header files.
-headers	:= \
-  math.h \
-  bits/mathcalls.h \
-  fpu_control.h \
-  complex.h \
+headers := \
   bits/cmathcalls.h \
-  fenv.h \
   bits/fenv.h \
-  bits/mathdef.h \
-  tgmath.h \
-  bits/math-vector.h \
-  finclude/math-vector-fortran.h \
-  bits/libm-simd-decl-stubs.h \
-  bits/iscanonical.h \
+  bits/floatn-common.h \
+  bits/floatn.h \
   bits/flt-eval-method.h \
   bits/fp-fast.h \
   bits/fp-logb.h \
+  bits/iscanonical.h \
+  bits/libm-simd-decl-stubs.h \
   bits/long-double.h \
+  bits/math-vector.h \
   bits/mathcalls-helper-functions.h \
-  bits/floatn.h \
-  bits/floatn-common.h \
-  bits/mathcalls-narrow.h
+  bits/mathcalls-macros.h \
+  bits/mathcalls-narrow.h \
+  bits/mathcalls.h \
+  bits/mathdef.h \
+  complex.h \
+  fenv.h \
+  finclude/math-vector-fortran.h \
+  fpu_control.h \
+  math.h \
+  tgmath.h \
   # headers
 
 # FPU support code.
@@ -93,6 +94,10 @@ gen-libm-calls = \
   e_scalbF \
   k_casinhF \
   k_casinhF \
+  s_acospiF \
+  s_asinpiF \
+  s_atan2piF \
+  s_atanpiF \
   s_cacosF  \
   s_cacoshF \
   s_canonicalizeF \
@@ -105,6 +110,7 @@ gen-libm-calls = \
   s_cexpF \
   s_clog10F \
   s_clogF \
+  s_cospiF \
   s_cpowF \
   s_cprojF \
   s_csinF \
@@ -134,6 +140,8 @@ gen-libm-calls = \
   s_nanF \
   s_nextdownF \
   s_significandF \
+  s_sinpiF \
+  s_tanpiF \
   w_acosF \
   w_acoshF \
   w_asinF \
@@ -201,6 +209,7 @@ libm-calls = \
   s_ceilF \
   s_cosF \
   s_erfF \
+  s_erfcF \
   s_expm1F \
   s_fabsF \
   s_floorF \
@@ -501,7 +510,6 @@ tests = \
   $(tests-static) \
   bug-nextafter \
   bug-nexttoward \
-  bug-tgmath1 \
   test-ceil-except-2 \
   test-femode \
   test-femode-traps \
@@ -539,15 +547,18 @@ tests = \
   test-signgam-ullong \
   test-signgam-ullong-init \
   test-snan \
-  test-tgmath \
-  test-tgmath-int \
-  test-tgmath-ret \
-  test-tgmath2 \
   test-trunc-except-2 \
   tst-CMPLX \
   tst-CMPLX2 \
   tst-definitions \
   # tests
+tests-tgmath = \
+  bug-tgmath1 \
+  test-tgmath \
+  test-tgmath-int \
+  test-tgmath-ret \
+  test-tgmath2 \
+  # tests-tgmath
 ifneq ($(config-cflags-signaling-nans),)
 tests += \
   test-fe-snans-always-signal \
@@ -613,11 +624,15 @@ $(objpfx)libm-test-ulps.h: $(ulps-file) gen-libm-test.py
 libm-test-funcs-auto = \
   acos \
   acosh \
+  acospi \
   asin \
   asinh \
+  asinpi \
   atan \
   atan2 \
+  atan2pi \
   atanh \
+  atanpi \
   cabs \
   cacos \
   cacosh \
@@ -634,6 +649,7 @@ libm-test-funcs-auto = \
   clog10 \
   cos \
   cosh \
+  cospi \
   cpow \
   csin \
   csinh \
@@ -664,9 +680,11 @@ libm-test-funcs-auto = \
   sin \
   sincos \
   sinh \
+  sinpi \
   sqrt \
   tan \
   tanh \
+  tanpi \
   tgamma \
   y0 \
   y1 \
@@ -918,11 +936,15 @@ tgmath3-macros = \
   $(tgmath3-narrow-macros) \
   acos \
   acosh \
+  acospi \
   asin \
   asinh \
+  asinpi \
   atan \
   atan2 \
+  atan2pi \
   atanh \
+  atanpi \
   carg \
   cbrt \
   ceil \
@@ -931,6 +953,7 @@ tgmath3-macros = \
   copysign \
   cos \
   cosh \
+  cospi \
   cproj \
   creal \
   erf \
@@ -994,16 +1017,26 @@ tgmath3-macros = \
   scalbn \
   sin \
   sinh \
+  sinpi \
   sqrt \
   tan \
   tanh \
+  tanpi \
   tgamma \
   trunc \
   ufromfp \
   ufromfpx \
   # tgmath3-macros
 tgmath3-macro-tests = $(addprefix test-tgmath3-,$(tgmath3-macros))
-tests += $(tgmath3-macro-tests)
+ifneq ($(have-test-clang),yes)
+# NB: tgmath3-macro-tests won't compile with <float.h> and <tgmath.h>
+# from Clang due to missing C23 support:
+# https://github.com/llvm/llvm-project/issues/97335
+# https://github.com/llvm/llvm-project/issues/121536
+tests-tgmath += $(tgmath3-macro-tests)
+endif
+tests += $(tests-tgmath)
+
 generated += $(addsuffix .c,$(tgmath3-macro-tests))
 
 $(tgmath3-macro-tests:%=$(objpfx)%.o): CFLAGS += -fno-builtin
@@ -1020,9 +1053,18 @@ $(objpfx)test-tgmath3-macro-list.out: gen-tgmath-tests.py
 	$(PYTHON) $< check-list $(tgmath3-macros) > $@; \
 	$(evaluate-test)
 
+ifeq ($(have-test-clang),yes)
+# NB: Clang has its own <tgmath.h> and doesn't use <tgmath.h> from glibc.
+define no-include
+$(1).c-no-include-dot = yes
+endef
+$(foreach m,$(tests-tgmath),$(eval $(call no-include,$(m))))
+endif
+
 libm-test-fast-math-cflags = -fno-builtin -D__FAST_MATH__ -DTEST_FAST_MATH
 libm-test-vec-cflags = $(libm-test-fast-math-cflags) -fno-inline \
-		       -ffloat-store -D_OPENMP=201307 -Wno-unknown-pragmas
+		       $(test-config-cflags-float-store) \
+		       -D_OPENMP=201307 -Wno-unknown-pragmas
 
 CFLAGS-test-double-vlen4-wrappers.c += $(double-vlen4-arch-ext-cflags)
 
@@ -1038,7 +1080,8 @@ CFLAGS-test-float-vlen16-wrappers.c += $(float-vlen16-arch-ext-cflags)
 # raise spurious exceptions for sNaNs, but also do not test for
 # exceptions.  Thus both versions of the classification macros are
 # validated.
-libm-test-no-inline-cflags = -fno-inline -ffloat-store -fno-builtin \
+libm-test-no-inline-cflags = -fno-inline -fno-builtin \
+			     $(test-config-cflags-float-store) \
 			     $(config-cflags-signaling-nans)
 CFLAGS-test-tgmath.c += -fno-builtin
 # The following testcase uses very long lines (>3 million), so it may take a
@@ -1297,11 +1340,15 @@ math-CPPFLAGS += -DNO_LONG_DOUBLE
 # functions.
 CFLAGS-w_acos.c += -fno-builtin-acosl
 CFLAGS-w_acosh.c += -fno-builtin-acoshl
+CFLAGS-s_acospi.c += -fno-builtin-acospil
 CFLAGS-w_asin.c += -fno-builtin-asinl
 CFLAGS-s_asinh.c += -fno-builtin-asinhl
+CFLAGS-s_asinpi.c += -fno-builtin-asinpil
 CFLAGS-s_atan.c += -fno-builtin-atanl
 CFLAGS-w_atan2.c += -fno-builtin-atan2l
+CFLAGS-s_atan2pi.c += -fno-builtin-atan2pil
 CFLAGS-w_atanh.c += -fno-builtin-atanhl
+CFLAGS-s_atanpi.c += -fno-builtin-atanpil
 CFLAGS-s_cabs.c += -fno-builtin-cabsl
 CFLAGS-s_cacos.c += -fno-builtin-cacosl
 CFLAGS-s_cacosh.c += -fno-builtin-cacoshl
@@ -1323,6 +1370,7 @@ CFLAGS-s_conj.c += -fno-builtin-conjl
 CFLAGS-s_copysign.c += -fno-builtin-copysignl
 CFLAGS-s_cos.c += -fno-builtin-cosl
 CFLAGS-w_cosh.c += -fno-builtin-coshl
+CFLAGS-s_cospi.c += -fno-builtin-cospil
 CFLAGS-s_cpow.c += -fno-builtin-cpowl
 CFLAGS-s_cproj.c += -fno-builtin-cprojl
 CFLAGS-s_creal.c += -fno-builtin-creall
@@ -1418,9 +1466,11 @@ CFLAGS-s_significand.c += -fno-builtin-significandl
 CFLAGS-s_sin.c += -fno-builtin-sinl
 CFLAGS-s_sincos.c += -fno-builtin-sincosl
 CFLAGS-w_sinh.c += -fno-builtin-sinhl
+CFLAGS-s_sinpi.c += -fno-builtin-sinpil
 CFLAGS-w_sqrt.c += -fno-builtin-sqrtl
 CFLAGS-s_tan.c += -fno-builtin-tanl
 CFLAGS-s_tanh.c += -fno-builtin-tanhl
+CFLAGS-s_tanpi.c += -fno-builtin-tanpil
 CFLAGS-w_tgamma.c += -fno-builtin-tgammal
 CFLAGS-s_totalorder.c += -fno-builtin-totalorderl
 CFLAGS-s_totalordermag.c += -fno-builtin-totalordermagl
@@ -1435,11 +1485,15 @@ endif
 # Likewise, for _Float32x and _Float64 aliases.
 CFLAGS-w_acos.c += -fno-builtin-acosf32x -fno-builtin-acosf64
 CFLAGS-w_acosh.c += -fno-builtin-acoshf32x -fno-builtin-acoshf64
+CFLAGS-s_acospi.c += -fno-builtin-acospif32x -fno-builtin-acospif64
 CFLAGS-w_asin.c += -fno-builtin-asinf32x -fno-builtin-asinf64
 CFLAGS-s_asinh.c += -fno-builtin-asinhf32x -fno-builtin-asinhf64
+CFLAGS-s_asinpi.c += -fno-builtin-asinpif32x -fno-builtin-asinpif64
 CFLAGS-s_atan.c += -fno-builtin-atanf32x -fno-builtin-atanf64
 CFLAGS-w_atan2.c += -fno-builtin-atan2f32x -fno-builtin-atan2f64
+CFLAGS-s_atan2pi.c += -fno-builtin-atan2pif32x -fno-builtin-atan2pif64
 CFLAGS-w_atanh.c += -fno-builtin-atanhf32x -fno-builtin-atanhf64
+CFLAGS-s_atanpi.c += -fno-builtin-atanpif32x -fno-builtin-atanpif64
 CFLAGS-s_cabs.c += -fno-builtin-cabsf32x -fno-builtin-cabsf64
 CFLAGS-s_cacos.c += -fno-builtin-cacosf32x -fno-builtin-cacosf64
 CFLAGS-s_cacosh.c += -fno-builtin-cacoshf32x -fno-builtin-cacoshf64
@@ -1461,6 +1515,7 @@ CFLAGS-s_conj.c += -fno-builtin-conjf32x -fno-builtin-conjf64
 CFLAGS-s_copysign.c += -fno-builtin-copysignf32x -fno-builtin-copysignf64
 CFLAGS-s_cos.c += -fno-builtin-cosf32x -fno-builtin-cosf64
 CFLAGS-w_cosh.c += -fno-builtin-coshf32x -fno-builtin-coshf64
+CFLAGS-s_cospi.c += -fno-builtin-cospif32x -fno-builtin-cospif64
 CFLAGS-s_cpow.c += -fno-builtin-cpowf32x -fno-builtin-cpowf64
 CFLAGS-s_cproj.c += -fno-builtin-cprojf32x -fno-builtin-cprojf64
 CFLAGS-s_creal.c += -fno-builtin-crealf32x -fno-builtin-crealf64
@@ -1543,9 +1598,11 @@ CFLAGS-s_setpayloadsig.c += -fno-builtin-setpayloadsigf32x -fno-builtin-setpaylo
 CFLAGS-s_sin.c += -fno-builtin-sinf32x -fno-builtin-sinf64
 CFLAGS-s_sincos.c += -fno-builtin-sincosf32x -fno-builtin-sincosf64
 CFLAGS-w_sinh.c += -fno-builtin-sinhf32x -fno-builtin-sinhf64
+CFLAGS-s_sinpi.c += -fno-builtin-sinpif32x -fno-builtin-sinpif64
 CFLAGS-w_sqrt.c += -fno-builtin-sqrtf32x -fno-builtin-sqrtf64
 CFLAGS-s_tan.c += -fno-builtin-tanf32x -fno-builtin-tanf64
 CFLAGS-s_tanh.c += -fno-builtin-tanhf32x -fno-builtin-tanhf64
+CFLAGS-s_tanpi.c += -fno-builtin-tanpif32x -fno-builtin-tanpif64
 CFLAGS-w_tgamma.c += -fno-builtin-tgammaf32x -fno-builtin-tgammaf64
 CFLAGS-s_totalorder.c += -fno-builtin-totalorderf32x -fno-builtin-totalorderf64
 CFLAGS-s_totalordermag.c += -fno-builtin-totalordermagf32x -fno-builtin-totalordermagf64
@@ -1559,11 +1616,15 @@ CFLAGS-s_yn.c += -fno-builtin-ynf32x -fno-builtin-ynf64
 # Likewise, for _Float32 aliases.
 CFLAGS-w_acosf.c += -fno-builtin-acosf32
 CFLAGS-w_acoshf.c += -fno-builtin-acoshf32
+CFLAGS-s_acospif.c += -fno-builtin-acospif32
 CFLAGS-w_asinf.c += -fno-builtin-asinf32
 CFLAGS-s_asinhf.c += -fno-builtin-asinhf32
+CFLAGS-s_asinpif.c += -fno-builtin-asinpif32
 CFLAGS-s_atanf.c += -fno-builtin-atanf32
 CFLAGS-w_atan2f.c += -fno-builtin-atan2f32
+CFLAGS-s_atan2pif.c += -fno-builtin-atan2pif32
 CFLAGS-w_atanhf.c += -fno-builtin-atanhf32
+CFLAGS-s_atanpif.c += -fno-builtin-atanpif32
 CFLAGS-s_cabsf.c += -fno-builtin-cabsf32
 CFLAGS-s_cacosf.c += -fno-builtin-cacosf32
 CFLAGS-s_cacoshf.c += -fno-builtin-cacoshf32
@@ -1585,6 +1646,7 @@ CFLAGS-s_conjf.c += -fno-builtin-conjf32
 CFLAGS-s_copysignf.c += -fno-builtin-copysignf32
 CFLAGS-s_cosf.c += -fno-builtin-cosf32
 CFLAGS-w_coshf.c += -fno-builtin-coshf32
+CFLAGS-s_cospif.c += -fno-builtin-cospif32
 CFLAGS-s_cpowf.c += -fno-builtin-cpowf32
 CFLAGS-s_cprojf.c += -fno-builtin-cprojf32
 CFLAGS-s_crealf.c += -fno-builtin-crealf32
@@ -1661,9 +1723,11 @@ CFLAGS-s_setpayloadsigf.c += -fno-builtin-setpayloadsigf32
 CFLAGS-s_sinf.c += -fno-builtin-sinf32
 CFLAGS-s_sincosf.c += -fno-builtin-sincosf32
 CFLAGS-w_sinhf.c += -fno-builtin-sinhf32
+CFLAGS-s_sinpif.c += -fno-builtin-sinpif32
 CFLAGS-w_sqrtf.c += -fno-builtin-sqrtf32
 CFLAGS-s_tanf.c += -fno-builtin-tanf32
 CFLAGS-s_tanhf.c += -fno-builtin-tanhf32
+CFLAGS-s_tanpif.c += -fno-builtin-tanpif32
 CFLAGS-w_tgammaf.c += -fno-builtin-tgammaf32
 CFLAGS-s_totalorderf.c += -fno-builtin-totalorderf32
 CFLAGS-s_totalordermagf.c += -fno-builtin-totalordermagf32

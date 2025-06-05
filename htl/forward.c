@@ -1,5 +1,5 @@
 /* Libc stubs for pthread functions.  Hurd pthread version.
-   Copyright (C) 2002-2024 Free Software Foundation, Inc.
+   Copyright (C) 2002-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -52,36 +52,6 @@ name decl								      \
 
 #define FORWARD(name, decl, params, defretval) \
   FORWARD2 (name, int, decl, params, return defretval)
-
-FORWARD (pthread_attr_destroy, (pthread_attr_t *attr), (attr), 0)
-
-FORWARD (pthread_attr_init, (pthread_attr_t *attr), (attr), 0)
-
-FORWARD (pthread_attr_setschedparam,
-	 (pthread_attr_t *attr, const struct sched_param *param),
-	 (attr, param), 0)
-
-FORWARD (pthread_attr_getscope,
-	 (const pthread_attr_t *attr, int *scope), (attr, scope), 0)
-FORWARD (pthread_attr_setscope, (pthread_attr_t *attr, int scope),
-	 (attr, scope), 0)
-
-
-FORWARD (pthread_condattr_destroy, (pthread_condattr_t *attr), (attr), 0)
-FORWARD (pthread_condattr_init, (pthread_condattr_t *attr), (attr), 0)
-
-
-FORWARD (pthread_cond_broadcast, (pthread_cond_t *cond), (cond), 0)
-FORWARD (pthread_cond_destroy, (pthread_cond_t *cond), (cond), 0)
-FORWARD (pthread_cond_init,
-	 (pthread_cond_t *cond, const pthread_condattr_t *cond_attr),
-	 (cond, cond_attr), 0)
-FORWARD (pthread_cond_signal, (pthread_cond_t *cond), (cond), 0)
-FORWARD (pthread_cond_wait, (pthread_cond_t *cond, pthread_mutex_t *mutex),
-	 (cond, mutex), 0)
-FORWARD (pthread_cond_timedwait,
-	 (pthread_cond_t *cond, pthread_mutex_t *mutex,
-	  const struct timespec *abstime), (cond, mutex, abstime), 0)
 
 /* Use an alias to avoid warning, as pthread_exit is declared noreturn.  */
 FORWARD_NORETURN (__pthread_exit, void, (void *retval), (retval),

@@ -1,5 +1,5 @@
 /* Set a thread's signal state.  Hurd on Mach version.
-   Copyright (C) 2002-2024 Free Software Foundation, Inc.
+   Copyright (C) 2002-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -36,7 +36,10 @@ __pthread_sigstate (struct __pthread *thread, int how,
   if (set != NULL)
     new = *set;
 
-  ss = _hurd_thread_sigstate (thread->kernel_thread);
+  if (thread == _pthread_self ())
+    ss = _hurd_self_sigstate ();
+  else
+    ss = _hurd_thread_sigstate (thread->kernel_thread);
   assert (ss);
 
   _hurd_sigstate_lock (ss);
@@ -82,3 +85,4 @@ __pthread_sigstate (struct __pthread *thread, int how,
 
   return err;
 }
+libc_hidden_def (__pthread_sigstate)

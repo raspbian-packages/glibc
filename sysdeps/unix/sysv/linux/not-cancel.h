@@ -1,5 +1,5 @@
 /* Uncancelable versions of cancelable interfaces.  Linux/NPTL version.
-   Copyright (C) 2003-2024 Free Software Foundation, Inc.
+   Copyright (C) 2003-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -27,18 +27,19 @@
 #include <sys/syscall.h>
 #include <sys/wait.h>
 #include <time.h>
+#include <sys/random.h>
 
 /* Non cancellable open syscall.  */
-__typeof (open) __open_nocancel;
+extern int __open_nocancel (const char *, int, ...);
 
 /* Non cancellable open syscall (LFS version).  */
-__typeof (open64) __open64_nocancel;
+extern int __open64_nocancel (const char *, int, ...);
 
 /* Non cancellable openat syscall.  */
-__typeof (openat) __openat_nocancel;
+extern int __openat_nocancel (int fd, const char *, int, ...);
 
 /* Non cacellable openat syscall (LFS version).  */
-__typeof (openat64) __openat64_nocancel;
+extern int __openat64_nocancel (int fd, const char *, int, ...);
 
 /* Non cancellable read syscall.  */
 __typeof (__read) __read_nocancel;
@@ -53,7 +54,7 @@ __typeof (__write) __write_nocancel;
 __typeof (__close) __close_nocancel;
 
 /* Uncancelable fcntl.  */
-__typeof (__fcntl) __fcntl64_nocancel;
+int __fcntl64_nocancel (int, int, ...);
 
 #if IS_IN (libc) || IS_IN (rtld)
 hidden_proto (__open_nocancel)
@@ -84,15 +85,17 @@ __writev_nocancel_nostatus (int fd, const struct iovec *iov, int iovcnt)
 }
 
 static inline ssize_t
-__getrandom_nocancel (void *buf, size_t buflen, unsigned int flags)
+__getrandom_nocancel_direct (void *buf, size_t buflen, unsigned int flags)
 {
   return INLINE_SYSCALL_CALL (getrandom, buf, buflen, flags);
 }
 
+__typeof (getrandom) __getrandom_nocancel attribute_hidden;
+
 /* Non cancellable getrandom syscall that does not also set errno in case of
    failure.  */
 static inline ssize_t
-__getrandom_nocancel_nostatus (void *buf, size_t buflen, unsigned int flags)
+__getrandom_nocancel_nostatus_direct (void *buf, size_t buflen, unsigned int flags)
 {
   return INTERNAL_SYSCALL_CALL (getrandom, buf, buflen, flags);
 }

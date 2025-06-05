@@ -3,30 +3,37 @@
 # Maximal error of functions:
 Function: "acos":
 double: 1
-float: 1
 
 Function: "acosh":
 double: 2
-float: 2
+
+Function: "acospi":
+double: 2
+float: 1
 
 Function: "asin":
 double: 1
-float: 1
 
 Function: "asinh":
 double: 2
-float: 2
 
-Function: "atan":
+Function: "asinpi":
 double: 1
 float: 1
 
-Function: "atan2":
-float: 2
+Function: "atan":
+double: 1
+
+Function: "atan2pi":
+double: 1
+float: 1
 
 Function: "atanh":
 double: 2
-float: 2
+
+Function: "atanpi":
+double: 2
+float: 1
 
 Function: "cabs":
 double: 1
@@ -46,9 +53,6 @@ float: 2
 Function: Imaginary part of "cacosh":
 double: 1
 float: 2
-
-Function: "carg":
-float: 1
 
 Function: Real part of "casin":
 double: 1
@@ -84,7 +88,6 @@ float: 1
 
 Function: "cbrt":
 double: 4
-float: 1
 
 Function: Real part of "ccos":
 double: 1
@@ -132,6 +135,9 @@ float: 1
 
 Function: "cosh":
 double: 2
+
+Function: "cospi":
+double: 2
 float: 2
 
 Function: Real part of "cpow":
@@ -143,6 +149,9 @@ float: 2
 
 Function: Real part of "csin":
 double: 1
+float: 1
+
+Function: Imaginary part of "csin":
 float: 1
 
 Function: Real part of "csinh":
@@ -178,11 +187,9 @@ float: 2
 
 Function: "erf":
 double: 1
-float: 1
 
 Function: "erfc":
 double: 5
-float: 3
 
 Function: "exp":
 double: 1
@@ -192,12 +199,17 @@ Function: "exp10":
 double: 2
 float: 1
 
+Function: "exp10m1":
+double: 3
+
 Function: "exp2":
 double: 1
 
+Function: "exp2m1":
+double: 2
+
 Function: "expm1":
 double: 1
-float: 1
 
 Function: "gamma":
 double: 4
@@ -205,6 +217,7 @@ float: 7
 
 Function: "hypot":
 double: 1
+float: 1
 
 Function: "j0":
 double: 2
@@ -220,23 +233,26 @@ float: 4
 
 Function: "lgamma":
 double: 4
-float: 7
 
 Function: "log10":
 double: 2
 float: 2
 
+Function: "log10p1":
+double: 1
+
 Function: "log1p":
 double: 1
-float: 1
 
 Function: "log2":
 double: 2
 float: 1
 
+Function: "log2p1":
+double: 1
+
 Function: "logp1":
 double: 1
-float: 1
 
 Function: "pow":
 double: 1
@@ -251,18 +267,20 @@ float: 1
 
 Function: "sinh":
 double: 2
-float: 2
 
-Function: "tan":
-float: 1
-
-Function: "tanh":
+Function: "sinpi":
 double: 2
 float: 2
 
+Function: "tanh":
+double: 2
+
+Function: "tanpi":
+double: 3
+float: 3
+
 Function: "tgamma":
 double: 9
-float: 8
 
 Function: "y0":
 double: 3

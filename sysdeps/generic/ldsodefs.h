@@ -1,5 +1,5 @@
 /* Run-time dynamic linker data structures for loaded ELF shared objects.
-   Copyright (C) 1995-2024 Free Software Foundation, Inc.
+   Copyright (C) 1995-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -392,33 +392,12 @@ struct rtld_global
   /* List of search directories.  */
   EXTERN struct r_search_path_elem *_dl_all_dirs;
 
-  /* Structure describing the dynamic linker itself.  */
-  EXTERN struct link_map _dl_rtld_map;
-#ifdef SHARED
-  /* Used to store the audit information for the link map of the
-     dynamic loader.  */
-  struct auditstate _dl_rtld_auditstate[DL_NNS];
-#endif
-
-#if !PTHREAD_IN_LIBC && defined SHARED \
-    && defined __rtld_lock_default_lock_recursive
-  EXTERN void (*_dl_rtld_lock_recursive) (void *);
-  EXTERN void (*_dl_rtld_unlock_recursive) (void *);
-#endif
-
   /* Get architecture specific definitions.  */
 #define PROCINFO_DECL
 #ifndef PROCINFO_CLASS
 # define PROCINFO_CLASS EXTERN
 #endif
 #include <dl-procruntime.c>
-
-#if !PTHREAD_IN_LIBC
-  /* If loading a shared object requires that we make the stack executable
-     when it was not, we do it by calling this function.
-     It returns an errno code or zero on success.  */
-  EXTERN int (*_dl_make_stack_executable_hook) (void **);
-#endif
 
   /* Prevailing state of the stack, PF_X indicating it's executable.  */
   EXTERN ElfW(Word) _dl_stack_flags;
@@ -716,17 +695,23 @@ extern const ElfW(Phdr) *_dl_phdr;
 extern size_t _dl_phnum;
 #endif
 
-#if PTHREAD_IN_LIBC
-/* This function changes the permissions of all stacks (not just those
-   of the main stack).  */
-int _dl_make_stacks_executable (void **stack_endp) attribute_hidden;
-#else
-/* This is the initial value of GL(dl_make_stack_executable_hook).
-   A threads library can change it.  The ld.so implementation changes
-   the permissions of the main stack only.  */
-extern int _dl_make_stack_executable (void **stack_endp);
-rtld_hidden_proto (_dl_make_stack_executable)
-#endif
+/* Possible values for the glibc.rtld.execstack tunable.  */
+enum stack_tunable_mode
+  {
+    /* Do not allow executable stacks, even if program requires it.  */
+    stack_tunable_mode_disable = 0,
+    /* Follows either ABI requirement, or the PT_GNU_STACK value.  */
+    stack_tunable_mode_enable = 1,
+    /* Always enable an executable stack.  */
+    stack_tunable_mode_force = 2
+  };
+
+void _dl_handle_execstack_tunable (void) attribute_hidden;
+
+/* This function changes the permission of the memory region pointed
+   by STACK_ENDP to executable and update the internal memory protection
+   flags for future thread stack creation.  */
+int _dl_make_stack_executable (const void *stack_endp) attribute_hidden;
 
 /* Variable pointing to the end of the stack (or close to it).  This value
    must be constant over the runtime of the application.  Some programs
@@ -1012,6 +997,13 @@ extern struct link_map *_dl_new_object (char *realname, const char *libname,
 extern void _dl_relocate_object (struct link_map *map,
 				 struct r_scope_elem *scope[],
 				 int reloc_mode, int consider_profiling)
+     attribute_hidden;
+
+/* Perform relocation, but do not apply RELRO.  Does not check
+   L->relocated.  Otherwise the same as _dl_relocate_object.  */
+void _dl_relocate_object_no_relro (struct link_map *map,
+				   struct r_scope_elem *scope[],
+				   int reloc_mode, int consider_profiling)
      attribute_hidden;
 
 /* Protect PT_GNU_RELRO area.  */
@@ -1322,12 +1314,26 @@ rtld_active (void)
   return GLRO(dl_init_all_dirs) != NULL;
 }
 
+/* Pre-allocated link map for the dynamic linker itself.  */
+extern struct link_map _dl_rtld_map attribute_hidden;
+
+/* Used to store the audit information for the link map of the
+   dynamic loader.  */
+extern struct auditstate _dl_rtld_auditstate[DL_NNS] attribute_hidden;
+
+/* Returns true of L is the link map of the dynamic linker itself.  */
+static inline bool
+is_rtld_link_map (const struct link_map *l)
+{
+  return l == &_dl_rtld_map;
+}
+
 static inline struct auditstate *
 link_map_audit_state (struct link_map *l, size_t index)
 {
-  if (l == &GL (dl_rtld_map))
+  if (is_rtld_link_map (l))
     /* The auditstate array is stored separately.  */
-    return &GL (dl_rtld_auditstate) [index];
+    return _dl_rtld_auditstate + index;
   else
     {
       /* The auditstate array follows the link map in memory.  */
@@ -1388,6 +1394,13 @@ void DL_ARCH_FIXUP_ATTRIBUTE _dl_audit_pltexit (struct link_map *l,
   attribute_hidden;
 
 #else  /* !SHARED */
+/* No special dynamic linker link map in static builds.  */
+static inline bool
+is_rtld_link_map (const struct link_map *l)
+{
+  return false;
+}
+
 static inline void
 _dl_audit_objclose (struct link_map *l)
 {

@@ -1,5 +1,5 @@
 /* Relocate a shared object and resolve its references to other loaded objects.
-   Copyright (C) 1995-2024 Free Software Foundation, Inc.
+   Copyright (C) 1995-2025 Free Software Foundation, Inc.
    Copyright The GNU Toolchain Authors.
    This file is part of the GNU C Library.
 
@@ -202,12 +202,9 @@ resolve_map (lookup_t l, struct r_scope_elem *scope[], const ElfW(Sym) **ref,
 #include "dynamic-link.h"
 
 void
-_dl_relocate_object (struct link_map *l, struct r_scope_elem *scope[],
-		     int reloc_mode, int consider_profiling)
+_dl_relocate_object_no_relro (struct link_map *l, struct r_scope_elem *scope[],
+			      int reloc_mode, int consider_profiling)
 {
-  if (l->l_relocated)
-    return;
-
   struct textrels
   {
     caddr_t start;
@@ -220,8 +217,8 @@ _dl_relocate_object (struct link_map *l, struct r_scope_elem *scope[],
   int lazy = reloc_mode & RTLD_LAZY;
   int skip_ifunc = reloc_mode & __RTLD_NOIFUNC;
 
-#ifdef SHARED
   bool consider_symbind = false;
+#ifdef SHARED
   /* If we are auditing, install the same handlers we need for profiling.  */
   if ((reloc_mode & __RTLD_AUDIT) == 0)
     {
@@ -240,9 +237,7 @@ _dl_relocate_object (struct link_map *l, struct r_scope_elem *scope[],
     }
 #elif defined PROF
   /* Never use dynamic linker profiling for gprof profiling code.  */
-# define consider_profiling 0
-#else
-# define consider_symbind 0
+  consider_profiling = 0;
 #endif
 
   /* If DT_BIND_NOW is set relocate all references in this object.  We
@@ -300,7 +295,6 @@ _dl_relocate_object (struct link_map *l, struct r_scope_elem *scope[],
 
     ELF_DYNAMIC_RELOCATE (l, scope, lazy, consider_profiling, skip_ifunc);
 
-#ifndef PROF
     if ((consider_profiling || consider_symbind)
 	&& l->l_info[DT_PLTRELSZ] != NULL)
       {
@@ -321,7 +315,6 @@ _dl_relocate_object (struct link_map *l, struct r_scope_elem *scope[],
 	    _dl_fatal_printf (errstring, RTLD_PROGNAME, l->l_name);
 	  }
       }
-#endif
   }
 
   /* Mark the object so we know this work has been done.  */
@@ -342,17 +335,24 @@ _dl_relocate_object (struct link_map *l, struct r_scope_elem *scope[],
 
       textrels = textrels->next;
     }
-
-  /* In case we can protect the data now that the relocations are
-     done, do it.  */
-  if (l->l_relro_size != 0)
-    _dl_protect_relro (l);
 }
 
+void
+_dl_relocate_object (struct link_map *l, struct r_scope_elem *scope[],
+		     int reloc_mode, int consider_profiling)
+{
+  if (l->l_relocated)
+    return;
+  _dl_relocate_object_no_relro (l, scope, reloc_mode, consider_profiling);
+  _dl_protect_relro (l);
+}
 
 void
 _dl_protect_relro (struct link_map *l)
 {
+  if (l->l_relro_size == 0)
+    return;
+
   ElfW(Addr) start = ALIGN_DOWN((l->l_addr
 				 + l->l_relro_addr),
 				GLRO(dl_pagesize));

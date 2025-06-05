@@ -1,5 +1,5 @@
 /* Internal functions for the *scanf* implementation.
-   Copyright (C) 1991-2024 Free Software Foundation, Inc.
+   Copyright (C) 1991-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -2028,7 +2028,51 @@ digits_extended_fail:
 	      if (width > 0)
 		--width;
 	      char_buffer_add (&charbuf, c);
-	      /* It is "nan".  */
+	      /* It is at least "nan".  Now we check for nan() and
+		 nan(n-char-sequence).  */
+	      if (width != 0 && inchar () != EOF)
+		{
+		  if (c == L_('('))
+		    {
+		      if (width > 0)
+			--width;
+		      char_buffer_add (&charbuf, c);
+		      /* A '(' was observed, check for a closing ')', there
+			 may or may not be a n-char-sequence in between.  We
+			 have to check the longest prefix until there is a
+			 conversion error or closing parenthesis.  */
+		      do
+			{
+			  if (__glibc_unlikely (width == 0
+						|| inchar () == EOF))
+			    {
+			      /* Conversion error because we ran out of
+				 characters.  */
+			      conv_error ();
+			      break;
+			    }
+			  if (!((c >= L_('0') && c <= L_('9'))
+				|| (c >= L_('A') && c <= L_('Z'))
+				|| (c >= L_('a') && c <= L_('z'))
+				|| c == L_('_') || c == L_(')')))
+			    {
+			      /* Invalid character was observed.  Only valid
+				 characters are [a-zA-Z0-9_] and ')'.  */
+			      conv_error ();
+			      break;
+			    }
+			  if (width > 0)
+			    --width;
+			  char_buffer_add (&charbuf, c);
+			}
+		      while (c != L_(')'));
+		      /* The loop only exits successfully when ')' is the
+			 last character.  */
+		    }
+		  else
+		    /* It is only 'nan'.  */
+		    ungetc (c, s);
+		}
 	      goto scan_float;
 	    }
 	  else if (TOLOWER (c) == L_('i'))

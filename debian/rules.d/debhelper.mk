@@ -130,7 +130,6 @@ $(stamp)debhelper-common:
 	      -e 'BEGIN {open(IN, "debian/tmp/usr/share/i18n/SUPPORTED"); $$l = join("", grep { !/^C\.UTF-8/ } grep { /UTF-8/ } <IN>);} s/__PROVIDED_LOCALES__/$$l/g;' \
 	      -e 's#DEB_VERSION_UPSTREAM#$(DEB_VERSION_UPSTREAM)#g;' \
 	      -e 's#CURRENT_VER#$(DEB_VERSION)#g;' \
-	      -e 's#LIBC#$(libc)#g;' \
 	      $$x > $$y ; \
 	  case $$y in \
 	    *.install) \
@@ -238,7 +237,11 @@ $(stamp)debhelper_%: $(stamp)debhelper-common $(stamp)install_%
 	    sed -e "s#LIBDIR#$$libdir#g" -i $$t; \
 	    sed -e "s#RTLD_SO#$$rtld_so#g" -i $$t ; \
 	    sed -e "s#RTLD_TARGET#$$rtld_target#g" -i $$t ; \
-	    $(if $(filter $(call xx,mvec),no),sed -e "/libmvec/d" -e "/libm-\*\.a/d" -i $$t ;) \
+	    $(if $(filter $(call xx,mvec),no),sed -e "/libmvec/d" \
+	                                          -e "/libm-\*\.a/d" \
+	                                          -e "/lacks-unversioned-link-to-shared-library.*libm\.so/d" \
+	                                          -e "/unpack-message-for-deb-data.*libm\.a/d" \
+	                                          -i $$t ;) \
 	    $(if $(filter-out $(DEB_HOST_ARCH_OS),linux),sed -e "/gdb/d" -i $$t ;) \
 	  done ; \
 	done

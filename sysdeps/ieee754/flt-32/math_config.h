@@ -1,5 +1,5 @@
 /* Configuration for math routines.
-   Copyright (C) 2017-2024 Free Software Foundation, Inc.
+   Copyright (C) 2017-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -56,6 +56,33 @@ roundtoint (double_t x);
 static inline int32_t
 converttoint (double_t x);
 #endif
+
+#ifndef ROUNDEVEN_INTRINSICS
+/* When set, roundeven_finite will route to the internal roundeven function.  */
+# define ROUNDEVEN_INTRINSICS 1
+#endif
+
+/* Round x to nearest integer value in floating-point format, rounding halfway
+  cases to even.  If the input is non finite the result is unspecified.  */
+static inline double
+roundeven_finite (double x)
+{
+  if (!isfinite (x))
+    __builtin_unreachable ();
+#if ROUNDEVEN_INTRINSICS
+  return roundeven (x);
+#else
+  double y = round (x);
+  if (fabs (x - y) == 0.5)
+    {
+      union { double f; uint64_t i; } u = {y};
+      union { double f; uint64_t i; } v = {y - copysign (1.0, x)};
+      if (__builtin_ctzll (v.i) > __builtin_ctzll (u.i))
+        y = v.f;
+    }
+  return y;
+#endif
+}
 
 static inline uint32_t
 asuint (float f)
@@ -166,9 +193,9 @@ extern const struct exp2f_data
   uint64_t tab[1 << EXP2F_TABLE_BITS];
   double shift_scaled;
   double poly[EXP2F_POLY_ORDER];
-  double shift;
   double invln2_scaled;
   double poly_scaled[EXP2F_POLY_ORDER];
+  double shift;
 } __exp2f_data attribute_hidden;
 
 #define LOGF_TABLE_BITS 4

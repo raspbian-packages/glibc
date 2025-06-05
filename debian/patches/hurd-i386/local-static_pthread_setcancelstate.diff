@@ -2,6 +2,8 @@ since the move of libpthread functions to libc, glibc dropped the use
 of __libc_ptf_call. But htl hasn't made the move yet, so we have to use
 __libc_ptf_call there for now.
 
+This is fixed for 2.42 and this patch should be dropped then.
+
 Index: glibc-2.36/misc/error.c
 ===================================================================
 --- glibc-2.36.orig/misc/error.c

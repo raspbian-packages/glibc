@@ -1,4 +1,4 @@
-# Copyright (C) 1998-2024 Free Software Foundation, Inc.
+# Copyright (C) 1998-2025 Free Software Foundation, Inc.
 # Copyright The GNU Toolchain Authors.
 # This file is part of the GNU C Library.
 
@@ -171,16 +171,16 @@ CFLAGS-recvfrom_chk.c += -fexceptions -fasynchronous-unwind-tables
 # set up for us, so keep the CFLAGS/CPPFLAGS split logical as the order is:
 # <user CFLAGS> <test CFLAGS> <user CPPFLAGS> <test CPPFLAGS>
 CFLAGS-tst-longjmp_chk.c += -fexceptions -fasynchronous-unwind-tables
-CPPFLAGS-tst-longjmp_chk.c += $(no-fortify-source),-D_FORTIFY_SOURCE=1
+CPPFLAGS-tst-longjmp_chk.c += $(no-fortify-source) -D_FORTIFY_SOURCE=1
 CFLAGS-tst-longjmp_chk2.c += -fexceptions -fasynchronous-unwind-tables
-CPPFLAGS-tst-longjmp_chk2.c += $(no-fortify-source),-D_FORTIFY_SOURCE=1
+CPPFLAGS-tst-longjmp_chk2.c += $(no-fortify-source) -D_FORTIFY_SOURCE=1
 CFLAGS-tst-longjmp_chk3.c += -fexceptions -fasynchronous-unwind-tables
-CPPFLAGS-tst-longjmp_chk3.c += $(no-fortify-source),-D_FORTIFY_SOURCE=1
-CPPFLAGS-tst-realpath-chk.c += $(no-fortify-source),-D_FORTIFY_SOURCE=2
-CPPFLAGS-tst-chk-cancel.c += $(no-fortify-source),-D_FORTIFY_SOURCE=2
-CFLAGS-tst-sprintf-fortify-rdonly.c += $(no-fortify-source),-D_FORTIFY_SOURCE=2
-CFLAGS-tst-fortify-syslog.c += $(no-fortify-source),-D_FORTIFY_SOURCE=2
-CFLAGS-tst-fortify-wide.c += $(no-fortify-source),-D_FORTIFY_SOURCE=2
+CPPFLAGS-tst-longjmp_chk3.c += $(no-fortify-source) -D_FORTIFY_SOURCE=1
+CPPFLAGS-tst-realpath-chk.c += $(no-fortify-source) -D_FORTIFY_SOURCE=2
+CPPFLAGS-tst-chk-cancel.c += $(no-fortify-source) -D_FORTIFY_SOURCE=2
+CFLAGS-tst-sprintf-fortify-rdonly.c += $(no-fortify-source) -D_FORTIFY_SOURCE=2
+CFLAGS-tst-fortify-syslog.c += $(no-fortify-source) -D_FORTIFY_SOURCE=2
+CFLAGS-tst-fortify-wide.c += $(no-fortify-source) -D_FORTIFY_SOURCE=2
 
 # _FORTIFY_SOURCE tests.
 # Auto-generate tests for _FORTIFY_SOURCE for different levels, compilers and
@@ -218,7 +218,8 @@ src-chk-nongnu = \#undef _GNU_SOURCE
 # cannot be disabled via pragmas, so require -Wno-error to be used.
 define gen-chk-test
 tests-$(1)-$(4)-chk += tst-fortify-$(1)-$(2)-$(3)-$(4)
-CFLAGS-tst-fortify-$(1)-$(2)-$(3)-$(4).$(1) += $(no-fortify-source),-D_FORTIFY_SOURCE=$(3) -Wno-format \
+CFLAGS-tst-fortify-$(1)-$(2)-$(3)-$(4).$(1) += $(no-fortify-source) -D_FORTIFY_SOURCE=$(3) \
+					  -Wno-format \
 					  -Wno-deprecated-declarations \
 					  -Wno-error
 $(eval $(call cflags-$(2),$(1),$(3),$(4)))
@@ -287,6 +288,7 @@ tests = \
   tst-fortify-wide \
   tst-longjmp_chk \
   tst-longjmp_chk2 \
+  tst-longjmp_chk3 \
   tst-realpath-chk \
   tst-sprintf-fortify-rdonly \
   tst-sprintf-fortify-unchecked \

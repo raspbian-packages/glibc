@@ -1,5 +1,5 @@
 /* Set up the data structures for the system-supplied DSO.
-   Copyright (C) 2012-2024 Free Software Foundation, Inc.
+   Copyright (C) 2012-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -91,8 +91,8 @@ setup_vdso (struct link_map *main_map __attribute__ ((unused)),
       /* Rearrange the list so this DSO appears after rtld_map.  */
       assert (l->l_next == NULL);
       assert (l->l_prev == main_map);
-      GL(dl_rtld_map).l_next = l;
-      l->l_prev = &GL(dl_rtld_map);
+      _dl_rtld_map.l_next = l;
+      l->l_prev = &_dl_rtld_map;
       *first_preload = &l->l_next;
 # else
       GL(dl_nns) = 1;

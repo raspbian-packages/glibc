@@ -1,4 +1,4 @@
-glibc (2.40-5+rpi1) trixie-staging; urgency=medium
+glibc (2.41-8+rpi1) trixie-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -6,7 +6,261 @@ glibc (2.40-5+rpi1) trixie-staging; urgency=medium
   [changes brought forward from 2.37-12+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Tue, 17 Oct 2023 12:00:24 +0000]
   * Remove valgrind conflicts.
 
- -- Raspbian forward porter <root@raspbian.org>  Thu, 16 Jan 2025 15:04:05 +0000
+ -- Peter Michael Green <plugwash@raspbian.org>  Thu, 05 Jun 2025 19:59:13 +0000
+
+glibc (2.41-8) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/testsuite-xfail-debian.mk: xfail tst-execstack-prog-static-tunable
+    on hurd-any. Drop duplicate unsupported stances commited uptream.
+  * debian/patches/hurd-i386/git-dup-refcnt.diff: Fix detecting too many dups.
+  * debian/patches/hurd-i386/git-xstate.diff: Fix restoring SSE state on
+    signals.
+  * debian/patches/hurd-i386/local-intr-msg-clobber.diff: Drop now-useless
+    patch.
+  * debian/patches/hurd-i386/git-utime-EINVAL.diff: Make *utime*s catch invalid
+    times.
+  * debian/patches/hurd-i386/git-xstate-initialized.diff: Fix crash in dash.
+  * debian/patches/hurd-i386/git-signal-fpe-exceptions.diff: Fix crash in FPE
+    handlers.
+  * debian/patches/hurd-i386/git-symlink-eexist.diff: Fix gnulib testsuite.
+
+  [ Adriano Rafael Gomes ]
+  * Update Brazilian Portuguese debconf translation.  Closes: #1103446.
+
+  [ Aurelien Jarno ]
+  * debian/rules.d/debhelper.mk: do not replace LIBC in debhelper.in files.
+    This was used for lintian overrides, but it is not used anymore.  Closes:
+    #1104099.
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix elf/tst-audit10 test failure on x86 systems without AVX.  Closes:
+      #1103303.
+    - Fix pthread_getattr_np failure when executable stack tunable is set.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sat, 17 May 2025 17:15:43 +0200
+
+glibc (2.41-7) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/git-pthread_setcancel.diff: Fix tst-cond32.
+
+  [ Atila KOÇ ]
+  * Update Turkish debconf translation.  Closes: #1101162.
+
+  [ Remus-Gabriel Chelu ]
+  * Update Romanian debconf translation.  Closes: #1101814.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Build a FMA version of atanh, sinh and tanh functions using IFUNC on
+      amd64.
+    - Fix a crash on amd64 when disabling XSAVEC through the glibc.cpu.hwcaps
+      tunable.
+    - Extend glibc.rtld.execstack tunable to force executable stack.
+    - Detect Intel Arrow Lake, Panther Lake, Clearwater Forest, and Diamond
+      Rapids CPUs.
+    - Handle unknown Intel processors with default tuning.
+  * debhelper.in/libc.NEWS: add an entry to describe the executable stack
+    change and provide workaround.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 13 Apr 2025 21:40:49 +0200
+
+glibc (2.41-6) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/rules.d/build.mk: Fix missing library-path to get just-built
+    libmachuser and libhurduser.
+  * debian/patches/hurd-i386/git-rt-timedwait-realtime.diff: Fix aio_suspend
+    delay.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Fri, 14 Mar 2025 23:56:28 +0100
+
+glibc (2.41-5) unstable; urgency=medium
+
+  [ Pedro Ribeiro ]
+  * Update Portuguese translation.  Closes: #1100065.
+
+  [ Bjarni Ingi Gislason ]
+  * debian/local/manpages/gencat.1: editorial fixes.  Closes: #1100190.
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix race condition between pthread_cancel() and pthread_setcanceltype()
+      affecting PARI/GP.  Closes: #1099624.
+  * debian/control.in/libc: add more conflicts against shared libraries with
+    executable stack.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Fri, 14 Mar 2025 21:07:20 +0100
+
+glibc (2.41-4) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/control.in/libc: change breaks against postgresql-15-pllua to the
+    fixed version available in apt.postgresql.org.  Closes: #1099197.
+  * debian/control.in/libc: add more conflicts against shared libraries with
+    executable stack.
+  * debian/tests/upstream-testsuite: disable biarch testsuite for i386
+    autopkgtest as the i386 debci runners are not powerful to run all the
+    testsuites within the default timeout.
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Remove an extra semicolon in math function declarations in
+      bits/mathcalls.h.  Addresses: #1099232.
+    - Move environ helper variables next to environ definition to help with
+      statically interposing getenv.  Closes: #1099217.
+  * debian/control.in/main: add conflicts against unscd.
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/git-pthread_once.diff: Move pthread_once symbol
+    to libc, to fix bison.
+  * debian/patches/hurd-i386/git-pthread_sigmask_nothread.diff: Fix calling
+    pthread_sigmask when no thread was created yet.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 09 Mar 2025 10:54:43 +0100
+
+glibc (2.41-3) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debhelper.in/libc{,-dev}.lintian-overrides: drop libm related lintian
+    overrides, as lintian does not provide a multiarch compatible way to
+    provide overrides.  Closes: #1099166, #1099167.
+  * debian/salsa-ci.yml: add unpack-message-for-deb-data to
+    SALSA_CI_LINTIAN_SUPPRESS_TAGS due to the above.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sat, 01 Mar 2025 15:24:08 +0100
+
+glibc (2.41-2) sid; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/proc_reauth.diff: Mark as committed for 2.42.
+
+  [ Aurelien Jarno ]
+  * debian/debhelper.in/*.lintian-overrides, debian/source/lintian-overrides:
+    update to limit the errors/warnings with recent lintian versions.
+  * debian/salsa-ci.yml: add CI/CD pipeline configuration for salsa.
+  * debian/patches/git-updates.diff: update from upstream stable branch.
+  * debian/patches/m68k/local-dwarf2-buildfix.diff: drop, obsolete.
+  * debian/patches/m68k/submitted-gcc34-seccomment.diff: drop, obsolete.
+  * debian/patches/hppa/local-inlining.diff: drop, obsolete.
+  * debian/control.in/libc: add breaks against dhcpcd (<< 1:10.1.0-7~), see
+    #1096157.
+  * debian/testsuite-xfail-debian.mk: mark math/test-float-log10 and
+    math/test-float32-log10 as XFAIL on powerpc as requested by the porters.
+  * debian/control.in/libc: add breaks against libraries with executable stack
+    that can be dlopened().
+
+  [ Camaleón ]
+  * Update Spanish debconf translation.  Closes: #1098283.
+
+  [ Paulo Henrique de Lima Santana ]
+  * Update Brazilian Portuguese translation.  Closes: #1098500.
+
+  [ Carles Pina i Estany ]
+  * Update Catalan debconf translation.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Fri, 28 Feb 2025 18:57:42 +0100
+
+glibc (2.41-1) experimental; urgency=medium
+
+  [ Aurelien Jarno ]
+  * New upstream release:
+    - Add the sched_setattr and sched_getattr functions.  Closes: #870488.
+    - Fix failure of pthread_cond_signal() to wake up pthread_cond_wait().
+      Closes: #986724.
+    - debian/copyright: update following upstream changes.
+    - debian/symbols.wildcards: add 2.41.
+    - debian/patches/git-updates.diff: update from upstream stable branch.
+    - debian/patches/arm/git-hwcap2-constants.diff: upstreamed.
+    - debian/patches/hurd-i386/git-fault-64bit.diff: upstreamed.
+    - debian/patches/hurd-i386/git-pthread_symbols.diff: upstreamed.
+    - debian/patches/hurd-i386/git-tst-aligned-alloc-random-thread.diff:
+      upstreamed.
+    - debian/patches/hurd-i386/git-tst-aligned-alloc-random-thread-mcheck.diff:
+      upstreamed.
+    - debian/patches/hurd-i386/git-default_pager.h.diff: upstreamed.
+    - debian/patches/hurd-i386/git-MAP_NORESERVE.diff: upstreamed.
+    - debian/patches/hurd-i386/git-signal-reply-port.diff: upstreamed.
+    - debian/patches/hurd-i386/git-CMSG_DATA.diff: upstreamed.
+    - debian/patches/hurd-i386/git-early-kill.diff: upstreamed.
+    - debian/patches/hurd-i386/submitted-bind_umask2.diff: rebased.
+    - debian/patches/hurd-i386/submitted-net.diff: rebased.
+    - debian/patches/hurd-i386/local-clock_gettime_MONOTONIC.diff: rebased.
+    - debian/patches/any/local-cudacc-float128.diff: dropped, obsolete.
+    - debian/patches/any/git-iconv-*: upstreamed.
+    - debian/patches/any/git-posix-fix-system-when-a-child-cannot-be*.patch:
+      upstreamed.
+  * debian/watch: rewrite pointing to git instead of release tarball (as we
+    need to mangle it anyway).
+  * debian/rules.d/tarball.mk: get rid of the now useless get-orig-source
+    target.
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/local-clock_gettime_MONOTONIC.diff: rebased.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Thu, 30 Jan 2025 23:14:50 +0100
+
+glibc (2.40-7) unstable; urgency=medium
+
+  [ Samuel Thibault ]
+  * debian/libc0.3.symbols.hurd-*: Prepare removal of experimental
+    exec_exec_file_name and file_exec_file_name.
+  * debian/patches/hurd-i386/local-exec_filename.diff: Drop old experimental
+    patch.
+  * debian/patches/hurd-i386/git-mig-strncpy.diff: ensure destination string is
+    null terminated.
+
+  [ Aurelien Jarno ]
+  * debian/libc0.1.symbols.common: remove leftover from kfreebsd removal.
+  * debhelper.in/locales.NEWS: remove asterisks list to make lintian happier.
+  * debian/copyright: fix issues reported by lintian.
+  * debian/tests/rebuild: rename into upstream-testsuite and only run the
+    build-arch-post-check target instead of the full build.
+  * debian/tests/control.in: update accordingly and drop fakeroot from the
+    depends.
+  * debian/rules.d/build.mk: display the failures again in the
+    build-arch-post-check target, useful for debci which drop the middle of
+    the autopkgtest log.
+
+  [ Frans Spiesschaert ]
+  * Update Dutch debconf translation.  Closes: #1094154.
+
+  [ Bjarni Ingi Gislason ]
+  * debian/local/manpages/locale.gen.5: editorial fixes.  Closes: #1095789.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sat, 15 Feb 2025 11:20:09 +0100
+
+glibc (2.40-6) unstable; urgency=medium
+
+  [ Ian Jackson ]
+  * debian/local/manpages/getconf.1: Mention `sysconf', mostly for the benefit
+    of search.  Closes: #942866.
+
+  [ Samuel Thibault ]
+  * debian/testsuite-xfail-debian.mk: Update for upcoming 2.41.
+  * debian/testsuite-xfail-debian.mk: Update against make 4.4.
+  * debian/patches/hurd-i386/git-CMSG_DATA.diff: Fix CMSG_DATA macro.
+  * control: On hurd-amd64, break openssh before rebuild against this.
+  * debian/patches/hurd-i386/git-early-kill.diff: Fix early kill.
+
+  [ Helge Kreutzmann ]
+  * Update German debconf translation.  Closes: #1092303.
+
+  [ Aurelien Jarno ]
+  * debian/control.in/arm{el,hf}, debian/sysdeps/arm{el,hf}.mk: drop disabled
+    code for armel/armhf multilib. It has never been used in Debian and is
+    also disabled in Ubuntu.
+  * debian/control.in/*: mirror existing Conflicts: of libc6 multilib packages
+    to libc6-dev multilib packages.  Closes: #1092278.
+  * debian/rules: update copyright header with all the previous maintainers.
+  * debian/copyright: rewrite in Machine-readable format.
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fixes a buffer overflow when printing assertion failure message
+      (GLIBC-SA-2025-0001 / CVE-2025-0395.
+
+  [ Luca Boccassi ]
+  * debian/control.in/libc: Fix breaks against sysvinit (source package) to
+    target sysvinit-core instead (binary package).
+
+ -- Aurelien Jarno <aurel32@debian.org>  Wed, 22 Jan 2025 23:57:51 +0100
 
 glibc (2.40-5) unstable; urgency=medium
 
@@ -939,7 +1193,7 @@ glibc (2.36-6) unstable; urgency=medium
   * debian/rules.d/build.mk: ensure that an empty libanl.a is shipped even on
     newly added upstream architectures.
   * debian/patches/git-updates.diff: update from upstream stable branch.
-  
+
   [ Dandan Zhang ]
   * debian/sysdeps/loong64.mk: add support for loong64 architecture.  Closes:
     #1024130.

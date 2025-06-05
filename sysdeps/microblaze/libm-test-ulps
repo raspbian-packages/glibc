@@ -2,28 +2,21 @@
 
 # Maximal error of functions:
 Function: "acos":
-float: 1
 
 Function: "acosh":
 double: 2
-float: 2
 
 Function: "asin":
-float: 1
 
 Function: "asinh":
 double: 1
-float: 1
 
 Function: "atan":
-float: 1
 
 Function: "atan2":
-float: 1
 
 Function: "atanh":
 double: 2
-float: 2
 
 Function: "cabs":
 double: 1
@@ -45,7 +38,6 @@ double: 1
 float: 2
 
 Function: "carg":
-float: 1
 
 Function: Real part of "casin":
 double: 1
@@ -81,7 +73,6 @@ float: 1
 
 Function: "cbrt":
 double: 3
-float: 1
 
 Function: Real part of "ccos":
 double: 1
@@ -127,7 +118,6 @@ float: 1
 
 Function: "cosh":
 double: 1
-float: 1
 
 Function: Real part of "cpow":
 double: 2
@@ -173,11 +163,9 @@ float: 2
 
 Function: "erf":
 double: 1
-float: 1
 
 Function: "erfc":
 double: 3
-float: 2
 
 Function: "exp":
 float: 1
@@ -191,7 +179,6 @@ float: 1
 
 Function: "expm1":
 double: 1
-float: 1
 
 Function: "gamma":
 double: 4
@@ -214,7 +201,6 @@ float: 4
 
 Function: "lgamma":
 double: 4
-float: 4
 
 Function: "log":
 float: 1
@@ -225,7 +211,6 @@ float: 2
 
 Function: "log1p":
 double: 1
-float: 1
 
 Function: "log2":
 double: 2
@@ -233,7 +218,6 @@ float: 1
 
 Function: "logp1":
 double: 1
-float: 1
 
 Function: "pow":
 float: 1
@@ -246,18 +230,12 @@ float: 1
 
 Function: "sinh":
 double: 2
-float: 2
-
-Function: "tan":
-float: 1
 
 Function: "tanh":
 double: 2
-float: 2
 
 Function: "tgamma":
 double: 5
-float: 4
 
 Function: "y0":
 double: 2

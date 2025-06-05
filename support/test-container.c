@@ -1,5 +1,5 @@
 /* Run a test case in an isolated namespace.
-   Copyright (C) 2018-2024 Free Software Foundation, Inc.
+   Copyright (C) 2018-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -440,7 +440,7 @@ copy_one_file (const char *sname, const char *dname)
   if (dfd < 0)
     FAIL_EXIT1 ("unable to open %s for writing\n", dname);
 
-  xcopy_file_range (sfd, 0, dfd, 0, st.st_size, 0);
+  xcopy_file_range (sfd, NULL, dfd, NULL, st.st_size, 0);
 
   xclose (sfd);
   xclose (dfd);

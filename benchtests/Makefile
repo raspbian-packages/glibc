@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2024 Free Software Foundation, Inc.
+# Copyright (C) 2013-2025 Free Software Foundation, Inc.
 # Copyright The GNU Toolchain Authors.
 # This file is part of the GNU C Library.
 
@@ -25,27 +25,41 @@ include ../Makeconfig
 
 bench-math := \
   acos \
+  acosf \
   acosh \
+  acoshf \
   asin \
+  asinf \
   asinh \
+  asinhf \
   atan \
   atan2 \
+  atan2f \
+  atanf \
   atanh \
+  atanhf \
   cbrt \
+  cbrtf \
   ceil \
   ceilf \
   cos \
   cosf \
   cosh \
+  coshf \
   erf \
   erfc \
+  erfcf \
+  erff \
   exp \
   exp10 \
   exp10f \
+  exp10m1f \
   exp2 \
   exp2f \
+  exp2m1f \
   expf \
   expm1 \
+  expm1f \
   floor \
   floorf \
   fmax \
@@ -64,13 +78,18 @@ bench-math := \
   j0 \
   j1 \
   lgamma \
+  lgammaf \
   llrint \
   llrintf \
   log \
   log10 \
+  log10f \
+  log10p1f \
   log1p \
+  log1pf \
   log2 \
   log2f \
+  log2p1f \
   logb \
   logbf \
   logf \
@@ -90,10 +109,14 @@ bench-math := \
   sincosf \
   sinf \
   sinh \
+  sinhf \
   sqrt \
   tan \
+  tanf \
   tanh \
+  tanhf \
   tgamma \
+  tgammaf \
   trunc \
   truncf \
   y0 \
@@ -153,6 +176,7 @@ string-benchset := \
   memrchr \
   memset \
   memset-large \
+  memset-random \
   memset-zero \
   memset-zero-large \
   rawmemchr \
@@ -252,6 +276,7 @@ hash-benchset := \
 
 stdlib-benchset := \
   arc4random \
+  bsearch \
   random-lock \
   strtod \
   # stdlib-benchset
@@ -294,11 +319,14 @@ CFLAGS-bench-isfinite.c += $(config-cflags-signaling-nans)
 
 ifeq (${BENCHSET},)
 bench-malloc := \
+  calloc-simple \
+  calloc-thread \
   malloc-simple \
   malloc-thread \
   # bench-malloc
 else
 bench-malloc := $(filter malloc-%,${BENCHSET})
+bench-malloc += $(filter calloc-%,${BENCHSET})
 endif
 
 ifeq (${STATIC-BENCHTESTS},yes)
@@ -415,6 +443,8 @@ VALIDBENCHSETNAMES := \
   bench-math \
   bench-pthread \
   bench-string \
+  calloc-simple \
+  calloc-thread \
   hash-benchset \
   malloc-simple \
   malloc-thread \
@@ -455,7 +485,7 @@ bench-set: $(binaries-benchset)
 bench-malloc: $(binaries-bench-malloc)
 	for run in $^; do \
 	  echo "$${run}"; \
-	  if [ `basename $${run}` = "bench-malloc-thread" ]; then \
+	  if [[ `basename $${run}` =~ bench-[cm]alloc-thread ]]; then \
 		for thr in 1 8 16 32; do \
 			echo "Running $${run} $${thr}"; \
 			$(run-bench) $${thr} > $${run}-$${thr}.out; \

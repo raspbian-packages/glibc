@@ -1,5 +1,5 @@
 /* Check if kernel supports set VMA range name.
-   Copyright (C) 2023-2024 Free Software Foundation, Inc.
+   Copyright (C) 2023-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -32,7 +32,7 @@ support_set_vma_name_supported (void)
   if (size == -1)
     FAIL_EXIT1 ("sysconf (_SC_PAGESIZE): %m\n");
 
-  void *vma = xmmap (0,
+  void *vma = xmmap (NULL,
 		     size,
 		     PROT_NONE,
 		     MAP_PRIVATE|MAP_ANONYMOUS|MAP_NORESERVE,

@@ -178,7 +178,7 @@ $(stamp)check_%: $(stamp)build_%
 	    echo "+---------------------------------------------------------------------+" ; \
 	    grep -E '^FAIL:' $(DEB_BUILDDIR)/tests.sum | sort ; \
 	    if ! echo $(DEB_VERSION) | grep -q -E '^Version:.*\+deb[0-9]+u[0-9]+' ; then \
-	        touch $@_failed ; \
+	        grep -E '^FAIL:' $(DEB_BUILDDIR)/tests.sum | sort > $@_failed ; \
 	    fi ; \
 	  else \
 	    echo "+---------------------------------------------------------------------+" ; \
@@ -200,6 +200,7 @@ build-arch-post-check: $(patsubst %,$(stamp)check_%,$(GLIBC_PASSES))
 	for pass in $(patsubst %,$(stamp)check_%,$(GLIBC_PASSES)); do \
 	  if [ -f $${pass}_failed ]; then \
 	    echo "check for $$(basename $$pass) failed"; \
+	    sed -e 's/^/  /' $${pass}_failed ; \
 	    fail=1; \
 	  fi; \
 	done; \
@@ -210,7 +211,7 @@ build-arch-post-check: $(patsubst %,$(stamp)check_%,$(GLIBC_PASSES))
 # build-dependency makes sure that the correct version is used, as
 # the format might change between upstream versions.
 ifeq ($(DEB_BUILD_ARCH),$(DEB_HOST_ARCH))
-ICONVCONFIG = $(CURDIR)/$(DEB_BUILDDIRLIBC)/elf/ld.so --library-path $(CURDIR)/$(DEB_BUILDDIRLIBC) \
+ICONVCONFIG = $(CURDIR)/$(DEB_BUILDDIRLIBC)/elf/ld.so --library-path $(CURDIR)/$(DEB_BUILDDIRLIBC):$(CURDIR)/$(DEB_BUILDDIRLIBC)/mach:$(CURDIR)/$(DEB_BUILDDIRLIBC)/hurd \
 	      $(CURDIR)/$(DEB_BUILDDIRLIBC)/iconv/iconvconfig
 else
 ICONVCONFIG = /usr/sbin/iconvconfig
@@ -350,7 +351,7 @@ ifeq ($(DEB_BUILD_ARCH),$(DEB_HOST_ARCH))
 LOCALEDEF = I18NPATH=$(CURDIR)/localedata \
 	    GCONV_PATH=$(CURDIR)/$(DEB_BUILDDIRLIBC)/iconvdata \
 	    LC_ALL=C \
-	    $(CURDIR)/$(DEB_BUILDDIRLIBC)/elf/ld.so --library-path $(CURDIR)/$(DEB_BUILDDIRLIBC) \
+	    $(CURDIR)/$(DEB_BUILDDIRLIBC)/elf/ld.so --library-path $(CURDIR)/$(DEB_BUILDDIRLIBC):$(CURDIR)/$(DEB_BUILDDIRLIBC)/mach:$(CURDIR)/$(DEB_BUILDDIRLIBC)/hurd \
 	    $(CURDIR)/$(DEB_BUILDDIRLIBC)/locale/localedef
 else
 LOCALEDEF = I18NPATH=$(CURDIR)/localedata \

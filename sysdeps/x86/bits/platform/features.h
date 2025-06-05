@@ -1,6 +1,6 @@
 /* Inline functions for x86 CPU features.
    This file is part of the GNU C Library.
-   Copyright (C) 2024 Free Software Foundation, Inc.
+   Copyright (C) 2024-2025 Free Software Foundation, Inc.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -20,7 +20,7 @@
 # error "Never include <bits/platform/features.h> directly; use <sys/platform/x86.h> instead."
 #endif
 
-static __inline__ _Bool
+static __inline__ bool
 x86_cpu_cet_active (unsigned int __index)
 {
   return false;

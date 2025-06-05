@@ -1,5 +1,5 @@
 /* Support for GNU properties.  x86 version.
-   Copyright (C) 2018-2024 Free Software Foundation, Inc.
+   Copyright (C) 2018-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -46,7 +46,7 @@ dl_isa_level_check (struct link_map *m, const char *program)
 #ifdef SHARED
       /* Skip ISA level check for ld.so since ld.so won't run if its ISA
 	 level is higher than CPU.  */
-      if (l == &GL(dl_rtld_map) || l->l_real == &GL(dl_rtld_map))
+      if (is_rtld_link_map (l) || is_rtld_link_map (l->l_real))
 	continue;
 #endif
 

@@ -1,6 +1,6 @@
 /* Scalar wrappers for double-precision Advanced SIMD vector math functions.
 
-   Copyright (C) 2023-2024 Free Software Foundation, Inc.
+   Copyright (C) 2023-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -33,6 +33,7 @@ VPCS_VECTOR_WRAPPER_ff (atan2_advsimd, _ZGVnN2vv_atan2)
 VPCS_VECTOR_WRAPPER (cbrt_advsimd, _ZGVnN2v_cbrt)
 VPCS_VECTOR_WRAPPER (cos_advsimd, _ZGVnN2v_cos)
 VPCS_VECTOR_WRAPPER (cosh_advsimd, _ZGVnN2v_cosh)
+VPCS_VECTOR_WRAPPER (cospi_advsimd, _ZGVnN2v_cospi)
 VPCS_VECTOR_WRAPPER (erf_advsimd, _ZGVnN2v_erf)
 VPCS_VECTOR_WRAPPER (erfc_advsimd, _ZGVnN2v_erfc)
 VPCS_VECTOR_WRAPPER (exp_advsimd, _ZGVnN2v_exp)
@@ -47,5 +48,7 @@ VPCS_VECTOR_WRAPPER (log2_advsimd, _ZGVnN2v_log2)
 VPCS_VECTOR_WRAPPER_ff (pow_advsimd, _ZGVnN2vv_pow)
 VPCS_VECTOR_WRAPPER (sin_advsimd, _ZGVnN2v_sin)
 VPCS_VECTOR_WRAPPER (sinh_advsimd, _ZGVnN2v_sinh)
+VPCS_VECTOR_WRAPPER (sinpi_advsimd, _ZGVnN2v_sinpi)
 VPCS_VECTOR_WRAPPER (tan_advsimd, _ZGVnN2v_tan)
 VPCS_VECTOR_WRAPPER (tanh_advsimd, _ZGVnN2v_tanh)
+VPCS_VECTOR_WRAPPER (tanpi_advsimd, _ZGVnN2v_tanpi)

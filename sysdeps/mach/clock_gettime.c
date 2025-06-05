@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2024 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -20,6 +20,7 @@
 #include <mach.h>
 #include <assert.h>
 #include <shlib-compat.h>
+#include <mach/mig_errors.h>
 
 /* Get the current time of day, putting it into *TS.
    Returns 0 on success, -1 on errors.  */
@@ -30,6 +31,29 @@ __clock_gettime (clockid_t clock_id, struct timespec *ts)
   error_t err;
 
   switch (clock_id) {
+
+    case CLOCK_MONOTONIC:
+      /* If HAVE_HOST_GET_UPTIME64 is not defined or not available,
+         CLOCK_MONOTONIC will be equivalent to CLOCK_REALTIME.  */
+#ifdef HAVE_HOST_GET_UPTIME64
+      {
+	time_value64_t tv;
+	err = __host_get_uptime64 (__mach_host_self (), &tv);
+
+	if (err != MIG_BAD_ID)
+	  {
+	    if (err)
+	      {
+		__set_errno (err);
+		return -1;
+	      }
+
+	    TIME_VALUE64_TO_TIMESPEC (&tv, ts);
+	    return 0;
+	  }
+      }
+#endif
+      /* FALLTHROUGH */
 
     case CLOCK_REALTIME:
       {

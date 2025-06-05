@@ -1,5 +1,5 @@
 /* Close a shared object opened by `_dl_open'.
-   Copyright (C) 1996-2024 Free Software Foundation, Inc.
+   Copyright (C) 1996-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -264,6 +264,12 @@ _dl_close_worker (struct link_map *map, bool force)
 	    _dl_catch_exception (NULL, _dl_call_fini, imap);
 
 #ifdef SHARED
+	  /* Auditing checkpoint: we will start deleting objects.
+	     This is supposed to happen before la_objclose (see _dl_fini),
+	     but only once per non-recursive dlclose call.  */
+	  if (!unload_any)
+	    _dl_audit_activity_nsid (nsid, LA_ACT_DELETE);
+
 	  /* Auditing checkpoint: we remove an object.  */
 	  _dl_audit_objclose (imap);
 #endif
@@ -424,12 +430,8 @@ _dl_close_worker (struct link_map *map, bool force)
   if (!unload_any)
     goto out;
 
-#ifdef SHARED
-  /* Auditing checkpoint: we will start deleting objects.  */
-  _dl_audit_activity_nsid (nsid, LA_ACT_DELETE);
-#endif
-
-  /* Notify the debugger we are about to remove some loaded objects.  */
+  /* Notify the debugger we are about to remove some loaded objects.
+     LA_ACT_DELETE has already been signalled above for !unload_any.  */
   struct r_debug *r = _dl_debug_update (nsid);
   r->r_state = RT_DELETE;
   _dl_debug_state ();
@@ -723,6 +725,11 @@ _dl_close_worker (struct link_map *map, bool force)
   /* TLS is cleaned up for the unloaded modules.  */
   __rtld_lock_unlock_recursive (GL(dl_load_tls_lock));
 
+  /* Notify the debugger those objects are finalized and gone.  */
+  r->r_state = RT_CONSISTENT;
+  _dl_debug_state ();
+  LIBC_PROBE (unmap_complete, 2, nsid, r);
+
 #ifdef SHARED
   /* Auditing checkpoint: we have deleted all objects.  Also, do not notify
      auditors of the cleanup of a failed audit module loading attempt.  */
@@ -734,11 +741,6 @@ _dl_close_worker (struct link_map *map, bool force)
     do
       --GL(dl_nns);
     while (GL(dl_ns)[GL(dl_nns) - 1]._ns_loaded == NULL);
-
-  /* Notify the debugger those objects are finalized and gone.  */
-  r->r_state = RT_CONSISTENT;
-  _dl_debug_state ();
-  LIBC_PROBE (unmap_complete, 2, nsid, r);
 
   /* Recheck if we need to retry, release the lock.  */
  out:

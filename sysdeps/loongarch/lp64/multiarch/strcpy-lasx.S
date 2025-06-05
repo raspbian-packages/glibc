@@ -1,5 +1,5 @@
 /* Optimized strcpy stpcpy implementation using LoongArch LASX instructions.
-   Copyright (C) 2023-2024 Free Software Foundation, Inc.
+   Copyright (C) 2023-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -211,5 +211,4 @@ L(zero_byte):
     jr              ra
 END(STRCPY)
 
-libc_hidden_builtin_def (STRCPY)
 #endif

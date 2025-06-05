@@ -1,5 +1,5 @@
 /* x86-64 CET initializers function.
-   Copyright (C) 2018-2024 Free Software Foundation, Inc.
+   Copyright (C) 2018-2025 Free Software Foundation, Inc.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -77,8 +77,8 @@ dl_check_legacy_object (struct link_map *m,
       /* Skip check for ld.so since it has the features enabled.  The
          features will be disabled later if they are not enabled in
 	 executable.  */
-      if (l == &GL(dl_rtld_map)
-          || l->l_real == &GL(dl_rtld_map)
+      if (is_rtld_link_map (l)
+          || is_rtld_link_map (l->l_real)
           || (info->program != NULL && l == m))
          continue;
 #endif

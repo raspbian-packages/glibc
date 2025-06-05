@@ -1,6 +1,6 @@
 /* Optimized strcpy unaligned implementation using basic LoongArch
    instructions.
-   Copyright (C) 2023-2024 Free Software Foundation, Inc.
+   Copyright (C) 2023-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -134,5 +134,4 @@ L(page_cross):
     b           L(end)
 END(STRCPY)
 
-libc_hidden_builtin_def (STRCPY)
 #endif

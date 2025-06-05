@@ -1,5 +1,5 @@
 /* Replacement for mach_msg used in interruptible Hurd RPCs.
-   Copyright (C) 1995-2024 Free Software Foundation, Inc.
+   Copyright (C) 1995-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -67,7 +67,7 @@ _hurd_intr_rpc_mach_msg (mach_msg_header_t *msg,
   mach_msg_bits_t msgh_bits;
   mach_port_t remote_port;
   mach_msg_id_t msgid;
-  volatile struct clobber save_data;
+  struct clobber save_data;
 
   if ((option & (MACH_SEND_MSG|MACH_RCV_MSG)) != (MACH_SEND_MSG|MACH_RCV_MSG)
       || _hurd_msgport_thread == MACH_PORT_NULL)

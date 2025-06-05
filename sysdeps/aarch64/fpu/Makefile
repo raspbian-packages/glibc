@@ -8,6 +8,7 @@ libmvec-supported-funcs = acos \
                           cbrt \
                           cos \
                           cosh \
+                          cospi \
                           erf \
                           erfc \
                           exp \
@@ -22,8 +23,10 @@ libmvec-supported-funcs = acos \
                           pow \
                           sin \
                           sinh \
+                          sinpi \
                           tan \
-                          tanh
+                          tanh \
+                          tanpi
 
 float-advsimd-funcs = $(libmvec-supported-funcs)
 double-advsimd-funcs = $(libmvec-supported-funcs)
@@ -41,8 +44,6 @@ libmvec-support = $(addsuffix f_advsimd,$(float-advsimd-funcs)) \
                   v_log10_data \
                   erf_data \
                   erff_data \
-                  sv_erf_data \
-                  sv_erff_data \
                   v_exp_tail_data \
                   erfc_data \
                   erfcf_data \

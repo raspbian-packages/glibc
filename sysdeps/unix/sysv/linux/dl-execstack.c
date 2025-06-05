@@ -1,5 +1,5 @@
 /* Stack executability handling for GNU dynamic linker.  Linux version.
-   Copyright (C) 2003-2024 Free Software Foundation, Inc.
+   Copyright (C) 2003-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,22 +16,13 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <errno.h>
 #include <ldsodefs.h>
-#include <libintl.h>
-#include <list.h>
-#include <pthreadP.h>
-#include <stackinfo.h>
-#include <stdbool.h>
-#include <sys/mman.h>
-#include <sysdep.h>
-#include <unistd.h>
 
-static int
-make_main_stack_executable (void **stack_endp)
+int
+_dl_make_stack_executable (const void *stack_endp)
 {
   /* This gives us the highest/lowest page that needs to be changed.  */
-  uintptr_t page = ((uintptr_t) *stack_endp
+  uintptr_t page = ((uintptr_t) stack_endp
 		    & -(intptr_t) GLRO(dl_pagesize));
 
   if (__mprotect ((void *) page, GLRO(dl_pagesize),
@@ -44,65 +35,8 @@ make_main_stack_executable (void **stack_endp)
 		  ) != 0)
     return errno;
 
-  /* Clear the address.  */
-  *stack_endp = NULL;
-
   /* Remember that we changed the permission.  */
   GL(dl_stack_flags) |= PF_X;
 
   return 0;
 }
-
-int
-_dl_make_stacks_executable (void **stack_endp)
-{
-  /* First the main thread's stack.  */
-  int err = make_main_stack_executable (stack_endp);
-  if (err != 0)
-    return err;
-
-  lll_lock (GL (dl_stack_cache_lock), LLL_PRIVATE);
-
-  list_t *runp;
-  list_for_each (runp, &GL (dl_stack_used))
-    {
-      err = __nptl_change_stack_perm (list_entry (runp, struct pthread, list));
-      if (err != 0)
-	break;
-    }
-
-  /* Also change the permission for the currently unused stacks.  This
-     might be wasted time but better spend it here than adding a check
-     in the fast path.  */
-  if (err == 0)
-    list_for_each (runp, &GL (dl_stack_cache))
-      {
-	err = __nptl_change_stack_perm (list_entry (runp, struct pthread,
-						    list));
-	if (err != 0)
-	  break;
-      }
-
-  lll_unlock (GL (dl_stack_cache_lock), LLL_PRIVATE);
-
-  return err;
-}
-
-int
-__nptl_change_stack_perm (struct pthread *pd)
-{
-#if _STACK_GROWS_DOWN
-  void *stack = pd->stackblock + pd->guardsize;
-  size_t len = pd->stackblock_size - pd->guardsize;
-#elif _STACK_GROWS_UP
-  void *stack = pd->stackblock;
-  size_t len = (uintptr_t) pd - pd->guardsize - (uintptr_t) pd->stackblock;
-#else
-# error "Define either _STACK_GROWS_DOWN or _STACK_GROWS_UP"
-#endif
-  if (__mprotect (stack, len, PROT_READ | PROT_WRITE | PROT_EXEC) != 0)
-    return errno;
-
-  return 0;
-}
-rtld_hidden_def (__nptl_change_stack_perm)

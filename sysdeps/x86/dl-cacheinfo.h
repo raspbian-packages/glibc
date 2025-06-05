@@ -1,5 +1,5 @@
 /* Initialize x86 cache info.
-   Copyright (C) 2020-2024 Free Software Foundation, Inc.
+   Copyright (C) 2020-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -567,6 +567,48 @@ handle_zhaoxin (int name)
   return 0;
 }
 
+static long int __attribute__ ((noinline))
+handle_hygon (int name)
+{
+  unsigned int eax;
+  unsigned int ebx;
+  unsigned int ecx;
+  unsigned int edx;
+  unsigned int count = 0x1;
+
+  if (name >= _SC_LEVEL3_CACHE_SIZE)
+    count = 0x3;
+  else if (name >= _SC_LEVEL2_CACHE_SIZE)
+    count = 0x2;
+  else if (name >= _SC_LEVEL1_DCACHE_SIZE)
+    count = 0x0;
+
+  /* Use __cpuid__ '0x8000_001D' to compute cache details.  */
+  __cpuid_count (0x8000001D, count, eax, ebx, ecx, edx);
+
+  switch (name)
+    {
+    case _SC_LEVEL1_ICACHE_ASSOC:
+    case _SC_LEVEL1_DCACHE_ASSOC:
+    case _SC_LEVEL2_CACHE_ASSOC:
+    case _SC_LEVEL3_CACHE_ASSOC:
+      return ((ebx >> 22) & 0x3ff) + 1;
+    case _SC_LEVEL1_ICACHE_LINESIZE:
+    case _SC_LEVEL1_DCACHE_LINESIZE:
+    case _SC_LEVEL2_CACHE_LINESIZE:
+    case _SC_LEVEL3_CACHE_LINESIZE:
+      return (ebx & 0xfff) + 1;
+    case _SC_LEVEL1_ICACHE_SIZE:
+    case _SC_LEVEL1_DCACHE_SIZE:
+    case _SC_LEVEL2_CACHE_SIZE:
+    case _SC_LEVEL3_CACHE_SIZE:
+      return (((ebx >> 22) & 0x3ff) + 1) * ((ebx & 0xfff) + 1) * (ecx + 1);
+    default:
+      __builtin_unreachable ();
+    }
+  return -1;
+}
+
 static void
 get_common_cache_info (long int *shared_ptr, long int * shared_per_thread_ptr, unsigned int *threads_ptr,
                 long int core)
@@ -889,6 +931,24 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
 
       shared_per_thread = shared;
     }
+  else if (cpu_features->basic.kind == arch_kind_hygon)
+    {
+      data = handle_hygon (_SC_LEVEL1_DCACHE_SIZE);
+      shared = handle_hygon (_SC_LEVEL3_CACHE_SIZE);
+      shared_per_thread = shared;
+
+      level1_icache_size = handle_hygon (_SC_LEVEL1_ICACHE_SIZE);
+      level1_icache_linesize = handle_hygon (_SC_LEVEL1_ICACHE_LINESIZE);
+      level1_dcache_size = data;
+      level1_dcache_assoc = handle_hygon (_SC_LEVEL1_DCACHE_ASSOC);
+      level1_dcache_linesize = handle_hygon (_SC_LEVEL1_DCACHE_LINESIZE);
+      level2_cache_size = handle_hygon (_SC_LEVEL2_CACHE_SIZE);;
+      level2_cache_assoc = handle_hygon (_SC_LEVEL2_CACHE_ASSOC);
+      level2_cache_linesize = handle_hygon (_SC_LEVEL2_CACHE_LINESIZE);
+      level3_cache_size = shared;
+      level3_cache_assoc = handle_hygon (_SC_LEVEL3_CACHE_ASSOC);
+      level3_cache_linesize = handle_hygon (_SC_LEVEL3_CACHE_LINESIZE);
+    }
 
   cpu_features->level1_icache_size = level1_icache_size;
   cpu_features->level1_icache_linesize = level1_icache_linesize;
@@ -988,14 +1048,6 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
   if (CPU_FEATURE_USABLE_P (cpu_features, FSRM))
     rep_movsb_threshold = 2112;
 
-  /* Non-temporal stores are more performant on Intel and AMD hardware above
-     non_temporal_threshold. Enable this for both Intel and AMD hardware. */
-  unsigned long int memset_non_temporal_threshold = SIZE_MAX;
-  if (!CPU_FEATURES_ARCH_P (cpu_features, Avoid_Non_Temporal_Memset)
-      && (cpu_features->basic.kind == arch_kind_intel
-	  || cpu_features->basic.kind == arch_kind_amd))
-    memset_non_temporal_threshold = non_temporal_threshold;
-
   /* For AMD CPUs that support ERMS (Zen3+), REP MOVSB is in a lot of
      cases slower than the vectorized path (and for some alignments,
      it is really slow, check BZ #30994).  */
@@ -1016,6 +1068,13 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
   /* NB: Ignore the default value 0.  */
   if (tunable_size != 0)
     shared = tunable_size;
+
+  /* Non-temporal stores are more performant on some hardware above
+     non_temporal_threshold. Currently Prefer_Non_Temporal is set for for both
+     Intel, AMD and Hygon hardware. */
+  unsigned long int memset_non_temporal_threshold = SIZE_MAX;
+  if (!CPU_FEATURES_ARCH_P (cpu_features, Avoid_Non_Temporal_Memset))
+    memset_non_temporal_threshold = non_temporal_threshold;
 
   tunable_size = TUNABLE_GET (x86_non_temporal_threshold, long int, NULL);
   if (tunable_size > minimum_non_temporal_threshold
@@ -1042,18 +1101,42 @@ dl_init_cacheinfo (struct cpu_features *cpu_features)
        slightly better than ERMS.  */
     rep_stosb_threshold = SIZE_MAX;
 
+  /*
+     For memset, the non-temporal implementation is only accessed through the
+     stosb code. ie:
+     ```
+     if (size >= rep_stosb_thresh)
+     {
+    	if (size >= non_temporal_thresh)
+     {
+     do_non_temporal ();
+     }
+    	do_stosb ();
+     }
+     do_normal_vec_loop ();
+     ```
+     So if we prefer non-temporal, set `rep_stosb_thresh = non_temporal_thresh`
+     to enable the implementation. If `rep_stosb_thresh = non_temporal_thresh`,
+    `rep stosb` will never be used.
+   */
+  TUNABLE_SET_WITH_BOUNDS (x86_memset_non_temporal_threshold,
+			   memset_non_temporal_threshold,
+			   minimum_non_temporal_threshold, SIZE_MAX);
+  /* Do `rep_stosb_thresh = non_temporal_thresh` after setting/getting the
+     final value of `x86_memset_non_temporal_threshold`. In some cases this can
+     be a matter of correctness.  */
+  if (CPU_FEATURES_ARCH_P (cpu_features, Avoid_STOSB))
+    rep_stosb_threshold
+	= TUNABLE_GET (x86_memset_non_temporal_threshold, long int, NULL);
+  TUNABLE_SET_WITH_BOUNDS (x86_rep_stosb_threshold, rep_stosb_threshold, 1,
+			   SIZE_MAX);
   TUNABLE_SET_WITH_BOUNDS (x86_data_cache_size, data, 0, SIZE_MAX);
   TUNABLE_SET_WITH_BOUNDS (x86_shared_cache_size, shared, 0, SIZE_MAX);
   TUNABLE_SET_WITH_BOUNDS (x86_non_temporal_threshold, non_temporal_threshold,
 			   minimum_non_temporal_threshold,
 			   maximum_non_temporal_threshold);
-  TUNABLE_SET_WITH_BOUNDS (x86_memset_non_temporal_threshold,
-			   memset_non_temporal_threshold,
-			   minimum_non_temporal_threshold, SIZE_MAX);
   TUNABLE_SET_WITH_BOUNDS (x86_rep_movsb_threshold, rep_movsb_threshold,
 			   minimum_rep_movsb_threshold, SIZE_MAX);
-  TUNABLE_SET_WITH_BOUNDS (x86_rep_stosb_threshold, rep_stosb_threshold, 1,
-			   SIZE_MAX);
 
   unsigned long int rep_movsb_stop_threshold;
   /* Setting the upper bound of ERMS to the computed value of

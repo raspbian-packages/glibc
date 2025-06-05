@@ -1,4 +1,4 @@
-# Copyright (C) 1993-2024 Free Software Foundation, Inc.
+# Copyright (C) 1993-2025 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -300,10 +300,21 @@ ifeq ($(subdir),elf)
 check-execstack-xfail += ld.so libc.so libpthread.so
 # We always create a thread for signals
 test-xfail-tst-single_threaded-pthread-static = yes
+
+CFLAGS-tst-execstack.c += -DDEFAULT_RWX_STACK=1
 endif
 
 # For bug 30166
 # (missing RLIMIT_AS support)
+ifeq ($(subdir),htl)
+tests-unsupported += tst-basic7
+endif
+ifeq ($(subdir),io)
+tests-unsupported += test-lfs
+endif
+ifeq ($(subdir),libio)
+tests-unsupported += tst-asprintf-null
+endif
 ifeq ($(subdir),malloc)
 tests-unsupported += tst-malloc-thread-fail
 tests-unsupported += tst-malloc-thread-fail-malloc-check
@@ -311,6 +322,22 @@ tests-unsupported += tst-malloc-thread-fail-mcheck
 tests-unsupported += tst-malloc-thread-fail-malloc-hugetlb1
 tests-unsupported += tst-malloc-thread-fail-malloc-hugetlb2
 tests-unsupported += tst-dynarray-fail
+endif
+ifeq ($(subdir),misc)
+tests-unsupported += bug18240
+endif
+ifeq ($(subdir),stdio-common)
+tests-unsupported += tst-getline-enomem
+tests-unsupported += tst-getline-enomem-mem
+tests-unsupported += tst-vfprintf-width-prec
+tests-unsupported += tst-vfprintf-width-prec-mem
+tests-unsupported += tst-vfprintf-width-prec-alloc
+endif
+ifeq ($(subdir),stdlib)
+tests-unsupported += test-bz22786 tst-strtod-overflow
+endif
+ifeq ($(subdir),timezone)
+tests-unsupported += tst-tzset
 endif
 
 # For bug 30167

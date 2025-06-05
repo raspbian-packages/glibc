@@ -1,6 +1,6 @@
 /* Machine-dependent ELF dynamic relocation inline functions.
    PowerPC64 version.
-   Copyright 1995-2024 Free Software Foundation, Inc.
+   Copyright 1995-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -537,7 +537,7 @@ elf_machine_fixup_plt (struct link_map *map, lookup_t sym_map,
   if (finaladdr != 0 && map != sym_map && !sym_map->l_relocated
 #if !defined RTLD_BOOTSTRAP && defined SHARED
       /* Bootstrap map doesn't have l_relocated set for it.  */
-      && sym_map != &GL(dl_rtld_map)
+      && !is_rtld_link_map (sym_map)
 #endif
       )
     offset = sym_map->l_addr;
@@ -662,7 +662,7 @@ resolve_ifunc (Elf64_Addr value,
   if (map != sym_map
 # if !defined RTLD_BOOTSTRAP && defined SHARED
       /* Bootstrap map doesn't have l_relocated set for it.  */
-      && sym_map != &GL(dl_rtld_map)
+      && !is_rtld_link_map (map)
 # endif
       && !sym_map->l_relocated)
     {

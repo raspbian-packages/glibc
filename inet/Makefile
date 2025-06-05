@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2024 Free Software Foundation, Inc.
+# Copyright (C) 1991-2025 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -91,6 +91,7 @@ tests := \
   tst-getni1 \
   tst-getni2 \
   tst-if_index-long \
+  tst-if_nameindex \
   tst-inet6_rth \
   tst-network \
   tst-ntoa \
@@ -136,6 +137,10 @@ $(inst_sysconfdir)/rpc: etc.rpc $(+force)
 
 ifeq ($(build-static-nss),yes)
 CFLAGS += -DSTATIC_NSS
+endif
+
+ifeq ($(have-test-clang),yes)
+CFLAGS-tst-deadline.c += -Wno-ignored-attributes
 endif
 
 # The test uses dlopen indirectly and would otherwise load system

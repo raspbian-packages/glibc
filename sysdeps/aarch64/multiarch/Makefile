@@ -7,8 +7,6 @@ sysdep_routines += \
   memcpy_mops \
   memcpy_oryon1 \
   memcpy_sve \
-  memcpy_thunderx \
-  memcpy_thunderx2 \
   memmove_mops \
   memset_a64fx \
   memset_emag \
@@ -16,6 +14,7 @@ sysdep_routines += \
   memset_kunpeng \
   memset_mops \
   memset_oryon1 \
+  memset_sve_zva64 \
   memset_zva64 \
   strlen_asimd \
   strlen_generic \

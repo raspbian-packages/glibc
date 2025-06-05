@@ -1,6 +1,6 @@
 /* Check getcontext and setcontext on the context from makecontext
    with shadow stack.
-   Copyright (C) 2018-2024 Free Software Foundation, Inc.
+   Copyright (C) 2018-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -30,7 +30,7 @@ static ucontext_t ctx[5];
 static atomic_int done;
 
 static void
-__attribute__((noinline, noclone))
+__attribute_optimization_barrier__
 f2 (void)
 {
   printf ("start f2\n");

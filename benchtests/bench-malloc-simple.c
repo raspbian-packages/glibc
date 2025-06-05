@@ -1,5 +1,5 @@
 /* Benchmark malloc and free functions.
-   Copyright (C) 2019-2024 Free Software Foundation, Inc.
+   Copyright (C) 2019-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -15,6 +15,11 @@
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
+
+#ifndef TEST_FUNC
+# define TEST_FUNC(size) malloc(size)
+# define TEST_NAME "malloc"
+#endif
 
 #include <pthread.h>
 #include <stdio.h>
@@ -55,7 +60,7 @@ do_benchmark (malloc_args *args, int **arr)
   for (int j = 0; j < iters; j++)
     {
       for (int i = 0; i < n; i++)
-	arr[i] = malloc (size);
+	arr[i] = TEST_FUNC (size);
 
       for (int i = 0; i < n; i++)
 	free (arr[i]);
@@ -124,7 +129,7 @@ bench (unsigned long size)
 
   json_attr_object_begin (&json_ctx, "functions");
 
-  json_attr_object_begin (&json_ctx, "malloc");
+  json_attr_object_begin (&json_ctx, TEST_NAME);
 
   char s[100];
   double iters2 = iters;

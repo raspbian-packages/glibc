@@ -1,5 +1,5 @@
 /* Data for vDSO support.  Linux version.
-   Copyright (C) 2020-2024 Free Software Foundation, Inc.
+   Copyright (C) 2020-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -65,6 +65,11 @@ PROCINFO_CLASS int (*_dl_vdso_clock_getres) (clockid_t,
 # ifdef HAVE_CLOCK_GETRES64_VSYSCALL
 PROCINFO_CLASS int (*_dl_vdso_clock_getres_time64) (clockid_t,
 						    struct __timespec64 *) RELRO;
+# endif
+# ifdef HAVE_GETRANDOM_VSYSCALL
+PROCINFO_CLASS ssize_t (*_dl_vdso_getrandom) (void *buffer, size_t len,
+                                              unsigned int flags, void *state,
+                                              size_t state_len) RELRO;
 # endif
 
 /* PowerPC specific ones.  */

@@ -1,6 +1,6 @@
 /* Double-precision vector (Advanced SIMD) acosh function
 
-   Copyright (C) 2024 Free Software Foundation, Inc.
+   Copyright (C) 2024-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -54,9 +54,8 @@ VPCS_ATTR float64x2_t V_NAME_D1 (acosh) (float64x2_t x)
     x = vbslq_f64 (special, vreinterpretq_f64_u64 (d->one), x);
 #endif
 
-  float64x2_t xm1 = vsubq_f64 (x, v_f64 (1));
-  float64x2_t y;
-  y = vaddq_f64 (x, v_f64 (1));
+  float64x2_t xm1 = vsubq_f64 (x, v_f64 (1.0));
+  float64x2_t y = vaddq_f64 (x, v_f64 (1.0));
   y = vmulq_f64 (y, xm1);
   y = vsqrtq_f64 (y);
   y = vaddq_f64 (xm1, y);

@@ -1,5 +1,5 @@
 /* Initialize pthreads library.
-   Copyright (C) 2000-2024 Free Software Foundation, Inc.
+   Copyright (C) 2000-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -27,19 +27,6 @@
 
 #if IS_IN (libpthread)
 static const struct pthread_functions pthread_functions = {
-  .ptr_pthread_attr_destroy = __pthread_attr_destroy,
-  .ptr_pthread_attr_init = __pthread_attr_init,
-  .ptr_pthread_attr_setschedparam = __pthread_attr_setschedparam,
-  .ptr_pthread_attr_getscope = __pthread_attr_getscope,
-  .ptr_pthread_attr_setscope = __pthread_attr_setscope,
-  .ptr_pthread_condattr_destroy = __pthread_condattr_destroy,
-  .ptr_pthread_condattr_init = __pthread_condattr_init,
-  .ptr_pthread_cond_broadcast = __pthread_cond_broadcast,
-  .ptr_pthread_cond_destroy = __pthread_cond_destroy,
-  .ptr_pthread_cond_init = __pthread_cond_init,
-  .ptr_pthread_cond_signal = __pthread_cond_signal,
-  .ptr_pthread_cond_wait = __pthread_cond_wait,
-  .ptr_pthread_cond_timedwait = __pthread_cond_timedwait,
   .ptr___pthread_exit = __pthread_exit,
   .ptr_pthread_mutex_destroy = __pthread_mutex_destroy,
   .ptr_pthread_mutex_init = __pthread_mutex_init,

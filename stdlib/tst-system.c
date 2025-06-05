@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2024 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -81,7 +81,7 @@ sleep_and_check_sigchld (void *closure)
   sprintf (cmd, "sleep %lf" , *seconds);
   TEST_COMPARE (system (cmd), 0);
 
-  sigset_t blocked = {0};
+  sigset_t blocked = { };
   TEST_COMPARE (sigprocmask (SIG_BLOCK, NULL, &blocked), 0);
   TEST_COMPARE (sigismember (&blocked, SIGCHLD), 0);
   return NULL;
@@ -170,7 +170,7 @@ do_test (void)
 
   {
     struct stat64 st;
-    xstat (_PATH_BSHELL, &st);
+    xstat64 (_PATH_BSHELL, &st);
     mode_t mode = st.st_mode;
     xchmod (_PATH_BSHELL, mode & ~(S_IXUSR | S_IXGRP | S_IXOTH));
 

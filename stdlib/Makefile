@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2024 Free Software Foundation, Inc.
+# Copyright (C) 1991-2025 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -273,9 +273,21 @@ tests := \
   tst-bsearch \
   tst-bz20544 \
   tst-canon-bz26341 \
+  tst-concurrent-exit \
+  tst-concurrent-quick_exit \
   tst-cxa_atexit \
   tst-environ \
+  tst-environ-change-1 \
+  tst-environ-change-2 \
+  tst-environ-change-3 \
+  tst-environ-change-4 \
+  tst-getenv-signal \
+  tst-getenv-static \
+  tst-getenv-thread \
+  tst-getenv-unsetenv \
   tst-getrandom \
+  tst-getrandom-errno \
+  tst-getrandom2 \
   tst-labs \
   tst-limits \
   tst-llabs \
@@ -289,9 +301,11 @@ tests := \
   tst-qsort3 \
   tst-qsort6 \
   tst-quick_exit \
+  tst-rand-sequence \
   tst-rand48 \
   tst-rand48-2 \
   tst-random \
+  tst-random-bz30584 \
   tst-random2 \
   tst-realpath \
   tst-realpath-toolong \
@@ -307,6 +321,7 @@ tests := \
   tst-setcontext9 \
   tst-setcontext10 \
   tst-setcontext11 \
+  tst-setenv-environ \
   tst-stdbit-Wconversion \
   tst-stdbit-builtins \
   tst-stdc_bit_ceil \
@@ -363,6 +378,7 @@ tests-internal := \
   # tests-internal
 
 tests-static := \
+  tst-getenv-static \
   tst-secure-getenv \
   # tests-static
 
@@ -625,3 +641,9 @@ $(objpfx)tst-setcontext3.out: tst-setcontext3.sh $(objpfx)tst-setcontext3
 	$(evaluate-test)
 
 $(objpfx)tst-qsort5: $(libm)
+$(objpfx)tst-concurrent-exit: $(shared-thread-library)
+$(objpfx)tst-concurrent-quick_exit: $(shared-thread-library)
+$(objpfx)tst-getrandom2: $(shared-thread-library)
+$(objpfx)tst-getenv-signal: $(shared-thread-library)
+$(objpfx)tst-getenv-thread: $(shared-thread-library)
+$(objpfx)tst-getenv-unsetenv: $(shared-thread-library)

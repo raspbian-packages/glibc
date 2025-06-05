@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # Generate tests for <tgmath.h> macros.
-# Copyright (C) 2017-2024 Free Software Foundation, Inc.
+# Copyright (C) 2017-2025 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 #
 # The GNU C Library is free software; you can redistribute it and/or
@@ -742,12 +742,19 @@ class Tests(object):
                                 ('_Float64x', 'f64x')):
                 self.add_tests(prefix + fn, ret, ['r'] * args)
         # TS 18661-4 functions.
+        self.add_tests('acospi', 'r', ['r'])
+        self.add_tests('asinpi', 'r', ['r'])
+        self.add_tests('atan2pi', 'r', ['r', 'r'])
+        self.add_tests('atanpi', 'r', ['r'])
+        self.add_tests('cospi', 'r', ['r'])
         self.add_tests('exp10', 'r', ['r'])
         self.add_tests('exp2m1', 'r', ['r'])
         self.add_tests('exp10m1', 'r', ['r'])
         self.add_tests('log2p1', 'r', ['r'])
         self.add_tests('log10p1', 'r', ['r'])
         self.add_tests('logp1', 'r', ['r'])
+        self.add_tests('sinpi', 'r', ['r'])
+        self.add_tests('tanpi', 'r', ['r'])
         # C23 functions.
         self.add_tests('fmaximum', 'r', ['r', 'r'])
         self.add_tests('fmaximum_mag', 'r', ['r', 'r'])

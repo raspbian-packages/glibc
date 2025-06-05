@@ -1,5 +1,5 @@
 /* Fortify check for wprintf.
-   Copyright (C) 2023-2024 Free Software Foundation, Inc.
+   Copyright (C) 2023-2025 Free Software Foundation, Inc.
    Copyright The GNU Toolchain Authors.
    This file is part of the GNU C Library.
 
@@ -26,7 +26,7 @@
 
 static volatile int chk_fail_ok;
 static volatile int ret;
-static jmp_buf chk_fail_buf;
+static sigjmp_buf chk_fail_buf;
 
 static void
 handler (int sig)
@@ -49,7 +49,7 @@ static wchar_t wbuf2[20] = L"%ls";
   do { wprintf (L"Failure on line %d\n", __LINE__); ret = 1; } while (0)
 #define CHK_FAIL_START \
   chk_fail_ok = 1;				\
-  if (! setjmp (chk_fail_buf))			\
+  if (! sigsetjmp (chk_fail_buf, 1))		\
     {
 #define CHK_FAIL_END \
       chk_fail_ok = 0;				\

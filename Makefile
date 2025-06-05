@@ -1,4 +1,4 @@
-# Copyright (C) 1991-2024 Free Software Foundation, Inc.
+# Copyright (C) 1991-2025 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -563,7 +563,8 @@ libof-check-installed-headers-c := testsuite
 $(objpfx)check-installed-headers-c.out: \
     scripts/check-installed-headers.sh $(headers)
 	$(SHELL) $(..)scripts/check-installed-headers.sh c $(supported-fortify) \
-	  "$(CC) $(filter-out -std=%,$(CFLAGS)) -D_ISOMAC $(+includes)" \
+	  "$(CC) $(test-config-cflags-finput-charset-ascii) \
+	     $(filter-out -std=%,$(CFLAGS)) -D_ISOMAC $(+includes)" \
 	  $(headers) > $@; \
 	$(evaluate-test)
 
@@ -573,7 +574,8 @@ libof-check-installed-headers-cxx := testsuite
 $(objpfx)check-installed-headers-cxx.out: \
     scripts/check-installed-headers.sh $(headers)
 	$(SHELL) $(..)scripts/check-installed-headers.sh c++ $(supported-fortify) \
-	  "$(CXX) $(filter-out -std=%,$(CXXFLAGS)) -D_ISOMAC $(+includes)" \
+	  "$(CXX) $(test-config-cxxflags-finput-charset-ascii) \
+	     $(filter-out -std=%,$(CXXFLAGS)) -D_ISOMAC $(+includes)" \
 	  $(headers) > $@; \
 	$(evaluate-test)
 endif # $(CXX)

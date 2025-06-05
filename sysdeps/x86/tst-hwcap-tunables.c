@@ -1,5 +1,5 @@
 /* Tests for x86 GLIBC_TUNABLES=glibc.cpu.hwcaps filter.
-   Copyright (C) 2023-2024 Free Software Foundation, Inc.
+   Copyright (C) 2023-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -60,7 +60,8 @@ static const struct test_t
     /* Disable everything.  */
     "-Prefer_ERMS,-Prefer_FSRM,-AVX,-AVX2,-AVX512F,-AVX512VL,"
     "-SSE4_1,-SSE4_2,-SSSE3,-Fast_Unaligned_Load,-ERMS,"
-    "-AVX_Fast_Unaligned_Load,-Avoid_Non_Temporal_Memset",
+    "-AVX_Fast_Unaligned_Load,-Avoid_Non_Temporal_Memset,"
+    "-Avoid_STOSB",
     test_1,
     array_length (test_1)
   },
@@ -68,7 +69,8 @@ static const struct test_t
     /* Same as before, but with some empty suboptions.  */
     ",-,-Prefer_ERMS,-Prefer_FSRM,-AVX,-AVX2,-AVX512F,-AVX512VL,"
     "-SSE4_1,-SSE4_2,-SSSE3,-Fast_Unaligned_Load,,-,"
-    "-ERMS,-AVX_Fast_Unaligned_Load,-Avoid_Non_Temporal_Memset,-,",
+    "-ERMS,-AVX_Fast_Unaligned_Load,-Avoid_Non_Temporal_Memset,"
+    "-Avoid_STOSB,-,",
     test_1,
     array_length (test_1)
   }

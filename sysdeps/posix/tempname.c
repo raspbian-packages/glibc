@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2024 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -117,6 +117,8 @@ random_bits (random_value *r, random_value s)
      succeed.  */
 #if !_LIBC
   *r = mix_random_values (v, clock ());
+#else
+  *r = v;
 #endif
   return false;
 }

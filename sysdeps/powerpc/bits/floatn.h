@@ -1,5 +1,5 @@
 /* Macros to control TS 18661-3 glibc features on powerpc.
-   Copyright (C) 2017-2024 Free Software Foundation, Inc.
+   Copyright (C) 2017-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -26,7 +26,7 @@
    floating-point type with the IEEE 754 binary128 format, and this glibc
    includes corresponding *f128 interfaces for it.  */
 #if defined _ARCH_PWR8 && defined __LITTLE_ENDIAN__ && (_CALL_ELF == 2) \
-    && defined __FLOAT128__ && !defined __NO_LONG_DOUBLE_MATH && !defined(__CUDACC__) && !defined(__ICC)
+    && defined __FLOAT128__ && !defined __NO_LONG_DOUBLE_MATH
 # define __HAVE_FLOAT128 1
 #else
 # define __HAVE_FLOAT128 0

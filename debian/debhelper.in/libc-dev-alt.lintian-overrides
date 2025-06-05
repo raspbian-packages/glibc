@@ -12,3 +12,7 @@ no-code-sections [*/libpthread.a]
 no-code-sections [*/libpthread_nonshared.a]
 no-code-sections [*/librt.a]
 no-code-sections [*/libutil.a]
+
+# Lintian false positive (see bug#994716)
+unpack-message-for-deb-data ar failed for */libm.a
+unpack-message-for-deb-data ar failed for */libmcheck.a

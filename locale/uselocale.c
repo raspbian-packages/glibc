@@ -1,5 +1,5 @@
 /* uselocale -- fetch and set the current per-thread locale
-   Copyright (C) 2002-2024 Free Software Foundation, Inc.
+   Copyright (C) 2002-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -54,7 +54,7 @@ __uselocale (locale_t newloc)
 	extern char _nl_current_##category##_used;			      \
 	weak_extern (_nl_current_##category##_used)			      \
 	weak_extern (_nl_current_##category)				      \
-	if (&_nl_current_##category##_used != 0)			      \
+	if (&_nl_current_##category##_used != NULL)			      \
 	  _nl_current_##category = &locobj->__locales[category];	      \
       }
 # include "categories.def"

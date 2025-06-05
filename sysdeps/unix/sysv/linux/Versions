@@ -328,6 +328,10 @@ libc {
     posix_spawnattr_getcgroup_np;
     posix_spawnattr_setcgroup_np;
   }
+  GLIBC_2.41 {
+    sched_getattr;
+    sched_setattr;
+  }
   GLIBC_PRIVATE {
     # functions used in other libraries
     __syscall_rt_sigqueueinfo;
@@ -355,8 +359,5 @@ ld {
     __rseq_flags;
     __rseq_offset;
     __rseq_size;
-  }
-  GLIBC_PRIVATE {
-    __nptl_change_stack_perm;
   }
 }

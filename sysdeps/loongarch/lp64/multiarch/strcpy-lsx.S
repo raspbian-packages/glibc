@@ -1,5 +1,5 @@
 /* Optimized strcpy stpcpy implementation using LoongArch LSX instructions.
-   Copyright (C) 2023-2024 Free Software Foundation, Inc.
+   Copyright (C) 2023-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -208,5 +208,4 @@ L(INDEX):
     .dword          0x0706050403020100
     .dword          0x0f0e0d0c0b0a0908
 
-libc_hidden_builtin_def (STRCPY)
 #endif

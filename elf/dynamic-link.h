@@ -1,5 +1,5 @@
 /* Inline functions for dynamic linking.
-   Copyright (C) 1995-2024 Free Software Foundation, Inc.
+   Copyright (C) 1995-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -152,7 +152,7 @@ elf_machine_lazy_rel (struct link_map *map, struct r_scope_elem *scope[],
 
 # define ELF_DYNAMIC_DO_RELR(map)					      \
   do {									      \
-    ElfW(Addr) l_addr = (map)->l_addr, *where = 0;			      \
+    ElfW(Addr) l_addr = (map)->l_addr, *where = NULL;			      \
     const ElfW(Relr) *r, *end;						      \
     if ((map)->l_info[DT_RELR] == NULL)					      \
       break;								      \
@@ -192,7 +192,7 @@ elf_machine_lazy_rel (struct link_map *map, struct r_scope_elem *scope[],
   do {									      \
     int edr_lazy = elf_machine_runtime_setup ((map), (scope), (lazy),	      \
 					      (consider_profile));	      \
-    if (((map) != &GL(dl_rtld_map) || DO_RTLD_BOOTSTRAP))		      \
+    if (!is_rtld_link_map (map) || DO_RTLD_BOOTSTRAP)			      \
       ELF_DYNAMIC_DO_RELR (map);					      \
     ELF_DYNAMIC_DO_REL ((map), (scope), edr_lazy, skip_ifunc);		      \
     ELF_DYNAMIC_DO_RELA ((map), (scope), edr_lazy, skip_ifunc);		      \

@@ -1,6 +1,6 @@
 /* Double-precision SVE log1p
 
-   Copyright (C) 2023-2024 Free Software Foundation, Inc.
+   Copyright (C) 2023-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -116,3 +116,5 @@ svfloat64_t SV_NAME_D1 (log1p) (svfloat64_t x, svbool_t pg)
 
   return y;
 }
+
+strong_alias (SV_NAME_D1 (log1p), SV_NAME_D1 (logp1))

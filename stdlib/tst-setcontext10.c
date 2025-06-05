@@ -1,5 +1,5 @@
 /* Check longjmp from user context to main context.
-   Copyright (C) 2023-2024 Free Software Foundation, Inc.
+   Copyright (C) 2023-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -37,7 +37,7 @@ static ucontext_t ctx;
 static void f2 (void);
 
 static void
-__attribute__ ((noinline, noclone))
+__attribute_optimization_barrier__
 f1 (void)
 {
   printf ("start f1\n");
@@ -45,7 +45,7 @@ f1 (void)
 }
 
 static void
-__attribute__ ((noinline, noclone))
+__attribute_optimization_barrier__
 f2 (void)
 {
   printf ("start f2\n");
@@ -64,7 +64,7 @@ f3 (void)
 }
 
 static int
-__attribute__ ((noinline, noclone))
+__attribute_optimization_barrier__
 do_test_1 (void)
 {
   char st1[32768];

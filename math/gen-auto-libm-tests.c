@@ -1,5 +1,5 @@
 /* Generate expected output for libm tests with MPFR and MPC.
-   Copyright (C) 2013-2024 Free Software Foundation, Inc.
+   Copyright (C) 2013-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -40,9 +40,10 @@
    empty lines.
 
    Other lines are test lines, of the form "function input1 input2
-   ... [flag1 flag2 ...]".  Inputs are either finite real numbers or
-   integers, depending on the function under test.  Real numbers may
-   be in any form acceptable to mpfr_strtofr (base 0); integers in any
+   ... [flag1 flag2 ...]".  Inputs are either finite real numbers,
+   positive or negative infinite (in the form of "inf" or "-inf"), or
+   integers, depending on the function under test.  Real numbers may be
+   in any form acceptable to mpfr_strtofr (base 0), and integers in any
    form acceptable to mpz_set_str (base 0).  In addition, real numbers
    may be certain special strings such as "pi", as listed in the
    special_real_inputs array.
@@ -96,8 +97,7 @@
    zero and infinite results should be ignored; "xfail" indicates the
    test is disabled as expected to produce incorrect results,
    "xfail-rounding" indicates the test is disabled only in rounding
-   modes other than round-to-nearest; "no-mathvec" indicates the test
-   is disabled in vector math libraries.  Otherwise, test flags are of
+   modes other than round-to-nearest.  Otherwise, test flags are of
    the form "spurious-<exception>" and "missing-<exception>", for any
    exception ("overflow", "underflow", "inexact", "invalid",
    "divbyzero"), "spurious-errno" and "missing-errno", to indicate
@@ -353,7 +353,6 @@ typedef enum
     flag_missing_overflow,
     flag_missing_underflow,
     flag_missing_errno,
-    flag_no_mathvec,
     num_input_flag_types,
     flag_first_flag = 0,
     flag_spurious_first = flag_spurious_divbyzero,
@@ -379,7 +378,6 @@ static const char *const input_flags[num_input_flag_types] =
     "missing-overflow",
     "missing-underflow",
     "missing-errno",
-    "no-mathvec",
   };
 
 /* An input flag, possibly conditional.  */
@@ -531,12 +529,16 @@ static test_function test_functions[] =
   {
     FUNC_mpfr_f_f ("acos", mpfr_acos, false),
     FUNC_mpfr_f_f ("acosh", mpfr_acosh, false),
+    FUNC_mpfr_f_f ("acospi", mpfr_acospi, false),
     FUNC_mpfr_ff_f ("add", mpfr_add, true),
     FUNC_mpfr_f_f ("asin", mpfr_asin, false),
     FUNC_mpfr_f_f ("asinh", mpfr_asinh, false),
+    FUNC_mpfr_f_f ("asinpi", mpfr_asinpi, false),
     FUNC_mpfr_f_f ("atan", mpfr_atan, false),
     FUNC_mpfr_ff_f ("atan2", mpfr_atan2, false),
+    FUNC_mpfr_ff_f ("atan2pi", mpfr_atan2pi, false),
     FUNC_mpfr_f_f ("atanh", mpfr_atanh, false),
+    FUNC_mpfr_f_f ("atanpi", mpfr_atanpi, false),
     FUNC_mpc_c_f ("cabs", mpc_abs, false),
     FUNC_mpc_c_c ("cacos", mpc_acos, false),
     FUNC_mpc_c_c ("cacosh", mpc_acosh, false),
@@ -553,6 +555,7 @@ static test_function test_functions[] =
     FUNC_mpc_c_c ("clog10", mpc_log10, false),
     FUNC_mpfr_f_f ("cos", mpfr_cos, false),
     FUNC_mpfr_f_f ("cosh", mpfr_cosh, false),
+    FUNC_mpfr_f_f ("cospi", mpfr_cospi, false),
     FUNC ("cpow", ARGS4 (type_fp, type_fp, type_fp, type_fp),
 	  RET2 (type_fp, type_fp), false, true, false,
 	  CALC (mpc_cc_c, mpc_pow)),
@@ -589,11 +592,13 @@ static test_function test_functions[] =
     FUNC_mpfr_f_f ("sin", mpfr_sin, false),
     FUNC ("sincos", ARGS1 (type_fp), RET2 (type_fp, type_fp), false, false,
 	  false, CALC (mpfr_f_11, mpfr_sin_cos)),
+    FUNC_mpfr_f_f ("sinpi", mpfr_sinpi, false),
     FUNC_mpfr_f_f ("sinh", mpfr_sinh, false),
     FUNC_mpfr_ff_f ("sub", mpfr_sub, true),
     FUNC_mpfr_f_f ("sqrt", mpfr_sqrt, true),
     FUNC_mpfr_f_f ("tan", mpfr_tan, false),
     FUNC_mpfr_f_f ("tanh", mpfr_tanh, false),
+    FUNC_mpfr_f_f ("tanpi", mpfr_tanpi, false),
     FUNC_mpfr_f_f ("tgamma", mpfr_gamma, false),
     FUNC_mpfr_f_f ("y0", mpfr_y0, false),
     FUNC_mpfr_f_f ("y1", mpfr_y1, false),
@@ -981,6 +986,27 @@ special_fill_e_minus_1 (mpfr_t res0, mpfr_t res1, fp_format format)
   return 2;
 }
 
+/* Set the precision of RES0 based on FORMAT and initialize as an
+   infinite number.  */
+static size_t
+special_fill_inf (mpfr_t res0, mpfr_t res1 __attribute__ ((unused)),
+		  fp_format format)
+{
+  mpfr_init2 (res0, fp_formats[format].mant_dig);
+  mpfr_set_inf (res0, 0);
+  return 1;
+}
+
+/* Same as special_fill_inf, but set the sign of infinite as negative.  */
+static size_t
+special_fill_minus_inf (mpfr_t res0, mpfr_t res1 __attribute__ ((unused)),
+			fp_format format)
+{
+  mpfr_init2 (res0, fp_formats[format].mant_dig);
+  mpfr_set_inf (res0, -1);
+  return 1;
+}
+
 /* A special string accepted in input arguments.  */
 typedef struct
 {
@@ -1016,6 +1042,8 @@ static const special_real_input special_real_inputs[] =
     { "e", special_fill_e },
     { "1/e", special_fill_1_e },
     { "e-1", special_fill_e_minus_1 },
+    { "inf", special_fill_inf },
+    { "-inf", special_fill_minus_inf },
   };
 
 /* Given a real number R computed in round-to-zero mode, set the
@@ -1062,7 +1090,6 @@ round_real (mpfr_t res[rm_num_modes],
 	    unsigned int exc_after[rm_num_modes],
 	    mpfr_t r, fp_format format)
 {
-  assert (mpfr_number_p (r));
   for (rounding_mode m = rm_first_mode; m < rm_num_modes; m++)
     {
       mpfr_init2 (res[m], fp_formats[format].mant_dig);
@@ -2056,7 +2083,6 @@ output_for_one_input_case (FILE *fp, const char *filename, test_function *tf,
 		  {
 		  case flag_ignore_zero_inf_sign:
 		  case flag_xfail:
-		  case flag_no_mathvec:
 		    if (fprintf (fp, " %s%s",
 				 input_flags[it->flags[i].type],
 				 (it->flags[i].cond

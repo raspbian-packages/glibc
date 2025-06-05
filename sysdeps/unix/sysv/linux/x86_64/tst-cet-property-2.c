@@ -1,5 +1,5 @@
 /* Test CET property note parser for [BZ #23467].
-   Copyright (C) 2018-2024 Free Software Foundation, Inc.
+   Copyright (C) 2018-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -25,7 +25,7 @@
 extern void bar (void);
 
 void
-__attribute__ ((noclone, noinline))
+__attribute_optimization_barrier__
 test (void (*func_p) (void))
 {
   func_p ();

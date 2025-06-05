@@ -1,5 +1,5 @@
 /* ELF symbol initialization functions for VDSO objects.  Linux version.
-   Copyright (C) 2020-2024 Free Software Foundation, Inc.
+   Copyright (C) 2020-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -49,6 +49,9 @@ setup_vdso_pointers (void)
 #endif
 #ifdef HAVE_RISCV_HWPROBE
   GLRO(dl_vdso_riscv_hwprobe) = dl_vdso_vsym (HAVE_RISCV_HWPROBE);
+#endif
+#ifdef HAVE_GETRANDOM_VSYSCALL
+  GLRO(dl_vdso_getrandom) = dl_vdso_vsym (HAVE_GETRANDOM_VSYSCALL);
 #endif
 }
 

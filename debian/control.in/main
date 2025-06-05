@@ -148,6 +148,7 @@ Multi-Arch: foreign
 Priority: optional
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Pre-Depends: ${misc:Pre-Depends}
+Conflicts: unscd
 Build-Profiles: <!stage1>
 Description: GNU C Library: Name Service Cache Daemon
  A daemon which handles passwd, group and host lookups

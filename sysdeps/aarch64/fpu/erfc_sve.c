@@ -1,6 +1,6 @@
 /* Double-precision vector (SVE) erfc function
 
-   Copyright (C) 2024 Free Software Foundation, Inc.
+   Copyright (C) 2024-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -104,7 +104,7 @@ svfloat64_t SV_NAME_D1 (erfc) (svfloat64_t x, const svbool_t pg)
 
   /* Lookup erfc(r) and 2/sqrt(pi)*exp(-r^2) in tables.  */
   i = svadd_x (pg, i, i);
-  const float64_t *p = &__erfc_data.tab[0].erfc - 2 * dat->off_arr;
+  const float64_t *p = &__v_erfc_data.tab[0].erfc - 2 * dat->off_arr;
   svfloat64_t erfcr = svld1_gather_index (pg, p, i);
   svfloat64_t scale = svld1_gather_index (pg, p + 1, i);
 

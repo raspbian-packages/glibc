@@ -1,5 +1,5 @@
 /* Map in a shared object's segments from the file.
-   Copyright (C) 1995-2024 Free Software Foundation, Inc.
+   Copyright (C) 1995-2025 Free Software Foundation, Inc.
    Copyright The GNU Toolchain Authors.
    This file is part of the GNU C Library.
 
@@ -32,6 +32,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <gnu/lib-names.h>
+#include <dl-tunables.h>
 
 /* Type for the buffer we put the ELF header and hopefully the program
    header.  This buffer does not really have to be too large.  In most
@@ -429,23 +430,7 @@ add_name_to_object (struct link_map *l, const char *name)
   newname->name = memcpy (newname + 1, name, name_len);
   newname->next = NULL;
   newname->dont_free = 0;
-  /* CONCURRENCY NOTES:
-
-     Make sure the initialization of newname happens before its address is
-     read from the lastp->next store below.
-
-     GL(dl_load_lock) is held here (and by other writers, e.g. dlclose), so
-     readers of libname_list->next (e.g. _dl_check_caller or the reads above)
-     can use that for synchronization, however the read in _dl_name_match_p
-     may be executed without holding the lock during _dl_runtime_resolve
-     (i.e. lazy symbol resolution when a function of library l is called).
-
-     The release MO store below synchronizes with the acquire MO load in
-     _dl_name_match_p.  Other writes need to synchronize with that load too,
-     however those happen either early when the process is single threaded
-     (dl_main) or when the library is unloaded (dlclose) and the user has to
-     synchronize library calls with unloading.  */
-  atomic_store_release (&lastp->next, newname);
+  lastp->next = newname;
 }
 
 /* Standard search directories.  */
@@ -771,7 +756,7 @@ _dl_init_paths (const char *llp, const char *source,
   l = GL(dl_ns)[LM_ID_BASE]._ns_loaded;
 #ifdef SHARED
   if (l == NULL)
-    l = &GL (dl_rtld_map);
+    l = &_dl_rtld_map;
 #endif
   assert (l->l_type != lt_loaded);
 
@@ -918,6 +903,37 @@ _dl_process_pt_gnu_property (struct link_map *l, int fd, const ElfW(Phdr) *ph)
     }
 }
 
+static void
+_dl_notify_new_object (int mode, Lmid_t nsid, struct link_map *l)
+{
+  /* Signal that we are going to add new objects.  */
+  struct r_debug *r = _dl_debug_update (nsid);
+  if (r->r_state == RT_CONSISTENT)
+    {
+#ifdef SHARED
+      /* Auditing checkpoint: we are going to add new objects.  Since this
+         is called after _dl_add_to_namespace_list the namespace is guaranteed
+	 to not be empty.  */
+      if ((mode & __RTLD_AUDIT) == 0)
+	_dl_audit_activity_nsid (nsid, LA_ACT_ADD);
+#endif
+
+      /* Notify the debugger we have added some objects.  We need to
+	 call _dl_debug_initialize in a static program in case dynamic
+	 linking has not been used before.  */
+      r->r_state = RT_ADD;
+      _dl_debug_state ();
+      LIBC_PROBE (map_start, 2, nsid, r);
+    }
+  else
+    assert (r->r_state == RT_ADD);
+
+#ifdef SHARED
+  /* Auditing checkpoint: we have a new object.  */
+  if (!GL(dl_ns)[l->l_ns]._ns_loaded->l_auditing)
+    _dl_audit_objopen (l, nsid);
+#endif
+}
 
 /* Map in the shared object NAME, actually located in REALNAME, and already
    opened on FD.  */
@@ -929,7 +945,7 @@ struct link_map *
 _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 			struct filebuf *fbp, char *realname,
 			struct link_map *loader, int l_type, int mode,
-			void **stack_endp, Lmid_t nsid)
+			const void *stack_endp, Lmid_t nsid)
 {
   struct link_map *l = NULL;
   const ElfW(Ehdr) *header;
@@ -995,8 +1011,8 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
   /* When loading into a namespace other than the base one we must
      avoid loading ld.so since there can only be one copy.  Ever.  */
   if (__glibc_unlikely (nsid != LM_ID_BASE)
-      && (_dl_file_id_match_p (&id, &GL(dl_rtld_map).l_file_id)
-	  || _dl_name_match_p (name, &GL(dl_rtld_map))))
+      && (_dl_file_id_match_p (&id, &_dl_rtld_map.l_file_id)
+	  || _dl_name_match_p (name, &_dl_rtld_map)))
     {
       /* This is indeed ld.so.  Create a new link_map which refers to
 	 the real one for almost everything.  */
@@ -1005,7 +1021,7 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 	goto fail_new;
 
       /* Refer to the real descriptor.  */
-      l->l_real = &GL(dl_rtld_map);
+      l->l_real = &_dl_rtld_map;
 
       /* Copy l_addr and l_ld to avoid a GDB warning with dlmopen().  */
       l->l_addr = l->l_real->l_addr;
@@ -1017,6 +1033,8 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 
       /* Add the map for the mirrored object to the object list.  */
       _dl_add_to_namespace_list (l, nsid);
+
+      _dl_notify_new_object (mode, nsid, l);
 
       return l;
     }
@@ -1231,7 +1249,7 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
       }
 
     /* This check recognizes most separate debuginfo files.  */
-    if (__glibc_unlikely ((l->l_ld == 0 && type == ET_DYN) || empty_dynamic))
+    if (__glibc_unlikely ((l->l_ld == NULL && type == ET_DYN) || empty_dynamic))
       {
 	errstring = N_("object file has no dynamic section");
 	goto lose;
@@ -1254,7 +1272,7 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
       }
   }
 
-  if (l->l_ld != 0)
+  if (l->l_ld != NULL)
     l->l_ld = (ElfW(Dyn) *) ((ElfW(Addr)) l->l_ld + l->l_addr);
 
   elf_get_dynamic_info (l, false, false);
@@ -1298,12 +1316,14 @@ _dl_map_object_from_fd (const char *name, const char *origname, int fd,
   if (__glibc_unlikely ((stack_flags &~ GL(dl_stack_flags)) & PF_X))
     {
       /* The stack is presently not executable, but this module
-	 requires that it be executable.  */
-#if PTHREAD_IN_LIBC
-      errval = _dl_make_stacks_executable (stack_endp);
-#else
-      errval = (*GL(dl_make_stack_executable_hook)) (stack_endp);
-#endif
+	 requires that it be executable.  Only tries to change the
+	 stack protection during process startup.  */
+      if ((mode & __RTLD_DLOPEN) == 0
+	  && TUNABLE_GET (glibc, rtld, execstack, int32_t, NULL) == 1)
+	errval = _dl_make_stack_executable (stack_endp);
+      else
+	errval = EINVAL;
+
       if (errval)
 	{
 	  errstring = N_("\
@@ -1442,33 +1462,7 @@ cannot enable executable stack as shared object requires");
   if (mode & __RTLD_SPROF)
     return l;
 
-  /* Signal that we are going to add new objects.  */
-  struct r_debug *r = _dl_debug_update (nsid);
-  if (r->r_state == RT_CONSISTENT)
-    {
-#ifdef SHARED
-      /* Auditing checkpoint: we are going to add new objects.  Since this
-         is called after _dl_add_to_namespace_list the namespace is guaranteed
-	 to not be empty.  */
-      if ((mode & __RTLD_AUDIT) == 0)
-	_dl_audit_activity_nsid (nsid, LA_ACT_ADD);
-#endif
-
-      /* Notify the debugger we have added some objects.  We need to
-	 call _dl_debug_initialize in a static program in case dynamic
-	 linking has not been used before.  */
-      r->r_state = RT_ADD;
-      _dl_debug_state ();
-      LIBC_PROBE (map_start, 2, nsid, r);
-    }
-  else
-    assert (r->r_state == RT_ADD);
-
-#ifdef SHARED
-  /* Auditing checkpoint: we have a new object.  */
-  if (!GL(dl_ns)[l->l_ns]._ns_loaded->l_auditing)
-    _dl_audit_objopen (l, nsid);
-#endif
+  _dl_notify_new_object (mode, nsid, l);
 
   return l;
 }
@@ -1608,15 +1602,13 @@ open_verify (const char *name, int fd,
 	  errval = errno;
 	  errstring = (errval == 0
 		       ? N_("file too short") : N_("cannot read file data"));
-	lose:
+	lose:;
+	  struct dl_exception exception;
+	  _dl_exception_create (&exception, name, errstring);
 	  if (free_name)
-	    {
-	      char *realname = (char *) name;
-	      name = strdupa (realname);
-	      free (realname);
-	    }
+	    free ((char *) name);
 	  __close_nocancel (fd);
-	  _dl_signal_error (errval, name, NULL, errstring);
+	  _dl_signal_exception (errval, &exception, NULL);
 	}
 
       /* See whether the ELF header is what we expect.  */
@@ -1968,6 +1960,9 @@ _dl_map_object (struct link_map *loader, const char *name,
 		      : "\nfile=%s [%lu];  dynamically loaded by %s [%lu]\n",
 		      name, nsid, DSO_FILENAME (loader->l_name), loader->l_ns);
 
+  /* Will be true if we found a DSO which is of the other ELF class.  */
+  bool found_other_class = false;
+
 #ifdef SHARED
   /* Give the auditing libraries a chance to change the name before we
      try anything.  */
@@ -1984,9 +1979,6 @@ _dl_map_object (struct link_map *loader, const char *name,
 	origname = before;
     }
 #endif
-
-  /* Will be true if we found a DSO which is of the other ELF class.  */
-  bool found_other_class = false;
 
   if (strchr (name, '/') == NULL)
     {
@@ -2081,7 +2073,7 @@ _dl_map_object (struct link_map *loader, const char *name,
 	      l = (loader
 		   ?: GL(dl_ns)[LM_ID_BASE]._ns_loaded
 # ifdef SHARED
-		   ?: &GL(dl_rtld_map)
+		   ?: &_dl_rtld_map
 # endif
 		  );
 
@@ -2207,7 +2199,7 @@ _dl_map_object (struct link_map *loader, const char *name,
 
   void *stack_end = __libc_stack_end;
   return _dl_map_object_from_fd (name, origname, fd, &fb, realname, loader,
-				 type, mode, &stack_end, nsid);
+				 type, mode, stack_end, nsid);
 }
 
 struct add_path_state

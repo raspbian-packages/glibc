@@ -1,5 +1,5 @@
 /* Map in a shared object's segments from the file.
-   Copyright (C) 1995-2024 Free Software Foundation, Inc.
+   Copyright (C) 1995-2025 Free Software Foundation, Inc.
    Copyright The GNU Toolchain Authors.
    This file is part of the GNU C Library.
 
@@ -88,7 +88,7 @@ static __always_inline void
 _dl_postprocess_loadcmd (struct link_map *l, const ElfW(Ehdr) *header,
                          const struct loadcmd *c)
 {
-  if (l->l_phdr == 0
+  if (l->l_phdr == NULL
       && c->mapoff <= header->e_phoff
       && ((size_t) (c->mapend - c->mapstart + c->mapoff)
           >= header->e_phoff + header->e_phnum * sizeof (ElfW(Phdr))))

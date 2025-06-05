@@ -1,5 +1,5 @@
 /* Thread-local storage handling in the ELF dynamic linker.  i386 version.
-   Copyright (C) 2002-2024 Free Software Foundation, Inc.
+   Copyright (C) 2002-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,6 +16,8 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
+#ifndef _DL_TLS_H
+#define _DL_TLS_H
 
 /* Type used for the representation of TLS information in the GOT.  */
 typedef struct dl_tls_index
@@ -24,6 +26,12 @@ typedef struct dl_tls_index
   unsigned long int ti_offset;
 } tls_index;
 
+/* Dynamic thread vector pointers point to the start of each
+   TLS block.  */
+#define TLS_DTV_OFFSET 0
+
+/* Static TLS offsets are relative to the unadjusted thread pointer.  */
+#define TLS_TP_OFFSET 0
 
 #ifdef SHARED
 /* This is the prototype for the GNU version.  */
@@ -59,3 +67,5 @@ rtld_hidden_def (___tls_get_addr)
 
 # endif
 #endif
+
+#endif /* _DL_TLS_H */

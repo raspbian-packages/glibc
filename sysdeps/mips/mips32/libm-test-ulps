@@ -3,114 +3,86 @@
 # Maximal error of functions:
 Function: "acos":
 double: 1
-float: 1
 
 Function: "acos_downward":
 double: 1
-float: 1
 
 Function: "acos_towardzero":
 double: 1
-float: 1
 
 Function: "acos_upward":
 double: 1
-float: 1
 
 Function: "acosh":
 double: 2
-float: 2
 
 Function: "acosh_downward":
 double: 2
-float: 2
 
 Function: "acosh_towardzero":
 double: 2
-float: 2
 
 Function: "acosh_upward":
 double: 2
-float: 2
 
 Function: "asin":
 double: 1
-float: 1
 
 Function: "asin_downward":
 double: 1
-float: 1
 
 Function: "asin_towardzero":
 double: 1
-float: 1
 
 Function: "asin_upward":
 double: 2
-float: 1
 
 Function: "asinh":
 double: 2
-float: 2
 
 Function: "asinh_downward":
 double: 3
-float: 3
 
 Function: "asinh_towardzero":
 double: 2
-float: 2
 
 Function: "asinh_upward":
 double: 3
-float: 3
 
 Function: "atan":
 double: 1
-float: 1
 
 Function: "atan2":
-float: 2
 
 Function: "atan2_downward":
 double: 1
-float: 2
 
 Function: "atan2_towardzero":
 double: 1
-float: 2
 
 Function: "atan2_upward":
 double: 1
-float: 2
 
 Function: "atan_downward":
 double: 1
-float: 2
 
 Function: "atan_towardzero":
 double: 1
-float: 1
 
 Function: "atan_upward":
 double: 1
-float: 2
 
 Function: "atanh":
 double: 2
-float: 2
 
 Function: "atanh_downward":
 double: 3
-float: 3
 
 Function: "atanh_towardzero":
 double: 2
-float: 2
 
 Function: "atanh_upward":
 double: 3
-float: 3
 
 Function: "cabs":
 double: 1
@@ -189,19 +161,15 @@ double: 3
 float: 2
 
 Function: "carg":
-float: 1
 
 Function: "carg_downward":
 double: 1
-float: 2
 
 Function: "carg_towardzero":
 double: 1
-float: 2
 
 Function: "carg_upward":
 double: 1
-float: 2
 
 Function: Real part of "casin":
 double: 1
@@ -333,19 +301,15 @@ float: 1
 
 Function: "cbrt":
 double: 4
-float: 1
 
 Function: "cbrt_downward":
 double: 4
-float: 1
 
 Function: "cbrt_towardzero":
 double: 3
-float: 1
 
 Function: "cbrt_upward":
 double: 5
-float: 1
 
 Function: Real part of "ccos":
 double: 1
@@ -525,19 +489,15 @@ float: 2
 
 Function: "cosh":
 double: 2
-float: 2
 
 Function: "cosh_downward":
 double: 3
-float: 1
 
 Function: "cosh_towardzero":
 double: 3
-float: 1
 
 Function: "cosh_upward":
 double: 2
-float: 2
 
 Function: Real part of "cpow":
 double: 2
@@ -727,35 +687,27 @@ float: 3
 
 Function: "erf":
 double: 1
-float: 1
 
 Function: "erf_downward":
 double: 1
-float: 1
 
 Function: "erf_towardzero":
 double: 1
-float: 1
 
 Function: "erf_upward":
 double: 1
-float: 1
 
 Function: "erfc":
 double: 5
-float: 3
 
 Function: "erfc_downward":
 double: 5
-float: 6
 
 Function: "erfc_towardzero":
 double: 3
-float: 4
 
 Function: "erfc_upward":
 double: 5
-float: 6
 
 Function: "exp":
 double: 1
@@ -778,20 +730,16 @@ double: 2
 float: 1
 
 Function: "exp10m1":
-double: 2
-float: 1
+double: 3
 
 Function: "exp10m1_downward":
-double: 1
-float: 1
+double: 3
 
 Function: "exp10m1_towardzero":
-double: 1
-float: 1
+double: 2
 
 Function: "exp10m1_upward":
-double: 3
-float: 1
+double: 4
 
 Function: "exp2":
 double: 1
@@ -810,20 +758,16 @@ double: 1
 float: 1
 
 Function: "exp2m1":
-double: 1
-float: 1
+double: 2
 
 Function: "exp2m1_downward":
-double: 2
-float: 1
+double: 3
 
 Function: "exp2m1_towardzero":
-double: 2
-float: 1
+double: 3
 
 Function: "exp2m1_upward":
-double: 1
-float: 1
+double: 3
 
 Function: "exp_downward":
 double: 1
@@ -839,19 +783,15 @@ float: 1
 
 Function: "expm1":
 double: 1
-float: 1
 
 Function: "expm1_downward":
 double: 1
-float: 1
 
 Function: "expm1_towardzero":
 double: 1
-float: 2
 
 Function: "expm1_upward":
 double: 1
-float: 1
 
 Function: "gamma":
 double: 4
@@ -932,19 +872,15 @@ float: 5
 
 Function: "lgamma":
 double: 4
-float: 7
 
 Function: "lgamma_downward":
 double: 5
-float: 7
 
 Function: "lgamma_towardzero":
 double: 5
-float: 6
 
 Function: "lgamma_upward":
 double: 5
-float: 6
 
 Function: "log":
 float: 1
@@ -967,35 +903,27 @@ float: 2
 
 Function: "log10p1":
 double: 1
-float: 1
 
 Function: "log10p1_downward":
 double: 2
-float: 1
 
 Function: "log10p1_towardzero":
-double: 2
-float: 2
+double: 3
 
 Function: "log10p1_upward":
 double: 2
-float: 1
 
 Function: "log1p":
 double: 1
-float: 1
 
 Function: "log1p_downward":
 double: 2
-float: 2
 
 Function: "log1p_towardzero":
 double: 2
-float: 2
 
 Function: "log1p_upward":
 double: 2
-float: 2
 
 Function: "log2":
 double: 2
@@ -1015,22 +943,18 @@ float: 3
 
 Function: "log2p1":
 double: 1
-float: 1
 ldouble: 1
 
 Function: "log2p1_downward":
 double: 2
-float: 2
 ldouble: 2
 
 Function: "log2p1_towardzero":
 double: 2
-float: 2
 ldouble: 2
 
 Function: "log2p1_upward":
-double: 1
-float: 2
+double: 2
 ldouble: 1
 
 Function: "log_downward":
@@ -1045,19 +969,15 @@ float: 2
 
 Function: "logp1":
 double: 1
-float: 1
 
 Function: "logp1_downward":
 double: 2
-float: 2
 
 Function: "logp1_towardzero":
 double: 2
-float: 2
 
 Function: "logp1_upward":
 double: 2
-float: 2
 
 Function: "pow":
 double: 1
@@ -1109,66 +1029,48 @@ float: 2
 
 Function: "sinh":
 double: 2
-float: 2
 
 Function: "sinh_downward":
 double: 3
-float: 3
 
 Function: "sinh_towardzero":
 double: 3
-float: 2
 
 Function: "sinh_upward":
 double: 3
-float: 3
-
-Function: "tan":
-float: 1
 
 Function: "tan_downward":
 double: 1
-float: 2
 
 Function: "tan_towardzero":
 double: 1
-float: 1
 
 Function: "tan_upward":
 double: 1
-float: 1
 
 Function: "tanh":
 double: 2
-float: 2
 
 Function: "tanh_downward":
 double: 3
-float: 3
 
 Function: "tanh_towardzero":
 double: 2
-float: 2
 
 Function: "tanh_upward":
 double: 3
-float: 3
 
 Function: "tgamma":
 double: 9
-float: 8
 
 Function: "tgamma_downward":
 double: 9
-float: 7
 
 Function: "tgamma_towardzero":
 double: 9
-float: 7
 
 Function: "tgamma_upward":
 double: 9
-float: 8
 
 Function: "y0":
 double: 3

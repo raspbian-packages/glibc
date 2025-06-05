@@ -1,5 +1,5 @@
 /* Uncancelable versions of cancelable interfaces.  Hurd version.
-   Copyright (C) 2003-2024 Free Software Foundation, Inc.
+   Copyright (C) 2003-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -79,7 +79,7 @@ __typeof (__fcntl) __fcntl_nocancel;
 /* Non cancellable getrandom syscall that does not also set errno in case of
    failure.  */
 static inline ssize_t
-__getrandom_nocancel_nostatus (void *buf, size_t buflen, unsigned int flags)
+__getrandom_nocancel_nostatus_direct (void *buf, size_t buflen, unsigned int flags)
 {
   int save_errno = errno;
   ssize_t r = __getrandom (buf, buflen, flags);
@@ -89,6 +89,8 @@ __getrandom_nocancel_nostatus (void *buf, size_t buflen, unsigned int flags)
 }
 
 #define __getrandom_nocancel(buf, size, flags) \
+  __getrandom (buf, size, flags)
+#define __getrandom_nocancel_direct(buf, size, flags) \
   __getrandom (buf, size, flags)
 
 #define __poll_infinity_nocancel(fds, nfds) \

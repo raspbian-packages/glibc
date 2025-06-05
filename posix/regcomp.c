@@ -1,5 +1,5 @@
 /* Extended regular expression matching and search library.
-   Copyright (C) 2002-2024 Free Software Foundation, Inc.
+   Copyright (C) 2002-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Isamu Hasegawa <isamu@yamato.ibm.com>.
 
@@ -674,7 +674,7 @@ re_comp (const char *s)
     {
       if (!re_comp_buf.buffer)
 	return gettext ("No previous regular expression");
-      return 0;
+      return NULL;
     }
 
   if (re_comp_buf.buffer)

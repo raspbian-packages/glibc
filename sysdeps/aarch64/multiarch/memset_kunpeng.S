@@ -1,5 +1,5 @@
 /* Optimized memset for Huawei Kunpeng processor.
-   Copyright (C) 2012-2024 Free Software Foundation, Inc.
+   Copyright (C) 2012-2025 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -18,13 +18,18 @@
    <https://www.gnu.org/licenses/>.  */
 
 #include <sysdep.h>
-#include <sysdeps/aarch64/memset-reg.h>
 
 /* Assumptions:
  *
  * ARMv8-a, AArch64, unaligned accesses
  *
  */
+
+#define dstin	x0
+#define valw	w1
+#define count	x2
+#define dst	x3
+#define dstend	x4
 
 ENTRY (__memset_kunpeng)
 

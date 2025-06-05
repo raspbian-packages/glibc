@@ -1,5 +1,5 @@
 /* Check setjmp/longjmp within user context.
-   Copyright (C) 2023-2024 Free Software Foundation, Inc.
+   Copyright (C) 2023-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -54,7 +54,7 @@ f1 (int a0, int a1, int a2, int a3)
 }
 
 static void
-__attribute__ ((noinline, noclone))
+__attribute_optimization_barrier__
 call_longjmp (void)
 {
   longjmp_called = 1;

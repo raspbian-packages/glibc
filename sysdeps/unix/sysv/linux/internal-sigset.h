@@ -1,5 +1,5 @@
 /* Internal sigset_t definition.
-   Copyright (C) 2022-2024 Free Software Foundation, Inc.
+   Copyright (C) 2022-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -21,7 +21,7 @@
 
 #include <sigsetops.h>
 
-typedef struct
+typedef struct _internal_sigset_t
 {
   unsigned long int __val[__NSIG_WORDS];
 } internal_sigset_t;

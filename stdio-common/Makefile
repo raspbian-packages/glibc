@@ -1,4 +1,5 @@
-# Copyright (C) 1991-2024 Free Software Foundation, Inc.
+# Copyright (C) 1991-2025 Free Software Foundation, Inc.
+# Copyright The GNU Toolchain Authors.
 # This file is part of the GNU C Library.
 
 # The GNU C Library is free software; you can redistribute it and/or
@@ -21,6 +22,34 @@
 subdir	:= stdio-common
 
 include ../Makeconfig
+
+# List of markers for printf family function tests.
+xprintf-funcs := p as d f s sn v vas vd vf vs vsn
+
+# List of data types and formats for individual per-conversion printf tests.
+fmt-convs := double ldouble
+fmts := E e F f G g
+
+# List of data types grouping all conversions in single printf tests.
+nonfmt-convs := c char int llong long s short
+nonfmt-convs += uchar uint ullong ulong ushort
+
+convs := $(sort $(fmt-convs) $(nonfmt-convs))
+
+xprintf-srcs := \
+  $(foreach p,$(xprintf-funcs), \
+	    $(foreach c,$(convs),tst-printf-format-$(p)-$(c)))
+
+fmt-xprintf-stems := \
+  $(foreach f,$(fmts), \
+	    $(foreach p,$(xprintf-funcs), \
+		      $(foreach c,$(fmt-convs), \
+				tst-printf-format-$(p)-$(c)-$(f))))
+nonfmt-xprintf-stems := \
+  $(foreach p,$(xprintf-funcs), \
+	    $(foreach c,$(nonfmt-convs),tst-printf-format-$(p)-$(c)))
+
+xprintf-stems := $(sort $(fmt-xprintf-stems) $(nonfmt-xprintf-stems))
 
 headers := \
   bits/printf-ldbl.h \
@@ -171,7 +200,6 @@ tests := \
   bug25 \
   bug26 \
   bug27 \
-  bug28 \
   bug29 \
   errnobug \
   scanf1 \
@@ -210,6 +238,7 @@ tests := \
   tst-fdopen2 \
   tst-ferror \
   tst-fgets \
+  tst-fgets2 \
   tst-fileno \
   tst-fmemopen \
   tst-fmemopen2 \
@@ -218,8 +247,24 @@ tests := \
   tst-fphex \
   tst-fphex-wide \
   tst-fread \
+  tst-freopen2 \
+  tst-freopen3 \
+  tst-freopen4 \
+  tst-freopen5 \
+  tst-freopen6 \
+  tst-freopen64-2 \
+  tst-freopen64-3 \
+  tst-freopen64-4 \
+  tst-freopen64-6 \
+  tst-freopen64-7 \
+  tst-freopen7 \
   tst-fseek \
   tst-fwrite \
+  tst-fwrite-memstrm \
+  tst-fwrite-overflow \
+  tst-fwrite-ro \
+  tst-getline \
+  tst-getline-enomem \
   tst-gets \
   tst-grouping \
   tst-grouping2 \
@@ -244,6 +289,7 @@ tests := \
   tst-scanf-binary-gnu89 \
   tst-scanf-bz27650 \
   tst-scanf-intn \
+  tst-scanf-nan \
   tst-scanf-round \
   tst-scanf-to_inpunct \
   tst-setvbuf1 \
@@ -257,6 +303,7 @@ tests := \
   tst-tmpnam \
   tst-ungetc \
   tst-ungetc-leak \
+  tst-ungetc-nomem \
   tst-unlockedio \
   tst-vfprintf-mbs-prec \
   tst-vfprintf-user-type \
@@ -268,6 +315,16 @@ tests := \
   tstscanf \
   xbug \
   # tests
+
+# Clang 19 takes a very long time, it ran more than 27 minutes on Intel
+# Core i7-1195G7 before the process was killed, to compile bug28.c.
+# The issue was fixed in upstream but check if clang has the version that has the fix:
+# https://github.com/llvm/llvm-project/commit/99dddef340e566e9d303010f1219f7d7d6d37a11
+ifneq ($(have-test-clang-19-or-less),yes)
+tests += \
+  bug28 \
+  # tests
+endif
 
 ifeq ($(run-built-tests),yes)
 ifeq (yes,$(build-shared))
@@ -299,6 +356,7 @@ tests-internal = \
   # tests-internal
 
 test-srcs = \
+  $(xprintf-srcs) \
   tst-printf \
   tst-printfsz-islongdouble \
   tst-unbputc \
@@ -306,6 +364,7 @@ test-srcs = \
 
 ifeq ($(run-built-tests),yes)
 tests-special += \
+  $(foreach f,$(xprintf-stems),$(objpfx)$(f).out) \
   $(objpfx)tst-printf.out \
   $(objpfx)tst-printfsz-islongdouble.out \
   $(objpfx)tst-setvbuf1-cmp.out \
@@ -315,6 +374,18 @@ tests-special += \
 ifeq (yes,$(build-shared))
 ifneq ($(PERL),no)
 tests-special += \
+  $(foreach f,$(xprintf-stems),$(objpfx)$(f)-mem.out) \
+  $(objpfx)tst-freopen2-mem.out \
+  $(objpfx)tst-freopen3-mem.out \
+  $(objpfx)tst-freopen4-mem.out \
+  $(objpfx)tst-freopen5-mem.out \
+  $(objpfx)tst-freopen6-mem.out \
+  $(objpfx)tst-freopen64-2-mem.out \
+  $(objpfx)tst-freopen64-3-mem.out \
+  $(objpfx)tst-freopen64-4-mem.out \
+  $(objpfx)tst-freopen64-6-mem.out \
+  $(objpfx)tst-getline-enomem-mem.out \
+  $(objpfx)tst-getline-mem.out \
   $(objpfx)tst-printf-bz18872-mem.out \
   $(objpfx)tst-printf-bz25691-mem.out \
   $(objpfx)tst-printf-fp-free-mem.out \
@@ -324,6 +395,30 @@ tests-special += \
   # tests-special
 
 generated += \
+  $(foreach f,$(xprintf-stems),$(f)-mem.out) \
+  $(foreach f,$(xprintf-stems),$(f).mtrace) \
+  tst-freopen2-mem.out \
+  tst-freopen2.mtrace \
+  tst-freopen3-mem.out \
+  tst-freopen3.mtrace \
+  tst-freopen4-mem.out \
+  tst-freopen4.mtrace \
+  tst-freopen5-mem.out \
+  tst-freopen5.mtrace \
+  tst-freopen6-mem.out \
+  tst-freopen6.mtrace \
+  tst-freopen64-2-mem.out \
+  tst-freopen64-2.mtrace \
+  tst-freopen64-3-mem.out \
+  tst-freopen64-3.mtrace \
+  tst-freopen64-4-mem.out \
+  tst-freopen64-4.mtrace \
+  tst-freopen64-6-mem.out \
+  tst-freopen64-6.mtrace \
+  tst-getline-enomem-mem.out \
+  tst-getline-enomem.mtrace \
+  tst-getline-mem.out \
+  tst-getline.mtrace \
   tst-printf-bz18872-mem.out \
   tst-printf-bz18872.c \
   tst-printf-bz18872.mtrace \
@@ -433,6 +528,39 @@ tst-scanf-bz27650-ENV = \
 tst-ungetc-leak-ENV = \
   MALLOC_TRACE=$(objpfx)tst-ungetc-leak.mtrace \
   LD_PRELOAD=$(common-objpfx)malloc/libc_malloc_debug.so
+tst-getline-ENV = \
+  MALLOC_TRACE=$(objpfx)tst-getline.mtrace \
+  LD_PRELOAD=$(common-objpfx)malloc/libc_malloc_debug.so
+tst-getline-enomem-ENV = \
+  MALLOC_TRACE=$(objpfx)tst-getline-enomem.mtrace \
+  LD_PRELOAD=$(common-objpfx)malloc/libc_malloc_debug.so
+tst-freopen2-ENV = \
+  MALLOC_TRACE=$(objpfx)tst-freopen2.mtrace \
+  LD_PRELOAD=$(common-objpfx)malloc/libc_malloc_debug.so
+tst-freopen64-2-ENV = \
+  MALLOC_TRACE=$(objpfx)tst-freopen64-2.mtrace \
+  LD_PRELOAD=$(common-objpfx)malloc/libc_malloc_debug.so
+tst-freopen3-ENV = \
+  MALLOC_TRACE=$(objpfx)tst-freopen3.mtrace \
+  LD_PRELOAD=$(common-objpfx)malloc/libc_malloc_debug.so
+tst-freopen64-3-ENV = \
+  MALLOC_TRACE=$(objpfx)tst-freopen64-3.mtrace \
+  LD_PRELOAD=$(common-objpfx)malloc/libc_malloc_debug.so
+tst-freopen4-ENV = \
+  MALLOC_TRACE=$(objpfx)tst-freopen4.mtrace \
+  LD_PRELOAD=$(common-objpfx)malloc/libc_malloc_debug.so
+tst-freopen64-4-ENV = \
+  MALLOC_TRACE=$(objpfx)tst-freopen64-4.mtrace \
+  LD_PRELOAD=$(common-objpfx)malloc/libc_malloc_debug.so
+tst-freopen5-ENV = \
+  MALLOC_TRACE=$(objpfx)tst-freopen5.mtrace \
+  LD_PRELOAD=$(common-objpfx)malloc/libc_malloc_debug.so
+tst-freopen6-ENV = \
+  MALLOC_TRACE=$(objpfx)tst-freopen6.mtrace \
+  LD_PRELOAD=$(common-objpfx)malloc/libc_malloc_debug.so
+tst-freopen64-6-ENV = \
+  MALLOC_TRACE=$(objpfx)tst-freopen64-6.mtrace \
+  LD_PRELOAD=$(common-objpfx)malloc/libc_malloc_debug.so
 
 $(objpfx)tst-unbputc.out: tst-unbputc.sh $(objpfx)tst-unbputc
 	$(SHELL) $< $(common-objpfx) '$(test-program-prefix)'; \
@@ -440,6 +568,21 @@ $(objpfx)tst-unbputc.out: tst-unbputc.sh $(objpfx)tst-unbputc
 
 $(objpfx)tst-printf.out: tst-printf.sh $(objpfx)tst-printf
 	$(SHELL) $< $(common-objpfx) '$(test-program-prefix)'; \
+	$(evaluate-test)
+
+# We can't split a quoted recipe line, so do it via an auxiliary variable.
+make-tst-printf-format-out = \
+  AWK='$(AWK)' BASH='$(BASH)' \
+    $(BASH) $< $@ $(common-objpfx) \
+    '$(run-program-prefix-before-env) \
+     $(run-program-env) \
+     MALLOC_TRACE=$(@:.out=.mtrace) \
+     LD_PRELOAD=$(common-objpfx)malloc/libc_malloc_debug.so \
+     $(run-program-prefix-after-env)'
+$(objpfx)tst-printf-format-%.out: \
+  tst-printf-format.sh $(foreach c,$(convs),tst-printf-format-$(c).sh) \
+  $(foreach f,$(xprintf-srcs),$(objpfx)$(f)) tst-printf-format.awk
+	$(make-tst-printf-format-out) > $@; \
 	$(evaluate-test)
 
 $(objpfx)tst-printfsz-islongdouble.out: \
@@ -454,6 +597,13 @@ $(objpfx)tst-printf-bz18872.c: tst-printf-bz18872.sh
 
 $(objpfx)tst-%-mem.out: $(objpfx)tst-%.out
 	$(common-objpfx)malloc/mtrace $(objpfx)tst-$*.mtrace > $@; \
+	$(evaluate-test)
+$(objpfx)tst-printf-format-%-mem.out: $(objpfx)tst-printf-format-%.out
+	{ test -r $(objpfx)tst-printf-format-$*.mtrace \
+	|| ( echo "$(objpfx)tst-printf-format-$*.mtrace does not exist"; \
+	     exit 77; ) \
+	&& $(common-objpfx)malloc/mtrace \
+	  $(objpfx)tst-printf-format-$*.mtrace; } > $@; \
 	$(evaluate-test)
 
 errlist-h = $(firstword $(wildcard $(addsuffix /errlist.h,$(sysdirs) .)))
@@ -499,6 +649,8 @@ CFLAGS-dprintf.c += $(config-cflags-wno-ignored-attributes)
 CFLAGS-_itoa.o = $(no-stack-protector)
 CFLAGS-_itoa.op = $(no-stack-protector)
 
+CFLAGS-scanf13.c += $(test-config-cflags-wno-fortify-source)
+
 # scanf18.c and scanf19.c test a deprecated extension which is no
 # longer visible under most conformance levels; see the source files
 # for more detail.
@@ -517,7 +669,7 @@ CFLAGS-tst-gets.c += -Wno-deprecated-declarations
 
 # BZ #11319 was first fixed for regular vdprintf, then reopened because
 # the fortified version had the same bug.
-CFLAGS-tst-bz11319-fortify2.c += $(no-fortify-source),-D_FORTIFY_SOURCE=2
+CFLAGS-tst-bz11319-fortify2.c += $(no-fortify-source) -D_FORTIFY_SOURCE=2
 
 CFLAGS-tst-memstream-string.c += -fno-builtin-fprintf
 
@@ -542,3 +694,6 @@ $(objpfx)tst-setvbuf1-cmp.out: tst-setvbuf1.expect $(objpfx)tst-setvbuf1.out
 
 $(objpfx)tst-printf-round: $(libm)
 $(objpfx)tst-scanf-round: $(libm)
+
+$(objpfx)tst-freopen7: $(shared-thread-library)
+$(objpfx)tst-freopen64-7: $(shared-thread-library)

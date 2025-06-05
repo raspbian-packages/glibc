@@ -1,5 +1,5 @@
 /* Declarations of internal pthread functions used by libc.  Hurd version.
-   Copyright (C) 2016-2024 Free Software Foundation, Inc.
+   Copyright (C) 2016-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -38,23 +38,74 @@ extern int __pthread_mutex_trylock (pthread_mutex_t *_mutex);
 extern int __pthread_mutex_timedlock (pthread_mutex_t *__mutex,
      const struct timespec *__abstime);
 extern int __pthread_mutex_unlock (pthread_mutex_t *__mutex);
-extern int __pthread_mutexattr_init (pthread_mutexattr_t *attr);
 extern int __pthread_mutexattr_settype (pthread_mutexattr_t *attr, int kind);
+extern int __pthread_mutexattr_getpshared(const pthread_mutexattr_t *__restrict __attr,
+					int *__restrict __pshared);
+libc_hidden_proto (__pthread_mutexattr_getpshared)
+extern int __pthread_mutexattr_setpshared(pthread_mutexattr_t *__attr,
+					int __pshared);
+libc_hidden_proto (__pthread_mutexattr_setpshared)
+
+/* Get the robustness flag of the mutex attribute ATTR.  */
+extern int __pthread_mutexattr_getrobust (const pthread_mutexattr_t *__attr,
+					int *__robustness);
+libc_hidden_proto (__pthread_mutexattr_getrobust)
+extern int __pthread_mutexattr_getrobust_np (const pthread_mutexattr_t *__attr,
+					   int *__robustness);
+libc_hidden_proto (__pthread_mutexattr_getrobust_np)
+extern int __pthread_mutexattr_setrobust_np (pthread_mutexattr_t *__attr,
+					   int __robustness);
+libc_hidden_proto (__pthread_mutexattr_setrobust_np)
+
+/* Set the robustness flag of the mutex attribute ATTR.  */
+extern int __pthread_mutexattr_setrobust (pthread_mutexattr_t *__attr,
+					int __robustness);
+libc_hidden_proto (__pthread_mutexattr_setrobust)
+
+extern int __pthread_mutexattr_getprioceiling(const pthread_mutexattr_t *__restrict __attr,
+					    int *__restrict __prioceiling);
+libc_hidden_proto (__pthread_mutexattr_getprioceiling)
+extern int __pthread_mutexattr_setprioceiling(pthread_mutexattr_t *__attr,
+					    int __prioceiling);
+libc_hidden_proto (__pthread_mutexattr_setprioceiling)
+
+extern int __pthread_mutexattr_getprotocol(const pthread_mutexattr_t *__restrict __attr,
+					 int *__restrict __protocol);
+libc_hidden_proto (__pthread_mutexattr_getprotocol)
+extern int __pthread_mutexattr_setprotocol(pthread_mutexattr_t *__attr,
+					 int __protocol);
+libc_hidden_proto (__pthread_mutexattr_setprotocol)
+
+extern int __pthread_mutexattr_gettype(const pthread_mutexattr_t *__restrict __attr,
+				     int *__restrict __type);
+libc_hidden_proto (__pthread_mutexattr_gettype)
+extern int __pthread_mutexattr_settype(pthread_mutexattr_t *__attr,
+				     int __type);
+libc_hidden_proto (__pthread_mutexattr_settype)
 
 extern int __pthread_cond_init (pthread_cond_t *cond,
 				const pthread_condattr_t *cond_attr);
+libc_hidden_proto (__pthread_cond_init)
 extern int __pthread_cond_signal (pthread_cond_t *cond);
+libc_hidden_proto (__pthread_cond_signal);
 extern int __pthread_cond_broadcast (pthread_cond_t *cond);
+libc_hidden_proto (__pthread_cond_broadcast);
 extern int __pthread_cond_wait (pthread_cond_t *cond, pthread_mutex_t *mutex);
+libc_hidden_proto (__pthread_cond_wait);
 extern int __pthread_cond_timedwait (pthread_cond_t *cond,
 				     pthread_mutex_t *mutex,
 				     const struct timespec *abstime);
+libc_hidden_proto (__pthread_cond_timedwait);
 extern int __pthread_cond_clockwait (pthread_cond_t *cond,
 				     pthread_mutex_t *mutex,
 				     clockid_t clockid,
 				     const struct timespec *abstime)
   __nonnull ((1, 2, 4));
+libc_hidden_proto (__pthread_cond_clockwait);
 extern int __pthread_cond_destroy (pthread_cond_t *cond);
+libc_hidden_proto (__pthread_cond_destroy);
+extern int __pthread_sigmask (int, const sigset_t *, sigset_t *);
+libc_hidden_proto (__pthread_sigmask);
 
 typedef struct __cthread *__cthread_t;
 typedef int __cthread_key_t;
@@ -83,16 +134,28 @@ int __pthread_setcancelstate (int state, int *oldstate);
 int __pthread_getattr_np (pthread_t, pthread_attr_t *);
 int __pthread_attr_getstackaddr (const pthread_attr_t *__restrict __attr,
 				 void **__restrict __stackaddr);
+libc_hidden_proto (__pthread_attr_getstackaddr)
 int __pthread_attr_setstackaddr (pthread_attr_t *__attr, void *__stackaddr);
+libc_hidden_proto (__pthread_attr_setstackaddr)
 int __pthread_attr_getstacksize (const pthread_attr_t *__restrict __attr,
 				 size_t *__restrict __stacksize);
+libc_hidden_proto (__pthread_attr_getstacksize)
 int __pthread_attr_setstacksize (pthread_attr_t *__attr, size_t __stacksize);
+libc_hidden_proto (__pthread_attr_setstacksize)
 int __pthread_attr_setstack (pthread_attr_t *__attr, void *__stackaddr,
 			     size_t __stacksize);
+libc_hidden_proto (__pthread_attr_setstack)
 int __pthread_attr_getstack (const pthread_attr_t *, void **, size_t *);
+libc_hidden_proto (__pthread_attr_getstack)
 void __pthread_testcancel (void);
+int __pthread_attr_init (pthread_attr_t *attr);
+int __pthread_condattr_init (pthread_condattr_t *attr);
+
+#define __pthread_raise_internal(__sig) raise (__sig)
 
 libc_hidden_proto (__pthread_self)
+libc_hidden_proto (__pthread_attr_init)
+libc_hidden_proto (__pthread_condattr_init)
 
 #if IS_IN (libpthread)
 hidden_proto (__pthread_create)
@@ -107,6 +170,14 @@ hidden_proto (__pthread_mutex_trylock)
 hidden_proto (__pthread_mutex_unlock)
 hidden_proto (__pthread_mutex_timedlock)
 hidden_proto (__pthread_get_cleanup_stack)
+#endif
+
+#if !defined(__NO_WEAK_PTHREAD_ALIASES) && !IS_IN (libpthread)
+# ifdef weak_extern
+weak_extern (__pthread_exit)
+# else
+#  pragma weak __pthread_exit
+# endif
 #endif
 
 #define ASSERT_TYPE_SIZE(type, size) 					\

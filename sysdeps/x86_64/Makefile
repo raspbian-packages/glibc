@@ -142,7 +142,6 @@ CFLAGS-tst-avxmod.c += $(AVX-CFLAGS)
 AVX512-CFLAGS = -mavx512f
 CFLAGS-tst-audit10-aux.c += $(AVX512-CFLAGS)
 CFLAGS-tst-auditmod10a.c += $(AVX512-CFLAGS)
-CFLAGS-tst-auditmod10b.c += $(AVX512-CFLAGS)
 CFLAGS-tst-avx512-aux.c += $(AVX512-CFLAGS)
 CFLAGS-tst-avx512mod.c += $(AVX512-CFLAGS)
 
@@ -196,6 +195,9 @@ modules-names += \
 
 tst-plt-rewrite1-no-pie = yes
 LDFLAGS-tst-plt-rewrite1 = -Wl,-z,now
+ifeq ($(have-test-cc-cflags-fsemantic-interposition),yes)
+CFLAGS-tst-plt-rewritemod1.c += -fsemantic-interposition
+endif
 LDFLAGS-tst-plt-rewritemod1.so = -Wl,-z,now
 tst-plt-rewrite1-ENV = GLIBC_TUNABLES=glibc.cpu.plt_rewrite=1 LD_DEBUG=files:bindings
 $(objpfx)tst-plt-rewrite1: $(objpfx)tst-plt-rewritemod1.so
@@ -354,8 +356,8 @@ CFLAGS-tst-cet-legacy-mod-6c.c += -fcf-protection
 CFLAGS-tst-cet-legacy-7.c += -fcf-protection=none
 CFLAGS-tst-cet-legacy-10.c += -mshstk
 CFLAGS-tst-cet-legacy-10-static.c += -mshstk
-CFLAGS-tst-cet-legacy-10a.c += -fcf-protection=none
-CFLAGS-tst-cet-legacy-10a-static.c += -fcf-protection=none
+CFLAGS-tst-cet-legacy-10a.c += -fcf-protection=none -mshstk
+CFLAGS-tst-cet-legacy-10a-static.c += -fcf-protection=none -mshstk
 
 tst-cet-legacy-4-ENV = GLIBC_TUNABLES=glibc.cpu.hwcaps=SHSTK
 tst-cet-legacy-6-ENV = GLIBC_TUNABLES=glibc.cpu.hwcaps=SHSTK
