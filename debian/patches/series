@@ -32,7 +32,9 @@ hurd-i386/git-utime-EINVAL.diff
 hurd-i386/git-xstate-initialized.diff
 hurd-i386/git-signal-fpe-exceptions.diff
 hurd-i386/git-symlink-eexist.diff
+hurd-i386/git-rename.diff
 hurd-i386/local-pthread_once.diff
+hurd-i386/local-64b-align.diff
 hurd-i386/local-enable-ldconfig.diff
 hurd-i386/tg-sysvshm.diff
 hurd-i386/tg-thread-cancel.diff

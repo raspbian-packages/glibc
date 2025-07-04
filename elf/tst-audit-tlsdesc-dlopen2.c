@@ -1,4 +1,4 @@
-/* Optimized strcmp implementation for POWER10/PPC64.
+/* Loading TLS-using modules from auditors (bug 32412).  Main program.
    Copyright (C) 2021-2025 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -16,11 +16,31 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#if defined __LITTLE_ENDIAN__ && IS_IN (libc)
-#define STRCMP __strcmp_power10
+#include <support/xdlfcn.h>
+#include <stdio.h>
 
-#undef libc_hidden_builtin_def
-#define libc_hidden_builtin_def(name)
+static int
+do_test (void)
+{
+  puts ("info: start of main program");
 
-#include <sysdeps/powerpc/powerpc64/le/power10/strcmp.S>
-#endif /* __LITTLE_ENDIAN__ && IS_IN (libc) */
+  /* Load TLS-using modules, to trigger DTV resizing.  The dynamic
+     linker will load them again (requiring their own TLS) because the
+     dlopen calls from the auditor were in the auditing namespace.  */
+  for (int i = 1; i <= 19; ++i)
+    {
+      char dso[30];
+      snprintf (dso, sizeof (dso), "tst-tlsmod17a%d.so", i);
+      char sym[30];
+      snprintf (sym, sizeof(sym), "tlsmod17a%d", i);
+
+      void *handle = xdlopen (dso, RTLD_LAZY);
+      int (*func) (void) = xdlsym (handle, sym);
+      /* Trigger TLS allocation.  */
+      func ();
+    }
+
+  return 0;
+}
+
+#include <support/test-driver.c>

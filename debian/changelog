@@ -1,4 +1,4 @@
-glibc (2.41-8+rpi1) trixie-staging; urgency=medium
+glibc (2.41-9+rpi1) trixie-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -6,7 +6,29 @@ glibc (2.41-8+rpi1) trixie-staging; urgency=medium
   [changes brought forward from 2.37-12+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Tue, 17 Oct 2023 12:00:24 +0000]
   * Remove valgrind conflicts.
 
- -- Peter Michael Green <plugwash@raspbian.org>  Thu, 05 Jun 2025 19:59:13 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Fri, 04 Jul 2025 17:42:47 +0000
+
+glibc (2.41-9) unstable; urgency=medium
+
+  [ Aurelien Jarno ]
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix loading TLS-using modules using LD_AUDIT.
+    - Add tests for CVE-2025-4802.
+    - Fix swapped wcsncpy and wcpncpy function names in IFUNC definition.
+    - Fix elf/tst-execstack-prog-static-tunable on sparc64.
+    - Remove POWER10 optimized strcmp function (GLIBC-SA-2025-0003 /
+      CVE-2025-5702).  Closes: #1107365.
+    - Remove POWER10 optimized strncmp function (GLIBC-SA-2025-0004 /
+      CVE-2025-5745).  Closes: #1107366.
+    - Remove POWER10 optimized memchr function.
+
+  [ Samuel Thibault ]
+  * debian/patches/hurd-i386/git-rename.diff: Make rename refuse trailing
+    slashes.
+  * debian/patches/hurd-i386/local-64b-align.diff: Avoid 64b typing error on
+    RPCs using 64b fields in structures.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Wed, 18 Jun 2025 06:49:31 +0200
 
 glibc (2.41-8) unstable; urgency=medium
 

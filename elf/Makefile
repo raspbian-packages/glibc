@@ -267,6 +267,7 @@ tests-static-normal := \
   tst-array1-static \
   tst-array5-static \
   tst-dl-iter-static \
+  tst-dlopen-sgid \
   tst-dst-static \
   tst-env-setuid-static \
   tst-getauxval-static \
@@ -380,6 +381,7 @@ tests += \
   tst-align3 \
   tst-audit-tlsdesc \
   tst-audit-tlsdesc-dlopen \
+  tst-audit-tlsdesc-dlopen2 \
   tst-audit1 \
   tst-audit2 \
   tst-audit8 \
@@ -866,6 +868,7 @@ modules-names += \
   tst-auditmanymod8 \
   tst-auditmanymod9 \
   tst-auditmod-tlsdesc  \
+  tst-auditmod-tlsdesc2 \
   tst-auditmod1 \
   tst-auditmod11 \
   tst-auditmod12 \
@@ -908,6 +911,7 @@ modules-names += \
   tst-dlmopen1mod \
   tst-dlopen-auditdup-auditmod \
   tst-dlopen-auditdupmod \
+  tst-dlopen-sgid-mod \
   tst-dlopen-tlsreinitmod1 \
   tst-dlopen-tlsreinitmod2 \
   tst-dlopen-tlsreinitmod3 \
@@ -3214,6 +3218,9 @@ $(objpfx)tst-audit-tlsdesc.out: $(objpfx)tst-auditmod-tlsdesc.so
 tst-audit-tlsdesc-ENV = LD_AUDIT=$(objpfx)tst-auditmod-tlsdesc.so
 $(objpfx)tst-audit-tlsdesc-dlopen.out: $(objpfx)tst-auditmod-tlsdesc.so
 tst-audit-tlsdesc-dlopen-ENV = LD_AUDIT=$(objpfx)tst-auditmod-tlsdesc.so
+$(objpfx)tst-audit-tlsdesc-dlopen2.out: $(objpfx)tst-auditmod-tlsdesc2.so \
+  $(patsubst %, $(objpfx)%.so, $(tlsmod17a-modules))
+tst-audit-tlsdesc-dlopen2-ENV = LD_AUDIT=$(objpfx)tst-auditmod-tlsdesc2.so
 
 $(objpfx)tst-dlmopen-twice.out: \
   $(objpfx)tst-dlmopen-twice-mod1.so \
@@ -3417,3 +3424,5 @@ $(objpfx)tst-nolink-libc-2: $(objpfx)tst-nolink-libc.o
 	  -Wl,--dynamic-linker=$(objpfx)ld.so
 $(objpfx)tst-nolink-libc-2.out: $(objpfx)tst-nolink-libc-2 $(objpfx)ld.so
 	$< > $@ 2>&1; $(evaluate-test)
+
+$(objpfx)tst-dlopen-sgid.out: $(objpfx)tst-dlopen-sgid-mod.so
