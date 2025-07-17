@@ -1318,6 +1318,10 @@ if test $libc_cv_as_noexecstack = yes; then
 fi
 AC_SUBST(ASFLAGS_config)
 
+LIBC_LINKER_FEATURE([--no-error-execstack], [-Wl,--no-error-execstack],
+		    [libc_cv_no_error_execstack=yes], [libc_cv_no_error_execstack=no])
+AC_SUBST(libc_cv_no_error_execstack)
+
 LIBC_LINKER_FEATURE([-z execstack], [-Wl,-z,execstack],
 		    [libc_cv_z_execstack=yes], [libc_cv_z_execstack=no])
 AC_SUBST(libc_cv_z_execstack)
@@ -1820,6 +1824,17 @@ if test $libc_cv_builtin_trap = yes; then
   AC_DEFINE([HAVE_BUILTIN_TRAP])
 fi
 
+dnl Check if
+AC_CACHE_CHECK([whether the compiler supports __attribute__ ((aligned (65536)))],
+	       libc_cv_aligned_65536, [
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+char bss[0xb5dce8] __attribute__ ((aligned (65536)));
+])],
+	       [libc_cv_aligned_65536=yes],
+	       [libc_cv_aligned_65536=no])
+])
+LIBC_CONFIG_VAR([aligned-65536], [$libc_cv_aligned_65536])
+
 dnl C++ feature tests.
 AC_LANG_PUSH([C++])
 
@@ -1991,6 +2006,23 @@ LIBC_LINKER_FEATURE([-Ttext-segment=$libc_cv_pde_load_address],
 		    [libc_cv_load_address_ldflag=-Wl,-Ttext-segment],
 		    [libc_cv_load_address_ldflag=])
 LIBC_CONFIG_VAR([load-address-ldflag], [$libc_cv_load_address_ldflag])
+
+# Check if compilers support GCS in branch protection:
+LIBC_TRY_CC_AND_TEST_CC_OPTION([if compiler supports -mbranch-protection=gcs],
+  [-Werror -mbranch-protection=gcs],
+  libc_cv_cc_gcs,
+  [libc_cv_cc_gcs=yes],
+  [libc_cv_cc_gcs=no],
+  libc_cv_test_cc_gcs,
+  [libc_cv_test_cc_gcs=yes],
+  [libc_cv_test_cc_gcs=no])
+LIBC_CONFIG_VAR([have-cc-gcs], [$libc_cv_cc_gcs])
+LIBC_CONFIG_VAR([have-test-cc-gcs], [$libc_cv_test_cc_gcs])
+
+# Check if linker supports GCS marking
+LIBC_LINKER_FEATURE([-z gcs=always], [-Wl,-z,gcs=always],
+		    [libc_cv_ld_gcs=yes], [libc_cv_ld_gcs=no])
+LIBC_CONFIG_VAR([have-ld-gcs], [$libc_cv_ld_gcs])
 
 AC_MSG_CHECKING(if we can build programs as PIE)
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([[#ifdef PIE_UNSUPPORTED
