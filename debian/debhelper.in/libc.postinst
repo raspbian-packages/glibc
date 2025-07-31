@@ -147,6 +147,30 @@ then
 	fi # end upgrading and $preversion lt DEB_VERSION_UPSTREAM
     fi # Upgrading
 
+# begin-remove-after: released:trixie
+    # Restart systemd. Starting with trixie, inits restart themselves via
+    # dpkg-triggers. For inits other than systemd, versioned Breaks have been
+    # declared, but doing so for systemd would create a cycle.
+    if ! command -v systemd >/dev/null; then
+	: # The systemd binary has been moved out of $PATH in trixie.
+	# systemd's trigger interest or its postinst will handle reexecuting.
+    elif [ -n "${DPKG_ROOT:-}" ] || ischroot 2>/dev/null; then
+	: # Do not re-exec init if we are operating on a chroot.
+    elif [ -d /run/systemd/system ]; then
+	# Restart systemd on upgrade, but carefully.
+	# The restart is wanted because of LP: #1942276 and Bug: #993821
+	# The care is needed because of https://bugs.debian.org/753725
+	# (if systemd --help fails the system might still be quite broken but
+	# that seems better than the kernel panic that results if systemd
+	# cannot reexec itself).
+	if command -v systemd >/dev/null; then
+	    systemctl daemon-reexec
+	else
+	    echo "Error: Could not restart systemd, systemd binary not working" >&2
+	fi
+    fi
+
+# end-remove-after
     # Emit triggers to allow depending packages to restart themselves if
     # needed.  The triggers are called with "--no-await", as packages with the
     # triggers-awaited state do not satisfy dependencies.

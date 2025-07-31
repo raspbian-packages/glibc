@@ -1321,10 +1321,10 @@ index 0000000000..5eb79eef48
 +/* Opening this object should not succeed.  */
 diff --git a/elf/tst-dlopen-sgid.c b/elf/tst-dlopen-sgid.c
 new file mode 100644
-index 0000000000..5688b79f2e
+index 0000000000..8aec52e19f
 --- /dev/null
 +++ b/elf/tst-dlopen-sgid.c
-@@ -0,0 +1,112 @@
+@@ -0,0 +1,106 @@
 +/* Test case for ignored LD_LIBRARY_PATH in static startug (bug 32976).
 +   Copyright (C) 2025 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
@@ -1397,13 +1397,7 @@ index 0000000000..5688b79f2e
 +
 +  free (libdir);
 +
-+  int status = support_capture_subprogram_self_sgid (magic_argument);
-+
-+  if (WEXITSTATUS (status) == EXIT_UNSUPPORTED)
-+    return EXIT_UNSUPPORTED;
-+
-+  if (!WIFEXITED (status))
-+    FAIL_EXIT1 ("Unexpected exit status %d from child process\n", status);
++  support_capture_subprogram_self_sgid (magic_argument);
 +
 +  return 0;
 +}
@@ -1437,6 +1431,77 @@ index 0000000000..5688b79f2e
 +
 +#define PREPARE alternative_main
 +#include <support/test-driver.c>
+diff --git a/elf/tst-env-setuid-tunables.c b/elf/tst-env-setuid-tunables.c
+index a4233b1727..bfdb30cbd8 100644
+--- a/elf/tst-env-setuid-tunables.c
++++ b/elf/tst-env-setuid-tunables.c
+@@ -105,10 +105,7 @@ do_test (int argc, char **argv)
+ 
+       if (ret != 0)
+ 	exit (1);
+-
+-      /* Special return code to make sure that the child executed all the way
+-	 through.  */
+-      exit (42);
++      return 0;
+     }
+   else
+     {
+@@ -127,18 +124,7 @@ do_test (int argc, char **argv)
+ 	      continue;
+ 	    }
+ 
+-	  int status = support_capture_subprogram_self_sgid (buf);
+-
+-	  /* Bail out early if unsupported.  */
+-	  if (WEXITSTATUS (status) == EXIT_UNSUPPORTED)
+-	    return EXIT_UNSUPPORTED;
+-
+-	  if (WEXITSTATUS (status) != 42)
+-	    {
+-	      printf ("    [%d] child failed with status %d\n", i,
+-		      WEXITSTATUS (status));
+-	      support_record_failure ();
+-	    }
++	  support_capture_subprogram_self_sgid (buf);
+ 	}
+       return 0;
+     }
+diff --git a/elf/tst-env-setuid.c b/elf/tst-env-setuid.c
+index 2c632ed30c..7209acd616 100644
+--- a/elf/tst-env-setuid.c
++++ b/elf/tst-env-setuid.c
+@@ -147,10 +147,7 @@ do_test (int argc, char **argv)
+ 
+       if (ret != 0)
+ 	exit (1);
+-
+-      /* Special return code to make sure that the child executed all the way
+-	 through.  */
+-      exit (42);
++      return 0;
+     }
+   else
+     {
+@@ -174,17 +171,7 @@ do_test (int argc, char **argv)
+ 	free (profilepath);
+       }
+ 
+-      int status = support_capture_subprogram_self_sgid (SETGID_CHILD);
+-
+-      if (WEXITSTATUS (status) == EXIT_UNSUPPORTED)
+-	exit (EXIT_UNSUPPORTED);
+-
+-      if (WEXITSTATUS (status) != 42)
+-	{
+-	  printf ("    child failed with status %d\n",
+-		  WEXITSTATUS (status));
+-	  support_record_failure ();
+-	}
++      support_capture_subprogram_self_sgid (SETGID_CHILD);
+ 
+       return 0;
+     }
 diff --git a/elf/tst-execstack-prog-static-tunable.c b/elf/tst-execstack-prog-static-tunable.c
 new file mode 100644
 index 0000000000..88b0ca1263
@@ -1829,51 +1894,281 @@ index 0000000000..f5f484c83a
 +}
 +
 +#include <support/test-driver.c>
+diff --git a/stdlib/tst-secure-getenv.c b/stdlib/tst-secure-getenv.c
+index 3fd1d232be..c12c63aee1 100644
+--- a/stdlib/tst-secure-getenv.c
++++ b/stdlib/tst-secure-getenv.c
+@@ -57,13 +57,7 @@ do_test (void)
+       exit (1);
+     }
+ 
+-  int status = support_capture_subprogram_self_sgid (MAGIC_ARGUMENT);
+-
+-  if (WEXITSTATUS (status) == EXIT_UNSUPPORTED)
+-    return EXIT_UNSUPPORTED;
+-
+-  if (!WIFEXITED (status))
+-    FAIL_EXIT1 ("Unexpected exit status %d from child process\n", status);
++  support_capture_subprogram_self_sgid (MAGIC_ARGUMENT);
+ 
+   return 0;
+ }
+@@ -82,6 +76,7 @@ alternative_main (int argc, char **argv)
+       if (secure_getenv ("PATH") != NULL)
+ 	FAIL_EXIT (4, "PATH variable not filtered out\n");
+ 
++      support_record_failure_barrier ();
+       exit (EXIT_SUCCESS);
+     }
+ }
 diff --git a/support/capture_subprocess.h b/support/capture_subprocess.h
-index 91d75e5d6b..77140430d2 100644
+index 91d75e5d6b..b37462d0d1 100644
 --- a/support/capture_subprocess.h
 +++ b/support/capture_subprocess.h
-@@ -45,8 +45,7 @@ struct support_capture_subprocess support_capture_subprogram
- /* Copy the running program into a setgid binary and run it with CHILD_ID
-    argument.  If execution is successful, return the exit status of the child
-    program, otherwise return a non-zero failure exit code.  */
+@@ -42,11 +42,12 @@ struct support_capture_subprocess support_capture_subprocess
+ struct support_capture_subprocess support_capture_subprogram
+   (const char *file, char *const argv[], char *const envp[]);
+ 
+-/* Copy the running program into a setgid binary and run it with CHILD_ID
+-   argument.  If execution is successful, return the exit status of the child
+-   program, otherwise return a non-zero failure exit code.  */
 -int support_capture_subprogram_self_sgid
 -  (char *child_id);
-+int support_capture_subprogram_self_sgid (const char *child_id);
++/* Copy the running program into a setgid binary and run it with
++   CHILD_ID argument.  If the program exits with a non-zero status,
++   exit with that exit status (or status 1 if the program did not exit
++   normally).  If the test cannot be performed, exit with
++   EXIT_UNSUPPORTED.  */
++void support_capture_subprogram_self_sgid (const char *child_id);
  
  /* Deallocate the subprocess data captured by
     support_capture_subprocess.  */
 diff --git a/support/support_capture_subprocess.c b/support/support_capture_subprocess.c
-index c3ef478d17..d99aafd370 100644
+index c3ef478d17..b4e4bf9502 100644
 --- a/support/support_capture_subprocess.c
 +++ b/support/support_capture_subprocess.c
-@@ -110,7 +110,7 @@ support_capture_subprogram (const char *file, char *const argv[],
+@@ -21,12 +21,17 @@
+ 
+ #include <errno.h>
+ #include <fcntl.h>
++#include <grp.h>
++#include <scratch_buffer.h>
++#include <stdio_ext.h>
+ #include <stdlib.h>
++#include <string.h>
+ #include <support/check.h>
+ #include <support/xunistd.h>
+ #include <support/xsocket.h>
+ #include <support/xspawn.h>
+ #include <support/support.h>
++#include <support/temp_file.h>
+ #include <support/test-driver.h>
+ 
+ static void
+@@ -109,111 +114,88 @@ support_capture_subprogram (const char *file, char *const argv[],
+ /* Copies the executable into a restricted directory, so that we can
     safely make it SGID with the TARGET group ID.  Then runs the
     executable.  */
- static int
+-static int
 -copy_and_spawn_sgid (char *child_id, gid_t gid)
++static void
 +copy_and_spawn_sgid (const char *child_id, gid_t gid)
  {
-   char *dirname = xasprintf ("%s/tst-tunables-setuid.%jd",
- 			     test_dir, (intmax_t) getpid ());
-@@ -182,7 +182,7 @@ copy_and_spawn_sgid (char *child_id, gid_t gid)
-   ret = 0;
-   infd = outfd = -1;
+-  char *dirname = xasprintf ("%s/tst-tunables-setuid.%jd",
+-			     test_dir, (intmax_t) getpid ());
++  char *dirname = support_create_temp_directory ("tst-glibc-sgid-");
+   char *execname = xasprintf ("%s/bin", dirname);
+-  int infd = -1;
+-  int outfd = -1;
+-  int ret = 1, status = 1;
+-
+-  TEST_VERIFY (mkdir (dirname, 0700) == 0);
+-  if (support_record_failure_is_failed ())
+-    goto err;
++  add_temp_file (execname);
+ 
+-  infd = open ("/proc/self/exe", O_RDONLY);
+-  if (infd < 0)
++  if (access ("/proc/self/exe", R_OK) != 0)
+     FAIL_UNSUPPORTED ("unsupported: Cannot read binary from procfs\n");
+ 
+-  outfd = open (execname, O_WRONLY | O_CREAT | O_EXCL, 0700);
+-  TEST_VERIFY (outfd >= 0);
+-  if (support_record_failure_is_failed ())
+-    goto err;
+-
+-  char buf[4096];
+-  for (;;)
+-    {
+-      ssize_t rdcount = read (infd, buf, sizeof (buf));
+-      TEST_VERIFY (rdcount >= 0);
+-      if (support_record_failure_is_failed ())
+-	goto err;
+-      if (rdcount == 0)
+-	break;
+-      char *p = buf;
+-      char *end = buf + rdcount;
+-      while (p != end)
+-	{
+-	  ssize_t wrcount = write (outfd, buf, end - p);
+-	  if (wrcount == 0)
+-	    errno = ENOSPC;
+-	  TEST_VERIFY (wrcount > 0);
+-	  if (support_record_failure_is_failed ())
+-	    goto err;
+-	  p += wrcount;
+-	}
+-    }
++  support_copy_file ("/proc/self/exe", execname);
+ 
+-  bool chowned = false;
+-  TEST_VERIFY ((chowned = fchown (outfd, getuid (), gid) == 0)
+-	       || errno == EPERM);
+-  if (support_record_failure_is_failed ())
+-    goto err;
+-  else if (!chowned)
+-    {
+-      ret = 77;
+-      goto err;
+-    }
++  if (chown (execname, getuid (), gid) != 0)
++    FAIL_UNSUPPORTED ("cannot change group of \"%s\" to %jd: %m",
++		      execname, (intmax_t) gid);
+ 
+-  TEST_VERIFY (fchmod (outfd, 02750) == 0);
+-  if (support_record_failure_is_failed ())
+-    goto err;
+-  TEST_VERIFY (close (outfd) == 0);
+-  if (support_record_failure_is_failed ())
+-    goto err;
+-  TEST_VERIFY (close (infd) == 0);
+-  if (support_record_failure_is_failed ())
+-    goto err;
++  if (chmod (execname, 02750) != 0)
++    FAIL_UNSUPPORTED ("cannot make \"%s\" SGID: %m ", execname);
+ 
+   /* We have the binary, now spawn the subprocess.  Avoid using
+      support_subprogram because we only want the program exit status, not the
+      contents.  */
+-  ret = 0;
+-  infd = outfd = -1;
  
 -  char * const args[] = {execname, child_id, NULL};
 +  char * const args[] = {execname, (char *) child_id, NULL};
++  int status = support_subprogram_wait (args[0], args);
  
-   status = support_subprogram_wait (args[0], args);
+-  status = support_subprogram_wait (args[0], args);
++  free (execname);
++  free (dirname);
  
-@@ -211,7 +211,7 @@ err:
+-err:
+-  if (outfd >= 0)
+-    close (outfd);
+-  if (infd >= 0)
+-    close (infd);
+-  if (execname != NULL)
++  if (WIFEXITED (status))
+     {
+-      unlink (execname);
+-      free (execname);
++      if (WEXITSTATUS (status) == 0)
++	return;
++      else
++	exit (WEXITSTATUS (status));
+     }
+-  if (dirname != NULL)
++  else
++    FAIL_EXIT1 ("subprogram failed with status %d", status);
++}
++
++/* Returns true if a group with NAME has been found, and writes its
++   GID to *TARGET.  */
++static bool
++find_sgid_group (gid_t *target, const char *name)
++{
++  /* Do not use getgrname_r because it does not work in statically
++     linked binaries if the system libc is different.  */
++  FILE *fp = fopen ("/etc/group", "rce");
++  if (fp == NULL)
++    return false;
++  __fsetlocking (fp, FSETLOCKING_BYCALLER);
++
++  bool ok = false;
++  struct scratch_buffer buf;
++  scratch_buffer_init (&buf);
++  while (true)
+     {
+-      rmdir (dirname);
+-      free (dirname);
++      struct group grp;
++      struct group *result = NULL;
++      int status = fgetgrent_r (fp, &grp, buf.data, buf.length, &result);
++      if (status == 0 && result != NULL)
++	{
++	  if (strcmp (result->gr_name, name) == 0)
++	    {
++	      *target = result->gr_gid;
++	      ok = true;
++	      break;
++	    }
++	}
++      else if (errno != ERANGE)
++	break;
++      else if (!scratch_buffer_grow (&buf))
++	break;
+     }
+-
+-  if (ret == 77)
+-    FAIL_UNSUPPORTED ("Failed to make sgid executable for test\n");
+-  if (ret != 0)
+-    FAIL_EXIT1 ("Failed to make sgid executable for test\n");
+-
+-  return status;
++  scratch_buffer_free (&buf);
++  fclose (fp);
++  return ok;
  }
  
- int
+-int
 -support_capture_subprogram_self_sgid (char *child_id)
++void
 +support_capture_subprogram_self_sgid (const char *child_id)
  {
-   gid_t target = 0;
+-  gid_t target = 0;
    const int count = 64;
+   gid_t groups[count];
+ 
+@@ -225,6 +207,7 @@ support_capture_subprogram_self_sgid (char *child_id)
+ 		     (intmax_t) getuid ());
+ 
+   gid_t current = getgid ();
++  gid_t target = current;
+   for (int i = 0; i < ret; ++i)
+     {
+       if (groups[i] != current)
+@@ -234,11 +217,18 @@ support_capture_subprogram_self_sgid (char *child_id)
+ 	}
+     }
+ 
+-  if (target == 0)
+-    FAIL_UNSUPPORTED("Could not find a suitable GID for user %jd\n",
+-		     (intmax_t) getuid ());
++  if (target == current)
++    {
++      /* If running as root, try to find a harmless group for SGID.  */
++      if (getuid () != 0
++	  || (!find_sgid_group (&target, "nogroup")
++	      && !find_sgid_group (&target, "bin")
++	      && !find_sgid_group (&target, "daemon")))
++	FAIL_UNSUPPORTED("Could not find a suitable GID for user %jd\n",
++			 (intmax_t) getuid ());
++    }
+ 
+-  return copy_and_spawn_sgid (child_id, target);
++  copy_and_spawn_sgid (child_id, target);
+ }
+ 
+ void
 diff --git a/sysdeps/aarch64/fpu/asinh_sve.c b/sysdeps/aarch64/fpu/asinh_sve.c
 index 0889f79dbb..ff6b71390c 100644
 --- a/sysdeps/aarch64/fpu/asinh_sve.c
@@ -4731,10 +5026,34 @@ index a30892f080..dcc3e0883b 100644
    return lazy;
  }
 diff --git a/sysdeps/sparc/sparc32/start.S b/sysdeps/sparc/sparc32/start.S
-index 694b020ce0..cef7c96cac 100644
+index 694b020ce0..8393760da6 100644
 --- a/sysdeps/sparc/sparc32/start.S
 +++ b/sysdeps/sparc/sparc32/start.S
-@@ -73,6 +73,10 @@ _start:
+@@ -35,6 +35,7 @@
+ 
+ #include <sysdep.h>
+ 
++#define FRAME_SIZE 104
+ 
+ 	.section ".text"
+ 	.align 4
+@@ -48,12 +49,12 @@ _start:
+   /* Terminate the stack frame, and reserve space for functions to
+      drop their arguments.  */
+ 	mov	%g0, %fp
+-	sub	%sp, 6*4, %sp
++	sub	%sp, FRAME_SIZE, %sp
+ 
+   /* Extract the arguments and environment as encoded on the stack.  The
+      argument info starts after one register window (16 words) past the SP.  */
+-	ld	[%sp+22*4], %o1
+-	add	%sp, 23*4, %o2
++	ld	[%sp+168], %o1
++	add	%sp, 172, %o2
+ 
+   /* Load the addresses of the user entry points.  */
+ #ifndef PIC
+@@ -73,6 +74,10 @@ _start:
       be NULL.  */
  	mov	%g1, %o5
  

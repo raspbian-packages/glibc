@@ -1,6 +1,8 @@
 Note: compared to upstream, this was changed to exposing pthread_once as version
 2.41. When 2.42 gets integrated, we'll want to keep the 2.41 symbol until we
-rebuild packages against the 2.42 symbol.
+rebuild packages against the 2.42 symbol. This is done by
+local-pthread_once-2.42.diff which is to be used instead of
+local-pthread_once.diff in 2.42
 
 commit ccdb68e829a31e4cda8339ea0d2dc3e51fb81ba5
 Author: Samuel Thibault <samuel.thibault@ens-lyon.org>

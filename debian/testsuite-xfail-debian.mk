@@ -393,8 +393,6 @@ test-xfail-tst-initgroups2 = yes
 test-xfail-tst-sprintf-fortify-rdonly = yes
 test-xfail-tst-plt-rewrite1 = yes
 test-xfail-tst-tunables = yes
-test-xfail-tst-cancel11 = yes
-test-xfail-tst-cancelx11 = yes
 test-xfail-tst-mremap1 = yes
 test-xfail-tst-mremap2 = yes
 
@@ -406,8 +404,6 @@ test-xfail-tst-malloc-alternate-path-malloc-hugetlb1 = yes
 test-xfail-tst-malloc-alternate-path-malloc-hugetlb2 = yes
 test-xfail-tst-malloc-alternate-path-mcheck = yes
 test-xfail-tst-shutdown = yes
-test-xfail-tst-dlopen-tlsreinit3 = yes
-test-xfail-tst-dlopen-tlsreinit4 = yes
 test-xfail-tst-truncate64 = yes
 
 # new in 2.41
@@ -433,6 +429,15 @@ test-xfail-tst-support-process_state = yes
 test-xfail-tst-audit12 = yes
 test-xfail-tst-audit28 = yes
 test-xfail-tst-execstack-prog-static-tunable = yes
+
+# new in 2.42
+test-xfail-tst-qsort7-mem = yes
+test-xfail-tst-qsortx7-mem = yes
+test-xfail-tst-fclose-devzero = yes
+test-xfail-tst-malloc-tcache-leak-malloc-largetcache = yes
+test-xfail-tst-malloc-too-large-malloc-largetcache = yes
+test-xfail-tst-mallocfork2-malloc-largetcache = yes
+test-xfail-tst-malloc-alternate-path-malloc-largetcache = yes
 
 # actually never succeded
 test-xfail-tst-create_format1 = yes
