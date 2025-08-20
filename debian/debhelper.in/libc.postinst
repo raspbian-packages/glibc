@@ -163,7 +163,7 @@ then
 	# (if systemd --help fails the system might still be quite broken but
 	# that seems better than the kernel panic that results if systemd
 	# cannot reexec itself).
-	if command -v systemd >/dev/null; then
+	if systemd --help >/dev/null 2>/dev/null; then
 	    systemctl daemon-reexec
 	else
 	    echo "Error: Could not restart systemd, systemd binary not working" >&2
