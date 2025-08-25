@@ -791,6 +791,8 @@ init_tls (size_t naudit)
     _dl_fatal_printf ("\
 cannot allocate TLS data structures for initial thread\n");
 
+  _dl_tls_initial_modid_limit_setup ();
+
   /* Store for detection of the special case by __tls_get_addr
      so it knows not to pass this dtv to the normal realloc.  */
   GL(dl_initial_dtv) = GET_DTV (tcbp);
@@ -2122,6 +2124,12 @@ dl_main (const ElfW(Phdr) *phdr,
 	    if (l->l_faked)
 	      /* The library was not found.  */
 	      _dl_printf ("\t%s => not found\n",  l->l_libname->name);
+	    else if (strcmp (l->l_libname->name, l->l_name) == 0)
+	      /* Print vDSO like libraries without duplicate name.  Some
+		 consumers depend of this format.  */
+	      _dl_printf ("\t%s (0x%0*Zx)\n", l->l_libname->name,
+			  (int) sizeof l->l_map_start * 2,
+			  (size_t) l->l_map_start);
 	    else
 	      _dl_printf ("\t%s => %s (0x%0*Zx)\n",
 			  DSO_FILENAME (l->l_libname->name),

@@ -1215,6 +1215,9 @@ typedef struct
 #define AT_HWCAP2	26		/* More machine-dependent hints about
 					   processor capabilities.  */
 
+#define AT_RSEQ_FEATURE_SIZE	27	/* rseq supported feature size.  */
+#define AT_RSEQ_ALIGN	28		/* rseq allocation alignment.  */
+
 #define AT_EXECFN	31		/* Filename of executable.  */
 
 /* Pointer to the global system page used for system calls and other
@@ -4085,8 +4088,11 @@ enum
 #define R_NDS32_TLS_DESC	119
 
 /* LoongArch ELF Flags */
-#define EF_LARCH_ABI    	0x07
-#define EF_LARCH_ABI_LP64D	0x03
+#define EF_LARCH_ABI_MODIFIER_MASK  0x07
+#define EF_LARCH_ABI_SOFT_FLOAT     0x01
+#define EF_LARCH_ABI_SINGLE_FLOAT   0x02
+#define EF_LARCH_ABI_DOUBLE_FLOAT   0x03
+#define EF_LARCH_OBJABI_V1          0x40
 
 /* LoongArch specific dynamic relocations */
 #define R_LARCH_NONE		0
