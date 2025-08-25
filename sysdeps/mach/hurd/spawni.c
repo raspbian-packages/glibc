@@ -334,7 +334,6 @@ __spawni (pid_t *pid, const char *file,
   ss = _hurd_self_sigstate ();
 
 retry:
-  assert (! __spin_lock_locked (&ss->critical_section_lock));
   __spin_lock (&ss->critical_section_lock);
 
   _hurd_sigstate_lock (ss);
