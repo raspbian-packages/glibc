@@ -85,10 +85,10 @@ index d1e139d03c..09c0cf8357 100644
  else	   					# -s
  verbose	:=
 diff --git a/NEWS b/NEWS
-index f61e521fc8..96ff2c8a20 100644
+index f61e521fc8..60ac79f4e6 100644
 --- a/NEWS
 +++ b/NEWS
-@@ -5,6 +5,115 @@ See the end for copying conditions.
+@@ -5,6 +5,117 @@ See the end for copying conditions.
  Please send GNU C library bug reports via <https://sourceware.org/bugzilla/>
  using `glibc' in the "product" field.
  
@@ -200,6 +200,8 @@ index f61e521fc8..96ff2c8a20 100644
 +  [32231] elf: Change ldconfig auxcache magic number
 +  [32470] x86: Avoid integer truncation with large cache sizes
 +  [32582] Fix underallocation of abort_msg_s struct (CVE-2025-0395)
++  [32987] elf: Fix subprocess status handling for tst-dlopen-sgid
++  [33185] Fix double-free after allocation failure in regcomp
 +
  Version 2.36
  
@@ -530,7 +532,7 @@ index 2696dde4b1..9b07b4e132 100644
  
  void *
 diff --git a/elf/Makefile b/elf/Makefile
-index fd77d0c7c8..eb77ff641d 100644
+index fd77d0c7c8..3e08a8046d 100644
 --- a/elf/Makefile
 +++ b/elf/Makefile
 @@ -53,6 +53,7 @@ routines = \
@@ -549,7 +551,15 @@ index fd77d0c7c8..eb77ff641d 100644
  CFLAGS-dl-printf.os += $(rtld-early-cflags)
  CFLAGS-dl-setup_hash.os += $(rtld-early-cflags)
  CFLAGS-dl-sysdep.os += $(rtld-early-cflags)
-@@ -374,6 +376,8 @@ tests += \
+@@ -271,6 +273,7 @@ tests-static-normal := \
+   tst-array1-static \
+   tst-array5-static \
+   tst-dl-iter-static \
++  tst-dlopen-sgid \
+   tst-dst-static \
+   tst-env-setuid \
+   tst-env-setuid-tunables \
+@@ -374,6 +377,8 @@ tests += \
    tst-align \
    tst-align2 \
    tst-align3 \
@@ -558,7 +568,7 @@ index fd77d0c7c8..eb77ff641d 100644
    tst-audit1 \
    tst-audit2 \
    tst-audit8 \
-@@ -408,6 +412,7 @@ tests += \
+@@ -408,6 +413,7 @@ tests += \
    tst-dlmopen4 \
    tst-dlmopen-dlerror \
    tst-dlmopen-gethostbyname \
@@ -566,7 +576,7 @@ index fd77d0c7c8..eb77ff641d 100644
    tst-dlopenfail \
    tst-dlopenfail-2 \
    tst-dlopenrpath \
-@@ -435,6 +440,7 @@ tests += \
+@@ -435,6 +441,7 @@ tests += \
    tst-p_align1 \
    tst-p_align2 \
    tst-p_align3 \
@@ -574,7 +584,7 @@ index fd77d0c7c8..eb77ff641d 100644
    tst-relsort1 \
    tst-ro-dynamic \
    tst-rtld-run-static \
-@@ -631,6 +637,7 @@ ifeq ($(run-built-tests),yes)
+@@ -631,6 +638,7 @@ ifeq ($(run-built-tests),yes)
  tests-special += \
    $(objpfx)noload-mem.out \
    $(objpfx)tst-ldconfig-X.out \
@@ -582,7 +592,7 @@ index fd77d0c7c8..eb77ff641d 100644
    $(objpfx)tst-leaks1-mem.out \
    $(objpfx)tst-rtld-help.out \
    # tests-special
-@@ -765,6 +772,8 @@ modules-names += \
+@@ -765,6 +773,8 @@ modules-names += \
    tst-alignmod3 \
    tst-array2dep \
    tst-array5dep \
@@ -591,7 +601,7 @@ index fd77d0c7c8..eb77ff641d 100644
    tst-audit11mod1 \
    tst-audit11mod2 \
    tst-audit12mod1 \
-@@ -798,6 +807,7 @@ modules-names += \
+@@ -798,6 +808,7 @@ modules-names += \
    tst-auditmanymod7 \
    tst-auditmanymod8 \
    tst-auditmanymod9 \
@@ -599,16 +609,17 @@ index fd77d0c7c8..eb77ff641d 100644
    tst-auditmod1 \
    tst-auditmod9a \
    tst-auditmod9b \
-@@ -834,6 +844,8 @@ modules-names += \
+@@ -834,6 +845,9 @@ modules-names += \
    tst-dlmopen1mod \
    tst-dlmopen-dlerror-mod \
    tst-dlmopen-gethostbyname-mod \
 +  tst-dlmopen-twice-mod1 \
 +  tst-dlmopen-twice-mod2 \
++  tst-dlopen-sgid-mod \
    tst-dlopenfaillinkmod \
    tst-dlopenfailmod1 \
    tst-dlopenfailmod2 \
-@@ -866,6 +878,23 @@ modules-names += \
+@@ -866,6 +880,23 @@ modules-names += \
    tst-null-argv-lib \
    tst-p_alignmod-base \
    tst-p_alignmod3 \
@@ -632,7 +643,7 @@ index fd77d0c7c8..eb77ff641d 100644
    tst-relsort1mod1 \
    tst-relsort1mod2 \
    tst-ro-dynamic-mod \
-@@ -990,23 +1019,8 @@ modules-names += tst-gnu2-tls1mod
+@@ -990,23 +1021,8 @@ modules-names += tst-gnu2-tls1mod
  $(objpfx)tst-gnu2-tls1: $(objpfx)tst-gnu2-tls1mod.so
  tst-gnu2-tls1mod.so-no-z-defs = yes
  CFLAGS-tst-gnu2-tls1mod.c += -mtls-dialect=gnu2
@@ -657,7 +668,7 @@ index fd77d0c7c8..eb77ff641d 100644
  ifeq (yes,$(have-protected-data))
  modules-names += tst-protected1moda tst-protected1modb
  tests += tst-protected1a tst-protected1b
-@@ -2410,6 +2424,11 @@ $(objpfx)tst-ldconfig-X.out : tst-ldconfig-X.sh $(objpfx)ldconfig
+@@ -2410,6 +2426,11 @@ $(objpfx)tst-ldconfig-X.out : tst-ldconfig-X.sh $(objpfx)ldconfig
  		 '$(run-program-env)' > $@; \
  	$(evaluate-test)
  
@@ -669,7 +680,7 @@ index fd77d0c7c8..eb77ff641d 100644
  # Test static linking of all the libraries we can possibly link
  # together.  Note that in some configurations this may be less than the
  # complete list of libraries we build but we try to maxmimize this list.
-@@ -2967,3 +2986,33 @@ $(objpfx)tst-tls-allocation-failure-static-patched.out: \
+@@ -2967,3 +2988,35 @@ $(objpfx)tst-tls-allocation-failure-static-patched.out: \
  	grep -q '^Fatal glibc error: Cannot allocate TLS block$$' $@ \
  	  && grep -q '^status: 127$$' $@; \
  	  $(evaluate-test)
@@ -703,6 +714,8 @@ index fd77d0c7c8..eb77ff641d 100644
 +    0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15)
 +$(objpfx)tst-recursive-tlsmod%.os: tst-recursive-tlsmodN.c
 +	$(compile-command.c) -DVAR=thread_$* -DFUNC=get_threadvar_$*
++
++$(objpfx)tst-dlopen-sgid.out: $(objpfx)tst-dlopen-sgid-mod.so
 diff --git a/elf/cache.c b/elf/cache.c
 index 3d7d3a67bf..528a8ba694 100644
 --- a/elf/cache.c
@@ -1174,7 +1187,7 @@ index 96638d7ed1..3e2a6a584e 100644
  
  #endif /* HAVE_TUNABLES.  */
 diff --git a/elf/dl-support.c b/elf/dl-support.c
-index 4af0b5b2ce..f45b630ba5 100644
+index 4af0b5b2ce..5c8d1e2428 100644
 --- a/elf/dl-support.c
 +++ b/elf/dl-support.c
 @@ -255,6 +255,25 @@ _dl_aux_init (ElfW(auxv_t) *av)
@@ -1203,7 +1216,65 @@ index 4af0b5b2ce..f45b630ba5 100644
  }
  #endif
  
-@@ -323,20 +342,19 @@ _dl_non_dynamic_init (void)
+@@ -266,8 +285,6 @@ _dl_non_dynamic_init (void)
+   _dl_main_map.l_phdr = GL(dl_phdr);
+   _dl_main_map.l_phnum = GL(dl_phnum);
+ 
+-  _dl_verbose = *(getenv ("LD_WARN") ?: "") == '\0' ? 0 : 1;
+-
+   /* Set up the data structures for the system-supplied DSO early,
+      so they can influence _dl_init_paths.  */
+   setup_vdso (NULL, NULL);
+@@ -275,6 +292,22 @@ _dl_non_dynamic_init (void)
+   /* With vDSO setup we can initialize the function pointers.  */
+   setup_vdso_pointers ();
+ 
++  if (__libc_enable_secure)
++    {
++      static const char unsecure_envvars[] =
++	UNSECURE_ENVVARS
++	;
++      const char *cp = unsecure_envvars;
++
++      while (cp < unsecure_envvars + sizeof (unsecure_envvars))
++	{
++	  __unsetenv (cp);
++	  cp = strchr (cp, '\0') + 1;
++	}
++    }
++
++  _dl_verbose = *(getenv ("LD_WARN") ?: "") == '\0' ? 0 : 1;
++
+   /* Initialize the data structures for the search paths for shared
+      objects.  */
+   _dl_init_paths (getenv ("LD_LIBRARY_PATH"), "LD_LIBRARY_PATH",
+@@ -296,25 +329,6 @@ _dl_non_dynamic_init (void)
+     _dl_profile_output
+       = &"/var/tmp\0/var/profile"[__libc_enable_secure ? 9 : 0];
+ 
+-  if (__libc_enable_secure)
+-    {
+-      static const char unsecure_envvars[] =
+-	UNSECURE_ENVVARS
+-	;
+-      const char *cp = unsecure_envvars;
+-
+-      while (cp < unsecure_envvars + sizeof (unsecure_envvars))
+-	{
+-	  __unsetenv (cp);
+-	  cp = (const char *) __rawmemchr (cp, '\0') + 1;
+-	}
+-
+-#if !HAVE_TUNABLES
+-      if (__access ("/etc/suid-debug", F_OK) != 0)
+-	__unsetenv ("MALLOC_CHECK_");
+-#endif
+-    }
+-
+ #ifdef DL_PLATFORM_INIT
+   DL_PLATFORM_INIT;
+ #endif
+@@ -323,20 +337,19 @@ _dl_non_dynamic_init (void)
    if (_dl_platform != NULL)
      _dl_platformlen = strlen (_dl_platform);
  
@@ -2010,8 +2081,127 @@ index 0000000000..70c71fe19c
 +}
 +
 +#include <support/test-driver.c>
+diff --git a/elf/tst-dlopen-sgid-mod.c b/elf/tst-dlopen-sgid-mod.c
+new file mode 100644
+index 0000000000..5eb79eef48
+--- /dev/null
++++ b/elf/tst-dlopen-sgid-mod.c
+@@ -0,0 +1 @@
++/* Opening this object should not succeed.  */
+diff --git a/elf/tst-dlopen-sgid.c b/elf/tst-dlopen-sgid.c
+new file mode 100644
+index 0000000000..8aec52e19f
+--- /dev/null
++++ b/elf/tst-dlopen-sgid.c
+@@ -0,0 +1,106 @@
++/* Test case for ignored LD_LIBRARY_PATH in static startug (bug 32976).
++   Copyright (C) 2025 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <https://www.gnu.org/licenses/>.  */
++
++#include <dlfcn.h>
++#include <gnu/lib-names.h>
++#include <stddef.h>
++#include <stdint.h>
++#include <stdlib.h>
++#include <string.h>
++#include <support/capture_subprocess.h>
++#include <support/check.h>
++#include <support/support.h>
++#include <support/temp_file.h>
++#include <support/test-driver.h>
++#include <sys/wait.h>
++#include <unistd.h>
++
++/* This is the name of our test object.  Use a custom module for
++   testing, so that this object does not get picked up from the system
++   path.  */
++static const char dso_name[] = "tst-dlopen-sgid-mod.so";
++
++/* Used to mark the recursive invocation.  */
++static const char magic_argument[] = "run-actual-test";
++
++static int
++do_test (void)
++{
++/* Pathname of the directory that receives the shared objects this
++   test attempts to load.  */
++  char *libdir = support_create_temp_directory ("tst-dlopen-sgid-");
++
++  /* This is supposed to be ignored and stripped.  */
++  TEST_COMPARE (setenv ("LD_LIBRARY_PATH", libdir, 1), 0);
++
++  /* Copy of libc.so.6.  */
++  {
++    char *from = xasprintf ("%s/%s", support_objdir_root, LIBC_SO);
++    char *to = xasprintf ("%s/%s", libdir, LIBC_SO);
++    add_temp_file (to);
++    support_copy_file (from, to);
++    free (to);
++    free (from);
++  }
++
++  /* Copy of the test object.   */
++  {
++    char *from = xasprintf ("%s/elf/%s", support_objdir_root, dso_name);
++    char *to = xasprintf ("%s/%s", libdir, dso_name);
++    add_temp_file (to);
++    support_copy_file (from, to);
++    free (to);
++    free (from);
++  }
++
++  free (libdir);
++
++  support_capture_subprogram_self_sgid (magic_argument);
++
++  return 0;
++}
++
++static void
++alternative_main (int argc, char **argv)
++{
++  if (argc == 2 && strcmp (argv[1], magic_argument) == 0)
++    {
++      if (getgid () == getegid ())
++        /* This can happen if the file system is mounted nosuid.  */
++        FAIL_UNSUPPORTED ("SGID failed: GID and EGID match (%jd)\n",
++                          (intmax_t) getgid ());
++
++      /* Should be removed due to SGID.  */
++      TEST_COMPARE_STRING (getenv ("LD_LIBRARY_PATH"), NULL);
++
++      TEST_VERIFY (dlopen (dso_name, RTLD_NOW) == NULL);
++      {
++        const char *message = dlerror ();
++        TEST_COMPARE_STRING (message,
++                             "tst-dlopen-sgid-mod.so:"
++                             " cannot open shared object file:"
++                             " No such file or directory");
++      }
++
++      support_record_failure_barrier ();
++      exit (EXIT_SUCCESS);
++    }
++}
++
++#define PREPARE alternative_main
++#include <support/test-driver.c>
 diff --git a/elf/tst-env-setuid-tunables.c b/elf/tst-env-setuid-tunables.c
-index 88182b7b25..5e9e4c5756 100644
+index 88182b7b25..bca299bb34 100644
 --- a/elf/tst-env-setuid-tunables.c
 +++ b/elf/tst-env-setuid-tunables.c
 @@ -52,6 +52,8 @@ const char *teststrings[] =
@@ -2052,14 +2242,13 @@ index 88182b7b25..5e9e4c5756 100644
  
    return 1;
  #else
-@@ -117,21 +128,26 @@ do_test (int argc, char **argv)
+@@ -116,32 +127,28 @@ do_test (int argc, char **argv)
+ 
        if (ret != 0)
  	exit (1);
- 
+-
 -      exit (EXIT_SUCCESS);
-+      /* Special return code to make sure that the child executed all the way
-+	 through.  */
-+      exit (42);
++      return 0;
      }
    else
      {
@@ -2076,31 +2265,53 @@ index 88182b7b25..5e9e4c5756 100644
 +	  fflush (stdout);
  	  if (setenv ("GLIBC_TUNABLES", teststrings[i], 1) != 0)
 -	    exit (1);
+-
+-	  int status = support_capture_subprogram_self_sgid (buf);
+-
+-	  /* Bail out early if unsupported.  */
+-	  if (WEXITSTATUS (status) == EXIT_UNSUPPORTED)
+-	    return EXIT_UNSUPPORTED;
 +	    {
 +	      printf ("    [%d] Failed to set GLIBC_TUNABLES: %m", i);
 +	      support_record_failure ();
 +	      continue;
 +	    }
  
- 	  int status = support_capture_subprogram_self_sgid (buf);
- 
-@@ -139,9 +155,14 @@ do_test (int argc, char **argv)
- 	  if (WEXITSTATUS (status) == EXIT_UNSUPPORTED)
- 	    return EXIT_UNSUPPORTED;
- 
 -	  ret |= status;
-+	  if (WEXITSTATUS (status) != 42)
-+	    {
-+	      printf ("    [%d] child failed with status %d\n", i,
-+		      WEXITSTATUS (status));
-+	      support_record_failure ();
-+	    }
++	  support_capture_subprogram_self_sgid (buf);
  	}
 -      return ret;
 +      return 0;
      }
  }
  
+diff --git a/elf/tst-env-setuid.c b/elf/tst-env-setuid.c
+index 53fc52787d..8ed4d48c26 100644
+--- a/elf/tst-env-setuid.c
++++ b/elf/tst-env-setuid.c
+@@ -104,20 +104,14 @@ do_test (int argc, char **argv)
+       if (ret != 0)
+ 	exit (1);
+ 
+-      exit (EXIT_SUCCESS);
++      return 0;
+     }
+   else
+     {
+       if (test_parent () != 0)
+ 	exit (1);
+ 
+-      int status = support_capture_subprogram_self_sgid (SETGID_CHILD);
+-
+-      if (WEXITSTATUS (status) == EXIT_UNSUPPORTED)
+-	return EXIT_UNSUPPORTED;
+-
+-      if (!WIFEXITED (status))
+-	FAIL_EXIT1 ("Unexpected exit status %d from child process\n", status);
++      support_capture_subprogram_self_sgid (SETGID_CHILD);
+ 
+       return 0;
+     }
 diff --git a/elf/tst-ldconfig-p.sh b/elf/tst-ldconfig-p.sh
 new file mode 100644
 index 0000000000..ec937bf4ec
@@ -5746,6 +5957,223 @@ index fdc5bdd65b..bc32bb132a 100644
    };
  
  static struct hostent host_table_2[] = {
+diff --git a/posix/Makefile b/posix/Makefile
+index d1df7c27cb..336bee4a4a 100644
+--- a/posix/Makefile
++++ b/posix/Makefile
+@@ -109,7 +109,7 @@ tests		:= test-errno tstgetopt testfnm runtests runptests \
+ 		   tst-glob-tilde test-ssize-max tst-spawn4 bug-regex37 \
+ 		   bug-regex38 tst-regcomp-truncated tst-spawn-chdir \
+ 		   tst-wordexp-nocmd tst-execveat tst-spawn5 \
+-		   tst-sched_getaffinity tst-spawn6
++		   tst-sched_getaffinity tst-spawn6 tst-regcomp-bracket-free
+ 
+ # Test for the glob symbol version that was replaced in glibc 2.27.
+ ifeq ($(have-GLIBC_2.26)$(build-shared),yesyes)
+diff --git a/posix/regcomp.c b/posix/regcomp.c
+index 84fc1cc82b..7bd0beeafe 100644
+--- a/posix/regcomp.c
++++ b/posix/regcomp.c
+@@ -3383,6 +3383,7 @@ parse_bracket_exp (re_string_t *regexp, re_dfa_t *dfa, re_token_t *token,
+     {
+ #ifdef RE_ENABLE_I18N
+       free_charset (mbcset);
++      mbcset = NULL;
+ #endif
+       /* Build a tree for simple bracket.  */
+       br_token.type = SIMPLE_BRACKET;
+@@ -3398,7 +3399,8 @@ parse_bracket_exp (re_string_t *regexp, re_dfa_t *dfa, re_token_t *token,
+  parse_bracket_exp_free_return:
+   re_free (sbcset);
+ #ifdef RE_ENABLE_I18N
+-  free_charset (mbcset);
++  if (__glibc_likely (mbcset != NULL))
++    free_charset (mbcset);
+ #endif /* RE_ENABLE_I18N */
+   return NULL;
+ }
+diff --git a/posix/tst-regcomp-bracket-free.c b/posix/tst-regcomp-bracket-free.c
+new file mode 100644
+index 0000000000..3c091d8c44
+--- /dev/null
++++ b/posix/tst-regcomp-bracket-free.c
+@@ -0,0 +1,176 @@
++/* Test regcomp bracket parsing with injected allocation failures (bug 33185).
++   Copyright (C) 2025 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <https://www.gnu.org/licenses/>.  */
++
++/* This test invokes regcomp multiple times, failing one memory
++   allocation in each call.  The function call should fail with
++   REG_ESPACE (or succeed if it can recover from the allocation
++   failure).  Previously, there was double-free bug.  */
++
++#include <errno.h>
++#include <regex.h>
++#include <stdio.h>
++#include <string.h>
++#include <support/check.h>
++#include <support/namespace.h>
++#include <support/support.h>
++
++/* Data structure allocated via MAP_SHARED, so that writes from the
++   subprocess are visible.  */
++struct shared_data
++{
++  /* Number of tracked allocations performed so far.  */
++  volatile unsigned int allocation_count;
++
++  /* If this number is reached, one allocation fails.  */
++  volatile unsigned int failing_allocation;
++
++  /* The subprocess stores the expected name here.  */
++  char name[100];
++};
++
++/* Allocation count in shared mapping.  */
++static struct shared_data *shared;
++
++/* Returns true if a failure should be injected for this allocation.  */
++static bool
++fail_this_allocation (void)
++{
++  if (shared != NULL)
++    {
++      unsigned int count = shared->allocation_count;
++      shared->allocation_count = count + 1;
++      return count == shared->failing_allocation;
++    }
++  else
++    return false;
++}
++
++/* Failure-injecting wrappers for allocation functions used by glibc.  */
++
++void *
++malloc (size_t size)
++{
++  if (fail_this_allocation ())
++    {
++      errno = ENOMEM;
++      return NULL;
++    }
++  extern __typeof (malloc) __libc_malloc;
++  return __libc_malloc (size);
++}
++
++void *
++calloc (size_t a, size_t b)
++{
++  if (fail_this_allocation ())
++    {
++      errno = ENOMEM;
++      return NULL;
++    }
++  extern __typeof (calloc) __libc_calloc;
++  return __libc_calloc (a, b);
++}
++
++void *
++realloc (void *ptr, size_t size)
++{
++  if (fail_this_allocation ())
++    {
++      errno = ENOMEM;
++      return NULL;
++    }
++  extern __typeof (realloc) __libc_realloc;
++  return __libc_realloc (ptr, size);
++}
++
++/* No-op subprocess to verify that support_isolate_in_subprocess does
++   not perform any heap allocations.  */
++static void
++no_op (void *ignored)
++{
++}
++
++/* Perform a regcomp call in a subprocess.  Used to count its
++   allocations.  */
++static void
++initialize (void *regexp1)
++{
++  const char *regexp = regexp1;
++
++  shared->allocation_count = 0;
++
++  regex_t reg;
++  TEST_COMPARE (regcomp (&reg, regexp, 0), 0);
++}
++
++/* Perform regcomp in a subprocess with fault injection.  */
++static void
++test_in_subprocess (void *regexp1)
++{
++  const char *regexp = regexp1;
++  unsigned int inject_at = shared->failing_allocation;
++
++  regex_t reg;
++  int ret = regcomp (&reg, regexp, 0);
++
++  if (ret != 0)
++    {
++      TEST_COMPARE (ret, REG_ESPACE);
++      printf ("info: allocation %u failure results in return value %d,"
++              " error %s (%d)\n",
++              inject_at, ret, strerrorname_np (errno), errno);
++    }
++}
++
++static int
++do_test (void)
++{
++  char regexp[] = "[:alpha:]";
++
++  shared = support_shared_allocate (sizeof (*shared));
++
++  /* Disable fault injection.  */
++  shared->failing_allocation = ~0U;
++
++  support_isolate_in_subprocess (no_op, NULL);
++  TEST_COMPARE (shared->allocation_count, 0);
++
++  support_isolate_in_subprocess (initialize, regexp);
++
++  /* The number of allocations in the successful case, plus some
++     slack.  Once the number of expected allocations is exceeded,
++     injecting further failures does not make a difference.  */
++  unsigned int maximum_allocation_count = shared->allocation_count;
++  printf ("info: successful call performs %u allocations\n",
++          maximum_allocation_count);
++  maximum_allocation_count += 10;
++
++  for (unsigned int inject_at = 0; inject_at <= maximum_allocation_count;
++       ++inject_at)
++    {
++      shared->allocation_count = 0;
++      shared->failing_allocation = inject_at;
++      support_isolate_in_subprocess (test_in_subprocess, regexp);
++    }
++
++  support_shared_free (shared);
++
++  return 0;
++}
++
++#include <support/test-driver.c>
 diff --git a/posix/tst-truncate-common.c b/posix/tst-truncate-common.c
 index c8093c5473..39061ce6c5 100644
 --- a/posix/tst-truncate-common.c
@@ -10651,6 +11079,33 @@ index 0000000000..0596b9763b
 +
 +#define TEST_FUNCTION do_test
 +#include <support/test-driver.c>
+diff --git a/stdlib/tst-secure-getenv.c b/stdlib/tst-secure-getenv.c
+index 69719a8acb..ed4728cbba 100644
+--- a/stdlib/tst-secure-getenv.c
++++ b/stdlib/tst-secure-getenv.c
+@@ -57,13 +57,7 @@ do_test (void)
+       exit (1);
+     }
+ 
+-  int status = support_capture_subprogram_self_sgid (MAGIC_ARGUMENT);
+-
+-  if (WEXITSTATUS (status) == EXIT_UNSUPPORTED)
+-    return EXIT_UNSUPPORTED;
+-
+-  if (!WIFEXITED (status))
+-    FAIL_EXIT1 ("Unexpected exit status %d from child process\n", status);
++  support_capture_subprogram_self_sgid (MAGIC_ARGUMENT);
+ 
+   return 0;
+ }
+@@ -82,6 +76,7 @@ alternative_main (int argc, char **argv)
+       if (secure_getenv ("PATH") != NULL)
+ 	FAIL_EXIT (4, "PATH variable not filtered out\n");
+ 
++      support_record_failure_barrier ();
+       exit (EXIT_SUCCESS);
+     }
+ }
 diff --git a/stdlib/tst-setenv-environ.c b/stdlib/tst-setenv-environ.c
 new file mode 100644
 index 0000000000..02fcef96d0
@@ -10915,8 +11370,30 @@ index 9b50eac117..c8c1363b76 100644
  ifeq (,$(CXX))
  LINKS_DSO_PROGRAM = links-dso-program-c
  else
+diff --git a/support/capture_subprocess.h b/support/capture_subprocess.h
+index e44c965ef3..8cae175bfe 100644
+--- a/support/capture_subprocess.h
++++ b/support/capture_subprocess.h
+@@ -41,11 +41,12 @@ struct support_capture_subprocess support_capture_subprocess
+ struct support_capture_subprocess support_capture_subprogram
+   (const char *file, char *const argv[]);
+ 
+-/* Copy the running program into a setgid binary and run it with CHILD_ID
+-   argument.  If execution is successful, return the exit status of the child
+-   program, otherwise return a non-zero failure exit code.  */
+-int support_capture_subprogram_self_sgid
+-  (char *child_id);
++/* Copy the running program into a setgid binary and run it with
++   CHILD_ID argument.  If the program exits with a non-zero status,
++   exit with that exit status (or status 1 if the program did not exit
++   normally).  If the test cannot be performed, exit with
++   EXIT_UNSUPPORTED.  */
++void support_capture_subprogram_self_sgid (const char *child_id);
+ 
+ /* Deallocate the subprocess data captured by
+    support_capture_subprocess.  */
 diff --git a/support/check.h b/support/check.h
-index fa080cf480..43f4208a0a 100644
+index fa080cf480..dac6f04b56 100644
 --- a/support/check.h
 +++ b/support/check.h
 @@ -24,6 +24,11 @@
@@ -10931,6 +11408,16 @@ index fa080cf480..43f4208a0a 100644
  /* Record a test failure, print the failure message to standard output
     and return 1.  */
  #define FAIL_RET(...) \
+@@ -202,6 +207,9 @@ void support_record_failure_reset (void);
+    failures or not.  */
+ int support_record_failure_is_failed (void);
+ 
++/* Terminate the process if any failures have been encountered so far.  */
++void support_record_failure_barrier (void);
++
+ __END_DECLS
+ 
+ #endif /* SUPPORT_CHECK_H */
 diff --git a/support/dtotimespec-time64.c b/support/dtotimespec-time64.c
 new file mode 100644
 index 0000000000..b3d5e351e3
@@ -11103,6 +11590,222 @@ index ca0e5f7ef4..43979f7c3f 100644
    xstat ("/", &after);
    TEST_VERIFY (before.st_dev == after.st_dev);
    TEST_VERIFY (before.st_ino == after.st_ino);
+diff --git a/support/support_capture_subprocess.c b/support/support_capture_subprocess.c
+index a8bcb23d40..424d6a910e 100644
+--- a/support/support_capture_subprocess.c
++++ b/support/support_capture_subprocess.c
+@@ -21,12 +21,17 @@
+ 
+ #include <errno.h>
+ #include <fcntl.h>
++#include <grp.h>
++#include <scratch_buffer.h>
++#include <stdio_ext.h>
+ #include <stdlib.h>
++#include <string.h>
+ #include <support/check.h>
+ #include <support/xunistd.h>
+ #include <support/xsocket.h>
+ #include <support/xspawn.h>
+ #include <support/support.h>
++#include <support/temp_file.h>
+ #include <support/test-driver.h>
+ 
+ static void
+@@ -108,100 +113,88 @@ support_capture_subprogram (const char *file, char *const argv[])
+ /* Copies the executable into a restricted directory, so that we can
+    safely make it SGID with the TARGET group ID.  Then runs the
+    executable.  */
+-static int
+-copy_and_spawn_sgid (char *child_id, gid_t gid)
++static void
++copy_and_spawn_sgid (const char *child_id, gid_t gid)
+ {
+-  char *dirname = xasprintf ("%s/tst-tunables-setuid.%jd",
+-			     test_dir, (intmax_t) getpid ());
++  char *dirname = support_create_temp_directory ("tst-glibc-sgid-");
+   char *execname = xasprintf ("%s/bin", dirname);
+-  int infd = -1;
+-  int outfd = -1;
+-  int ret = 1, status = 1;
+-
+-  TEST_VERIFY (mkdir (dirname, 0700) == 0);
+-  if (support_record_failure_is_failed ())
+-    goto err;
++  add_temp_file (execname);
+ 
+-  infd = open ("/proc/self/exe", O_RDONLY);
+-  if (infd < 0)
++  if (access ("/proc/self/exe", R_OK) != 0)
+     FAIL_UNSUPPORTED ("unsupported: Cannot read binary from procfs\n");
+ 
+-  outfd = open (execname, O_WRONLY | O_CREAT | O_EXCL, 0700);
+-  TEST_VERIFY (outfd >= 0);
+-  if (support_record_failure_is_failed ())
+-    goto err;
++  support_copy_file ("/proc/self/exe", execname);
+ 
+-  char buf[4096];
+-  for (;;)
+-    {
+-      ssize_t rdcount = read (infd, buf, sizeof (buf));
+-      TEST_VERIFY (rdcount >= 0);
+-      if (support_record_failure_is_failed ())
+-	goto err;
+-      if (rdcount == 0)
+-	break;
+-      char *p = buf;
+-      char *end = buf + rdcount;
+-      while (p != end)
+-	{
+-	  ssize_t wrcount = write (outfd, buf, end - p);
+-	  if (wrcount == 0)
+-	    errno = ENOSPC;
+-	  TEST_VERIFY (wrcount > 0);
+-	  if (support_record_failure_is_failed ())
+-	    goto err;
+-	  p += wrcount;
+-	}
+-    }
+-  TEST_VERIFY (fchown (outfd, getuid (), gid) == 0);
+-  if (support_record_failure_is_failed ())
+-    goto err;
+-  TEST_VERIFY (fchmod (outfd, 02750) == 0);
+-  if (support_record_failure_is_failed ())
+-    goto err;
+-  TEST_VERIFY (close (outfd) == 0);
+-  if (support_record_failure_is_failed ())
+-    goto err;
+-  TEST_VERIFY (close (infd) == 0);
+-  if (support_record_failure_is_failed ())
+-    goto err;
++  if (chown (execname, getuid (), gid) != 0)
++    FAIL_UNSUPPORTED ("cannot change group of \"%s\" to %jd: %m",
++		      execname, (intmax_t) gid);
++
++  if (chmod (execname, 02750) != 0)
++    FAIL_UNSUPPORTED ("cannot make \"%s\" SGID: %m ", execname);
+ 
+   /* We have the binary, now spawn the subprocess.  Avoid using
+      support_subprogram because we only want the program exit status, not the
+      contents.  */
+-  ret = 0;
+-  infd = outfd = -1;
+ 
+-  char * const args[] = {execname, child_id, NULL};
++  char * const args[] = {execname, (char *) child_id, NULL};
++  int status = support_subprogram_wait (args[0], args);
+ 
+-  status = support_subprogram_wait (args[0], args);
++  free (execname);
++  free (dirname);
+ 
+-err:
+-  if (outfd >= 0)
+-    close (outfd);
+-  if (infd >= 0)
+-    close (infd);
+-  if (execname != NULL)
++  if (WIFEXITED (status))
+     {
+-      unlink (execname);
+-      free (execname);
++      if (WEXITSTATUS (status) == 0)
++	return;
++      else
++	exit (WEXITSTATUS (status));
+     }
+-  if (dirname != NULL)
++  else
++    FAIL_EXIT1 ("subprogram failed with status %d", status);
++}
++
++/* Returns true if a group with NAME has been found, and writes its
++   GID to *TARGET.  */
++static bool
++find_sgid_group (gid_t *target, const char *name)
++{
++  /* Do not use getgrname_r because it does not work in statically
++     linked binaries if the system libc is different.  */
++  FILE *fp = fopen ("/etc/group", "rce");
++  if (fp == NULL)
++    return false;
++  __fsetlocking (fp, FSETLOCKING_BYCALLER);
++
++  bool ok = false;
++  struct scratch_buffer buf;
++  scratch_buffer_init (&buf);
++  while (true)
+     {
+-      rmdir (dirname);
+-      free (dirname);
++      struct group grp;
++      struct group *result = NULL;
++      int status = fgetgrent_r (fp, &grp, buf.data, buf.length, &result);
++      if (status == 0 && result != NULL)
++	{
++	  if (strcmp (result->gr_name, name) == 0)
++	    {
++	      *target = result->gr_gid;
++	      ok = true;
++	      break;
++	    }
++	}
++      else if (errno != ERANGE)
++	break;
++      else if (!scratch_buffer_grow (&buf))
++	break;
+     }
+-
+-  if (ret != 0)
+-    FAIL_EXIT1("Failed to make sgid executable for test\n");
+-
+-  return status;
++  scratch_buffer_free (&buf);
++  fclose (fp);
++  return ok;
+ }
+ 
+-int
+-support_capture_subprogram_self_sgid (char *child_id)
++void
++support_capture_subprogram_self_sgid (const char *child_id)
+ {
+-  gid_t target = 0;
+   const int count = 64;
+   gid_t groups[count];
+ 
+@@ -213,6 +206,7 @@ support_capture_subprogram_self_sgid (char *child_id)
+ 		     (intmax_t) getuid ());
+ 
+   gid_t current = getgid ();
++  gid_t target = current;
+   for (int i = 0; i < ret; ++i)
+     {
+       if (groups[i] != current)
+@@ -222,11 +216,18 @@ support_capture_subprogram_self_sgid (char *child_id)
+ 	}
+     }
+ 
+-  if (target == 0)
+-    FAIL_UNSUPPORTED("Could not find a suitable GID for user %jd\n",
+-		     (intmax_t) getuid ());
++  if (target == current)
++    {
++      /* If running as root, try to find a harmless group for SGID.  */
++      if (getuid () != 0
++	  || (!find_sgid_group (&target, "nogroup")
++	      && !find_sgid_group (&target, "bin")
++	      && !find_sgid_group (&target, "daemon")))
++	FAIL_UNSUPPORTED("Could not find a suitable GID for user %jd\n",
++			 (intmax_t) getuid ());
++    }
+ 
+-  return copy_and_spawn_sgid (child_id, target);
++  copy_and_spawn_sgid (child_id, target);
+ }
+ 
+ void
 diff --git a/support/support_copy_file.c b/support/support_copy_file.c
 index 9a936b37c7..52ed90fae0 100644
 --- a/support/support_copy_file.c
@@ -11129,6 +11832,24 @@ index d9bcade1cf..83f02f7cf6 100644
    xfstat (fd, &st);
    if (!S_ISREG (st.st_mode))
      FAIL_EXIT1 ("descriptor %d does not refer to a regular file", fd);
+diff --git a/support/support_record_failure.c b/support/support_record_failure.c
+index 7e57fe97fb..b00387ff80 100644
+--- a/support/support_record_failure.c
++++ b/support/support_record_failure.c
+@@ -112,3 +112,13 @@ support_record_failure_is_failed (void)
+      synchronization for reliable test error reporting anyway.  */
+   return __atomic_load_n (&state->failed, __ATOMIC_RELAXED);
+ }
++
++void
++support_record_failure_barrier (void)
++{
++  if (__atomic_load_n (&state->failed, __ATOMIC_RELAXED))
++    {
++      puts ("error: exiting due to previous errors");
++      exit (1);
++    }
++}
 diff --git a/support/test-container.c b/support/test-container.c
 index b6a1158ae1..2033985a67 100644
 --- a/support/test-container.c
@@ -11797,63 +12518,273 @@ index 5179320720..428af51f70 100644
  	shrn	vend.8b, vhas_chr.8h, 4		/* 128->64 */
  	fmov	synd, dend
 diff --git a/sysdeps/aarch64/memset.S b/sysdeps/aarch64/memset.S
-index 957996bd19..b76d1c3e5e 100644
+index 957996bd19..71814d0b2f 100644
 --- a/sysdeps/aarch64/memset.S
 +++ b/sysdeps/aarch64/memset.S
-@@ -29,7 +29,7 @@
+@@ -1,4 +1,5 @@
+-/* Copyright (C) 2012-2022 Free Software Foundation, Inc.
++/* Generic optimized memset using SIMD.
++   Copyright (C) 2012-2024 Free Software Foundation, Inc.
+ 
+    This file is part of the GNU C Library.
+ 
+@@ -17,7 +18,6 @@
+    <https://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include "memset-reg.h"
+ 
+ #ifndef MEMSET
+ # define MEMSET memset
+@@ -25,167 +25,117 @@
+ 
+ /* Assumptions:
+  *
+- * ARMv8-a, AArch64, unaligned accesses
++ * ARMv8-a, AArch64, Advanced SIMD, unaligned accesses.
   *
   */
  
 -ENTRY_ALIGN (MEMSET, 6)
+-
++#define dstin	x0
++#define val	x1
++#define valw	w1
++#define count	x2
++#define dst	x3
++#define dstend	x4
++#define zva_val	x5
++#define off	x3
++#define dstend2	x5
++
 +ENTRY (MEMSET)
- 
  	PTR_ARG (0)
  	SIZE_ARG (2)
-@@ -101,19 +101,19 @@ L(tail64):
- 	ret
  
- L(try_zva):
--#ifdef ZVA_MACRO
--	zva_macro
--#else
-+#ifndef ZVA64_ONLY
- 	.p2align 3
- 	mrs	tmp1, dczid_el0
- 	tbnz	tmp1w, 4, L(no_zva)
- 	and	tmp1w, tmp1w, 15
- 	cmp	tmp1w, 4	/* ZVA size is 64 bytes.  */
- 	b.ne	 L(zva_128)
--
-+	nop
-+#endif
- 	/* Write the first and last 64 byte aligned block using stp rather
- 	   than using DC ZVA.  This is faster on some cores.
- 	 */
+ 	dup	v0.16B, valw
++	cmp	count, 16
++	b.lo	L(set_small)
++
+ 	add	dstend, dstin, count
++	cmp	count, 64
++	b.hs	L(set_128)
+ 
+-	cmp	count, 96
+-	b.hi	L(set_long)
+-	cmp	count, 16
+-	b.hs	L(set_medium)
+-	mov	val, v0.D[0]
++	/* Set 16..63 bytes.  */
++	mov	off, 16
++	and	off, off, count, lsr 1
++	sub	dstend2, dstend, off
++	str	q0, [dstin]
++	str	q0, [dstin, off]
++	str	q0, [dstend2, -16]
++	str	q0, [dstend, -16]
++	ret
+ 
 +	.p2align 4
- L(zva_64):
- 	str	q0, [dst, 16]
- 	stp	q0, q0, [dst, 32]
-@@ -123,7 +123,6 @@ L(zva_64):
- 	sub	count, dstend, dst	/* Count is now 128 too large.	*/
- 	sub	count, count, 128+64+64	/* Adjust count and bias for loop.  */
- 	add	dst, dst, 128
+ 	/* Set 0..15 bytes.  */
+-	tbz	count, 3, 1f
+-	str	val, [dstin]
+-	str	val, [dstend, -8]
+-	ret
 -	nop
- 1:	dc	zva, dst
- 	add	dst, dst, 64
- 	subs	count, count, 64
-@@ -134,6 +133,7 @@ L(zva_64):
+-1:	tbz	count, 2, 2f
+-	str	valw, [dstin]
+-	str	valw, [dstend, -4]
++L(set_small):
++	add	dstend, dstin, count
++	cmp	count, 4
++	b.lo	2f
++	lsr	off, count, 3
++	sub	dstend2, dstend, off, lsl 2
++	str	s0, [dstin]
++	str	s0, [dstin, off, lsl 2]
++	str	s0, [dstend2, -4]
++	str	s0, [dstend, -4]
+ 	ret
++
++	/* Set 0..3 bytes.  */
+ 2:	cbz	count, 3f
++	lsr	off, count, 1
+ 	strb	valw, [dstin]
+-	tbz	count, 1, 3f
+-	strh	valw, [dstend, -2]
++	strb	valw, [dstin, off]
++	strb	valw, [dstend, -1]
+ 3:	ret
+ 
+-	/* Set 17..96 bytes.  */
+-L(set_medium):
+-	str	q0, [dstin]
+-	tbnz	count, 6, L(set96)
+-	str	q0, [dstend, -16]
+-	tbz	count, 5, 1f
+-	str	q0, [dstin, 16]
+-	str	q0, [dstend, -32]
+-1:	ret
+-
+ 	.p2align 4
+-	/* Set 64..96 bytes.  Write 64 bytes from the start and
+-	   32 bytes from the end.  */
+-L(set96):
+-	str	q0, [dstin, 16]
++L(set_128):
++	bic	dst, dstin, 15
++	cmp	count, 128
++	b.hi	L(set_long)
++	stp	q0, q0, [dstin]
+ 	stp	q0, q0, [dstin, 32]
++	stp	q0, q0, [dstend, -64]
  	stp	q0, q0, [dstend, -32]
  	ret
  
+-	.p2align 3
+-	nop
++	.p2align 4
+ L(set_long):
+-	and	valw, valw, 255
+-	bic	dst, dstin, 15
+ 	str	q0, [dstin]
+-	cmp	count, 256
+-	ccmp	valw, 0, 0, cs
+-	b.eq	L(try_zva)
+-L(no_zva):
+-	sub	count, dstend, dst	/* Count is 16 too large.  */
+-	sub	dst, dst, 16		/* Dst is biased by -32.  */
+-	sub	count, count, 64 + 16	/* Adjust count and bias for loop.  */
+-1:	stp	q0, q0, [dst, 32]
+-	stp	q0, q0, [dst, 64]!
+-L(tail64):
+-	subs	count, count, 64
+-	b.hi	1b
+-2:	stp	q0, q0, [dstend, -64]
+-	stp	q0, q0, [dstend, -32]
+-	ret
+-
+-L(try_zva):
+-#ifdef ZVA_MACRO
+-	zva_macro
+-#else
+-	.p2align 3
+-	mrs	tmp1, dczid_el0
+-	tbnz	tmp1w, 4, L(no_zva)
+-	and	tmp1w, tmp1w, 15
+-	cmp	tmp1w, 4	/* ZVA size is 64 bytes.  */
+-	b.ne	 L(zva_128)
+-
+-	/* Write the first and last 64 byte aligned block using stp rather
+-	   than using DC ZVA.  This is faster on some cores.
+-	 */
+-L(zva_64):
+ 	str	q0, [dst, 16]
++	tst	valw, 255
++	b.ne	L(no_zva)
 +#ifndef ZVA64_ONLY
++	mrs	zva_val, dczid_el0
++	and	zva_val, zva_val, 31
++	cmp	zva_val, 4		/* ZVA size is 64 bytes.  */
++	b.ne	L(no_zva)
++#endif
+ 	stp	q0, q0, [dst, 32]
+-	bic	dst, dst, 63
+-	stp	q0, q0, [dst, 64]
+-	stp	q0, q0, [dst, 96]
+-	sub	count, dstend, dst	/* Count is now 128 too large.	*/
+-	sub	count, count, 128+64+64	/* Adjust count and bias for loop.  */
+-	add	dst, dst, 128
+-	nop
+-1:	dc	zva, dst
+-	add	dst, dst, 64
+-	subs	count, count, 64
+-	b.hi	1b
+-	stp	q0, q0, [dst, 0]
+-	stp	q0, q0, [dst, 32]
++	bic	dst, dstin, 63
++	sub	count, dstend, dst	/* Count is now 64 too large.  */
++	sub	count, count, 64 + 64	/* Adjust count and bias for loop.  */
++
++	/* Write last bytes before ZVA loop.  */
+ 	stp	q0, q0, [dstend, -64]
+ 	stp	q0, q0, [dstend, -32]
++
++	.p2align 4
++L(zva64_loop):
++	add	dst, dst, 64
++	dc	zva, dst
++	subs	count, count, 64
++	b.hi	L(zva64_loop)
+ 	ret
+ 
  	.p2align 3
- L(zva_128):
- 	cmp	tmp1w, 5	/* ZVA size is 128 bytes.  */
+-L(zva_128):
+-	cmp	tmp1w, 5	/* ZVA size is 128 bytes.  */
+-	b.ne	L(zva_other)
+-
+-	str	q0, [dst, 16]
++L(no_zva):
++	sub	count, dstend, dst	/* Count is 32 too large.  */
++	sub	count, count, 64 + 32	/* Adjust count and bias for loop.  */
++L(no_zva_loop):
+ 	stp	q0, q0, [dst, 32]
+ 	stp	q0, q0, [dst, 64]
+-	stp	q0, q0, [dst, 96]
+-	bic	dst, dst, 127
+-	sub	count, dstend, dst	/* Count is now 128 too large.	*/
+-	sub	count, count, 128+128	/* Adjust count and bias for loop.  */
+-	add	dst, dst, 128
+-1:	dc	zva, dst
+-	add	dst, dst, 128
+-	subs	count, count, 128
+-	b.hi	1b
+-	stp	q0, q0, [dstend, -128]
+-	stp	q0, q0, [dstend, -96]
++	add	dst, dst, 64
++	subs	count, count, 64
++	b.hi	L(no_zva_loop)
+ 	stp	q0, q0, [dstend, -64]
+ 	stp	q0, q0, [dstend, -32]
+ 	ret
+ 
+-L(zva_other):
+-	mov	tmp2w, 4
+-	lsl	zva_lenw, tmp2w, tmp1w
+-	add	tmp1, zva_len, 64	/* Max alignment bytes written.	 */
+-	cmp	count, tmp1
+-	blo	L(no_zva)
+-
+-	sub	tmp2, zva_len, 1
+-	add	tmp1, dst, zva_len
+-	add	dst, dst, 16
+-	subs	count, tmp1, dst	/* Actual alignment bytes to write.  */
+-	bic	tmp1, tmp1, tmp2	/* Aligned dc zva start address.  */
+-	beq	2f
+-1:	stp	q0, q0, [dst], 64
+-	stp	q0, q0, [dst, -32]
+-	subs	count, count, 64
+-	b.hi	1b
+-2:	mov	dst, tmp1
+-	sub	count, dstend, tmp1	/* Remaining bytes to write.  */
+-	subs	count, count, zva_len
+-	b.lo	4f
+-3:	dc	zva, dst
+-	add	dst, dst, zva_len
+-	subs	count, count, zva_len
+-	b.hs	3b
+-4:	add	count, count, zva_len
+-	sub	dst, dst, 32		/* Bias dst for tail loop.  */
+-	b	L(tail64)
+-#endif
+-
+ END (MEMSET)
+ libc_hidden_builtin_def (MEMSET)
 diff --git a/sysdeps/aarch64/multiarch/Makefile b/sysdeps/aarch64/multiarch/Makefile
-index 16297192ee..e4720b7468 100644
+index 16297192ee..214b6137b0 100644
 --- a/sysdeps/aarch64/multiarch/Makefile
 +++ b/sysdeps/aarch64/multiarch/Makefile
-@@ -3,18 +3,19 @@ sysdep_routines += \
+@@ -3,18 +3,20 @@ sysdep_routines += \
    memchr_generic \
    memchr_nosimd \
    memcpy_a64fx \
@@ -11871,6 +12802,7 @@ index 16297192ee..e4720b7468 100644
    memset_generic \
    memset_kunpeng \
 +  memset_mops \
++  memset_sve_zva64 \
 +  memset_zva64 \
    strlen_asimd \
 -  strlen_mte \
@@ -11878,10 +12810,10 @@ index 16297192ee..e4720b7468 100644
  # sysdep_routines
  endif
 diff --git a/sysdeps/aarch64/multiarch/ifunc-impl-list.c b/sysdeps/aarch64/multiarch/ifunc-impl-list.c
-index 4144615ab2..1c712ce913 100644
+index 4144615ab2..7ec82150ca 100644
 --- a/sysdeps/aarch64/multiarch/ifunc-impl-list.c
 +++ b/sysdeps/aarch64/multiarch/ifunc-impl-list.c
-@@ -36,32 +36,29 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+@@ -36,32 +36,30 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
    IFUNC_IMPL (i, name, memcpy,
  	      IFUNC_IMPL_ADD (array, i, memcpy, 1, __memcpy_thunderx)
  	      IFUNC_IMPL_ADD (array, i, memcpy, !bti, __memcpy_thunderx2)
@@ -11914,13 +12846,14 @@ index 4144615ab2..1c712ce913 100644
  	      IFUNC_IMPL_ADD (array, i, memset, 1, __memset_kunpeng)
  #if HAVE_AARCH64_SVE_ASM
 -	      IFUNC_IMPL_ADD (array, i, memset, sve, __memset_a64fx)
-+	      IFUNC_IMPL_ADD (array, i, memset, sve && zva_size == 256, __memset_a64fx)
++	      IFUNC_IMPL_ADD (array, i, memset, sve && !bti && zva_size == 256, __memset_a64fx)
++	      IFUNC_IMPL_ADD (array, i, memset, sve && zva_size == 64, __memset_sve_zva64)
  #endif
 +	      IFUNC_IMPL_ADD (array, i, memset, mops, __memset_mops)
  	      IFUNC_IMPL_ADD (array, i, memset, 1, __memset_generic))
    IFUNC_IMPL (i, name, memchr,
  	      IFUNC_IMPL_ADD (array, i, memchr, !mte, __memchr_nosimd)
-@@ -69,7 +66,7 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
+@@ -69,7 +67,7 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
  
    IFUNC_IMPL (i, name, strlen,
  	      IFUNC_IMPL_ADD (array, i, strlen, !mte, __strlen_asimd)
@@ -12971,10 +13904,10 @@ index 0000000000..c5ea66be3a
 +
 +END (__memmove_mops)
 diff --git a/sysdeps/aarch64/multiarch/memset.c b/sysdeps/aarch64/multiarch/memset.c
-index c4008f346b..9ef9521fa6 100644
+index c4008f346b..6c9bb910c6 100644
 --- a/sysdeps/aarch64/multiarch/memset.c
 +++ b/sysdeps/aarch64/multiarch/memset.c
-@@ -28,28 +28,40 @@
+@@ -28,28 +28,44 @@
  
  extern __typeof (__redirect_memset) __libc_memset;
  
@@ -12987,6 +13920,7 @@ index c4008f346b..9ef9521fa6 100644
 -# endif
  extern __typeof (__redirect_memset) __memset_generic attribute_hidden;
 +extern __typeof (__redirect_memset) __memset_mops attribute_hidden;
++extern __typeof (__redirect_memset) __memset_sve_zva64 attribute_hidden;
  
 -libc_ifunc (__libc_memset,
 -	    IS_KUNPENG920 (midr)
@@ -13014,6 +13948,9 @@ index c4008f346b..9ef9521fa6 100644
 +    {
 +      if (IS_A64FX (midr) && zva_size == 256)
 +	return __memset_a64fx;
++
++      if (prefer_sve_ifuncs && zva_size == 64)
++	return __memset_sve_zva64;
 +    }
 +
 +  if (IS_KUNPENG920 (midr))
@@ -13523,6 +14460,135 @@ index 0000000000..ca820b8636
 +	ret
 +
 +END (__memset_mops)
+diff --git a/sysdeps/aarch64/multiarch/memset_sve_zva64.S b/sysdeps/aarch64/multiarch/memset_sve_zva64.S
+new file mode 100644
+index 0000000000..7fb40fdd9e
+--- /dev/null
++++ b/sysdeps/aarch64/multiarch/memset_sve_zva64.S
+@@ -0,0 +1,123 @@
++/* Optimized memset for SVE.
++   Copyright (C) 2025 Free Software Foundation, Inc.
++
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library.  If not, see
++   <https://www.gnu.org/licenses/>.  */
++
++#include <sysdep.h>
++
++/* Assumptions:
++ *
++ * ARMv8-a, AArch64, Advanced SIMD, SVE, unaligned accesses.
++ * ZVA size is 64.
++ */
++
++#if HAVE_AARCH64_SVE_ASM
++
++.arch armv8.2-a+sve
++
++#define dstin	x0
++#define val	x1
++#define valw	w1
++#define count	x2
++#define dst	x3
++#define dstend	x4
++#define zva_val	x5
++#define vlen	x5
++#define off	x3
++#define dstend2 x5
++
++ENTRY (__memset_sve_zva64)
++	dup	v0.16B, valw
++	cmp	count, 16
++	b.lo	L(set_16)
++
++	add	dstend, dstin, count
++	cmp	count, 64
++	b.hs	L(set_128)
++
++	/* Set 16..63 bytes.  */
++	mov	off, 16
++	and	off, off, count, lsr 1
++	sub	dstend2, dstend, off
++	str	q0, [dstin]
++	str	q0, [dstin, off]
++	str	q0, [dstend2, -16]
++	str	q0, [dstend, -16]
++	ret
++
++	.p2align 4
++L(set_16):
++	whilelo p0.b, xzr, count
++	st1b	z0.b, p0, [dstin]
++	ret
++
++	.p2align 4
++L(set_128):
++	bic	dst, dstin, 15
++	cmp	count, 128
++	b.hi	L(set_long)
++	stp	q0, q0, [dstin]
++	stp	q0, q0, [dstin, 32]
++	stp	q0, q0, [dstend, -64]
++	stp	q0, q0, [dstend, -32]
++	ret
++
++	.p2align 4
++L(set_long):
++	cmp	count, 256
++	b.lo	L(no_zva)
++	tst	valw, 255
++	b.ne	L(no_zva)
++
++	str	q0, [dstin]
++	str	q0, [dst, 16]
++	bic	dst, dstin, 31
++	stp	q0, q0, [dst, 32]
++	bic	dst, dstin, 63
++	sub	count, dstend, dst	/* Count is now 64 too large.  */
++	sub	count, count, 128	/* Adjust count and bias for loop.  */
++
++	sub	x8, dstend, 1		/* Write last bytes before ZVA loop.  */
++	bic	x8, x8, 15
++	stp	q0, q0, [x8, -48]
++	str	q0, [x8, -16]
++	str	q0, [dstend, -16]
++
++	.p2align 4
++L(zva64_loop):
++	add	dst, dst, 64
++	dc	zva, dst
++	subs	count, count, 64
++	b.hi	L(zva64_loop)
++	ret
++
++L(no_zva):
++	str	q0, [dstin]
++	sub	count, dstend, dst	/* Count is 16 too large.  */
++	sub	count, count, 64 + 16	/* Adjust count and bias for loop.  */
++L(no_zva_loop):
++	stp	q0, q0, [dst, 16]
++	stp	q0, q0, [dst, 48]
++	add	dst, dst, 64
++	subs	count, count, 64
++	b.hi	L(no_zva_loop)
++	stp	q0, q0, [dstend, -64]
++	stp	q0, q0, [dstend, -32]
++	ret
++
++END (__memset_sve_zva64)
++#endif
 diff --git a/sysdeps/aarch64/multiarch/memset_zva64.S b/sysdeps/aarch64/multiarch/memset_zva64.S
 new file mode 100644
 index 0000000000..13f45fd3d8
@@ -14006,10 +15072,17 @@ index 78d27b4aa6..6eeda12df6 100644
  
  END (STRCPY)
 diff --git a/sysdeps/aarch64/strlen.S b/sysdeps/aarch64/strlen.S
-index 3a5d088407..10b9ec0769 100644
+index 3a5d088407..352fb40d3a 100644
 --- a/sysdeps/aarch64/strlen.S
 +++ b/sysdeps/aarch64/strlen.S
-@@ -43,12 +43,9 @@
+@@ -1,4 +1,5 @@
+-/* Copyright (C) 2012-2022 Free Software Foundation, Inc.
++/* Generic optimized strlen using SIMD.
++   Copyright (C) 2012-2024 Free Software Foundation, Inc.
+ 
+    This file is part of the GNU C Library.
+ 
+@@ -43,12 +44,9 @@
  #define dend		d2
  
  /* Core algorithm:
@@ -14025,34 +15098,65 @@ index 3a5d088407..10b9ec0769 100644
  
  ENTRY (STRLEN)
  	PTR_ARG (0)
-@@ -68,18 +65,25 @@ ENTRY (STRLEN)
+@@ -59,29 +57,50 @@ ENTRY (STRLEN)
+ 	shrn	vend.8b, vhas_nul.8h, 4		/* 128->64 */
+ 	fmov	synd, dend
+ 	lsr	synd, synd, shift
+-	cbz	synd, L(loop)
++	cbz	synd, L(next16)
  
- 	.p2align 5
- L(loop):
+ 	rbit	synd, synd
+ 	clz	result, synd
+ 	lsr	result, result, 2
+ 	ret
+ 
+-	.p2align 5
+-L(loop):
 -	ldr	data, [src, 16]!
++L(next16):
 +	ldr	data, [src, 16]
-+	cmeq	vhas_nul.16b, vdata.16b, 0
-+	umaxp	vend.16b, vhas_nul.16b, vhas_nul.16b
-+	fmov	synd, dend
-+	cbnz	synd, L(loop_end)
-+	ldr	data, [src, 32]!
  	cmeq	vhas_nul.16b, vdata.16b, 0
- 	umaxp	vend.16b, vhas_nul.16b, vhas_nul.16b
+-	umaxp	vend.16b, vhas_nul.16b, vhas_nul.16b
++	shrn	vend.8b, vhas_nul.8h, 4		/* 128->64 */
  	fmov	synd, dend
  	cbz	synd, L(loop)
 -
-+	sub	src, src, 16
-+L(loop_end):
- 	shrn	vend.8b, vhas_nul.8h, 4		/* 128->64 */
+-	shrn	vend.8b, vhas_nul.8h, 4		/* 128->64 */
++	add	src, src, 16
++#ifndef __AARCH64EB__
++	rbit	synd, synd
++#endif
  	sub	result, src, srcin
++	clz	tmp, synd
++	add	result, result, tmp, lsr 2
++	ret
++
++	.p2align 5
++L(loop):
++	ldr	data, [src, 32]!
++	cmeq	vhas_nul.16b, vdata.16b, 0
++	addhn	vend.8b, vhas_nul.8h, vhas_nul.8h
  	fmov	synd, dend
++	cbnz	synd, L(loop_end)
++	ldr	data, [src, 16]
++	cmeq	vhas_nul.16b, vdata.16b, 0
++	addhn	vend.8b, vhas_nul.8h, vhas_nul.8h
++	fmov	synd, dend
++	cbz	synd, L(loop)
++	add	src, src, 16
++L(loop_end):
++	sub	result, shift, src, lsl 2	/* (srcin - src) << 2.  */
  #ifndef __AARCH64EB__
  	rbit	synd, synd
++	sub	result, result, 3
  #endif
-+	add	result, result, 16
  	clz	tmp, synd
- 	add	result, result, tmp, lsr 2
+-	add	result, result, tmp, lsr 2
++	sub	result, tmp, result
++	lsr	result, result, 2
  	ret
+ 
+ END (STRLEN)
 diff --git a/sysdeps/aarch64/strnlen.S b/sysdeps/aarch64/strnlen.S
 index 282bddc9aa..a44a49a920 100644
 --- a/sysdeps/aarch64/strnlen.S
@@ -14568,6 +15672,23 @@ index 0000000000..8f21ebe1b6
 @@ -0,0 +1,2 @@
 +#define UTMP_SIZE 384
 +#define LASTLOG_SIZE 292
+diff --git a/sysdeps/ieee754/dbl-64/math_config.h b/sysdeps/ieee754/dbl-64/math_config.h
+index a346fdca58..6c6cee511f 100644
+--- a/sysdeps/ieee754/dbl-64/math_config.h
++++ b/sysdeps/ieee754/dbl-64/math_config.h
+@@ -134,10 +134,11 @@ check_uflow (double x)
+ extern const struct exp_data
+ {
+   double invln2N;
+-  double shift;
+   double negln2hiN;
+   double negln2loN;
+   double poly[4]; /* Last four coefficients.  */
++  double shift;
++
+   double exp2_shift;
+   double exp2_poly[EXP2_POLY_ORDER];
+   uint64_t tab[2*(1 << EXP_TABLE_BITS)];
 diff --git a/sysdeps/ieee754/dbl-64/s_expm1.c b/sysdeps/ieee754/dbl-64/s_expm1.c
 index 8f1c95bd04..1cafeca9c0 100644
 --- a/sysdeps/ieee754/dbl-64/s_expm1.c
@@ -14607,6 +15728,21 @@ index e6476a8260..eeb0af859f 100644
  double
  __log1p (double x)
  {
+diff --git a/sysdeps/ieee754/flt-32/math_config.h b/sysdeps/ieee754/flt-32/math_config.h
+index c7f71ca496..6a52d1d51b 100644
+--- a/sysdeps/ieee754/flt-32/math_config.h
++++ b/sysdeps/ieee754/flt-32/math_config.h
+@@ -126,9 +126,9 @@ extern const struct exp2f_data
+   uint64_t tab[1 << EXP2F_TABLE_BITS];
+   double shift_scaled;
+   double poly[EXP2F_POLY_ORDER];
+-  double shift;
+   double invln2_scaled;
+   double poly_scaled[EXP2F_POLY_ORDER];
++  double shift;
+ } __exp2f_data attribute_hidden;
+ 
+ #define LOGF_TABLE_BITS 4
 diff --git a/sysdeps/ieee754/ldbl-128/e_j1l.c b/sysdeps/ieee754/ldbl-128/e_j1l.c
 index 54c457681a..9a9c5c6f00 100644
 --- a/sysdeps/ieee754/ldbl-128/e_j1l.c

@@ -1,5 +1,5 @@
-/* Generic optimized memset using SIMD.
-   Copyright (C) 2012-2024 Free Software Foundation, Inc.
+/* Optimized memset for SVE.
+   Copyright (C) 2025 Free Software Foundation, Inc.
 
    This file is part of the GNU C Library.
 
@@ -19,15 +19,15 @@
 
 #include <sysdep.h>
 
-#ifndef MEMSET
-# define MEMSET memset
-#endif
-
 /* Assumptions:
  *
- * ARMv8-a, AArch64, Advanced SIMD, unaligned accesses.
- *
+ * ARMv8-a, AArch64, Advanced SIMD, SVE, unaligned accesses.
+ * ZVA size is 64.
  */
+
+#if HAVE_AARCH64_SVE_ASM
+
+.arch armv8.2-a+sve
 
 #define dstin	x0
 #define val	x1
@@ -36,16 +36,14 @@
 #define dst	x3
 #define dstend	x4
 #define zva_val	x5
+#define vlen	x5
 #define off	x3
-#define dstend2	x5
+#define dstend2 x5
 
-ENTRY (MEMSET)
-	PTR_ARG (0)
-	SIZE_ARG (2)
-
+ENTRY (__memset_sve_zva64)
 	dup	v0.16B, valw
 	cmp	count, 16
-	b.lo	L(set_small)
+	b.lo	L(set_16)
 
 	add	dstend, dstin, count
 	cmp	count, 64
@@ -62,26 +60,10 @@ ENTRY (MEMSET)
 	ret
 
 	.p2align 4
-	/* Set 0..15 bytes.  */
-L(set_small):
-	add	dstend, dstin, count
-	cmp	count, 4
-	b.lo	2f
-	lsr	off, count, 3
-	sub	dstend2, dstend, off, lsl 2
-	str	s0, [dstin]
-	str	s0, [dstin, off, lsl 2]
-	str	s0, [dstend2, -4]
-	str	s0, [dstend, -4]
+L(set_16):
+	whilelo p0.b, xzr, count
+	st1b	z0.b, p0, [dstin]
 	ret
-
-	/* Set 0..3 bytes.  */
-2:	cbz	count, 3f
-	lsr	off, count, 1
-	strb	valw, [dstin]
-	strb	valw, [dstin, off]
-	strb	valw, [dstend, -1]
-3:	ret
 
 	.p2align 4
 L(set_128):
@@ -96,24 +78,24 @@ L(set_128):
 
 	.p2align 4
 L(set_long):
-	str	q0, [dstin]
-	str	q0, [dst, 16]
+	cmp	count, 256
+	b.lo	L(no_zva)
 	tst	valw, 255
 	b.ne	L(no_zva)
-#ifndef ZVA64_ONLY
-	mrs	zva_val, dczid_el0
-	and	zva_val, zva_val, 31
-	cmp	zva_val, 4		/* ZVA size is 64 bytes.  */
-	b.ne	L(no_zva)
-#endif
+
+	str	q0, [dstin]
+	str	q0, [dst, 16]
+	bic	dst, dstin, 31
 	stp	q0, q0, [dst, 32]
 	bic	dst, dstin, 63
 	sub	count, dstend, dst	/* Count is now 64 too large.  */
-	sub	count, count, 64 + 64	/* Adjust count and bias for loop.  */
+	sub	count, count, 128	/* Adjust count and bias for loop.  */
 
-	/* Write last bytes before ZVA loop.  */
-	stp	q0, q0, [dstend, -64]
-	stp	q0, q0, [dstend, -32]
+	sub	x8, dstend, 1		/* Write last bytes before ZVA loop.  */
+	bic	x8, x8, 15
+	stp	q0, q0, [x8, -48]
+	str	q0, [x8, -16]
+	str	q0, [dstend, -16]
 
 	.p2align 4
 L(zva64_loop):
@@ -123,13 +105,13 @@ L(zva64_loop):
 	b.hi	L(zva64_loop)
 	ret
 
-	.p2align 3
 L(no_zva):
-	sub	count, dstend, dst	/* Count is 32 too large.  */
-	sub	count, count, 64 + 32	/* Adjust count and bias for loop.  */
+	str	q0, [dstin]
+	sub	count, dstend, dst	/* Count is 16 too large.  */
+	sub	count, count, 64 + 16	/* Adjust count and bias for loop.  */
 L(no_zva_loop):
-	stp	q0, q0, [dst, 32]
-	stp	q0, q0, [dst, 64]
+	stp	q0, q0, [dst, 16]
+	stp	q0, q0, [dst, 48]
 	add	dst, dst, 64
 	subs	count, count, 64
 	b.hi	L(no_zva_loop)
@@ -137,5 +119,5 @@ L(no_zva_loop):
 	stp	q0, q0, [dstend, -32]
 	ret
 
-END (MEMSET)
-libc_hidden_builtin_def (MEMSET)
+END (__memset_sve_zva64)
+#endif
