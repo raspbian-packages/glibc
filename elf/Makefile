@@ -34,7 +34,6 @@ routines = \
   dl-addr \
   dl-addr-obj \
   dl-early_allocate \
-  dl-find_object \
   dl-iteratephdr \
   dl-libc \
   dl-origin \
@@ -61,6 +60,8 @@ dl-routines = \
   dl-deps \
   dl-exception \
   dl-execstack \
+  dl-execstack-tunable \
+  dl-find_object \
   dl-fini \
   dl-init \
   dl-load \
@@ -266,6 +267,7 @@ tests-static-normal := \
   tst-array1-static \
   tst-array5-static \
   tst-dl-iter-static \
+  tst-dlopen-sgid \
   tst-dst-static \
   tst-env-setuid-static \
   tst-getauxval-static \
@@ -379,6 +381,7 @@ tests += \
   tst-align3 \
   tst-audit-tlsdesc \
   tst-audit-tlsdesc-dlopen \
+  tst-audit-tlsdesc-dlopen2 \
   tst-audit1 \
   tst-audit2 \
   tst-audit8 \
@@ -532,6 +535,8 @@ tests-internal += \
   tst-dl_find_object-threads \
   tst-dlmopen2 \
   tst-hash-collision3 \
+  tst-link-map-contiguous-ldso \
+  tst-link-map-contiguous-libc \
   tst-ptrguard1 \
   tst-stackguard1 \
   tst-tls-surplus \
@@ -542,6 +547,10 @@ tests-internal += \
   unload \
   unload2 \
   # tests-internal
+
+ifeq ($(build-hardcoded-path-in-tests),yes)
+tests-internal += tst-link-map-contiguous-main
+endif
 
 tests-container += \
   tst-dlopen-self-container \
@@ -567,9 +576,11 @@ tests-execstack-yes = \
   tst-execstack \
   tst-execstack-needed \
   tst-execstack-prog \
+  tst-execstack-tunable \
   # tests-execstack-yes
 tests-execstack-static-yes = \
-  tst-execstack-prog-static
+  tst-execstack-prog-static \
+  tst-execstack-prog-static-tunable \
   # tests-execstack-static-yes
 ifeq (yes,$(run-built-tests))
 tests-execstack-special-yes = \
@@ -863,6 +874,7 @@ modules-names += \
   tst-auditmanymod8 \
   tst-auditmanymod9 \
   tst-auditmod-tlsdesc  \
+  tst-auditmod-tlsdesc2 \
   tst-auditmod1 \
   tst-auditmod11 \
   tst-auditmod12 \
@@ -905,6 +917,7 @@ modules-names += \
   tst-dlmopen1mod \
   tst-dlopen-auditdup-auditmod \
   tst-dlopen-auditdupmod \
+  tst-dlopen-sgid-mod \
   tst-dlopen-tlsreinitmod1 \
   tst-dlopen-tlsreinitmod2 \
   tst-dlopen-tlsreinitmod3 \
@@ -1144,6 +1157,10 @@ tests-pie += \
   tst-pie1 \
   tst-pie2 \
   # tests-pie
+ifeq (yes,$(aligned-65536))
+tests += tst-pie-bss
+tests-pie += tst-pie-bss
+endif
 ifneq (,$(load-address-ldflag))
 tests += \
   tst-pie-address \
@@ -1159,6 +1176,10 @@ tests += \
 tests-static += \
   tst-pie-address-static \
   # tests-static
+ifeq (yes,$(aligned-65536))
+tests += tst-pie-bss-static
+tests-static += tst-pie-bss-static
+endif
 LDFLAGS-tst-pie-address-static += \
   $(load-address-ldflag)=$(pde-load-address)
 endif
@@ -1988,6 +2009,9 @@ $(objpfx)tst-execstack.out: $(objpfx)tst-execstack-mod.so
 CPPFLAGS-tst-execstack.c += -DUSE_PTHREADS=0
 LDFLAGS-tst-execstack = -Wl,-z,noexecstack
 LDFLAGS-tst-execstack-mod.so = -Wl,-z,execstack
+ifeq ($(have-no-error-execstack),yes)
+LDFLAGS-tst-execstack-mod.so += -Wl,--no-error-execstack
+endif
 
 $(objpfx)tst-execstack-needed: $(objpfx)tst-execstack-mod.so
 LDFLAGS-tst-execstack-needed = -Wl,-z,noexecstack
@@ -1996,7 +2020,18 @@ LDFLAGS-tst-execstack-prog = -Wl,-z,execstack
 CFLAGS-tst-execstack-prog.c += -Wno-trampolines
 CFLAGS-tst-execstack-mod.c += -Wno-trampolines
 
+# It expects loading a module with executable stack to work.
+CFLAGS-tst-execstack-tunable.c += -DUSE_PTHREADS=0 -DDEFAULT_RWX_STACK=1
+$(objpfx)tst-execstack-tunable.out: $(objpfx)tst-execstack-mod.so
+tst-execstack-tunable-ENV = GLIBC_TUNABLES=glibc.rtld.execstack=2
+
+LDFLAGS-tst-execstack-prog-static-tunable = -Wl,-z,noexecstack
+tst-execstack-prog-static-tunable-ENV = GLIBC_TUNABLES=glibc.rtld.execstack=2
+
 LDFLAGS-tst-execstack-prog-static = -Wl,-z,execstack
+ifeq ($(have-no-error-execstack),yes)
+LDFLAGS-tst-execstack-prog-static += -Wl,--no-error-execstack
+endif
 CFLAGS-tst-execstack-prog-static.c += -Wno-trampolines
 
 ifeq (yes,$(build-hardcoded-path-in-tests))
@@ -2074,6 +2109,7 @@ $(objpfx)tst-array5-static-cmp.out: tst-array5-static.exp \
 
 CFLAGS-tst-pie1.c += $(pie-ccflag)
 CFLAGS-tst-pie2.c += $(pie-ccflag)
+CFLAGS-tst-pie-bss.c += $(pie-ccflag)
 CFLAGS-tst-pie-address.c += $(pie-ccflag)
 
 $(objpfx)tst-piemod1.so: $(libsupport)
@@ -3189,6 +3225,9 @@ $(objpfx)tst-audit-tlsdesc.out: $(objpfx)tst-auditmod-tlsdesc.so
 tst-audit-tlsdesc-ENV = LD_AUDIT=$(objpfx)tst-auditmod-tlsdesc.so
 $(objpfx)tst-audit-tlsdesc-dlopen.out: $(objpfx)tst-auditmod-tlsdesc.so
 tst-audit-tlsdesc-dlopen-ENV = LD_AUDIT=$(objpfx)tst-auditmod-tlsdesc.so
+$(objpfx)tst-audit-tlsdesc-dlopen2.out: $(objpfx)tst-auditmod-tlsdesc2.so \
+  $(patsubst %, $(objpfx)%.so, $(tlsmod17a-modules))
+tst-audit-tlsdesc-dlopen2-ENV = LD_AUDIT=$(objpfx)tst-auditmod-tlsdesc2.so
 
 $(objpfx)tst-dlmopen-twice.out: \
   $(objpfx)tst-dlmopen-twice-mod1.so \
@@ -3392,3 +3431,5 @@ $(objpfx)tst-nolink-libc-2: $(objpfx)tst-nolink-libc.o
 	  -Wl,--dynamic-linker=$(objpfx)ld.so
 $(objpfx)tst-nolink-libc-2.out: $(objpfx)tst-nolink-libc-2 $(objpfx)ld.so
 	$< > $@ 2>&1; $(evaluate-test)
+
+$(objpfx)tst-dlopen-sgid.out: $(objpfx)tst-dlopen-sgid-mod.so
