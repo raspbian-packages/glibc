@@ -1,4 +1,4 @@
-glibc (2.41-12+rpi1) trixie-staging; urgency=medium
+glibc (2.41-12+rpi1+deb13u1) trixie-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -6,7 +6,23 @@ glibc (2.41-12+rpi1) trixie-staging; urgency=medium
   [changes brought forward from 2.37-12+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Tue, 17 Oct 2023 12:00:24 +0000]
   * Remove valgrind conflicts.
 
- -- Raspbian forward porter <root@raspbian.org>  Wed, 20 Aug 2025 17:01:38 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Sun, 11 Jan 2026 22:49:43 +0000
+
+glibc (2.41-12+deb13u1) trixie; urgency=medium
+
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix a double lock init issue after fork()
+    - Fix _dl_find_object when ld.so has LOAD segment gaps, causing wrong
+      backtrace unwinding. This affects at least arm64.
+    - Fix SYSCALL_CANCEL for return values larger than INT_MAX (closes:
+      #1115729).
+    - Fix crash in ifunc functions on arm64 when hardening with
+      -ftrivial-auto-var-init=zero.
+    - Optimize inverse trig functions on arm64.
+    - Optimize arm64 SVE exp, hyperbolic, and log1p functions.
+    - Optimize arm64 SVE expf and log1p helpers.
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 28 Dec 2025 17:32:33 +0100
 
 glibc (2.41-12) unstable; urgency=medium
 
