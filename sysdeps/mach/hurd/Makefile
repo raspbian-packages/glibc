@@ -97,7 +97,7 @@ $(common-objpfx)errnos.d: $(mach-errnos-deps)
 	echo >> $@t
 	mv -f $@t $@
 
-$(hurd)/bits/errno.h: $(common-objpfx)stamp-errnos ;
+$(hurd)/bits/errno-disabled.h: $(common-objpfx)stamp-errnos ;
 $(common-objpfx)stamp-errnos: $(hurd)/errnos.awk $(errno.texinfo) \
 			      $(mach-errnos-deps) $(common-objpfx)errnos.d
 	mkdir -p $(hurd-objpfx)bits
