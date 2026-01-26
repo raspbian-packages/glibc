@@ -15,6 +15,9 @@
 # License along with the GNU C Library; if not, see
 # <https://www.gnu.org/licenses/>.
 
+# We need execstack for iterators for now, binutils ≥ 2.45.50.202601 seems to miss it
+sysdep-LDFLAGS += -Wl,-z,execstack
+
 ifdef in-Makerules
 
 # Look for header files in hurd/ under the top-level library source directory.
