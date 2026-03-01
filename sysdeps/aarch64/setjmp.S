@@ -37,6 +37,12 @@ ENTRY (__sigsetjmp)
 	PTR_ARG (0)
 
 1:
+
+#if IS_IN(libc)
+	/* Disable ZA state of SME in libc.a and libc.so, but not in ld.so.  */
+	CALL_LIBC_ARM_ZA_DISABLE
+#endif
+
 	stp	x19, x20, [x0, #JB_X19<<3]
 	stp	x21, x22, [x0, #JB_X21<<3]
 	stp	x23, x24, [x0, #JB_X23<<3]

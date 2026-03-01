@@ -4,7 +4,13 @@ endif
 
 ifeq ($(subdir),elf)
 sysdep_routines += get-cpuid-feature-leaf
-sysdep-dl-routines += dl-get-cpu-features
+sysdep-dl-routines += \
+  dl-get-cpu-features \
+  dl-tlsdesc \
+  tls_get_addr \
+  tlsdesc \
+# sysdep-dl-routines
+
 sysdep_headers += \
   bits/platform/features.h \
   bits/platform/x86.h \
@@ -21,6 +27,9 @@ tests += \
   tst-cpu-features-supports-static \
   tst-get-cpu-features \
   tst-get-cpu-features-static \
+  tst-gnu2-tls2-x86-noxsave \
+  tst-gnu2-tls2-x86-noxsavec \
+  tst-gnu2-tls2-x86-noxsavexsavec \
   tst-hwcap-tunables \
 # tests
 tests-static += \
@@ -91,6 +100,42 @@ CFLAGS-tst-gnu2-tls2.c += -msse
 CFLAGS-tst-gnu2-tls2mod0.c += -msse2 -mtune=haswell
 CFLAGS-tst-gnu2-tls2mod1.c += -msse2 -mtune=haswell
 CFLAGS-tst-gnu2-tls2mod2.c += -msse2 -mtune=haswell
+
+LDFLAGS-tst-gnu2-tls2-x86-noxsave += -Wl,-z,lazy
+LDFLAGS-tst-gnu2-tls2-x86-noxsavec += -Wl,-z,lazy
+LDFLAGS-tst-gnu2-tls2-x86-noxsavexsavec += -Wl,-z,lazy
+
+# Test for bug 32810: incorrect XSAVE state size if XSAVEC is disabled
+# via tunable.
+tst-gnu2-tls2-x86-noxsave-ENV = GLIBC_TUNABLES=glibc.cpu.hwcaps=-XSAVE
+tst-gnu2-tls2-x86-noxsavec-ENV = GLIBC_TUNABLES=glibc.cpu.hwcaps=-XSAVEC
+tst-gnu2-tls2-x86-noxsavexsavec-ENV = GLIBC_TUNABLES=glibc.cpu.hwcaps=-XSAVE,-XSAVEC
+$(objpfx)tst-gnu2-tls2-x86-noxsave: $(shared-thread-library)
+$(objpfx)tst-gnu2-tls2-x86-noxsavec: $(shared-thread-library)
+$(objpfx)tst-gnu2-tls2-x86-noxsavexsavec: $(shared-thread-library)
+$(objpfx)tst-gnu2-tls2-x86-noxsave.out \
+$(objpfx)tst-gnu2-tls2-x86-noxsavec.out \
+$(objpfx)tst-gnu2-tls2-x86-noxsavexsavec.out: \
+  $(objpfx)tst-gnu2-tls2mod0.so \
+  $(objpfx)tst-gnu2-tls2mod1.so \
+  $(objpfx)tst-gnu2-tls2mod2.so
+
+CFLAGS-tst-tls23.c += -msse2
+CFLAGS-tst-tls23-mod.c += -msse2 -mtune=haswell
+
+LDFLAGS-tst-tls23 += -rdynamic
+tst-tls23-mod.so-no-z-defs = yes
+
+$(objpfx)tst-tls23-mod.so: $(libsupport)
+
+tests-special += $(objpfx)check-gnu2-tls.out
+
+$(objpfx)check-gnu2-tls.out: $(common-objpfx)libc.so
+	LC_ALL=C $(READELF) -V -W $< \
+		| sed -ne '/.gnu.version_d/, /.gnu.version_r/ p' \
+		| grep GLIBC_ABI_GNU2_TLS > $@; \
+	$(evaluate-test)
+generated += check-gnu2-tls.out
 endif
 
 ifeq ($(subdir),math)

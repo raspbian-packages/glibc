@@ -41,9 +41,6 @@ ifeq ($(subdir),elf)
 CFLAGS-.os += $(if $(filter $(@F),$(patsubst %,%.os,$(all-rtld-routines))),\
 		   -mno-mmx)
 
-sysdep-dl-routines += tlsdesc dl-tlsdesc tls_get_addr
-
-tests += ifuncmain8
 modules-names += ifuncmod8
 
 $(objpfx)ifuncmain8: $(objpfx)ifuncmod8.so
@@ -142,7 +139,6 @@ CFLAGS-tst-avxmod.c += $(AVX-CFLAGS)
 AVX512-CFLAGS = -mavx512f
 CFLAGS-tst-audit10-aux.c += $(AVX512-CFLAGS)
 CFLAGS-tst-auditmod10a.c += $(AVX512-CFLAGS)
-CFLAGS-tst-auditmod10b.c += $(AVX512-CFLAGS)
 CFLAGS-tst-avx512-aux.c += $(AVX512-CFLAGS)
 CFLAGS-tst-avx512mod.c += $(AVX512-CFLAGS)
 
@@ -212,6 +208,15 @@ LDFLAGS-tst-plt-rewrite2 = -Wl,-z,now
 LDFLAGS-tst-plt-rewritemod2.so = -Wl,-z,now,-z,undefs
 tst-plt-rewrite2-ENV = GLIBC_TUNABLES=glibc.cpu.plt_rewrite=2
 $(objpfx)tst-plt-rewrite2: $(objpfx)tst-plt-rewritemod2.so
+
+tests-special += $(objpfx)check-dt-x86-64-plt.out
+
+$(objpfx)check-dt-x86-64-plt.out: $(common-objpfx)libc.so
+	LC_ALL=C $(READELF) -V -W $< \
+		| sed -ne '/.gnu.version_d/, /.gnu.version_r/ p' \
+		| grep GLIBC_ABI_DT_X86_64_PLT > $@; \
+	$(evaluate-test)
+generated += check-dt-x86-64-plt.out
 endif
 
 test-internal-extras += tst-gnu2-tls2mod1
