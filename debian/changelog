@@ -1,4 +1,4 @@
-glibc (2.41-12+rpi1+deb13u1) trixie-staging; urgency=medium
+glibc (2.41-12+rpi1+deb13u2) trixie-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -6,7 +6,58 @@ glibc (2.41-12+rpi1+deb13u1) trixie-staging; urgency=medium
   [changes brought forward from 2.37-12+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Tue, 17 Oct 2023 12:00:24 +0000]
   * Remove valgrind conflicts.
 
- -- Raspbian forward porter <root@raspbian.org>  Sun, 11 Jan 2026 22:49:43 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Tue, 17 Mar 2026 21:07:24 +0000
+
+glibc (2.41-12+deb13u2) trixie; urgency=medium
+
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix a null pointer dereference in <ctype.h> macros in multithreaded
+      programs with multiple libc.so.
+    - Fix _r_debug handling when interposed by the main executable, restoring
+      compatibility with Dyninst.
+    - Fix a null pointer dereference in symbol lookup when the symbol version
+      hash value is zero.
+    - Add a new test for dlopen (NULL, RTLD_LAZY) from an ELF constructor.
+    - Preserve vector registers in the i386 TLS slow path.
+    - Add GLIBC_ABI_GNU2_TLS and GLIBC_ABI_GNU_TLS symbol versions and i386.
+    - Add GLIBC_ABI_GNU2_TLS and GLIBC_ABI_DT_X86_64_PLT symbol versions on
+      amd64.
+    - Fix NSS group merge not reacting to ERANGE during merge.
+    - Detect Intel Nova and Wildcat processors and use the same ifunc
+      selection as for Intel Panther Lake.
+    - Fix typo in wmemset ifunc selector that caused AVX2/AVX512 paths to be
+      skipped.
+    - Fix incorrect return values and improve special case handling in arm64
+      SVE pow/powf and tanpi/tanpif implementations.
+    - Optimise SVE scalar callbacks on arm64.
+    - Correct SME handling on arm64 by disabling ZA state in setjmp and
+      sigsetjmp, clearing ZA state in clone/clone3.
+    - Fix conform tests on arm64 when the toolchain does not default to
+      -mbranch-protection=standard.
+    - Fix performance instability in AdvSIMD tan and sinh function on arm64
+    - Fix and restore POWER10 optimized strcmp/strncmp functions on ppc64el,
+      they got previously disabled 2.41-8 due to a security issue.
+    - Fix POWER optimized rawmemchr function on ppc64el.
+    - Validate pread size and offset for overflow when reading ELF
+      headers in the sprof utility.
+    - Minor fixes to testsuite support code.
+    - Optimize trylock for high cache contention workloads.
+    - Fix and integer overflow in _int_memalign leading to heap corruption
+      (CVE-2026-0861).  Closes: #1125678.
+    - Fix stack contents leak in getnetbyaddr (CVE-2026-0915).  Closes:
+      #1125748.
+    - Fix bug in wordexp, which could return uninitialized memory when using
+      WRDE_REUSE together with WRDE_APPEND (CVE-2025-15281).  Closes: #1126266.
+    - Switch currency symbol for the bg_BG locale to euro.
+  * Revert addition of symbol versions used as ABI flags, as the
+    dpkg-shlibdeps version in trixie is not able to handle them (see
+    #1122107):
+    - local-revert-x86-64-add-GLIBC_ABI_DT_X86_64_PLT-version.diff
+    - local-revert-x86-64-add-GLIBC_ABI_GNU2_TLS-version.diff
+    - local-revert-i386-add-GLIBC_ABI_GNU2_TLS-version.diff
+    - local-revert-i386-add-GLIBC_ABI_GNU_TLS-version.diff
+
+ -- Aurelien Jarno <aurel32@debian.org>  Sun, 01 Mar 2026 21:10:06 +0100
 
 glibc (2.41-12+deb13u1) trixie; urgency=medium
 

@@ -1,5 +1,12 @@
 git-updates.diff
 
+# Revert addition of symbol versions used as ABI flags, as the dpkg-shlibdeps
+# version in trixie is not able to handle them (see #1122107)
+i386/local-revert-i386-add-GLIBC_ABI_GNU_TLS-version.diff
+i386/local-revert-i386-add-GLIBC_ABI_GNU2_TLS-version.diff
+amd64/local-revert-x86-64-add-GLIBC_ABI_DT_X86_64_PLT-version.diff
+amd64/local-revert-x86-64-add-GLIBC_ABI_GNU2_TLS-version.diff
+
 locale/check-unknown-symbols.diff
 locale/locale-print-LANGUAGE.diff
 locale/LC_IDENTIFICATION-optional-fields.diff

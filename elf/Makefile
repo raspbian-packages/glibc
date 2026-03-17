@@ -57,6 +57,7 @@ dl-routines = \
   dl-close \
   dl-debug \
   dl-debug-symbols \
+  dl-debug_state \
   dl-deps \
   dl-exception \
   dl-execstack \
@@ -418,7 +419,10 @@ tests += \
   tst-dlmopen1 \
   tst-dlmopen3 \
   tst-dlmopen4 \
+  tst-dlmopen4-nonpic \
+  tst-dlmopen4-pic \
   tst-dlopen-auditdup \
+  tst-dlopen-constructor-null \
   tst-dlopen-self \
   tst-dlopen-tlsmodid \
   tst-dlopen-tlsreinit1 \
@@ -493,6 +497,7 @@ tests += \
   tst-tls21 \
   tst-tls22 \
   tst-tls22-gnu2 \
+  tst-tls23 \
   tst-tlsalign \
   tst-tlsalign-extern \
   tst-tlsgap \
@@ -500,6 +505,7 @@ tests += \
   tst-unique2 \
   tst-unwind-ctor \
   tst-unwind-main \
+  tst-version-hash-zero \
   unload3 \
   unload4 \
   unload5 \
@@ -917,6 +923,8 @@ modules-names += \
   tst-dlmopen1mod \
   tst-dlopen-auditdup-auditmod \
   tst-dlopen-auditdupmod \
+  tst-dlopen-constructor-null-mod1 \
+  tst-dlopen-constructor-null-mod2 \
   tst-dlopen-sgid-mod \
   tst-dlopen-tlsreinitmod1 \
   tst-dlopen-tlsreinitmod2 \
@@ -1016,6 +1024,7 @@ modules-names += \
   tst-tls22-mod1-gnu2 \
   tst-tls22-mod2 \
   tst-tls22-mod2-gnu2 \
+  tst-tls23-mod \
   tst-tlsalign-lib \
   tst-tlsgap-mod0 \
   tst-tlsgap-mod1 \
@@ -1046,6 +1055,9 @@ modules-names += \
   tst-unique2mod1 \
   tst-unique2mod2 \
   tst-unwind-ctor-lib \
+  tst-version-hash-zero-linkmod \
+  tst-version-hash-zero-mod \
+  tst-version-hash-zero-refmod \
   unload2dep \
   unload2mod \
   unload3mod1 \
@@ -2242,6 +2254,13 @@ $(objpfx)tst-dlmopen3.out: $(objpfx)tst-dlmopen1mod.so
 
 $(objpfx)tst-dlmopen4.out: $(objpfx)tst-dlmopen1mod.so
 
+CFLAGS-tst-dlmopen4-pic.c += -fPIC
+$(objpfx)tst-dlmopen4-pic.out: $(objpfx)tst-dlmopen1mod.so
+
+CFLAGS-tst-dlmopen4-nonpic.c += -fno-pie
+tst-dlmopen4-nonpic-no-pie = yes
+$(objpfx)tst-dlmopen4-nonpic.out: $(objpfx)tst-dlmopen1mod.so
+
 $(objpfx)tst-audit1.out: $(objpfx)tst-auditmod1.so
 tst-audit1-ENV = LD_AUDIT=$(objpfx)tst-auditmod1.so
 
@@ -3392,6 +3411,13 @@ tst-tls22-mod1-gnu2.so-no-z-defs = yes
 tst-tls22-mod2.so-no-z-defs = yes
 tst-tls22-mod2-gnu2.so-no-z-defs = yes
 
+$(objpfx)tst-tls23: $(shared-thread-library)
+$(objpfx)tst-tls23.out: $(objpfx)tst-tls23-mod.so
+
+ifneq (no,$(have-test-mtls-traditional))
+CFLAGS-tst-tls23-mod.c += -mtls-dialect=$(have-test-mtls-traditional)
+endif
+
 ifeq ($(have-test-cc-cflags-fsemantic-interposition),yes)
 # Compiler may default to -fno-semantic-interposition.  These modules
 # must be compiled with -fsemantic-interposition.
@@ -3432,3 +3458,26 @@ $(objpfx)tst-nolink-libc-2.out: $(objpfx)tst-nolink-libc-2 $(objpfx)ld.so
 	$< > $@ 2>&1; $(evaluate-test)
 
 $(objpfx)tst-dlopen-sgid.out: $(objpfx)tst-dlopen-sgid-mod.so
+
+$(objpfx)tst-version-hash-zero.out: \
+  $(objpfx)tst-version-hash-zero-mod.so \
+  $(objpfx)tst-version-hash-zero-refmod.so
+LDFLAGS-tst-version-hash-zero-mod.so = \
+  -Wl,--version-script=tst-version-hash-zero-mod.map
+# The run-time test module tst-version-hash-zero-refmod.so is linked
+# to a stub module, tst-version-hash-zero-linkmod.so, to produce an
+# expected relocation error.
+$(objpfx)tst-version-hash-zero-refmod.so: \
+  $(objpfx)tst-version-hash-zero-linkmod.so
+LDFLAGS-tst-version-hash-zero-linkmod.so = \
+  -Wl,--version-script=tst-version-hash-zero-linkmod.map \
+  -Wl,--soname=tst-version-hash-zero-mod.so
+$(objpfx)tst-version-hash-zero-refmod.so: \
+  $(objpfx)tst-version-hash-zero-linkmod.so
+tst-version-hash-zero-refmod.so-no-z-defs = yes
+
+$(objpfx)tst-dlopen-constructor-null: \
+  $(objpfx)tst-dlopen-constructor-null-mod1.so \
+  $(objpfx)tst-dlopen-constructor-null-mod2.so
+$(objpfx)tst-dlopen-constructor-null-mod2.so: \
+  $(objpfx)tst-dlopen-constructor-null-mod1.so

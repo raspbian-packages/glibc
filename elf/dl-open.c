@@ -594,6 +594,16 @@ dl_open_worker_begin (void *a)
       if ((mode & RTLD_GLOBAL) && new->l_global == 0)
 	add_to_global_update (new);
 
+      /* It is not possible to run the ELF constructor for the new
+	 link map if it has not executed yet: If this dlopen call came
+	 from an ELF constructor that has not put that object into a
+	 consistent state, completing initialization for the entire
+	 scope will expose objects that have this partially
+	 constructed object among its dependencies to this
+	 inconsistent state.  This could happen even with a benign
+	 dlopen (NULL, RTLD_LAZY) call from a constructor of an
+	 initially loaded shared object.  */
+
       return;
     }
 
@@ -771,8 +781,7 @@ dl_open_worker (void *a)
 #ifdef SHARED
 	bool was_not_consistent  = r->r_state != RT_CONSISTENT;
 #endif
-	r->r_state = RT_CONSISTENT;
-	_dl_debug_state ();
+	_dl_debug_change_state (r, RT_CONSISTENT);
 	LIBC_PROBE (map_complete, 3, nsid, r, args->map);
 
 #ifdef SHARED
@@ -841,7 +850,7 @@ no more namespaces available for dlmopen()"));
 	}
 
       GL(dl_ns)[nsid].libc_map = NULL;
-      _dl_debug_update (nsid)->r_state = RT_CONSISTENT;
+      _dl_debug_change_state (_dl_debug_update (nsid), RT_CONSISTENT);
     }
   /* Never allow loading a DSO in a namespace which is empty.  Such
      direct placements is only causing problems.  Also don't allow
