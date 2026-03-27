@@ -24,7 +24,9 @@ int
 __tcsetattr (int fd, int optional_actions, const struct termios *termios_p)
 {
   struct termios2 k_termios;
+  struct termios2 k_termios_old;
   unsigned long cmd;
+  int retval, old_retval;
 
   memset (&k_termios, 0, sizeof k_termios);
 
@@ -74,7 +76,65 @@ __tcsetattr (int fd, int optional_actions, const struct termios *termios_p)
       k_termios.c_cflag &= ~CIBAUD;
     }
 
-  return INLINE_SYSCALL_CALL (ioctl, fd, cmd, &k_termios);
+  /* Preserve the previous termios state if we can. */
+  if (__ASSUME_TERMIOS2)
+    old_retval = INLINE_SYSCALL_CALL (ioctl, fd, TCGETS2, &k_termios_old);
+  else
+    old_retval = INLINE_SYSCALL_CALL (ioctl, fd, TCGETS, &k_termios_old);
+
+  retval = INLINE_SYSCALL_CALL (ioctl, fd, cmd, &k_termios);
+
+  /* The Linux kernel silently ignores the invalid c_cflag on pty.
+     We have to check it here, and return an error.  But if some other
+     setting was successfully changed, POSIX requires us to report
+     success. */
+  if ((retval == 0) && (old_retval == 0))
+    {
+      int save = errno;
+      if (__ASSUME_TERMIOS2)
+	retval = INLINE_SYSCALL_CALL (ioctl, fd, TCGETS2, &k_termios);
+      else
+	retval = INLINE_SYSCALL_CALL (ioctl, fd, TCGETS, &k_termios);
+
+      if (retval)
+	{
+	  /* We cannot verify if the setting is ok. We don't return
+	     an error (?). */
+	  __set_errno (save);
+	  retval = 0;
+	}
+      else if ((k_termios_old.c_oflag != k_termios.c_oflag) ||
+	       (k_termios_old.c_lflag != k_termios.c_lflag) ||
+	       (k_termios_old.c_line != k_termios.c_line) ||
+	       (k_termios_old.c_iflag != k_termios.c_iflag))
+	{
+	  /* Some other setting was successfully changed, which
+	     means we should not return an error. */
+	  __set_errno (save);
+	  retval = 0;
+	}
+      else if ((k_termios_old.c_cflag & ~(PARENB | CREAD | CSIZE)) !=
+	       (k_termios.c_cflag & ~(PARENB | CREAD | CSIZE)))
+	{
+	  /* Some other c_cflag setting was successfully changed, which
+	     means we should not return an error. */
+	  __set_errno (save);
+	  retval = 0;
+	}
+      else if ((termios_p->c_cflag & (PARENB | CREAD))
+			!= (k_termios.c_cflag & (PARENB | CREAD))
+	       || ((termios_p->c_cflag & CSIZE)
+		   && (termios_p->c_cflag & CSIZE)
+			!= (k_termios.c_cflag & CSIZE)))
+	{
+	  /* It looks like the Linux kernel silently changed the
+	     PARENB/CREAD/CSIZE bits in c_cflag. Report it as an
+	     error. */
+	  __set_errno (EINVAL);
+	  retval = -1;
+	}
+    }
+  return retval;
 }
 libc_hidden_def (__tcsetattr)
 
