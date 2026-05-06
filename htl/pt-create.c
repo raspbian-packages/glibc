@@ -25,6 +25,7 @@
 #include <atomic.h>
 #include <hurd/resource.h>
 #include <sys/single_threaded.h>
+#include <libioP.h>
 
 #include <pt-internal.h>
 #include <pthreadP.h>
@@ -237,6 +238,9 @@ __pthread_create_internal (struct __pthread **thread,
      the new thread might be passed its ID through pthread_create (to
      avoid calling pthread_self), read it before starting the thread.  */
   *thread = pthread;
+
+  if (start_routine)
+    _IO_enable_locks ();
 
   /* Schedule the new thread.  */
   err = __pthread_thread_start (pthread);
