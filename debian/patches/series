@@ -19,6 +19,7 @@ alpha/submitted-dl-support.diff
 alpha/local-string-functions.diff
 alpha/submitted-fts64.diff
 alpha/submitted-makecontext.diff
+amd64/local-revert-x86-64-add-GLIBC_ABI_DT_X86_64_PLT-version.diff
 arm/local-sigaction.diff
 arm/unsubmitted-ldso-multilib.diff
 arm/local-arm-futex.diff

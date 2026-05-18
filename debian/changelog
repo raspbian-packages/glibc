@@ -1,4 +1,4 @@
-glibc (2.36-9+rpi1+deb12u13) bookworm-staging; urgency=medium
+glibc (2.36-9+rpi1+deb12u14) bookworm-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -6,7 +6,42 @@ glibc (2.36-9+rpi1+deb12u13) bookworm-staging; urgency=medium
   [changes brought forward from 2.35-1+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Sun, 02 Oct 2022 17:46:25 +0000]
   * Remove valgrind breaks.
 
- -- Raspbian forward porter <root@raspbian.org>  Thu, 11 Sep 2025 22:03:57 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Mon, 18 May 2026 21:53:48 +0000
+
+glibc (2.36-9+deb12u14) bookworm; urgency=medium
+
+  * debian/patches/git-updates.diff: update from upstream stable branch:
+    - Fix a performance bottleneck with the Address Sanitizer (ASAN) on 32-bit
+      arm.
+    - Fix _dl_find_object when ld.so has LOAD segment gaps, causing wrong
+      backtrace unwinding. This affects at least arm64.
+    - Add GLIBC_ABI_DT_X86_64_PLT symbol version on amd64.
+    - Fix typo in wmemset ifunc selector that caused AVX2/AVX512 paths to be
+      skipped.
+    - Fix POWER optimized rawmemchr function on ppc64el.
+    - Optimize trylock for high cache contention workloads.
+    - Fix and integer overflow in _int_memalign leading to heap corruption
+      (CVE-2026-0861).  Closes: #1125678.
+    - Fix stack contents leak in getnetbyaddr (CVE-2026-0915).  Closes:
+      #1125748.
+    - Fix bug in wordexp, which could return uninitialized memory when using
+      WRDE_REUSE together with WRDE_APPEND (CVE-2025-15281).  Closes: #1126266.
+    - Fix invalid pointer arithmetic in ANSI_X3.110 iconv module
+    - Fix a typo preventing new tst-wordexp-reuse-mem to run
+    - Fix incorrect handling of DNS responses in gethostbyaddr and
+      gethostbyaddr_r (CVE-2026-4437).  Closes: #1131435.
+    - Fix invalid DNS hostnames returned by gethostbyaddr and
+      gethostbyaddr_r (CVE-2026-4438).  Closes: #1131887.
+    - Fix random failure of tst-link-map-contiguous-ldso.
+    - Fix a possible crash due to an assertion failure when converting
+      inputs from the IBM139x character sets (CVE-2026-4046).  Closes:
+      #1132499.
+  * d/p/amd64/local-revert-x86-64-add-GLIBC_ABI_DT_X86_64_PLT-version.diff:
+    revert addition of the GLIBC_ABI_DT_X86_64_PLT symbol version used as ABI
+    flag, as the dpkg-shlibdeps version in bookworm is not able to handle it
+    (see #1122107).
+
+ -- Aurelien Jarno <aurel32@debian.org>  Mon, 27 Apr 2026 22:14:33 +0200
 
 glibc (2.36-9+deb12u13) bookworm; urgency=medium
 

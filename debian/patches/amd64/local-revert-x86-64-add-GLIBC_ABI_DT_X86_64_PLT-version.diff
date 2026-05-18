@@ -1,0 +1,50 @@
+From cc8046413227196540f7f3106739e91e6e8a86d6 Mon Sep 17 00:00:00 2001
+From: Aurelien Jarno <aurelien@aurel32.net>
+Date: Sat, 7 Mar 2026 23:26:12 +0100
+Subject: [PATCH] Revert "x86-64: Add GLIBC_ABI_DT_X86_64_PLT [BZ #33212]"
+
+This reverts commit 99338e3841dd8dcc36e35c274e1063c33b5e5e87.
+---
+ sysdeps/x86_64/Makefile | 9 ---------
+ sysdeps/x86_64/Versions | 5 -----
+ 2 files changed, 14 deletions(-)
+
+diff --git a/sysdeps/x86_64/Makefile b/sysdeps/x86_64/Makefile
+index f173c5ef4a..c19bef2dec 100644
+--- a/sysdeps/x86_64/Makefile
++++ b/sysdeps/x86_64/Makefile
+@@ -190,15 +190,6 @@ endif
+ 
+ tests-internal += tst-x86-64-tls-1
+ 
+-tests-special += $(objpfx)check-dt-x86-64-plt.out
+-
+-$(objpfx)check-dt-x86-64-plt.out: $(common-objpfx)libc.so
+-       LC_ALL=C $(READELF) -V -W $< \
+-               | sed -ne '/.gnu.version_d/, /.gnu.version_r/ p' \
+-               | grep GLIBC_ABI_DT_X86_64_PLT > $@; \
+-       $(evaluate-test)
+-generated += check-dt-x86-64-plt.out
+-
+ endif # $(subdir) == elf
+ 
+ ifeq ($(subdir),csu)
+diff --git a/sysdeps/x86_64/Versions b/sysdeps/x86_64/Versions
+index 6a989ad3b3..e94758b236 100644
+--- a/sysdeps/x86_64/Versions
++++ b/sysdeps/x86_64/Versions
+@@ -5,11 +5,6 @@ libc {
+   GLIBC_2.13 {
+     __fentry__;
+   }
+-  GLIBC_ABI_DT_X86_64_PLT {
+-    # This symbol is used only for empty version map and will be removed
+-    # by scripts/versions.awk.
+-    __placeholder_only_for_empty_version_map;
+-  }
+ }
+ libm {
+   GLIBC_2.1 {
+-- 
+2.51.0
+
