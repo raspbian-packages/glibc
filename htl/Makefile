@@ -109,6 +109,8 @@ libpthread-routines := pt-attr pt-attr-destroy pt-attr-getdetachstate	    \
 									    \
 	pt-block							    \
 	pt-timedblock							    \
+	pt-block-intr							    \
+	pt-timedblock-intr						    \
 	pt-wakeup							    \
 	pt-docancel							    \
 	pt-sysdep							    \
