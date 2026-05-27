@@ -1399,7 +1399,7 @@ envsubst:
   /* Is it a numeric parameter? */
   else if (isdigit (env[0]))
     {
-      int n = atoi (env);
+      unsigned long n = strtoul (env, NULL, 10);
 
       if (n >= __libc_argc)
 	/* Substitute NULL. */
@@ -2220,7 +2220,9 @@ wordexp (const char *words, wordexp_t *pwordexp, int flags)
     {
       /* Minimal implementation of WRDE_REUSE for now */
       wordfree (pwordexp);
+      old_word.we_wordc = 0;
       old_word.we_wordv = NULL;
+      pwordexp->we_wordc = 0;
     }
 
   if ((flags & WRDE_APPEND) == 0)
