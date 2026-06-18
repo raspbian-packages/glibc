@@ -1,0 +1,140 @@
+commit 4932f9d1fcc0b3375b8ea39c8dc7abc542932f56
+Author: Mike Kelly <mike@weatherwax.co.uk>
+Date:   Wed Apr 1 20:49:32 2026 +0100
+
+    hurd: alterations to MSG_EXAMINE interface (intr-msg.h)
+    
+    MSG_EXAMINE has been broadened to allow the signal thread (for
+    example) to access additional arguments that are passed to
+    interruptible RPCs in other threads. All architecture specific
+    variants of intr-msg.h now comply with the revised interface and the
+    single user of MSG_EXAMINE (report-wait.c) adjusted accordingly.
+    Message-ID: <20260401194948.90428-2-mike@weatherwax.co.uk>
+
+diff --git a/hurd/report-wait.c b/hurd/report-wait.c
+index 3f141345f4..703482c6cc 100644
+--- a/hurd/report-wait.c
++++ b/hurd/report-wait.c
+@@ -155,16 +155,29 @@ _S_msg_report_wait (mach_port_t msgport, thread_t thread,
+ 	  assert (count == MACHINE_THREAD_STATE_COUNT);
+ 	  if (SYSCALL_EXAMINE (&state, msgid))
+ 	    {
++	      mach_msg_header_t* msghdr;
+ 	      mach_port_t send_port, rcv_port;
++	      mach_msg_size_t rcv_sz;
+ 	      mach_msg_option_t option;
+ 	      mach_msg_timeout_t timeout;
+ 
+ 	      /* Blocked in a system call.  */
+ 	      if (*msgid == -25
+ 		  /* mach_msg system call.  Examine its parameters.  */
+-		  && MSG_EXAMINE (&state, msgid, &rcv_port, &send_port,
++		  && MSG_EXAMINE (&state, &msghdr, &rcv_port, &rcv_sz,
+ 				  &option, &timeout) == 0)
+ 		{
++		  if (msghdr != NULL)
++		    {
++		      send_port = msghdr->msgh_remote_port;
++		      *msgid = msghdr->msgh_id;
++		    }
++		  else
++		    {
++		      send_port = MACH_PORT_NULL;
++		      *msgid = 0;
++		    }
++
+ 		  if (send_port != MACH_PORT_NULL && *msgid != 0)
+ 		    {
+ 		      /* For the normal case of RPCs, we consider the
+diff --git a/sysdeps/mach/hurd/i386/intr-msg.h b/sysdeps/mach/hurd/i386/intr-msg.h
+index e8acf63bd0..5b9a35d526 100644
+--- a/sysdeps/mach/hurd/i386/intr-msg.h
++++ b/sysdeps/mach/hurd/i386/intr-msg.h
+@@ -106,30 +106,29 @@ struct mach_msg_trap_args
+ 
+ 
+ /* This cannot be an inline function because it calls setjmp.  */
+-#define MSG_EXAMINE(state, msgid, rcvname, send_name, opt, tmout)	      \
++#define MSG_EXAMINE(state, msghdr, rcvname, rcvsz, opt, tmout)		      \
+ ({									      \
+   const struct mach_msg_trap_args *args = (const void *) (state)->uesp;	      \
+-  mach_msg_header_t *msg;						      \
+-  _hurdsig_catch_memory_fault (args) ? -1 :				      \
+-    ({									      \
+-      msg = args->msg;							      \
++  int ret = _hurdsig_catch_memory_fault (args) ? -1 : 0;		      \
++  if (ret == 0)								      \
++    {									      \
++      mach_msg_header_t *msg = args->msg;				      \
++      *(msghdr) = msg;							      \
+       *(opt) = args->option;						      \
+       *(tmout) = args->timeout;						      \
+       *(rcvname) = args->rcv_name;					      \
++      *(rcvsz) = args->rcv_size;					      \
+       _hurdsig_end_catch_fault ();					      \
+-      if (msg == 0)							      \
++      if (msg != NULL)							      \
+ 	{								      \
+-	  *(send_name) = MACH_PORT_NULL;				      \
+-	  *(msgid) = 0;							      \
++	  ret = _hurdsig_catch_memory_fault (msg) ? -1 : 0;		      \
++	  if (ret == 0)							      \
++	    {								      \
++	      /* Access memory at msg to ensure validity */		      \
++	      *((volatile mach_msg_id_t *) &msg->msgh_id) = msg->msgh_id;     \
++	      _hurdsig_end_catch_fault ();				      \
++	    }								      \
+ 	}								      \
+-      else								      \
+-	{								      \
+-	  if (_hurdsig_catch_memory_fault (msg))			      \
+-	    return -1;							      \
+-	  *(send_name) = msg->msgh_remote_port;				      \
+-	  *(msgid) = msg->msgh_id;					      \
+-	  _hurdsig_end_catch_fault ();					      \
+-	}								      \
+-      0;								      \
+-    });									      \
++    }									      \
++    ret;								      \
+ })
+diff --git a/sysdeps/mach/hurd/x86_64/intr-msg.h b/sysdeps/mach/hurd/x86_64/intr-msg.h
+index 82cc78eeb5..6f0ea90ded 100644
+--- a/sysdeps/mach/hurd/x86_64/intr-msg.h
++++ b/sysdeps/mach/hurd/x86_64/intr-msg.h
+@@ -92,27 +92,24 @@
+ 
+ 
+ /* This cannot be an inline function because it calls setjmp.  */
+-#define MSG_EXAMINE(state, msgid, rcvname, send_name, opt, tmout)	      \
++#define MSG_EXAMINE(state, msghdr, rcvname, rcvsz, opt, tmout)  	      \
+ ({									      \
+   int ret = 0;								      \
+   const struct machine_thread_state *s = (state);			      \
+-  const mach_msg_header_t *msg = (const void *) s->rdi;			      \
++  mach_msg_header_t *msg = (void *) s->rdi;				      \
++  *(msghdr) = msg;   							      \
+   *(rcvname) = s->r8;							      \
+   *(opt) = s->rsi;							      \
+   *(tmout) = s->r9;							      \
+-  if (msg == 0)								      \
+-    {									      \
+-      *(send_name) = MACH_PORT_NULL;					      \
+-      *(msgid) = 0;							      \
+-    }									      \
+-  else									      \
++  *(rcvsz) = s->r10;							      \
++  if (msg != NULL)							      \
+     {									      \
+       ret = _hurdsig_catch_memory_fault (msg) ? -1 : 0;			      \
+       if (ret == 0)							      \
+         {								      \
+-          *(send_name) = msg->msgh_remote_port;				      \
+-          *(msgid) = msg->msgh_id;					      \
+-          _hurdsig_end_catch_fault ();					      \
++	    /* Access memory at msg to ensure validity */		      \
++	    *((volatile mach_msg_id_t *) &msg->msgh_id) = msg->msgh_id;       \
++	    _hurdsig_end_catch_fault ();				      \
+ 	}								      \
+     }									      \
+   ret;									      \
