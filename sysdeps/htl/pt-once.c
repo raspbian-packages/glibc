@@ -58,5 +58,8 @@ libc_hidden_def (__pthread_once)
 versioned_symbol (libc, __pthread_once, pthread_once, GLIBC_2_42);
 
 #if OTHER_SHLIB_COMPAT (libpthread, GLIBC_2_12, GLIBC_2_42)
+compat_symbol (libpthread, __pthread_once, pthread_once, GLIBC_2_41);
+#endif
+#if OTHER_SHLIB_COMPAT (libpthread, GLIBC_2_12, GLIBC_2_42)
 compat_symbol (libpthread, __pthread_once, pthread_once, GLIBC_2_12);
 #endif
