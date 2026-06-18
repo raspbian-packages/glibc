@@ -1,4 +1,4 @@
-glibc (2.31-13+rpi1+deb11u13) bullseye-staging; urgency=medium
+glibc (2.31-13+rpi1+deb11u14) bullseye-staging; urgency=medium
 
   [changes brought forward from 2.25-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 29 Nov 2017 03:00:21 +0000]
   * Disable testsuite.
@@ -13,7 +13,25 @@ glibc (2.31-13+rpi1+deb11u13) bullseye-staging; urgency=medium
   * Change mode on sysdeps/x86_64/configure to 644, same dgit issue
     as above.
  
- -- Raspbian forward porter <root@raspbian.org>  Fri, 30 May 2025 00:15:28 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 18 Jun 2026 16:12:55 +0000
+
+glibc (2.31-13+deb11u14) bullseye-security; urgency=medium
+
+  * Non-maintainer upload by the LTS Team.
+  * debian/patches/git-updates.diff: update from upstream stable branch
+    (4 commits total, including 2 CVE fixes):
+    - aarch64: MTE compatible strncmp
+    - nptl: Optimize trylock for high cache contention workloads
+    - memalign: reinstate alignment overflow check (CVE-2026-0861)
+    - posix: Reset wordexp_t fields with WRDE_REUSE (CVE-2025-15281)
+  * Backport patches to fix 3 CVEs:
+    - CVE-2025-8058: posix: Fix double-free after allocation failure in
+      regcomp
+    - CVE-2026-0915: resolv: Fix NSS DNS backend for getnetbyaddr
+    - CVE-2026-4046: iconvdata: Use pending character state in IBM1390,
+      IBM1399 character sets
+
+ -- Arnaud Rebillout <arnaudr@debian.org>  Wed, 27 May 2026 11:49:44 +0700
 
 glibc (2.31-13+deb11u13) bullseye-security; urgency=high
 
