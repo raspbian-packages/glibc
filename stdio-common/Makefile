@@ -260,6 +260,8 @@ tests := \
   tllformat \
   tst-bz11319 \
   tst-bz11319-fortify2 \
+  tst-bz12701-c \
+  tst-bz12701-c2 \
   tst-cookie \
   tst-dprintf-length \
   tst-fclose-devzero \
@@ -347,6 +349,7 @@ tests := \
   tst-vfprintf-user-type \
   tst-vfprintf-width-i18n \
   tst-vfprintf-width-prec-alloc \
+  tst-vfscanf-bz34008 \
   tst-wc-printf \
   tstdiomisc \
   tstgetln \
@@ -561,6 +564,9 @@ tst-printf-bz18872-ENV = MALLOC_TRACE=$(objpfx)tst-printf-bz18872.mtrace \
 			LD_PRELOAD=$(common-objpfx)/malloc/libc_malloc_debug.so
 tst-vfprintf-width-prec-ENV = \
   MALLOC_TRACE=$(objpfx)tst-vfprintf-width-prec.mtrace \
+  LD_PRELOAD=$(common-objpfx)/malloc/libc_malloc_debug.so
+tst-vfscanf-bz34008-ENV = \
+  MALLOC_CHECK_=3 \
   LD_PRELOAD=$(common-objpfx)/malloc/libc_malloc_debug.so
 tst-printf-bz25691-ENV = \
   MALLOC_TRACE=$(objpfx)tst-printf-bz25691.mtrace \
