@@ -19,10 +19,10 @@
 #include <ldsodefs.h>
 
 int
-_dl_make_stack_executable (void **stack_endp)
+_dl_make_stack_executable (const void *stack_endp)
 {
   /* This gives us the highest/lowest page that needs to be changed.  */
-  uintptr_t page = ((uintptr_t) *stack_endp
+  uintptr_t page = ((uintptr_t) stack_endp
 		    & -(intptr_t) GLRO(dl_pagesize));
 
   if (__mprotect ((void *) page, GLRO(dl_pagesize),
@@ -34,9 +34,6 @@ _dl_make_stack_executable (void **stack_endp)
 #endif
 		  ) != 0)
     return errno;
-
-  /* Clear the address.  */
-  *stack_endp = NULL;
 
   /* Remember that we changed the permission.  */
   GL(dl_stack_flags) |= PF_X;

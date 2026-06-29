@@ -2,11 +2,15 @@ long-double-fcts = yes
 
 ifeq (yes,$(aarch64-bti))
 # Mark linker output BTI compatible, it warns on non-BTI inputs.
+# Do not do this for conform tests because they may not be compiled
+# with the appropriate compiler flags.
+ifneq ($(subdir),conform)
 sysdep-LDFLAGS += -Wl,-z,force-bti
 # Make warnings fatal outside the test system.
 LDFLAGS-lib.so += -Wl,--fatal-warnings
 LDFLAGS-rtld += -Wl,-z,force-bti,--fatal-warnings
-endif
+endif # $(subdir) != conform
+endif # $(aarch64-bit)
 
 ifeq ($(subdir),elf)
 sysdep-dl-routines += \
@@ -75,7 +79,19 @@ sysdep_routines += \
   __alloc_gcs
 
 tests += \
-  tst-sme-jmp
+  tst-sme-jmp \
+  tst-sme-signal \
+  tst-sme-za-state \
+  # tests
+tests-internal += \
+  tst-sme-clone \
+  tst-sme-clone3 \
+  tst-sme-fork \
+  tst-sme-vfork \
+  # tests-internal
+
+$(objpfx)tst-sme-clone3: $(objpfx)clone3.o $(objpfx)__arm_za_disable.o
+
 endif
 
 ifeq ($(subdir),malloc)

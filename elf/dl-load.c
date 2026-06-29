@@ -921,8 +921,7 @@ _dl_notify_new_object (int mode, Lmid_t nsid, struct link_map *l)
       /* Notify the debugger we have added some objects.  We need to
 	 call _dl_debug_initialize in a static program in case dynamic
 	 linking has not been used before.  */
-      r->r_state = RT_ADD;
-      _dl_debug_state ();
+      _dl_debug_change_state (r, RT_ADD);
       LIBC_PROBE (map_start, 2, nsid, r);
     }
   else
@@ -945,7 +944,7 @@ struct link_map *
 _dl_map_object_from_fd (const char *name, const char *origname, int fd,
 			struct filebuf *fbp, char *realname,
 			struct link_map *loader, int l_type, int mode,
-			void **stack_endp, Lmid_t nsid)
+			const void *stack_endp, Lmid_t nsid)
 {
   struct link_map *l = NULL;
   const ElfW(Ehdr) *header;
@@ -2180,7 +2179,7 @@ _dl_map_object (struct link_map *loader, const char *name,
 
   void *stack_end = __libc_stack_end;
   return _dl_map_object_from_fd (name, origname, fd, &fb, realname, loader,
-				 type, mode, &stack_end, nsid);
+				 type, mode, stack_end, nsid);
 }
 
 struct add_path_state
