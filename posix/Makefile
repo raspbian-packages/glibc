@@ -327,6 +327,7 @@ tests := \
   tst-wait3 \
   tst-wait4 \
   tst-waitid \
+  tst-wordexp-append \
   tst-wordexp-nocmd \
   tst-wordexp-reuse \
   tstgetopt \
@@ -357,6 +358,7 @@ tests-internal := \
 tests-container := \
   bug-ga2 \
   tst-vfork3 \
+  tst-wordexp-tilde \
   # tests-container
 
 tests-time64 := \
@@ -499,7 +501,7 @@ tests-special += \
   $(objpfx)tst-pcre-mem.out \
   $(objpfx)tst-rxspencer-no-utf8-mem.out \
   $(objpfx)tst-vfork3-mem.out \
-  $(objpfx)tst-wordexp-reuse.out \
+  $(objpfx)tst-wordexp-reuse-mem.out \
   # tests-special
 endif
 endif
