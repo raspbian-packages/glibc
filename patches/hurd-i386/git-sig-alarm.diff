@@ -1,0 +1,27 @@
+commit 1d19ddf714f5e7afeaf2ef538417bbf681c5d4e8
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Sun Mar 1 17:01:25 2026 +0100
+
+    hurd: Sign-extend the sigcode passed to msg_sig_post
+    
+    The negative sigcodes are reserved for SI_* values, we need to keep them
+    negative when extending to exc_subcode's long type.
+    
+    This fixes the comparison in HURD_PREEMPT_SIGNAL_P for the signal preemptor
+    for setitimer, thus fixing considering it.it_interval.
+    
+    Reported-by: David Yang <mmyangfl@gmail.com>
+
+diff --git a/hurd/hurdsig.c b/hurd/hurdsig.c
+index 91e664d0f1..b202d1fdfc 100644
+--- a/hurd/hurdsig.c
++++ b/hurd/hurdsig.c
+@@ -1392,7 +1392,7 @@ _S_msg_sig_post (mach_port_t me,
+   if (err = signal_allowed (signo, refport))
+     return err;
+ 
+-  d.code = d.exc_subcode = sigcode;
++  d.code = d.exc_subcode = (int) sigcode;
+   d.exc = 0;
+ 
+   /* Post the signal to a global receiver thread (or mark it pending in
