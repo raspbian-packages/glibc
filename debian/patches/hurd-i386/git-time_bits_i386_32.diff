@@ -1,0 +1,117 @@
+commit 47dd7e0dacf50c740b04c78d3f85fbf983d53aba
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Thu Aug 27 00:29:48 2026 +0200
+
+    hurd: Set _TIME_BITS=32 for installed programs on i386/Hurd
+    
+    We do not plan to take the time to implement the compatibility layer.
+    Other 32b Hurd ports will be able to directly use 64b time_t.
+
+diff --git a/Makeconfig b/Makeconfig
+index 135a98b697..a91a5c81a4 100644
+--- a/Makeconfig
++++ b/Makeconfig
+@@ -959,8 +959,9 @@ endif
+ installed-modules = nonlib nscd ldconfig locale_programs \
+ 		    iconvprogs libnss_files libnss_compat libnss_db libnss_hesiod \
+ 		    libutil libpcprofile libnsl
+++time64-flags = -D_TIME_BITS=64
+ +extra-time-flags = $(if $(filter $(installed-modules),\
+-                           $(in-module)),-D_TIME_BITS=64 -D_FILE_OFFSET_BITS=64)
++                           $(in-module)),$(+time64-flags) -D_FILE_OFFSET_BITS=64)
+ 
+ # We might want to compile with some stack-protection flag.
+ ifneq ($(stack-protector),)
+diff --git a/Makerules b/Makerules
+index c0ade8b30c..6f2c9088b1 100644
+--- a/Makerules
++++ b/Makerules
+@@ -1267,7 +1267,7 @@ vpath %.input $(sysdirs)
+ include $(o-iterator)
+ define o-iterator-doit
+ $(foreach f,$(tests-time64) $(xtests-time64),\
+-	    $(objpfx)$(f)$(o)): CFLAGS += -D_TIME_BITS=64 -D_FILE_OFFSET_BITS=64
++	    $(objpfx)$(f)$(o)): CFLAGS += $(+time64-flags) -D_FILE_OFFSET_BITS=64
+ endef
+ object-suffixes-left := $(all-object-suffixes)
+ include $(o-iterator)
+diff --git a/io/Makefile b/io/Makefile
+index 2a5b4dcb65..9e6c7ab90f 100644
+--- a/io/Makefile
++++ b/io/Makefile
+@@ -309,7 +309,7 @@ tst-statvfs-ARGS = $(objpfx)tst-statvfs tst-statvfs.c /tmp
+ 
+ tst-open-tmpfile-ARGS = --test-dir=$(objpfx)
+ 
+-CFLAGS-ftwtest-time64.c += -D_TIME_BITS=64 -D_FILE_OFFSET_BITS=64
++CFLAGS-ftwtest-time64.c += $(+time64-flags) -D_FILE_OFFSET_BITS=64
+ 
+ ifeq ($(run-built-tests),yes)
+ $(objpfx)ftwtest.out: ftwtest-sh $(objpfx)ftwtest
+diff --git a/login/Makefile b/login/Makefile
+index edc95c0bde..c623341388 100644
+--- a/login/Makefile
++++ b/login/Makefile
+@@ -89,8 +89,8 @@ tests := \
+   tst-utmpx \
+   # tests
+ 
+-CFLAGS-tst-utmp-size-64.c += -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
+-CFLAGS-tst-utmp-unsigned-64.c += -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
++CFLAGS-tst-utmp-size-64.c += -D_FILE_OFFSET_BITS=64 $(+time64-flags)
++CFLAGS-tst-utmp-unsigned-64.c += -D_FILE_OFFSET_BITS=64 $(+time64-flags)
+ 
+ # Empty compatibility library for old binaries.
+ extra-libs      := libutil
+diff --git a/support/Makefile b/support/Makefile
+index 87eeb8199f..737aa38759 100644
+--- a/support/Makefile
++++ b/support/Makefile
+@@ -298,22 +298,22 @@ CFLAGS-timespec.c += -fexcess-precision=standard
+ CFLAGS-timespec-time64.c += -fexcess-precision=standard
+ 
+ # Ensure that general support files use 64-bit time_t
+-CFLAGS-delayed_exit.c += -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
+-CFLAGS-shell-container.c += -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
+-CFLAGS-support_can_chroot.c += -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
+-CFLAGS-support_copy_file.c += -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
+-CFLAGS-support_copy_file_range.c += -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
+-CFLAGS-support_descriptor_supports_holes.c += -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
+-CFLAGS-support_descriptors.c += -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
+-CFLAGS-support_process_state.c += -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
+-CFLAGS-support_stat_nanoseconds.c += -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
+-CFLAGS-support_subprocess.c += -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
+-CFLAGS-support_test_main.c += -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
+-CFLAGS-test-container.c += -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
+-CFLAGS-xmkdirp.c += -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
++CFLAGS-delayed_exit.c += -D_FILE_OFFSET_BITS=64 $(+time64-flags)
++CFLAGS-shell-container.c += -D_FILE_OFFSET_BITS=64 $(+time64-flags)
++CFLAGS-support_can_chroot.c += -D_FILE_OFFSET_BITS=64 $(+time64-flags)
++CFLAGS-support_copy_file.c += -D_FILE_OFFSET_BITS=64 $(+time64-flags)
++CFLAGS-support_copy_file_range.c += -D_FILE_OFFSET_BITS=64 $(+time64-flags)
++CFLAGS-support_descriptor_supports_holes.c += -D_FILE_OFFSET_BITS=64 $(+time64-flags)
++CFLAGS-support_descriptors.c += -D_FILE_OFFSET_BITS=64 $(+time64-flags)
++CFLAGS-support_process_state.c += -D_FILE_OFFSET_BITS=64 $(+time64-flags)
++CFLAGS-support_stat_nanoseconds.c += -D_FILE_OFFSET_BITS=64 $(+time64-flags)
++CFLAGS-support_subprocess.c += -D_FILE_OFFSET_BITS=64 $(+time64-flags)
++CFLAGS-support_test_main.c += -D_FILE_OFFSET_BITS=64 $(+time64-flags)
++CFLAGS-test-container.c += -D_FILE_OFFSET_BITS=64 $(+time64-flags)
++CFLAGS-xmkdirp.c += -D_FILE_OFFSET_BITS=64 $(+time64-flags)
+ # This is required to get an mkstemp which can create large files on some
+ # 32-bit platforms.
+-CFLAGS-temp_file.c += -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
++CFLAGS-temp_file.c += -D_FILE_OFFSET_BITS=64 $(+time64-flags)
+ 
+ ifeq (,$(CXX))
+ LINKS_DSO_PROGRAM = links-dso-program-c
+diff --git a/sysdeps/mach/hurd/i386/Makefile b/sysdeps/mach/hurd/i386/Makefile
+index 8fe93ef27a..f1404461e7 100644
+--- a/sysdeps/mach/hurd/i386/Makefile
++++ b/sysdeps/mach/hurd/i386/Makefile
+@@ -1,3 +1,6 @@
++# hurd-i386 does not support 64b time_t
+++time64-flags = -D_TIME_BITS=32
++
+ ifeq ($(subdir),csu)
+ ifeq (yes,$(build-shared))
+ sysdep_routines += divdi3
