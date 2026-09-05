@@ -33,19 +33,10 @@
 #include <array_length.h>
 #include <dl-minimal-malloc.h>
 #include <dl-symbol-redir-ifunc.h>
+#include <malloc-hugepages.h>
 
 #define TUNABLES_INTERNAL 1
 #include "dl-tunables.h"
-
-/* The function might be called before the process is self-relocated.  */
-static size_t
-__attribute_optimization_barrier__
-_dl_strlen (const char *s)
-{
-  const char *p = s;
-  for (; *s != '\0'; s++);
-  return s - p;
-}
 
 static char **
 get_next_env (char **envp, char **name, char **val, char ***prev_envp)
@@ -306,6 +297,10 @@ __tunables_init (char **envp)
   char *envval = NULL;
   char **prev_envp = envp;
 
+  /* Default to glibc.malloc.hugetlb=1 if DEFAULT_THP_PAGESIZE is non-zero.  */
+  if (DEFAULT_THP_PAGESIZE > 0)
+    TUNABLE_SET (glibc, malloc, hugetlb, 1);
+
   /* Ignore tunables for AT_SECURE programs.  */
   if (__libc_enable_secure)
     return;
@@ -335,10 +330,8 @@ __tunables_init (char **envp)
 	  if (tunable_is_name (name, envname))
 	    {
 	      /* The environment variable is always null-terminated.  */
-	      size_t envvallen = _dl_strlen (envval);
-
 	      tunables_env_alias[i] =
-		(struct tunable_toset_t) { cur, envval, envvallen };
+		(struct tunable_toset_t) { cur, envval, strlen (envval) };
 	      break;
 	    }
 	}
