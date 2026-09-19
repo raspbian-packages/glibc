@@ -1,0 +1,6 @@
+Version: 5
+Source: https://sourceware.org/git/glibc.git
+Matching-Pattern: refs/tags/glibc-(\d+\.\d+(?:\.\d{1,2})?)$
+Mode: git
+Git-Mode: shallow
+Pgp-Mode: none
