@@ -1,0 +1,20 @@
+commit 493fac9ac87531cd77df6fd6ba039ed434fb3ff4
+Author: Adhemerval Zanella <adhemerval.zanella@linaro.org>
+Date:   Wed Feb 25 15:35:41 2026 -0300
+
+    elf: Fix tst-link-map-contiguous-ldso build for Hurd
+    
+    Checked with a make check for i686-gnu.
+
+diff --git a/elf/tst-link-map-contiguous-ldso.c b/elf/tst-link-map-contiguous-ldso.c
+index 4d04d37581..1991cd7ebb 100644
+--- a/elf/tst-link-map-contiguous-ldso.c
++++ b/elf/tst-link-map-contiguous-ldso.c
+@@ -28,6 +28,7 @@
+ #include <support/xunistd.h>
+ #include <support/xstdio.h>
+ #include <sys/mman.h>
++#include <string.h>
+ #include <unistd.h>
+ 
+ /* Slow path in case we cannot find a gap with mmap (when the runtime has

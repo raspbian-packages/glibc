@@ -1,0 +1,44 @@
+commit a367c5da61220542b7bdd9c4365c8e6d56d0ab2f
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Sun Aug 23 17:22:12 2026 +0200
+
+    hurd: Make __pthread_timedblock update relative timeout on signal
+    
+    We should not let __mach_msg handle it, otherwise if we keep receiving
+    signals faster than the computed relative timeout, we will never time out.
+
+diff --git a/sysdeps/mach/htl/pt-timedblock.c b/sysdeps/mach/htl/pt-timedblock.c
+index 06244bde6c..2b51f532bd 100644
+--- a/sysdeps/mach/htl/pt-timedblock.c
++++ b/sysdeps/mach/htl/pt-timedblock.c
+@@ -40,6 +40,7 @@ __pthread_timedblock (struct __pthread *thread,
+   mach_msg_timeout_t timeout;
+   struct timespec now;
+ 
++retry:
+   /* We have an absolute time and now we have to convert it to a
+      relative time.  Arg.  */
+ 
+@@ -58,13 +59,19 @@ __pthread_timedblock (struct __pthread *thread,
+     /* Need to do a carry.  */
+     timeout -= (now.tv_nsec - abstime->tv_nsec + 999999) / 1000000;
+ 
+-  err = __mach_msg (&msg, MACH_RCV_MSG | MACH_RCV_TIMEOUT | MSG_OPTIONS, 0,
++  err = __mach_msg (&msg, MACH_RCV_MSG | MACH_RCV_TIMEOUT | MSG_OPTIONS | MACH_RCV_INTERRUPT, 0,
+ 		    sizeof msg, thread->wakeupmsg.msgh_remote_port,
+ 		    timeout, MACH_PORT_NULL);
+   if (err == EMACH_RCV_TIMED_OUT)
+     return ETIMEDOUT;
+-  if ((MSG_OPTIONS & MACH_RCV_INTERRUPT) && err == MACH_RCV_INTERRUPTED)
+-    return EINTR;
++  if (err == MACH_RCV_INTERRUPTED)
++    {
++      if ((MSG_OPTIONS & MACH_RCV_INTERRUPT))
++	return EINTR;
++      else
++	/* Re-convert absolute time to relative time.  */
++	goto retry;
++    }
+ 
+   assert_perror (err);
+   return 0;
