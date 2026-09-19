@@ -183,6 +183,20 @@ generated += $(inlines:=.c)
 CFLAGS-hurdstartup.o = $(no-stack-protector)
 CFLAGS-RPC_exec_startup_get_info.o = $(no-stack-protector)
 
+CFLAGS-RPC_file_record_lock.c = -DTypeCheck=0
+CFLAGS-RPC_file_statfs.c = -DTypeCheck=0
+CFLAGS-RPC_file_utimens.c = -DTypeCheck=0
+CFLAGS-RPC_file_utimes.c = -DTypeCheck=0
+CFLAGS-RPC_io_select_timeout.c = -DTypeCheck=0
+CFLAGS-RPC_io_select_timeout_request.c = -DTypeCheck=0
+CFLAGS-RPC_io_select_timeout_request.os= -DTypeCheck=0
+CFLAGS-RPC_io_stat.c = -DTypeCheck=0
+CFLAGS-RPC_io_stat_reply.c = -DTypeCheck=0
+CFLAGS-RPC_login_get_idle_time.c = -DTypeCheck=0
+CFLAGS-RPC_proc_getchildren_rusage.c = -DTypeCheck=0
+CFLAGS-RPC_proc_wait.c = -DTypeCheck=0
+CFLAGS-RPC_proc_waitid.c = -DTypeCheck=0
+
 # Make it simpler to unwind over INTR_MSG_TRAP
 CFLAGS-intr-msg.o = -fno-omit-frame-pointer
 CFLAGS-intr-msg.os = -fno-omit-frame-pointer
