@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <limits.h>
 #include <nss_files.h>
 
 /* These symbols are defined by the including source file:
@@ -157,7 +158,12 @@ strtou32 (const char *nptr, char **endptr, int base)
 # define INT_FIELD(variable, terminator_p, swallow, base, convert)	      \
   {									      \
     char *endp;								      \
-    variable = convert (strtou32 (line, &endp, base));			      \
+    unsigned long long tmp;						      \
+    /* Prevent from 32-bit overflow.  */				      \
+    tmp = __strtoull_internal (line, &endp, base, 0);			      \
+    if (tmp > UINT_MAX)						      \
+      return 0;								      \
+    variable = convert ((unsigned long int)tmp);			      \
     if (endp == line)							      \
       return 0;								      \
     else if (terminator_p (*endp))					      \
@@ -172,10 +178,15 @@ strtou32 (const char *nptr, char **endptr, int base)
 # define INT_FIELD_MAYBE_NULL(variable, terminator_p, swallow, base, convert, default)	      \
   {									      \
     char *endp;								      \
+    unsigned long long tmp;						      \
     if (*line == '\0')							      \
       /* We expect some more input, so don't allow the string to end here. */ \
       return 0;								      \
-    variable = convert (strtou32 (line, &endp, base));			      \
+    /* Prevent from 32-bit overflow.  */				      \
+    tmp = __strtoull_internal (line, &endp, base, 0);		      \
+    if (tmp > UINT_MAX)						      \
+      return 0;								      \
+    variable = convert ((unsigned long int)tmp);			      \
     if (endp == line)							      \
       variable = default;						      \
     if (terminator_p (*endp))						      \
