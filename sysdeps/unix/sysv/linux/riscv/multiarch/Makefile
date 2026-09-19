@@ -9,4 +9,7 @@ sysdep_routines += \
   # sysdep_routines
 
 CFLAGS-memcpy_noalignment.c += -mno-strict-align
+# Called during static initialization
+CFLAGS-memset-generic.c += $(no-stack-protector)
+CFLAGS-memcpy-generic.c += $(no-stack-protector)
 endif
