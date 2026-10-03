@@ -2330,6 +2330,7 @@ GLIBC_2.41 pthread_mutexattr_setpshared F
 GLIBC_2.41 pthread_mutexattr_setrobust F
 GLIBC_2.41 pthread_mutexattr_setrobust_np F
 GLIBC_2.41 pthread_mutexattr_settype F
+GLIBC_2.41 pthread_once F
 GLIBC_2.41 pthread_sigmask F
 GLIBC_2.42 __inet_ntop_chk F
 GLIBC_2.42 __inet_pton_chk F
