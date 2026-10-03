@@ -89,6 +89,8 @@
 
 #else /* Not NDEBUG.  */
 
+#ifndef _ASSERT_H_DECLS
+#define _ASSERT_H_DECLS
 __BEGIN_DECLS
 
 /* This prints an "Assertion failed" message and aborts.  */
@@ -116,6 +118,7 @@ extern _Bool __assert_single_arg (_Bool);
 # endif
 
 __END_DECLS
+#endif /* Not _ASSERT_H_DECLS */
 
 /* When possible, define assert so that it does not add extra
    parentheses around EXPR.  Otherwise, those added parentheses would
