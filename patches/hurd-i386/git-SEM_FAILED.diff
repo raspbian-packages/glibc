@@ -1,0 +1,18 @@
+commit 4ffc76bb0eba8a46a45a1a98811d769d0ca8627a
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Mon Apr 6 04:03:38 2026 +0200
+
+    htl: Fix SEM_FAILED type
+
+diff --git a/sysdeps/htl/bits/semaphore.h b/sysdeps/htl/bits/semaphore.h
+index 0e5fe5f1e7..a8bb13d515 100644
+--- a/sysdeps/htl/bits/semaphore.h
++++ b/sysdeps/htl/bits/semaphore.h
+@@ -36,6 +36,6 @@ typedef union
+   long int __align;
+ } sem_t;
+ 
+-#define SEM_FAILED ((void *) 0)
++#define SEM_FAILED ((sem_t *) 0)
+ 
+ #endif /* bits/semaphore.h */
