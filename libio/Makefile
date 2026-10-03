@@ -84,6 +84,7 @@ tests = \
   bug-ungetwc1 \
   bug-ungetwc2 \
   bug-wfflush \
+  bug-wgenops-bz33998 \
   bug-wmemstream1 \
   bug-wsetpos \
   test-fmemopen \
@@ -107,6 +108,7 @@ tests = \
   tst-fgetc-after-eof \
   tst-fgetwc \
   tst-fgetws \
+  tst-fopen-ccs-empty \
   tst-fopenloc2 \
   tst-fputws \
   tst-freopen \
